@@ -1,0 +1,49 @@
+/build
+!/build/.gitkeep
+
+#------------------------------------------------------------------------------
+# https://raw.githubusercontent.com/github/gitignore/9f1b7d77e24ec9c3e2681da93b68767fd96dd52b/Global/Vim.gitignore
+
+[._]*.s[a-w][a-z]
+[._]s[a-w][a-z]
+*.un~
+Session.vim
+.netrwhist
+*~
+
+
+#------------------------------------------------------------------------------
+# https://raw.githubusercontent.com/github/gitignore/08de2b88e286e6f90376bc8d104b3052d0e0a310/C.gitignore
+
+# Object files
+*.o
+*.ko
+*.obj
+*.elf
+
+# Precompiled Headers
+*.gch
+*.pch
+
+# Libraries
+*.lib
+*.a
+*.la
+*.lo
+
+# Shared objects (inc. Windows DLLs)
+*.dll
+*.so
+*.so.*
+*.dylib
+
+# Executables
+*.exe
+*.out
+*.app
+*.i*86
+*.x86_64
+*.hex
+
+# Debug files
+*.dSYM/
