@@ -49,12 +49,13 @@ TEST_CLI_BIN := $(BUILD_DIR)/test-$(NAME)
 #------------------------------------------------------------------------------
 # Targets.
 
+.PHONY : all
+all : cli test_cli
+
+
 .PHONY : clean
 clean :
 	$(RM) $(CLI_OBJS) $(TEST_CLI_OBJS) $(BUILD)
-
-.PHONY : all
-all : cli test_cli
 
 .PHONY : cli test_cli
 cli      : $(CLI_BIN)
