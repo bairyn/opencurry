@@ -1,0 +1,3 @@
+# opencurry
+
+Haskell compiler.
