@@ -33,7 +33,7 @@
 #include "../base.h"
 #include "test_all.h"
 
-int main(int argc, char **argv)
+int test_all(int argc, char **argv)
 {
-  return test_all(argc, argv);
+  return 0;
 }
