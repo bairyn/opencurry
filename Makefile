@@ -62,10 +62,10 @@ cli      : $(CLI_BIN)
 test_cli : $(TEST_CLI_BIN)
 
 $(CLI_BIN) : $(CLI_OBJS)
-	$(CC) -o $@ $(CLI_OBJS)
+	$(CC) -o $@ $^
 
 $(TEST_CLI_BIN) : $(TEST_CLI_OBJS)
-	$(CC) -o $@ $(TEST_CLI_OBJS)
+	$(CC) -o $@ $^
 
 $(OBJ_DIR)/%.o : $(SRC_DIR)/%.c
 	$(CC) -c -o $@ $<
