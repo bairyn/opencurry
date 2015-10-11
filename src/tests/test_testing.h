@@ -1,5 +1,5 @@
 /*
- * opencurry: base.h
+ * opencurry: tests/test_testing.h
  *
  * Copyright (c) 2015, Byron James Johnson
  * All rights reserved.
@@ -30,15 +30,15 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+
 /*
- * base.h
+ * tests/test_testing.h
  * ------
- *
- * Header file included by each C file, including those for testing.
  */
 
-#ifndef BASE_H
-#define BASE_H
-#include "base.h"
+#ifndef TESTS_TEST_TESTING_H
+#define TESTS_TEST_TESTING_H
+#include "../base.h"
+#include "testing.h"
 
-#endif /* ifndef BASE_H */
+#endif /* ifndef TESTS_TEST_TESTING_H */

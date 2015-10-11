@@ -30,13 +30,15 @@ ALL_CPPFLAGS := $(USR_CPPFLAGS) $(CPPFLAGS)
 #------------------------------------------------------------------------------
 # Object files.
 
-CLI_OBJS := \
-	$(OBJ_DIR)/main.o \
-	$(OBJ_DIR)/opencurry.o \
+CLI_OBJS :=                         \
+	$(OBJ_DIR)/main.o                 \
+	$(OBJ_DIR)/opencurry.o            \
 	$(OBJ_DIR)/cli.o
-TEST_CLI_OBJS := \
-	$(OBJ_DIR)/tests/main.o \
-	$(OBJ_DIR)/tests/test_all.o \
+TEST_CLI_OBJS :=                    \
+	$(OBJ_DIR)/tests/main.o           \
+	$(OBJ_DIR)/tests/testing.o        \
+	$(OBJ_DIR)/tests/test_testing.o   \
+	$(OBJ_DIR)/tests/test_all.o       \
 	$(OBJ_DIR)/tests/test_opencurry.o \
 	$(OBJ_DIR)/tests/test_cli.o
 

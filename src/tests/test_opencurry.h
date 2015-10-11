@@ -31,3 +31,14 @@
  */
 
 
+/*
+ * tests/test_opencurry.h
+ * ------
+ */
+
+#ifndef TESTS_TEST_OPENCURRY_H
+#define TESTS_TEST_OPENCURRY_H
+#include "../base.h"
+#include "testing.h"
+
+#endif /* ifndef TESTS_TEST_OPENCURRY_H */

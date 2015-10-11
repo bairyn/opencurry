@@ -38,5 +38,6 @@
 
 #ifndef CLI_H
 #define CLI_H
+#include "base.h"
 
 #endif /* ifndef CLI_H */

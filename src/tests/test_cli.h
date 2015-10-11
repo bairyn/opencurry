@@ -37,5 +37,7 @@
 
 #ifndef TESTS_TEST_CLI_H
 #define TESTS_TEST_CLI_H
+#include "../base.h"
+#include "testing.h"
 
 #endif /* ifndef TESTS_TEST_CLI_H */

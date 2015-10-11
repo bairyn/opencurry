@@ -37,6 +37,8 @@
 
 #ifndef TESTS_TEST_ALL_H
 #define TESTS_TEST_ALL_H
+#include "../base.h"
+#include "testing.h"
 
 int test_all(int argc, char **argv);
 

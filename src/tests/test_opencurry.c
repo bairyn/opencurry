@@ -31,4 +31,4 @@
  */
 
 #include "../base.h"
-#include "test_cli.h"
+#include "test_opencurry.h"

@@ -37,6 +37,7 @@
 
 #ifndef OPENCURRY_H
 #define OPENCURRY_H
+#include "base.h"
 
 int opencurry(int argc, char **argv);
 
