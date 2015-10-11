@@ -31,7 +31,7 @@
  */
 
 #include "../base.h"
-#include "test_opencurry.h"
+#include "test_all.h"
 
 int main(int argc, char **argv)
 {
