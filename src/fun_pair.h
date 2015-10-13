@@ -1,5 +1,5 @@
 /*
- * opencurry: fun.h
+ * opencurry: fun_prim.h
  *
  * Copyright (c) 2015, Byron James Johnson
  * All rights reserved.
@@ -31,13 +31,15 @@
  */
 
 /*
- * fun.h
+ * fun_prim.h
  * ------
+ *
+ * Primitive, unwrapped values.
  */
 
 
-#ifndef FUN_H
-#define FUN_H
+#ifndef FUN_PRIM_H
+#define FUN_PRIM_H
 #include "base.h"
 
 /* Non-function values. */
@@ -109,7 +111,7 @@ typedef struct primpair_s primpair_t;
 struct fun_s
 {
   union  prim_u  out;
-  struct fun_s  (*fun)(struct fun_s in);
+  struct fun_s  (*fun)(const struct fun_s *self, struct fun_s in);
 
   union  prim_u  state;
 
@@ -121,4 +123,4 @@ typedef struct fun_s fun_t;
 typedef fun_t any_t;
 typedef fun_t val_t;
 
-#endif /* ifndef FUN_H */
+#endif /* ifndef FUN_PRIM_H */
