@@ -31,6 +31,7 @@
  */
 
 #include "../base.h"
+#include "testing.h"
 #include "test_all.h"
 
 int main(int argc, char **argv)

@@ -31,4 +31,5 @@
  */
 
 #include "../base.h"
+#include "testing.h"
 #include "test_cli.h"

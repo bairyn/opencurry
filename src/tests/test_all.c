@@ -31,9 +31,17 @@
  */
 
 #include "../base.h"
+#include "testing.h"
 #include "test_all.h"
+
+#include "test_testing.h"
+#include "test_opencurry.h"
+#include "test_cli.h"
+#include "test_util.h"
 
 int test_all(int argc, char **argv)
 {
+  /* unit_test_t tests[] */
+
   return 0;
 }

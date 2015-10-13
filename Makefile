@@ -15,10 +15,10 @@ USR_CFLAGS   :=
 USR_CPPFLAGS :=
 
 ifeq ($(DEBUG),1)
-	CFLAGS   := -std=c89 -pedantic -pedantic-errors -pthreads -Wall  -Werr -g
+	CFLAGS   := -std=c89 -pedantic -pedantic-errors -pthread -Wall  -Werror -g
 	CPPFLAGS := -DDEBUG
 else
-	CFLAGS   := -std=c89 -pedantic -pedantic-errors -pthreads -Wall  -Werr -O2
+	CFLAGS   := -std=c89 -pedantic -pedantic-errors -pthread -Wall  -Werror -O2
 	CPPFLAGS := -DNDEBUG
 endif
 
@@ -34,7 +34,8 @@ CLI_OBJS :=                         \
 	$(OBJ_DIR)/main.o                 \
 	$(OBJ_DIR)/opencurry.o            \
 	$(OBJ_DIR)/cli.o                  \
-	$(OBJ_DIR)/util.o
+	$(OBJ_DIR)/util.o                 \
+	$(OBJ_DIR)/fun.o
 TEST_CLI_OBJS :=                    \
 	$(OBJ_DIR)/tests/main.o           \
 	$(OBJ_DIR)/tests/testing.o        \
@@ -42,7 +43,8 @@ TEST_CLI_OBJS :=                    \
 	$(OBJ_DIR)/tests/test_all.o       \
 	$(OBJ_DIR)/tests/test_opencurry.o \
 	$(OBJ_DIR)/tests/test_cli.o       \
-	$(OBJ_DIR)/tests/test_util.o
+	$(OBJ_DIR)/tests/test_util.o      \
+	$(OBJ_DIR)/tests/test_fun.o
 
 #------------------------------------------------------------------------------
 # Build files.
@@ -59,17 +61,18 @@ all : cli test_cli
 
 .PHONY : clean
 clean :
-	$(RM) $(CLI_OBJS) $(TEST_CLI_OBJS) $(BUILD)
+	$(RM) $(CLI_OBJS) $(TEST_CLI_OBJS)
+	$(RM) $(CLI_BIN)  $(TEST_CLI_BIN)
 
 .PHONY : cli test_cli
 cli      : $(CLI_BIN)
 test_cli : $(TEST_CLI_BIN)
 
 $(CLI_BIN) : $(CLI_OBJS)
-	$(CC) -o $@ $^
+	$(CC) $(ALL_CFLAGS) $(ALL_CPPFLAGS) -o $@ $^
 
 $(TEST_CLI_BIN) : $(TEST_CLI_OBJS)
-	$(CC) -o $@ $^
+	$(CC) $(ALL_CFLAGS) $(ALL_CPPFLAGS) -o $@ $^
 
 $(OBJ_DIR)/%.o : $(SRC_DIR)/%.c
 	$(CC) -c -o $@ $<

@@ -1,5 +1,5 @@
 /*
- * opencurry: tests/testing.h
+ * opencurry: fun.c
  *
  * Copyright (c) 2015, Byron James Johnson
  * All rights reserved.
@@ -30,19 +30,69 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+/* stddef.h:
+ *   - NULL
+ */
+#include <stddef.h>
+
+#include "base.h"
+#include "util.h"
+
+#include "fun.h"
+
+/* Primitive values. */
+
+const val_t prim_void = { NULL };
+
+prim_t prim_int(int i)
+{
+  prim_t prim;
+  prim.vint = i;
+  return prim;
+}
+
+prim_t prim_any(void *any)
+{
+  prim_t prim;
+  prim.any = any;
+  return prim;
+}
+
+/* Create a "val" from a "prim". */
+val_t val_prim(prim_t prim)
+{
+  val_t val;
+  val.out = prim;
+  return val;
+}
 
 /*
- * tests/testing.h
- * ------
+ * Return the primitive value contained in a value.
  *
- * Included by each C file under `testing/`.
+ * Behaviour is undefined if "val" is a function value.
  */
+prim_t val_get_prim(val_t val)
+{
+  return val.out;
+}
 
-#ifndef TESTS_TESTING_H
-#define TESTS_TESTING_H
-#include "../base.h"
-#include "testing.h"
+/*
+ * return_two:
+ *
+ * Create a function that returns "a" along with another function
+ * that returns "".
+ *
+ * Example:
+ *
+ * > fun_s who_is_together = return_two('u', 'i');
+ * > char first_result = who_is_together();
+ */
+any_t return_two(any_t a, any_t b)
+{
+  any_t two_tuple;
 
-/* typedef unit_test_s unit_test_t; */
+  two_tuple.out = a;
+  two_tuple.fun = ;
 
-#endif /* ifndef TESTS_TESTING_H */
+  return two_tuple;
+}

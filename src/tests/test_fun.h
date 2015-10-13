@@ -1,5 +1,5 @@
 /*
- * opencurry: tests/testing.h
+ * opencurry: tests/test_fun.h
  *
  * Copyright (c) 2015, Byron James Johnson
  * All rights reserved.
@@ -32,17 +32,13 @@
 
 
 /*
- * tests/testing.h
+ * tests/test_fun.h
  * ------
- *
- * Included by each C file under `testing/`.
  */
 
-#ifndef TESTS_TESTING_H
-#define TESTS_TESTING_H
+#ifndef TESTS_TEST_FUN_H
+#define TESTS_TEST_FUN_H
 #include "../base.h"
 #include "testing.h"
 
-/* typedef unit_test_s unit_test_t; */
-
-#endif /* ifndef TESTS_TESTING_H */
+#endif /* ifndef TESTS_TEST_FUN_H */
