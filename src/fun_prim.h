@@ -96,31 +96,28 @@ union prim_u
 };
 typedef union prim_u prim_t;
 
-struct primpair_s
-{
-  union prim_u a;
-  union prim_u b;
-};
-typedef struct primpair_s primpair_t;
+/* Constants. */
+extern const prim_t prim_void_val;
 
-/*
- * Functions and values:
- *
- * A val_t can be either a primitive value or a function.
- */
-struct fun_s
-{
-  union  prim_u  out;
-  struct fun_s  (*fun)(const struct fun_s *self, struct fun_s in);
+/* Constructors. */
+prim_t prim_void(void);
+prim_t prim_any(void *any);
+prim_t prim_pointer(union prim_u *pointer);
+prim_t prim_vchar(char vchar);
+prim_t prim_schar(signed char schar);
+prim_t prim_uchar(unsigned char uchar);
+prim_t prim_vshort(short vshort);
+prim_t prim_ushort(unsigned short ushort);
+prim_t prim_vint(int vint);
+prim_t prim_uint(unsigned int uint);
+prim_t prim_vlong(int vlong);
+prim_t prim_ulong(unsigned int ulong);
+prim_t prim_vfloat(int vfloat);
+prim_t prim_ufloat(unsigned int ufloat);
+prim_t prim_vdouble(int vdouble);
+prim_t prim_udouble(unsigned int udouble);
+prim_t prim_next(union prim_u (*next)(union prim_u in));
 
-  union  prim_u  state;
-
-  struct primpair_s user0;
-  struct primpair_s user1;
-};
-typedef struct fun_s fun_t;
-
-typedef fun_t any_t;
-typedef fun_t val_t;
+/* Accessors. */
 
 #endif /* ifndef FUN_PRIM_H */

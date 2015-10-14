@@ -38,70 +38,12 @@
  */
 
 
-#ifndef FUN_PRIM_H
-#define FUN_PRIM_H
+#ifndef FUN_BASE_H
+#define FUN_BASE_H
 #include "base.h"
 
-/* Non-function values. */
-union prim_u
-{
-  void           *any;
-
-  union prim_u   *pointer;
-
-  char           vchar;
-  signed char    schar;
-  unsigned char  uchar;
-
-  /* - short
-   * - short int
-   * - signed short
-   * - signed short int
-   */
-  short          vshort;
-
-  /* - unsigned short
-   * - unsigned short int
-   */
-  unsigned short ushort;
-
-  /* - int
-   * - signed
-   * - signed int
-   */
-  int            vint;
-
-  /* - unsigned
-   * - unsigned int
-   */
-  unsigned int   uint;
-
-  /* - long
-   * - long int
-   * - signed long
-   * - signed long int
-   */
-  long           vlong;
-
-  /* - unsigned long
-   * - unsigned long int
-   */
-  unsigned long  ulong;
-
-  float          vfloat;
-  double         vdouble;
-  /* long double    ldouble; */
-
-  union prim_u   (*next)(union prim_u in);
-};
-typedef union prim_u prim_t;
-
-struct primpair_s
-{
-  union prim_u a;
-  union prim_u b;
-};
-typedef struct primpair_s primpair_t;
+#include "fun_prim.h"
+#include "fun_base.h"
 
 /*
  * Functions and values:
@@ -123,4 +65,4 @@ typedef struct fun_s fun_t;
 typedef fun_t any_t;
 typedef fun_t val_t;
 
-#endif /* ifndef FUN_PRIM_H */
+#endif /* ifndef FUN_BASE_H */

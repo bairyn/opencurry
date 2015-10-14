@@ -42,71 +42,146 @@
 
 /* Primitive values. */
 
-const val_t prim_void = { NULL };
+/* ---------------------------------------------------------------- */
+/* Constants. */
 
-prim_t prim_int(int i)
+const prim_t prim_void_val = { NULL };
+
+/* ---------------------------------------------------------------- */
+/* Constructors. */
+
+prim_t prim_void(void)
 {
-  prim_t prim;
-  prim.vint = i;
+  prim_t prim = { NULL };
+
   return prim;
 }
 
 prim_t prim_any(void *any)
 {
   prim_t prim;
+
   prim.any = any;
+
   return prim;
 }
 
-/* Create a "val" from a "prim". */
-val_t val_prim(prim_t prim)
+prim_t prim_pointer(union prim_u *pointer)
 {
-  val_t val;
-  val.out = prim;
-  return val;
+  prim_t prim;
+
+  prim.pointer = pointer;
+
+  return prim;
 }
 
-/*
- * Return the primitive value contained in a value.
- *
- * Behaviour is undefined if "val" is a function value.
- */
-prim_t val_get_prim(val_t val)
+prim_t prim_vchar(char vchar)
 {
-  return val.out;
+  prim_t prim;
+
+  prim.vchar = vchar;
+
+  return prim;
 }
 
-/*
- * return_one:
- *
- * Create a function that returns "a".
- */
-any_t return_one(any_t a)
+prim_t prim_schar(signed char schar)
 {
-  any_t fun;
+  prim_t prim;
 
-  fun.fun = ;
+  prim.schar = schar;
 
-  return fun;
+  return prim;
 }
 
-/*
- * return_two:
- *
- * Create a function that returns "a" along with another function
- * that returns "".
- *
- * Example:
- *
- * > fun_s who_is_together = return_two('u', 'i');
- * > char first_result = who_is_together();
- */
-any_t return_two(any_t a, any_t b)
+prim_t prim_uchar(unsigned char uchar)
 {
-  any_t two_tuple;
+  prim_t prim;
 
-  two_tuple.out = a;
-  two_tuple.fun = ;
+  prim.uchar = uchar;
 
-  return two_tuple;
+  return prim;
 }
+
+prim_t prim_vshort(short vshort)
+{
+  prim_t prim;
+
+  prim.vshort = vshort;
+
+  return prim;
+}
+
+prim_t prim_ushort(unsigned short ushort)
+{
+  prim_t prim;
+
+  prim.ushort = ushort;
+
+  return prim;
+}
+
+prim_t prim_vint(int vint)
+{
+  prim_t prim;
+
+  prim.vint = vint;
+
+  return prim;
+}
+
+prim_t prim_uint(unsigned int uint)
+{
+  prim_t prim;
+
+  prim.uint = uint;
+
+  return prim;
+}
+
+prim_t prim_vlong(int vlong)
+{
+  prim_t prim;
+
+  prim.vlong = vlong;
+
+  return prim;
+}
+
+prim_t prim_ulong(unsigned int ulong)
+{
+  prim_t prim;
+
+  prim.ulong = ulong;
+
+  return prim;
+}
+
+prim_t prim_vfloat(int vfloat)
+{
+  prim_t prim;
+
+  prim.vfloat = vfloat;
+
+  return prim;
+}
+
+prim_t prim_vdouble(int vdouble)
+{
+  prim_t prim;
+
+  prim.vdouble = vdouble;
+
+  return prim;
+}
+
+prim_t prim_next(union prim_u (*next)(union prim_u in))
+{
+  prim_t prim;
+
+  prim.next = next;
+
+  return prim;
+}
+
+/* ---------------------------------------------------------------- */
+/* Accessors. */

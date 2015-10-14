@@ -39,74 +39,67 @@
 #include "util.h"
 
 #include "fun_prim.h"
+#include "fun_pair.h"
 
-/* Primitive values. */
+/* Pairs of primitive values. */
 
-const val_t prim_void = { NULL };
+/* ---------------------------------------------------------------- */
+/* Constructors. */
 
-prim_t prim_int(int i)
+/* Create a pair of two primitive values. */
+primpair_t primpair_pair(prim_t a, prim_t b)
 {
-  prim_t prim;
-  prim.vint = i;
-  return prim;
+  primpair_t pair = { a, b };
+  return pair;
 }
 
-prim_t prim_any(void *any)
+/* Create a copy of a pair. */
+primpair_t primpair_copy(primpair_t pair)
 {
-  prim_t prim;
-  prim.any = any;
-  return prim;
+  primpair_t new_pair = { pair.a, pair.b };
+  return new_pair;
 }
 
-/* Create a "val" from a "prim". */
-val_t val_prim(prim_t prim)
+/* ---------------------------------------------------------------- */
+/* Accessors. */
+
+/* Return the first value from a pair. */
+prim_t primpair_fst(primpair_t pair)
 {
-  val_t val;
-  val.out = prim;
-  return val;
+  return pair.a;
 }
 
-/*
- * Return the primitive value contained in a value.
- *
- * Behaviour is undefined if "val" is a function value.
- */
-prim_t val_get_prim(val_t val)
+/* Return the second value from a pair. */
+prim_t primpair_snd(primpair_t pair)
 {
-  return val.out;
+  return pair.b;
 }
 
-/*
- * return_one:
- *
- * Create a function that returns "a".
- */
-any_t return_one(any_t a)
+/* Create a copy of a pair with a different first value. */
+primpair_t primpair_setFst(primpair_t pair, prim_t a)
 {
-  any_t fun;
-
-  fun.fun = ;
-
-  return fun;
+  primpair_t new_pair = { a, pair.b };
+  return new_pair;
 }
 
-/*
- * return_two:
- *
- * Create a function that returns "a" along with another function
- * that returns "".
- *
- * Example:
- *
- * > fun_s who_is_together = return_two('u', 'i');
- * > char first_result = who_is_together();
- */
-any_t return_two(any_t a, any_t b)
+/* Create a copy of a pair with a different second value. */
+primpair_t primpair_setSnd(primpair_t pair, prim_t b)
 {
-  any_t two_tuple;
+  primpair_t new_pair = { pair.a, b };
+  return new_pair;
+}
 
-  two_tuple.out = a;
-  two_tuple.fun = ;
+/* ---------------------------------------------------------------- */
+/* Mutators. */
 
-  return two_tuple;
+/* Mutate the first value of a pair in-place, setting it to the provided value. */
+void primpair_impureMutateFst(primpair_t pair, prim_t a)
+{
+  pair.a = a;
+}
+
+/* Mutate the second value of a pair in-place, setting it to the provided value. */
+void primpair_impureMutateSnd(primpair_t pair, prim_t b)
+{
+  pair.b = b;
 }

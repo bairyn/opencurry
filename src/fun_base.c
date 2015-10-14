@@ -40,32 +40,6 @@
 
 #include "fun_prim.h"
 
-/* Primitive values. */
-
-const val_t prim_void = { NULL };
-
-prim_t prim_int(int i)
-{
-  prim_t prim;
-  prim.vint = i;
-  return prim;
-}
-
-prim_t prim_any(void *any)
-{
-  prim_t prim;
-  prim.any = any;
-  return prim;
-}
-
-/* Create a "val" from a "prim". */
-val_t val_prim(prim_t prim)
-{
-  val_t val;
-  val.out = prim;
-  return val;
-}
-
 /*
  * Return the primitive value contained in a value.
  *

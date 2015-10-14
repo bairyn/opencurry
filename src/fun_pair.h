@@ -38,63 +38,11 @@
  */
 
 
-#ifndef FUN_PRIM_H
-#define FUN_PRIM_H
+#ifndef FUN_PAIR_H
+#define FUN_PAIR_H
 #include "base.h"
 
-/* Non-function values. */
-union prim_u
-{
-  void           *any;
-
-  union prim_u   *pointer;
-
-  char           vchar;
-  signed char    schar;
-  unsigned char  uchar;
-
-  /* - short
-   * - short int
-   * - signed short
-   * - signed short int
-   */
-  short          vshort;
-
-  /* - unsigned short
-   * - unsigned short int
-   */
-  unsigned short ushort;
-
-  /* - int
-   * - signed
-   * - signed int
-   */
-  int            vint;
-
-  /* - unsigned
-   * - unsigned int
-   */
-  unsigned int   uint;
-
-  /* - long
-   * - long int
-   * - signed long
-   * - signed long int
-   */
-  long           vlong;
-
-  /* - unsigned long
-   * - unsigned long int
-   */
-  unsigned long  ulong;
-
-  float          vfloat;
-  double         vdouble;
-  /* long double    ldouble; */
-
-  union prim_u   (*next)(union prim_u in);
-};
-typedef union prim_u prim_t;
+#include "fun_prim.h"
 
 struct primpair_s
 {
@@ -103,24 +51,17 @@ struct primpair_s
 };
 typedef struct primpair_s primpair_t;
 
-/*
- * Functions and values:
- *
- * A val_t can be either a primitive value or a function.
- */
-struct fun_s
-{
-  union  prim_u  out;
-  struct fun_s  (*fun)(const struct fun_s *self, struct fun_s in);
+/* Constructors. */
+primpair_t primpair_pair(prim_t a, prim_t b);
 
-  union  prim_u  state;
+/* Accessors. */
+prim_t primpair_fst(primpair_t pair);
+prim_t primpair_snd(primpair_t pair);
+primpair_t primpair_setFst(primpair_t pair, prim_t a);
+primpair_t primpair_setSnd(primpair_t pair, prim_t b);
 
-  struct primpair_s user0;
-  struct primpair_s user1;
-};
-typedef struct fun_s fun_t;
+/* Impure mutators. */
+void primpair_impureMutateFst(primpair_t pair, prim_t a);
+void primpair_impureMutateSnd(primpair_t pair, prim_t b);
 
-typedef fun_t any_t;
-typedef fun_t val_t;
-
-#endif /* ifndef FUN_PRIM_H */
+#endif /* ifndef FUN_PAIR_H */
