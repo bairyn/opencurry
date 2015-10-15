@@ -43,6 +43,7 @@
 #include "base.h"
 
 #include "fun_prim.h"
+#include "fun_pair.h"
 #include "fun_base.h"
 
 /*
@@ -52,7 +53,11 @@
  */
 struct fun_s
 {
-  union  prim_u  out;
+  union
+  {
+    union  prim_u  out;
+    struct fun_s  (*out_fun)(const struct fun_s *self, struct fun_s in);
+  };
   struct fun_s  (*fun)(const struct fun_s *self, struct fun_s in);
 
   union  prim_u  state;
