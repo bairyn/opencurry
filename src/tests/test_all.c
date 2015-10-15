@@ -30,6 +30,11 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+/* stddef.h:
+ *   - NULL
+ */
+#include <stddef.h>
+
 #include "../base.h"
 #include "testing.h"
 #include "test_all.h"
@@ -38,10 +43,26 @@
 #include "test_opencurry.h"
 #include "test_cli.h"
 #include "test_util.h"
+#include "test_fun_prim.h"
+#include "test_fun_pair.h"
+#include "test_fun_base.h"
+#include "test_lex.h"
+#include "test_utf8.h"
+
+unit_test_t all_tests[] =
+  { test_testing
+  , test_opencurry
+  , test_cli
+  , test_util
+  , test_fun_prim
+  , test_fun_pair
+  , test_fun_base
+  , test_lex
+  , test_utf8
+  , NULL
+  };
 
 int test_all(int argc, char **argv)
 {
-  /* unit_test_t tests[] */
-
-  return 0;
+  return run_tests(all_tests);
 }

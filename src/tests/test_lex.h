@@ -1,5 +1,5 @@
 /*
- * opencurry: tests/test_fun_prim.c
+ * opencurry: tests/test_lex.h
  *
  * Copyright (c) 2015, Byron James Johnson
  * All rights reserved.
@@ -30,11 +30,16 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+/*
+ * tests/test_lex.h
+ * ------
+ */
+
+#ifndef TESTS_TEST_LEX_H
+#define TESTS_TEST_LEX_H
 #include "../base.h"
 #include "testing.h"
-#include "test_fun_prim.h"
 
-int test_fun_prim(char *err_buf, int err_buf_len)
-{
-  return 0;
-}
+int test_lex(char *err_buf, int err_buf_len);
+
+#endif /* ifndef TESTS_TEST_LEX_H */

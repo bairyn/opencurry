@@ -41,4 +41,6 @@
 #include "../base.h"
 #include "testing.h"
 
+int test_testing(char *err_buf, int err_buf_len);
+
 #endif /* ifndef TESTS_TEST_TESTING_H */

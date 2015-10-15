@@ -34,6 +34,7 @@ CLI_OBJS :=                         \
 	$(OBJ_DIR)/main.o                 \
 	$(OBJ_DIR)/opencurry.o            \
 	$(OBJ_DIR)/cli.o                  \
+	$(OBJ_DIR)/lex.o                  \
 	$(OBJ_DIR)/util.o                 \
 	$(OBJ_DIR)/fun_prim.o             \
 	$(OBJ_DIR)/fun_pair.o             \
@@ -46,7 +47,11 @@ TEST_CLI_OBJS :=                    \
 	$(OBJ_DIR)/tests/test_opencurry.o \
 	$(OBJ_DIR)/tests/test_cli.o       \
 	$(OBJ_DIR)/tests/test_util.o      \
-	$(OBJ_DIR)/tests/test_fun_prim.o
+	$(OBJ_DIR)/tests/test_fun_prim.o  \
+	$(OBJ_DIR)/tests/test_fun_pair.o  \
+	$(OBJ_DIR)/tests/test_fun_base.o  \
+	$(OBJ_DIR)/tests/test_lex.o       \
+	$(OBJ_DIR)/tests/test_utf8.o
 
 #------------------------------------------------------------------------------
 # Build files.
@@ -77,4 +82,4 @@ $(TEST_CLI_BIN) : $(TEST_CLI_OBJS)
 	$(CC) $(ALL_CFLAGS) $(ALL_CPPFLAGS) -o $@ $^
 
 $(OBJ_DIR)/%.o : $(SRC_DIR)/%.c
-	$(CC) -c -o $@ $<
+	$(CC) $(ALL_CFLAGS) $(ALL_CPPFLAGS) -c -o $@ $<

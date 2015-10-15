@@ -1,5 +1,5 @@
 /*
- * opencurry: tests/test_fun_prim.c
+ * opencurry: tests/test_utf8.c
  *
  * Copyright (c) 2015, Byron James Johnson
  * All rights reserved.
@@ -32,9 +32,9 @@
 
 #include "../base.h"
 #include "testing.h"
-#include "test_fun_prim.h"
+#include "test_utf8.h"
 
-int test_fun_prim(char *err_buf, int err_buf_len)
+int test_utf8(char *err_buf, int err_buf_len)
 {
   return 0;
 }

@@ -43,6 +43,10 @@
 #include "../base.h"
 #include "testing.h"
 
-/* typedef unit_test_s unit_test_t; */
+typedef int (*unit_test_t)(char *err_buf, int err_buf_len);
+
+extern unit_test_t all_tests[];
+
+int run_tests(unit_test_t *tests);
 
 #endif /* ifndef TESTS_TESTING_H */

@@ -32,3 +32,8 @@
 
 #include "../base.h"
 #include "test_opencurry.h"
+
+int test_opencurry(char *err_buf, int err_buf_len)
+{
+  return 0;
+}

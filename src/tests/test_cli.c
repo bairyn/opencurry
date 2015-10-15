@@ -33,3 +33,8 @@
 #include "../base.h"
 #include "testing.h"
 #include "test_cli.h"
+
+int test_cli(char *err_buf, int err_buf_len)
+{
+  return 0;
+}
