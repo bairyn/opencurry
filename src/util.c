@@ -32,3 +32,5 @@
 
 #include "base.h"
 #include "util.h"
+
+void util_placeholder(void) { }

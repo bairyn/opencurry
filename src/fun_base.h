@@ -53,11 +53,7 @@
  */
 struct fun_s
 {
-  union
-  {
-    union  prim_u  out;
-    struct fun_s  (*out_fun)(const struct fun_s *self, struct fun_s in);
-  };
+  union  prim_u  out;
   struct fun_s  (*fun)(const struct fun_s *self, struct fun_s in);
 
   union  prim_u  state;

@@ -56,11 +56,11 @@ int run_tests(unit_test_t *tests)
     {
       err_buf[TEST_ERR_BUF_SIZE-1] = 0;
 
-      fprintf(stderr, "FAIL: test group #%d failed:\n%s", test-tests, err_buf);
+      fprintf(stderr, "FAIL: test group #%d failed:\n%s", (int) (test-tests), (const char *) err_buf);
       return result;
     }
   }
 
-  fprintf(stdout, "pass: %d/%d test groups.\n", test-tests, test-tests);
+  fprintf(stdout, "pass: %d/%d test groups.\n", (int) (test-tests), (int) (test-tests));
   return 0;
 }

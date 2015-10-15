@@ -32,3 +32,5 @@
 
 #include "base.h"
 #include "lex.h"
+
+void lex_placeholder(void) { }

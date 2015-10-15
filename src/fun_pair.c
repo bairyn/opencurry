@@ -49,14 +49,22 @@
 /* Create a pair of two primitive values. */
 primpair_t primpair_pair(prim_t a, prim_t b)
 {
-  primpair_t pair = { a, b };
+  primpair_t pair;
+
+  pair.a = a;
+  pair.b = b;
+
   return pair;
 }
 
 /* Create a copy of a pair. */
 primpair_t primpair_copy(primpair_t pair)
 {
-  primpair_t new_pair = { pair.a, pair.b };
+  primpair_t new_pair;
+
+  new_pair.a = pair.a;
+  new_pair.b = pair.b;
+
   return new_pair;
 }
 
@@ -78,14 +86,22 @@ prim_t primpair_snd(primpair_t pair)
 /* Create a copy of a pair with a different first value. */
 primpair_t primpair_setFst(primpair_t pair, prim_t a)
 {
-  primpair_t new_pair = { a, pair.b };
+  primpair_t new_pair;
+
+  new_pair.a = a;
+  new_pair.b = pair.b;
+
   return new_pair;
 }
 
 /* Create a copy of a pair with a different second value. */
 primpair_t primpair_setSnd(primpair_t pair, prim_t b)
 {
-  primpair_t new_pair = { pair.a, b };
+  primpair_t new_pair;
+
+  new_pair.a = pair.a;
+  new_pair.b = b;
+
   return new_pair;
 }
 

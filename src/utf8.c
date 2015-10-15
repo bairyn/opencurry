@@ -32,3 +32,5 @@
 
 #include "base.h"
 #include "utf8.h"
+
+void utf8_placeholder(void) { }
