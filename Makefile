@@ -1,20 +1,20 @@
 #------------------------------------------------------------------------------
 # Settings.
 
-NAME                   := opencurry
-VERSION                := 0.1.0
+NAME             := opencurry
+VERSION          := 0.1.0
 
-BUILD_DIR              := build
-OBJ_DIR                := $(BUILD_DIR)/obj
-SRC_DIR                := src
+BUILD_DIR        := build
+OBJ_DIR          := $(BUILD_DIR)/obj
+SRC_DIR          := src
 
-RES_DIR                := resource
-TEST_RES_DIR           := $(RES_DIR)/tests
+RES_DIR          := resource
+TEST_RES_DIR     := $(RES_DIR)/tests
 
-BUILD_RES_OBJ_DIR      := $(BUILD_DIR)/resource
-BUILD_TEST_RES_OBJ_DIR := $(BUILD_DIR)/$(RES_DIR)/tests
+RES_OBJ_DIR      := $(BUILD_DIR)/resource
+TEST_RES_OBJ_DIR := $(BUILD_DIR)/$(RES_DIR)/tests
 
-MKDIR_P                := mkdir -p
+MKDIR_P          := mkdir -p
 
 #------------------------------------------------------------------------------
 # Flags.
@@ -42,8 +42,8 @@ BUILD_DIRECTORIES :=                \
 	$(BUILD_DIR)                      \
 	$(OBJ_DIR)                        \
 	$(OBJ_DIR)/tests                  \
-	$(BUILD_RES_DIR)                  \
-	$(BUILD_TEST_RES_DIR)
+	$(RES_OBJ_DIR)                    \
+	$(TEST_RES_OBJ_DIR)
 
 #------------------------------------------------------------------------------
 # Object files.
@@ -68,6 +68,7 @@ TEST_CLI_OBJS :=                    \
 	$(OBJ_DIR)/tests/resources.o      \
 	$(OBJ_DIR)/tests/test_testing.o   \
 	$(OBJ_DIR)/tests/test_all.o       \
+	$(OBJ_DIR)/tests/test_resources.o \
 	$(OBJ_DIR)/tests/test_opencurry.o \
 	$(OBJ_DIR)/tests/test_cli.o       \
 	$(OBJ_DIR)/tests/test_util.o      \
@@ -98,7 +99,7 @@ TEST_CLI_BIN := $(BUILD_DIR)/test-$(NAME)
 
 # Build everything: compiler and test suites.
 .PHONY : all
-all : build_directories cli test_cli
+all : build-directories cli test_cli
 
 
 # Remove all build files.
@@ -119,12 +120,12 @@ clean-res-objs :
 cleanall : clean clean-build-directories
 clean-build-directories :
 	# Remove all build directories.
-	$(RM) $(BUILD_DIRECTORIES)
+	$(RM) -r $(BUILD_DIRECTORIES)
 
 
 # Create all build directories.
-.PHONY : build_directories
-build_directories : $(BUILD_DIRECTORIES)
+.PHONY : build-directories
+build-directories : $(BUILD_DIRECTORIES)
 
 $(BUILD_DIRECTORIES) :
 	$(MKDIR_P) $@
@@ -133,19 +134,19 @@ $(BUILD_DIRECTORIES) :
 # Executable targets.
 
 .PHONY : cli test_cli
-cli      : build_directories $(CLI_BIN)
-test_cli : build_directories $(TEST_CLI_BIN)
+cli      :  $(CLI_BIN) | build-directories
+test_cli :  $(TEST_CLI_BIN) | build-directories
 
-$(CLI_BIN) : build_directories $(CLI_OBJS) $(CLI_RESOURCE_OBJS)
+$(CLI_BIN) : $(CLI_OBJS) $(CLI_RESOURCE_OBJS) | build-directories
 	$(CC) $(ALL_CFLAGS) $(ALL_CPPFLAGS) -o $@ $^
 
-$(TEST_CLI_BIN) : build_directories $(TEST_CLI_OBJS) $(TEST_CLI_RESOURCE_OBJS)
+$(TEST_CLI_BIN) : $(TEST_CLI_OBJS) $(TEST_CLI_RESOURCE_OBJS) | build-directories
 	$(CC) $(ALL_CFLAGS) $(ALL_CPPFLAGS) -o $@ $^
 
 #------------------------------------------------------------------------------
 # Application code.
 
-$(OBJ_DIR)/%.o : build_directories $(SRC_DIR)/%.c
+$(OBJ_DIR)/%.o : $(SRC_DIR)/%.c | build-directories
 	$(CC) $(ALL_CFLAGS) $(ALL_CPPFLAGS) -c -o $@ $<
 
 #------------------------------------------------------------------------------
@@ -153,5 +154,5 @@ $(OBJ_DIR)/%.o : build_directories $(SRC_DIR)/%.c
 
 # http://stackoverflow.com/a/4158997
 
-$(RES_OBJ_DIR)/%.o : $(RES_DIR)/%.res
-	$(LD) --leading-underscore -r -b binary -o $@ $<
+$(RES_OBJ_DIR)/%.o : $(RES_DIR)/%.res | build-directories
+	$(LD) -r -b binary -o $@ $<

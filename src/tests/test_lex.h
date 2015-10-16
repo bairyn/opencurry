@@ -40,6 +40,6 @@
 #include "../base.h"
 #include "testing.h"
 
-int test_lex(char *err_buf, int err_buf_len);
+int test_lex(unit_test_context_t *context);
 
 #endif /* ifndef TESTS_TEST_LEX_H */

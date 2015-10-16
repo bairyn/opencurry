@@ -33,7 +33,22 @@
 #include "base.h"
 #include "resources.h"
 
+/* ---------------------------------------------------------------- */
 /* resource/tmp.txt.res */
-unsigned int binary_resource_tmp_txt_res_size = (unsigned int)(((char *)(_binary_resource_tmp_txt_res_start)) - ((char *)(_binary_resource_tmp_txt_res_end)));
 
-void resources_placeholder(void) { }
+unsigned int get_binary_resource_tmp_txt_res_size(void)
+{
+  return (unsigned int)(((char *)(_binary_resource_tmp_txt_res_start)) - ((char *)(_binary_resource_tmp_txt_res_end)));
+}
+
+
+const char   *res_tmp_txt_start(void) { return _binary_resource_tmp_txt_res_start; }
+unsigned int  res_tmp_txt_size(void)  { return get_binary_resource_tmp_txt_res_size(); }
+const char   *res_tmp_txt_end(void)   { return _binary_resource_tmp_txt_res_end; }
+
+void res_tmp_txt(const char **start, unsigned int *size, const char **end)
+{
+  if(start) *start = res_tmp_txt_start();
+  if(size)  *size  = res_tmp_txt_size();
+  if(end)   *end   = res_tmp_txt_end();
+}

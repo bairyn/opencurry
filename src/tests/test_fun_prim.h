@@ -41,6 +41,6 @@
 #include "../base.h"
 #include "testing.h"
 
-int test_fun_prim(char *err_buf, int err_buf_len);
+int test_fun_prim(unit_test_context_t *context);
 
 #endif /* ifndef TESTS_TEST_FUN_PRIM_H */

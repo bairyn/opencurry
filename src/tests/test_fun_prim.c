@@ -34,7 +34,7 @@
 #include "testing.h"
 #include "test_fun_prim.h"
 
-int test_fun_prim(char *err_buf, int err_buf_len)
+int test_fun_prim(unit_test_context_t *context)
 {
   return 0;
 }

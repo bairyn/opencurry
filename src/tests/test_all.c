@@ -40,6 +40,7 @@
 #include "test_all.h"
 
 #include "test_testing.h"
+#include "test_resources.h"
 #include "test_opencurry.h"
 #include "test_cli.h"
 #include "test_util.h"
@@ -51,6 +52,7 @@
 
 unit_test_t all_tests[] =
   { test_testing
+  , test_resources
   , test_opencurry
   , test_cli
   , test_util
@@ -64,5 +66,5 @@ unit_test_t all_tests[] =
 
 int test_all(int argc, char **argv)
 {
-  return run_tests(all_tests);
+  return run_test_suite(all_tests);
 }

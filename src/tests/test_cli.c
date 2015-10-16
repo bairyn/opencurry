@@ -34,7 +34,7 @@
 #include "testing.h"
 #include "test_cli.h"
 
-int test_cli(char *err_buf, int err_buf_len)
+int test_cli(unit_test_context_t *context)
 {
   return 0;
 }

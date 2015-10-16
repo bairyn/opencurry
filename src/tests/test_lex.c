@@ -34,7 +34,7 @@
 #include "testing.h"
 #include "test_lex.h"
 
-int test_lex(char *err_buf, int err_buf_len)
+int test_lex(unit_test_context_t *context)
 {
   return 0;
 }

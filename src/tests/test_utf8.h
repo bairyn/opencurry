@@ -40,6 +40,6 @@
 #include "../base.h"
 #include "testing.h"
 
-int test_utf8(char *err_buf, int err_buf_len);
+int test_utf8(unit_test_context_t *context);
 
 #endif /* ifndef TESTS_TEST_UTF8_H */

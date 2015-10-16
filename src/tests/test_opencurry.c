@@ -33,7 +33,7 @@
 #include "../base.h"
 #include "test_opencurry.h"
 
-int test_opencurry(char *err_buf, int err_buf_len)
+int test_opencurry(unit_test_context_t *context)
 {
   return 0;
 }

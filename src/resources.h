@@ -41,8 +41,13 @@
 #include "base.h"
 
 /* resource/tmp.txt.res */
-extern char         _binary_resource_tmp_txt_res_start[];
-extern char         _binary_resource_tmp_txt_res_end[];
-extern unsigned int binary_resource_tmp_txt_res_size;
+extern char  _binary_resource_tmp_txt_res_start[];
+extern char  _binary_resource_tmp_txt_res_end[];
+unsigned int get_binary_resource_tmp_txt_res_size(void);
+
+const char   *res_tmp_txt_start(void);
+unsigned int  res_tmp_txt_size(void);
+const char   *res_tmp_txt_end(void);
+void          res_tmp_txt(const char **start, unsigned int *size, const char **end);
 
 #endif /* ifndef RESOURCES_H */

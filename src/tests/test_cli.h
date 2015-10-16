@@ -40,6 +40,8 @@
 #include "../base.h"
 #include "testing.h"
 
-int test_cli(char *err_buf, int err_buf_len);
+#include "../cli.h"
+
+int test_cli(unit_test_context_t *context);
 
 #endif /* ifndef TESTS_TEST_CLI_H */

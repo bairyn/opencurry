@@ -1,5 +1,5 @@
 /*
- * opencurry: tests/test_fun_pair.c
+ * opencurry: tests/test_resources.h
  *
  * Copyright (c) 2015, Byron James Johnson
  * All rights reserved.
@@ -30,11 +30,23 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+/*
+ * tests/test_resources.h
+ * ------
+ */
+
+#ifndef TESTS_TEST_RESOURCES_H
+#define TESTS_TEST_RESOURCES_H
 #include "../base.h"
 #include "testing.h"
-#include "test_fun_pair.h"
 
-int test_fun_pair(unit_test_context_t *context)
-{
-  return 0;
-}
+#include "../resources.h"
+
+extern unit_test_t resource_tests[];
+
+int test_resources(unit_test_context_t *context);
+
+int static_string_eq_test(unit_test_context_t *context);
+int static_string_len_test(unit_test_context_t *context);
+
+#endif /* ifndef TESTS_TEST_RESOURCES_H */

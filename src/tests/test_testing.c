@@ -34,7 +34,7 @@
 #include "testing.h"
 #include "test_testing.h"
 
-int test_testing(char *err_buf, int err_buf_len)
+int test_testing(unit_test_context_t *context)
 {
   return 0;
 }

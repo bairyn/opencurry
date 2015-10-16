@@ -1,5 +1,5 @@
 /*
- * opencurry: tests/resources.h
+ * opencurry: tests/test_resources.c
  *
  * Copyright (c) 2015, Byron James Johnson
  * All rights reserved.
@@ -30,27 +30,65 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-/*
- * tests/resources.h
- * ------
+/* stddef.h:
+ *   - NULL
  */
+#include <stddef.h>
 
-
-#ifndef TESTS_RESOURCES_H
-#define TESTS_RESOURCES_H
 #include "../base.h"
 #include "testing.h"
+#include "test_resources.h"
 
 #include "../resources.h"
 
-/* resource/tests/static_string_test.txt.res */
-extern char         _binary_resource_tests_static_string_test_txt_res_start[];
-extern char         _binary_resource_tests_static_string_test_txt_res_end[];
-unsigned int        get_binary_resource_tests_static_string_test_txt_res_size(void);
+unit_test_t resource_tests[] =
+  { static_string_len_test
+  , static_string_eq_test
+  , NULL
+  };
+
+int test_resources(unit_test_context_t *context)
+{
+  return run_tests(context, resource_tests);
+}
+
+/* ---------------------------------------------------------------- */
+
+static const char   *static_string     = "This string is checked for equality.\n";
+static unsigned int  static_string_len = 37;
+
+int static_string_len_test(unit_test_context_t *context)
+{
+  return
+    assert_inteq(context, NULL, 
+  return assert_inteq(context, NULL, (int) );
+}
+
+int static_string_eq_test(unit_test_context_t *context)
+{
+  return assert_streq(context, NULL, );
+}
+
+
+int assert_inteq(unit_test_context_t *context, const char *err_msg, int check, int model);
+
+int assert_streqz(unit_test_context_t *context, const char *err_msg, const char *check, const char *model);
+int assert_streqn(unit_test_context_t *context, const char *err_msg, const char *check, const char *model, unsigned int len);
+int assert_streqnz(unit_test_context_t *context, const char *err_msg, const char *check, const char *model, unsigned int max_len);
+
 
 const char   *res_tests_static_string_start(void);
 unsigned int  res_tests_static_string_size(void);
 const char   *res_tests_static_string_end(void);
 void          res_tests_static_string(const char **start, unsigned int *size, const char **end);
+  return 1;
+int assert_success(unit_test_context_t *context);
+int assert_failure(unit_test_context_t *context, const char *err_msg);
+int assert_failure_continue(unit_test_context_t *context, const char *err_msg);
+int assert_streq(unit_test_context_t *context, const char *err_msg, const char *check, const char *model);
+}
 
-#endif /* ifndef TESTS_RESOURCES_H */
+int static_string_len_test(unit_test_context_t *context)
+{
+  return 1;
+}
