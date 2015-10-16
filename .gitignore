@@ -1,20 +1,7 @@
 #------------------------------------------------------------------------------
 # Build files.
 
-/build/*
-
-# /build
-!/build/.gitkeep
-
-# /build/obj
-!/build/obj
-/build/obj/*
-!/build/obj/.gitkeep
-
-# /build/obj/tests
-!/build/obj/tests
-/build/obj/tests/*
-!/build/obj/tests/.gitkeep
+/build
 
 #------------------------------------------------------------------------------
 # https://raw.githubusercontent.com/github/gitignore/9f1b7d77e24ec9c3e2681da93b68767fd96dd52b/Global/Vim.gitignore

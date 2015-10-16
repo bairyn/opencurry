@@ -1,12 +1,20 @@
 #------------------------------------------------------------------------------
 # Settings.
 
-NAME      := opencurry
-VERSION   := 0.1.0
+NAME                   := opencurry
+VERSION                := 0.1.0
 
-BUILD_DIR := build
-OBJ_DIR   := $(BUILD_DIR)/obj
-SRC_DIR   := src
+BUILD_DIR              := build
+OBJ_DIR                := $(BUILD_DIR)/obj
+SRC_DIR                := src
+
+RES_DIR                := resource
+TEST_RES_DIR           := $(RES_DIR)/tests
+
+BUILD_RES_OBJ_DIR      := $(BUILD_DIR)/resource
+BUILD_TEST_RES_OBJ_DIR := $(BUILD_DIR)/$(RES_DIR)/tests
+
+MKDIR_P                := mkdir -p
 
 #------------------------------------------------------------------------------
 # Flags.
@@ -28,10 +36,20 @@ ALL_CFLAGS   := $(USR_CFLAGS)   $(CFLAGS)
 ALL_CPPFLAGS := $(USR_CPPFLAGS) $(CPPFLAGS)
 
 #------------------------------------------------------------------------------
+# Directories.
+
+BUILD_DIRECTORIES :=                \
+	$(BUILD_DIR)                      \
+	$(OBJ_DIR)                        \
+	$(OBJ_DIR)/tests                  \
+	$(BUILD_RES_DIR)                  \
+	$(BUILD_TEST_RES_DIR)
+
+#------------------------------------------------------------------------------
 # Object files.
 
-CLI_OBJS :=                         \
-	$(OBJ_DIR)/main.o                 \
+SHARED_OBJS :=                      \
+	$(OBJ_DIR)/resources.o            \
 	$(OBJ_DIR)/opencurry.o            \
 	$(OBJ_DIR)/cli.o                  \
 	$(OBJ_DIR)/lex.o                  \
@@ -39,9 +57,15 @@ CLI_OBJS :=                         \
 	$(OBJ_DIR)/fun_prim.o             \
 	$(OBJ_DIR)/fun_pair.o             \
 	$(OBJ_DIR)/fun_base.o
+
+CLI_OBJS :=                         \
+	$(SHARED_OBJS)                    \
+	$(OBJ_DIR)/main.o
 TEST_CLI_OBJS :=                    \
+	$(SHARED_OBJS)                    \
 	$(OBJ_DIR)/tests/main.o           \
 	$(OBJ_DIR)/tests/testing.o        \
+	$(OBJ_DIR)/tests/resources.o      \
 	$(OBJ_DIR)/tests/test_testing.o   \
 	$(OBJ_DIR)/tests/test_all.o       \
 	$(OBJ_DIR)/tests/test_opencurry.o \
@@ -54,32 +78,80 @@ TEST_CLI_OBJS :=                    \
 	$(OBJ_DIR)/tests/test_utf8.o
 
 #------------------------------------------------------------------------------
+# Resource files, to be statically linked with the binary executable.
+
+CLI_RESOURCE_OBJS :=                           \
+	$(RES_OBJ_DIR)/tmp.txt.o
+TEST_CLI_RESOURCE_OBJS :=                      \
+	$(CLI_RESOURCE_OBJS)                         \
+	$(TEST_RES_OBJ_DIR)/static_string_test.txt.o
+
+#------------------------------------------------------------------------------
 # Build files.
 
 CLI_BIN      := $(BUILD_DIR)/$(NAME)
 TEST_CLI_BIN := $(BUILD_DIR)/test-$(NAME)
 
+
 #------------------------------------------------------------------------------
-# Targets.
+# Main targets.
 
+# Build everything: compiler and test suites.
 .PHONY : all
-all : cli test_cli
+all : build_directories cli test_cli
 
 
-.PHONY : clean
-clean :
-	$(RM) $(CLI_OBJS) $(TEST_CLI_OBJS)
+# Remove all build files.
+.PHONY : clean clean-executables clean-code-objs clean-res-objs
+clean : clean-executables clean-code-objs clean-res-objs
+clean-executables :
+	# Remove application binaries.
 	$(RM) $(CLI_BIN)  $(TEST_CLI_BIN)
+clean-code-objs :
+	# Remove application code object files.
+	$(RM) $(CLI_OBJS) $(TEST_CLI_OBJS)
+clean-res-objs :
+	# Remove application code object files.
+	$(RM) $(CLI_RESOURCE_OBJS) $(TEST_CLI_RESOURCE_OBJS)
+
+# Remove all build files and directories.
+.PHONY : cleanall clean-build-directories
+cleanall : clean clean-build-directories
+clean-build-directories :
+	# Remove all build directories.
+	$(RM) $(BUILD_DIRECTORIES)
+
+
+# Create all build directories.
+.PHONY : build_directories
+build_directories : $(BUILD_DIRECTORIES)
+
+$(BUILD_DIRECTORIES) :
+	$(MKDIR_P) $@
+
+#------------------------------------------------------------------------------
+# Executable targets.
 
 .PHONY : cli test_cli
-cli      : $(CLI_BIN)
-test_cli : $(TEST_CLI_BIN)
+cli      : build_directories $(CLI_BIN)
+test_cli : build_directories $(TEST_CLI_BIN)
 
-$(CLI_BIN) : $(CLI_OBJS)
+$(CLI_BIN) : build_directories $(CLI_OBJS) $(CLI_RESOURCE_OBJS)
 	$(CC) $(ALL_CFLAGS) $(ALL_CPPFLAGS) -o $@ $^
 
-$(TEST_CLI_BIN) : $(TEST_CLI_OBJS)
+$(TEST_CLI_BIN) : build_directories $(TEST_CLI_OBJS) $(TEST_CLI_RESOURCE_OBJS)
 	$(CC) $(ALL_CFLAGS) $(ALL_CPPFLAGS) -o $@ $^
 
-$(OBJ_DIR)/%.o : $(SRC_DIR)/%.c
+#------------------------------------------------------------------------------
+# Application code.
+
+$(OBJ_DIR)/%.o : build_directories $(SRC_DIR)/%.c
 	$(CC) $(ALL_CFLAGS) $(ALL_CPPFLAGS) -c -o $@ $<
+
+#------------------------------------------------------------------------------
+# Resource objects.
+
+# http://stackoverflow.com/a/4158997
+
+$(RES_OBJ_DIR)/%.o : $(RES_DIR)/%.res
+	$(LD) --leading-underscore -r -b binary -o $@ $<
