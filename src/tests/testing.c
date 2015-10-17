@@ -183,7 +183,7 @@ void print_test_suite_result(unit_test_context_t *context, unit_test_result_t re
     context->err_buf[context->err_buf_len-1] = 0;
     fprintf
       ( out
-      , "Error: %d tests failed:\n  last failed test #: %d\n  number of tests run: %d\n  can continue testing after last failure?: %s\n\nLast error message:\n%s"
+      , "Error: %d tests failed:\n  last failed test #: %d\n  number of tests run: %d\n  can continue testing after last failure?: %s\n\nLast error message:\n%s\n"
       , (int) (context->num_fail)
       , (int) (context->last_fail)
       , (int) (context->num_test)

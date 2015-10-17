@@ -34,7 +34,7 @@
 #include "util.h"
 
 /* ANSI C implementation of snprintf. */
-int snprintf(char *str, size_t size, const char *format, ...)
+int snprintf_TODO(char *str, size_t size, const char *format, ...)
 {
   /* TODO! */
   return 0;
