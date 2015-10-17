@@ -41,6 +41,15 @@
 #include "../base.h"
 #include "testing.h"
 
-int test_opencurry(unit_test_context_t *context);
+#include "../opencurry.h"
+
+int test_opencurry_cli(int argc, char **argv);
+
+extern unit_test_t opencurry_test;
+extern unit_test_t *opencurry_tests[];
+
+unit_test_result_t test_opencurry_run(unit_test_context_t *context);
+
+/* ---------------------------------------------------------------- */
 
 #endif /* ifndef TESTS_TEST_OPENCURRY_H */

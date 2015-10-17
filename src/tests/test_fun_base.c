@@ -34,6 +34,8 @@
 #include "testing.h"
 #include "test_fun_base.h"
 
+#include "../fun_base.h"
+
 int test_fun_base_cli(int argc, char **argv)
 {
   return run_test_suite(fun_base_test);
@@ -41,7 +43,7 @@ int test_fun_base_cli(int argc, char **argv)
 
 /* ---------------------------------------------------------------- */
 
-/* Resource tests. */
+/* fun_base tests. */
 unit_test_t fun_base_test =
   {  test_fun_base_run
   , "test_fun_base"
@@ -49,7 +51,7 @@ unit_test_t fun_base_test =
   };
 
 /* Array of fun_base tests. */
-unit_test_t resource_tests[] =
+unit_test_t *fun_base_tests[] =
   { NULL
   };
 

@@ -30,6 +30,11 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+/* stddef.h:
+ *   - size_t
+ */
+#include <stddef.h>
+
 #include "../base.h"
 #include "testing.h"
 #include "resources.h"
@@ -37,17 +42,17 @@
 /* ---------------------------------------------------------------- */
 /* resource/tests/static_string_test.txt.res */
 
-unsigned int get_binary_resource_tests_static_string_test_txt_res_size(void)
+size_t get_binary_resource_tests_static_string_test_txt_res_size(void)
 {
-  return (unsigned int)(((char *)(_binary_resource_tests_static_string_test_txt_res_end)) - ((char *)(_binary_resource_tests_static_string_test_txt_res_end)));
+  return (size_t)(((char *)(_binary_resource_tests_static_string_test_txt_res_end)) - ((char *)(_binary_resource_tests_static_string_test_txt_res_end)));
 }
 
 
-const char   *res_tests_static_string_start(void) { return _binary_resource_tmp_txt_res_start; }
-unsigned int  res_tests_static_string_size(void)  { return get_binary_resource_tmp_txt_res_size(); }
-const char   *res_tests_static_string_end(void)   { return _binary_resource_tmp_txt_res_end; }
+const char  *res_tests_static_string_start(void) { return _binary_resource_tmp_txt_res_start; }
+size_t       res_tests_static_string_size(void)  { return get_binary_resource_tmp_txt_res_size(); }
+const char  *res_tests_static_string_end(void)   { return _binary_resource_tmp_txt_res_end; }
 
-void res_tests_static_string_test(const char **start, unsigned int *size, const char **end)
+void res_tests_static_string_test(const char **start, size_t *size, const char **end)
 {
   if(start) *start  = res_tests_static_string_start();
   if(size)  *size   = res_tests_static_string_size();

@@ -34,7 +34,31 @@
 #include "testing.h"
 #include "test_testing.h"
 
-int test_testing(unit_test_context_t *context)
+#include "testing.h"
+
+int test_testing_cli(int argc, char **argv)
 {
-  return 0;
+  return run_test_suite(testing_test);
 }
+
+/* ---------------------------------------------------------------- */
+
+/* testing tests. */
+unit_test_t testing_test =
+  {  test_testing_run
+  , "test_testing"
+  , "testing tests."
+  };
+
+/* Array of testing tests. */
+unit_test_t *testing_tests[] =
+  { NULL
+  };
+
+unit_test_result_t test_testing_run(unit_test_context_t *context)
+{
+  return run_tests(context, testing_tests);
+}
+
+/* ---------------------------------------------------------------- */
+

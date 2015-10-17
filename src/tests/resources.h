@@ -38,6 +38,11 @@
 
 #ifndef TESTS_RESOURCES_H
 #define TESTS_RESOURCES_H
+/* stddef.h:
+ *   - size_t
+ */
+#include <stddef.h>
+
 #include "../base.h"
 #include "testing.h"
 
@@ -46,10 +51,10 @@
 /* resource/tests/static_string_test.txt.res */
 extern char         _binary_resource_tests_static_string_test_txt_res_start[];
 extern char         _binary_resource_tests_static_string_test_txt_res_end[];
-unsigned int        get_binary_resource_tests_static_string_test_txt_res_size(void);
+size_t              get_binary_resource_tests_static_string_test_txt_res_size(void);
 
 const char   *res_tests_static_string_start(void);
-unsigned int  res_tests_static_string_size(void);
+size_t        res_tests_static_string_size(void);
 const char   *res_tests_static_string_end(void);
 void          res_tests_static_string(const char **start, unsigned int *size, const char **end);
 

@@ -34,7 +34,31 @@
 #include "testing.h"
 #include "test_utf8.h"
 
-int test_utf8(unit_test_context_t *context)
+#include "../utf8.h"
+
+int test_utf8_cli(int argc, char **argv)
 {
-  return 0;
+  return run_test_suite(utf8_test);
 }
+
+/* ---------------------------------------------------------------- */
+
+/* utf8 tests. */
+unit_test_t utf8_test =
+  {  test_utf8_run
+  , "test_utf8"
+  , "utf8 tests."
+  };
+
+/* Array of utf8 tests. */
+unit_test_t *utf8_tests[] =
+  { NULL
+  };
+
+unit_test_result_t test_utf8_run(unit_test_context_t *context)
+{
+  return run_tests(context, utf8_tests);
+}
+
+/* ---------------------------------------------------------------- */
+

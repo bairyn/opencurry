@@ -40,12 +40,14 @@
 #include "../base.h"
 #include "testing.h"
 
+#include "resources.h"
+
 #include "../resources.h"
 
 int test_resources_cli(int argc, char **argv);
 
 extern unit_test_t resources_test;
-extern unit_test_t resources_tests[];
+extern unit_test_t *resources_tests[];
 
 unit_test_result_t test_resources_run(unit_test_context_t *context);
 

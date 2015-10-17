@@ -35,9 +35,16 @@
  */
 #include <stddef.h>
 
+/* string.h:
+ *   - strlen
+ */
+#include <string.h>
+
 #include "../base.h"
 #include "testing.h"
 #include "test_resources.h"
+
+#include "resources.h"
 
 #include "../resources.h"
 
@@ -56,9 +63,9 @@ unit_test_t resources_test =
   };
 
 /* Array of resources tests. */
-unit_test_t resource_tests[] =
-  { static_string_len_test
-  , static_string_eq_test
+unit_test_t *resources_tests[] =
+  { &static_string_len_test
+  , &static_string_eq_test
   , NULL
   };
 
@@ -83,8 +90,9 @@ unit_test_t static_string_len_test =
 unit_test_result_t static_string_len_test_run(unit_test_context_t *context)
 {
   return
-    assert_inteq(context, NULL, (int) strlen(static_string),          (int) static_string_len);
-  | assert_inteq(context, NULL, (int) res_tests_static_string_size(), (int) static_string_len);
+    assert_inteq(context, NULL, (int) strlen(static_string),          (int) static_string_len)
+  | assert_inteq(context, NULL, (int) res_tests_static_string_size(), (int) static_string_len)
+  ;
 }
 
 /* ---------------------------------------------------------------- */
@@ -98,5 +106,5 @@ unit_test_t static_string_eq_test =
 unit_test_result_t static_string_eq_test_run(unit_test_context_t *context)
 {
   return
-    assert_streqn(context, NULL, (const char *) res_tests_static_string_start(), (const char *) static_string, (unsigned int) static_string_len);
+    assert_streqn(context, NULL, (const char *) res_tests_static_string_start(), (const char *) static_string, (size_t) res_tests_static_string_size());
 }

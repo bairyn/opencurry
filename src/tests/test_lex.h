@@ -40,6 +40,16 @@
 #include "../base.h"
 #include "testing.h"
 
-int test_lex(unit_test_context_t *context);
+#include "../util.h"
+
+int test_lex_cli(int argc, char **argv);
+
+extern unit_test_t lex_test;
+extern unit_test_t *lex_tests[];
+
+unit_test_result_t test_lex_run(unit_test_context_t *context);
+
+/* ---------------------------------------------------------------- */
+
 
 #endif /* ifndef TESTS_TEST_LEX_H */

@@ -34,6 +34,8 @@
 #include "testing.h"
 #include "test_cli.h"
 
+#include "../cli.h"
+
 int test_cli_cli(int argc, char **argv)
 {
   return run_test_suite(cli_test);
@@ -49,7 +51,7 @@ unit_test_t cli_test =
   };
 
 /* Array of CLI tests. */
-unit_test_t resource_tests[] =
+unit_test_t *cli_tests[] =
   { NULL
   };
 

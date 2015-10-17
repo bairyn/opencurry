@@ -34,7 +34,31 @@
 #include "testing.h"
 #include "test_fun_pair.h"
 
-int test_fun_pair(unit_test_context_t *context)
+#include "../fun_pair.h"
+
+int test_fun_pair_cli(int argc, char **argv)
 {
-  return 0;
+  return run_test_suite(fun_pair_test);
 }
+
+/* ---------------------------------------------------------------- */
+
+/* fun_pair tests. */
+unit_test_t fun_pair_test =
+  {  test_fun_pair_run
+  , "test_fun_pair"
+  , "fun_pair tests."
+  };
+
+/* Array of fun_pair tests. */
+unit_test_t *fun_pair_tests[] =
+  { NULL
+  };
+
+unit_test_result_t test_fun_pair_run(unit_test_context_t *context)
+{
+  return run_tests(context, fun_pair_tests);
+}
+
+/* ---------------------------------------------------------------- */
+

@@ -34,7 +34,31 @@
 #include "testing.h"
 #include "test_fun_prim.h"
 
-int test_fun_prim(unit_test_context_t *context)
+#include "../fun_prim.h"
+
+int test_fun_prim_cli(int argc, char **argv)
 {
-  return 0;
+  return run_test_suite(fun_prim_test);
 }
+
+/* ---------------------------------------------------------------- */
+
+/* fun_prim tests. */
+unit_test_t fun_prim_test =
+  {  test_fun_prim_run
+  , "test_fun_prim"
+  , "fun_prim tests."
+  };
+
+/* Array of fun_prim tests. */
+unit_test_t *fun_prim_tests[] =
+  { NULL
+  };
+
+unit_test_result_t test_fun_prim_run(unit_test_context_t *context)
+{
+  return run_tests(context, fun_prim_tests);
+}
+
+/* ---------------------------------------------------------------- */
+

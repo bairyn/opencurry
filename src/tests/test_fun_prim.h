@@ -41,6 +41,15 @@
 #include "../base.h"
 #include "testing.h"
 
-int test_fun_prim(unit_test_context_t *context);
+#include "../fun_prim.h"
+
+int test_fun_prim_cli(int argc, char **argv);
+
+extern unit_test_t fun_prim_test;
+extern unit_test_t *fun_prim_tests[];
+
+unit_test_result_t test_fun_prim_run(unit_test_context_t *context);
+
+/* ---------------------------------------------------------------- */
 
 #endif /* ifndef TESTS_TEST_FUN_PRIM_H */

@@ -143,8 +143,8 @@ void print_test_prefix(unit_test_context_t *context, unit_test_t test, int id);
 void print_passed_test_result(unit_test_context_t *context, unit_test_t test, int id, unit_test_result_t result);
 void print_failed_test_result(unit_test_context_t *context, unit_test_t test, int id, unit_test_result_t result);
 
-int run_tests_num(unit_test_context_t *context, unit_test_t *tests, size_t num_tests);
-int run_tests(unit_test_context_t *context, unit_test_t *tests);
+int run_tests_num(unit_test_context_t *context, unit_test_t **tests, size_t num_tests);
+int run_tests(unit_test_context_t *context, unit_test_t **tests);
 
 /* ---------------------------------------------------------------- */
 /* Default error messages for assertion failures. */

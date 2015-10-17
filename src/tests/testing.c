@@ -288,7 +288,7 @@ void print_failed_test_result(unit_test_context_t *context, unit_test_t test, in
 }
 
 
-int run_tests_num(unit_test_context_t *context, unit_test_t *tests, size_t num_tests)
+int run_tests_num(unit_test_context_t *context, unit_test_t **tests, size_t num_tests)
 {
   int                i;
   int                abort = 0;
@@ -299,7 +299,7 @@ int run_tests_num(unit_test_context_t *context, unit_test_t *tests, size_t num_t
   {
     int individual_result;
     
-    individual_result = run_test(context, tests[i]);
+    individual_result = run_test(context, *tests[i]);
 
     abort = test_result_need_abort(individual_result) || test_result_need_abort(result);
 
@@ -315,15 +315,15 @@ int run_tests_num(unit_test_context_t *context, unit_test_t *tests, size_t num_t
   return result;
 }
 
-int run_tests(unit_test_context_t *context, unit_test_t *tests)
+int run_tests(unit_test_context_t *context, unit_test_t **tests)
 {
   int                abort = 0;
-  unit_test_t        *test;
+  unit_test_t        **test;
   unit_test_result_t result = UNIT_TEST_PASS;
 
-  for(test = tests; test->run && test->name && test->description; ++test)
+  for(test = tests; *test; ++test)
   {
-    int individual_result = run_test(context, *test);
+    int individual_result = run_test(context, **test);
 
     abort = test_result_need_abort(individual_result) || test_result_need_abort(result);
 

@@ -62,20 +62,20 @@ unit_test_t test_all_test =
   {  test_all_run
   , "test_all"
   , "All tests."
-  }
+  };
 
 /* Array of all test groups. */
-unit_test_t all_tests[] =
-  { test_testing,
-  , test_resources,
-  , test_opencurry,
-  , test_cli,
-  , test_util,
-  , test_fun_prim,
-  , test_fun_pair,
-  , test_fun_base,
-  , test_lex,
-  , test_utf8,
+unit_test_t *all_tests[] =
+  { &testing_test
+  , &resources_test
+  , &opencurry_test
+  , &cli_test
+  , &util_test
+  , &fun_prim_test
+  , &fun_pair_test
+  , &fun_base_test
+  , &lex_test
+  , &utf8_test
   , NULL
   };
 

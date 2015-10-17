@@ -42,9 +42,8 @@
 
 int test_all(int argc, char **argv);
 
-
-extern unit_test_t all_test;
-extern unit_test_t all_tests[];
+extern unit_test_t test_all_test;
+extern unit_test_t *test_all_tests[];
 
 unit_test_result_t test_all_run(unit_test_context_t *context);
 

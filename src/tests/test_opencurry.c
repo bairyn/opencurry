@@ -31,9 +31,34 @@
  */
 
 #include "../base.h"
+#include "testing.h"
 #include "test_opencurry.h"
 
-int test_opencurry(unit_test_context_t *context)
+#include "../opencurry.h"
+
+int test_opencurry_cli(int argc, char **argv)
 {
-  return 0;
+  return run_test_suite(opencurry_test);
 }
+
+/* ---------------------------------------------------------------- */
+
+/* Resource tests. */
+unit_test_t opencurry_test =
+  {  test_opencurry_run
+  , "test_opencurry"
+  , "opencurry tests."
+  };
+
+/* Array of opencurry tests. */
+unit_test_t *opencurry_tests[] =
+  { NULL
+  };
+
+unit_test_result_t test_opencurry_run(unit_test_context_t *context)
+{
+  return run_tests(context, opencurry_tests);
+}
+
+/* ---------------------------------------------------------------- */
+

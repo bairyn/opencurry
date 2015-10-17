@@ -45,7 +45,7 @@
 int test_cli_cli(int argc, char **argv);
 
 extern unit_test_t cli_test;
-extern unit_test_t cli_tests[];
+extern unit_test_t *cli_tests[];
 
 unit_test_result_t test_cli_run(unit_test_context_t *context);
 

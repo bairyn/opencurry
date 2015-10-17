@@ -38,16 +38,21 @@
 
 #ifndef RESOURCES_H
 #define RESOURCES_H
+/* stddef.h:
+ *   - size_t
+ */
+#include <stddef.h>
+
 #include "base.h"
 
 /* resource/tmp.txt.res */
 extern char  _binary_resource_tmp_txt_res_start[];
 extern char  _binary_resource_tmp_txt_res_end[];
-unsigned int get_binary_resource_tmp_txt_res_size(void);
+size_t       get_binary_resource_tmp_txt_res_size(void);
 
 const char   *res_tmp_txt_start(void);
-unsigned int  res_tmp_txt_size(void);
+size_t        res_tmp_txt_size(void);
 const char   *res_tmp_txt_end(void);
-void          res_tmp_txt(const char **start, unsigned int *size, const char **end);
+void          res_tmp_txt(const char **start, size_t *size, const char **end);
 
 #endif /* ifndef RESOURCES_H */

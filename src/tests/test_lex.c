@@ -34,7 +34,31 @@
 #include "testing.h"
 #include "test_lex.h"
 
-int test_lex(unit_test_context_t *context)
+#include "../lex.h"
+
+int test_lex_cli(int argc, char **argv)
 {
-  return 0;
+  return run_test_suite(lex_test);
 }
+
+/* ---------------------------------------------------------------- */
+
+/* lex tests. */
+unit_test_t lex_test =
+  {  test_lex_run
+  , "test_lex"
+  , "lex tests."
+  };
+
+/* Array of lex tests. */
+unit_test_t *lex_tests[] =
+  { NULL
+  };
+
+unit_test_result_t test_lex_run(unit_test_context_t *context)
+{
+  return run_tests(context, lex_tests);
+}
+
+/* ---------------------------------------------------------------- */
+
