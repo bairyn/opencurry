@@ -48,6 +48,7 @@
 #include "test_fun_pair.h"
 #include "test_fun_base.h"
 #include "test_lex.h"
+#include "test_unicode.h"
 #include "test_utf8.h"
 
 int test_all(int argc, char **argv)
@@ -75,6 +76,7 @@ unit_test_t *all_tests[] =
   , &fun_pair_test
   , &fun_base_test
   , &lex_test
+  , &unicode_test
   , &utf8_test
   , NULL
   };

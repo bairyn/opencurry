@@ -40,4 +40,6 @@
 #define UTF8_H
 #include "base.h"
 
+#include "unicode.h"
+
 #endif /* ifndef UTF8_H */

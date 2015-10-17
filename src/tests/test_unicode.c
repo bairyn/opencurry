@@ -1,5 +1,5 @@
 /*
- * opencurry: tests/resources.h
+ * opencurry: tests/test_unicode.c
  *
  * Copyright (c) 2015, Byron James Johnson
  * All rights reserved.
@@ -30,32 +30,35 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-/*
- * tests/resources.h
- * ------
- */
-
-
-#ifndef TESTS_RESOURCES_H
-#define TESTS_RESOURCES_H
-/* stddef.h:
- *   - size_t
- */
-#include <stddef.h>
-
 #include "../base.h"
 #include "testing.h"
+#include "test_unicode.h"
 
-#include "../resources.h"
+#include "../unicode.h"
 
-/* resource/tests/static_string_test.txt.res */
-extern char  _binary_resource_tests_static_string_test_txt_res_start[];
-extern char  _binary_resource_tests_static_string_test_txt_res_end[];
-size_t       get_binary_resource_tests_static_string_test_txt_res_size(void);
+int test_unicode_cli(int argc, char **argv)
+{
+  return run_test_suite(unicode_test);
+}
 
-const char  *res_tests_static_string_start(void);
-size_t       res_tests_static_string_size(void);
-const char  *res_tests_static_string_end(void);
-void         res_tests_static_string(const char **start, unsigned int *size, const char **end);
+/* ---------------------------------------------------------------- */
 
-#endif /* ifndef TESTS_RESOURCES_H */
+/* unicode tests. */
+unit_test_t unicode_test =
+  {  test_unicode_run
+  , "test_unicode"
+  , "unicode tests."
+  };
+
+/* Array of unicode tests. */
+unit_test_t *unicode_tests[] =
+  { NULL
+  };
+
+unit_test_result_t test_unicode_run(unit_test_context_t *context)
+{
+  return run_tests(context, unicode_tests);
+}
+
+/* ---------------------------------------------------------------- */
+

@@ -1,5 +1,5 @@
 /*
- * opencurry: tests/resources.h
+ * opencurry: unicode.h
  *
  * Copyright (c) 2015, Byron James Johnson
  * All rights reserved.
@@ -31,31 +31,15 @@
  */
 
 /*
- * tests/resources.h
+ * unicode.h
  * ------
  */
 
 
-#ifndef TESTS_RESOURCES_H
-#define TESTS_RESOURCES_H
-/* stddef.h:
- *   - size_t
- */
-#include <stddef.h>
+#ifndef UNICODE_H
+#define UNICODE_H
+#include "base.h"
 
-#include "../base.h"
-#include "testing.h"
+typedef int codepoint_t;
 
-#include "../resources.h"
-
-/* resource/tests/static_string_test.txt.res */
-extern char  _binary_resource_tests_static_string_test_txt_res_start[];
-extern char  _binary_resource_tests_static_string_test_txt_res_end[];
-size_t       get_binary_resource_tests_static_string_test_txt_res_size(void);
-
-const char  *res_tests_static_string_start(void);
-size_t       res_tests_static_string_size(void);
-const char  *res_tests_static_string_end(void);
-void         res_tests_static_string(const char **start, unsigned int *size, const char **end);
-
-#endif /* ifndef TESTS_RESOURCES_H */
+#endif /* ifndef UNICODE_H */
