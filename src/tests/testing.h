@@ -79,7 +79,9 @@ struct unit_test_context_s
   /* State. */
   int    group_depth;  /* Group depth. */
 
-  int    num_test;     /* Number of the current test. */
+  int    next_test_id; /* Number of the id of the next test that would be run.   */
+                       /* This is incremented immediately before a test is run.  */
+                       /* The current test id is equal to this minus 1.          */
 
   int    num_pass;     /* Number of tests passed so far. */
   int    num_fail;     /* Number of tests failed so far. */

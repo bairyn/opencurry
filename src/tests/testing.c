@@ -96,15 +96,15 @@ unit_test_context_t *new_unit_test_context( int override_err_buf_len, int overri
   context->free = free_unit_test_context;
 
   /* Set up initial state. */
-  context->group_depth = 0;
+  context->group_depth  = 0;
 
-  context->num_test    = 1;
+  context->next_test_id = 1;
 
-  context->num_pass    = 0;
-  context->num_fail    = 0;
+  context->num_pass     = 0;
+  context->num_fail     = 0;
 
-  context->last_pass   = -1;
-  context->last_fail   = -1;
+  context->last_pass    = -1;
+  context->last_fail    = -1;
 
   /* Return object. */
   return context;
@@ -186,7 +186,7 @@ void print_test_suite_result(unit_test_context_t *context, unit_test_result_t re
       , "Error: %d tests failed:\n  last failed test #: %d\n  number of tests run: %d\n  can continue testing after last failure?: %s\n\nLast error message:\n%s\n"
       , (int) (context->num_fail)
       , (int) (context->last_fail)
-      , (int) (context->num_test)
+      , (int) (context->next_test_id)
       , (result >= 0) ? "yes" : "no (aborted)"
       , (const char *) context->err_buf
       );
@@ -220,7 +220,7 @@ int run_test(unit_test_context_t *context, unit_test_t test)
   int id;
   unit_test_result_t result;
 
-  id = context->num_test++;
+  id = context->next_test_id++;
 
   print_test_prefix(context, test, id);
 
@@ -245,7 +245,7 @@ int run_test(unit_test_context_t *context, unit_test_t test)
 }
 
 
-void print_test_prefix(unit_test_context_t *context, unit_test_t test, int id)
+void print_test_indent(unit_test_context_t *context)
 {
   int i;
 
@@ -253,14 +253,21 @@ void print_test_prefix(unit_test_context_t *context, unit_test_t test, int id)
   {
     fprintf(context->out, "| ");
   }
+}
 
-  fprintf(context->out, "- %s: ", test.name);
+void print_test_prefix(unit_test_context_t *context, unit_test_t test, int id)
+{
+  print_test_indent(context);
+
+  fprintf(context->out, "- %d) %s:\n", id, test.name);
 }
 
 void print_passed_test_result(unit_test_context_t *context, unit_test_t test, int id, unit_test_result_t result)
 {
-  fprintf(context->out, "=)\n");
-  /* fprintf(context->out, "=) - %s\n", test.description); */
+  print_test_indent(context);
+
+  /* fprintf(context->out, "  %*c    =)\n", id, ' '); */
+  fprintf(context->out, "  %*c    =): pass: %s\n", id, ' ', test.description);
 }
 
 void print_failed_test_result(unit_test_context_t *context, unit_test_t test, int id, unit_test_result_t result)
@@ -275,11 +282,11 @@ void print_failed_test_result(unit_test_context_t *context, unit_test_t test, in
 
   fprintf(context->err, "/----------------------------------------------------------------\n");
   fprintf(context->err, "FAILURE:\n");
-  fprintf(context->err, "  test number:      %d:\n", id);
-  fprintf(context->err, "  test name:        %s:\n", test.name);
-  fprintf(context->err, "  test description: %s:\n", test.description);
-  fprintf(context->err, "  test result code: %d:\n", (int) result);
-  fprintf(context->err, "  can continue?:    %s:\n", (can_continue) ? "yes" : "no (aborting!)");
+  fprintf(context->err, "  test number:      %d\n", id);
+  fprintf(context->err, "  test name:        %s\n", test.name);
+  fprintf(context->err, "  test description: %s\n", test.description);
+  fprintf(context->err, "  test result code: %d\n", (int) result);
+  fprintf(context->err, "  can continue?:    %s\n", (can_continue) ? "yes" : "no (aborting!)");
   fprintf(context->err, "\n");
   fprintf(context->err, "Error message:\n");
   fprintf(context->err, "\n");

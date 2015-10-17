@@ -39,3 +39,13 @@ int snprintf_TODO(char *str, size_t size, const char *format, ...)
   /* TODO! */
   return 0;
 }
+
+int max_int(int a, int b)
+{
+  return a >  b ? a : b;
+}
+
+int min_int(int a, int b)
+{
+  return a <= b ? a : b;
+}
