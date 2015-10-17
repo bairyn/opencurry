@@ -159,3 +159,13 @@ $(OBJ_DIR)/%.o : $(SRC_DIR)/%.c | build-directories
 
 $(RES_OBJ_DIR)/%.o : $(RES_DIR)/%.res | build-directories
 	$(LD) -r -b binary -o $@ $<
+
+#------------------------------------------------------------------------------
+# Utility targets.
+
+.PHONY : run-test-all
+run-test-all : run-test-cli
+
+.PHONY : run-test-cli
+run-test-cli : test_cli
+	$(TEST_CLI_BIN)
