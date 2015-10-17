@@ -40,6 +40,6 @@
 #define UNICODE_H
 #include "base.h"
 
-typedef int codepoint_t;
+typedef unsigned int codepoint_t;
 
 #endif /* ifndef UNICODE_H */

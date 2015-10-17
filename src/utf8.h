@@ -33,13 +33,29 @@
 /*
  * utf8.h
  * ------
+ *
+ * http://www.ietf.org/rfc/rfc3629.txt
  */
 
 
 #ifndef UTF8_H
 #define UTF8_H
+/* stddef.h:
+ *   - size_t
+ */
+#include <stddef.h>
+
 #include "base.h"
 
 #include "unicode.h"
+
+/* dest must support at least 4 bytes. */
+size_t utf8_encode_one(char *dest, codepoint_t input);
+
+/* Returns number of encoded bytes. */
+/* If num_encoded is not null, sets number of encoded codepoints. */
+/*size_t utf8_encode(char *dest, size_t dest_max_size, codepoint_t *input, size_t num_chars, size_t *num_encoded);
+
+codepoint_t utf8_decode*/
 
 #endif /* ifndef UTF8_H */
