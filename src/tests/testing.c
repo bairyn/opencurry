@@ -183,7 +183,7 @@ void print_test_suite_result(unit_test_context_t *context, unit_test_result_t re
     context->err_buf[context->err_buf_len-1] = 0;
     fprintf
       ( out
-      , "Error: %d tests failed:\n  last failed test #: %d\n  number of tests run: %d\n  can continue testing after last failure?: %s\n\nLast error message:\n%s\n"
+      , "Error: %d tests failed:\n  last failed test #: %d\n  number of tests run: %d\n  can continue testing after last failure?: %s\n\nLast error message:\n\n%s\n"
       , (int) (context->num_fail)
       , (int) (context->last_fail)
       , (int) (context->next_test_id)
@@ -370,7 +370,7 @@ void assert_inteq_msg(unit_test_context_t *context, char *msg_out, size_t msg_ou
 {
   snprintf
     ( (char *) msg_out, (size_t) msg_out_len
-    , "Assertion failed - integers must be equal, but differ:\n  should be:  %d\n actually is: %d."
+    , "Assertion failed - integers must be equal, but differ:\n   should be: % d\n actually is: % d."
     , (int) model
     , (int) check
     );
@@ -380,7 +380,7 @@ void assert_streqz_msg(unit_test_context_t *context, char *msg_out, size_t msg_o
 {
   snprintf
     ( (char *) msg_out, (size_t) msg_out_len
-    , "Assertion failed - strings must be equal, but differ:\n  should be:  %s\n actually is: %s."
+    , "Assertion failed - strings must be equal, but differ:\n   should be: %s\n actually is: %s."
     , (const char*) model
     , (const char*) check
     );
@@ -401,7 +401,7 @@ void assert_streqn_msg(unit_test_context_t *context, char *msg_out, size_t msg_o
 
     snprintf
       ( (char *) msg_out, (size_t) msg_out_len
-      , "Assertion failed - strings must be equal, but differ:\n  should be:  %s\n actually is: %s."
+      , "Assertion failed - strings must be equal, but differ:\n   should be: %s\n actually is: %s."
       , (const char *) modelz
       , (const char *) checkz
       );
