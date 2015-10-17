@@ -231,14 +231,20 @@ int run_test(unit_test_context_t *context, unit_test_t test)
     ++context->num_pass;
     context->last_pass = id;
 
-    print_passed_test_result(context, test, id, result);
+    if(!context->silence)
+    {
+      print_passed_test_result(context, test, id, result);
+    }
   }
   else
   {
     ++context->num_fail;
     context->last_fail = id;
 
-    print_failed_test_result(context, test, id, result);
+    if(!context->silence)
+    {
+      print_failed_test_result(context, test, id, result);
+    }
   }
 
   return result;
@@ -293,6 +299,11 @@ void print_failed_test_result(unit_test_context_t *context, unit_test_t test, in
   fprintf(context->err, "\n");
   fprintf(context->err, "%s\n", (const char *) context->err_buf);
   fprintf(context->err, "\\----------------------------------------------------------------\n\n");
+
+  if(!can_continue)
+  {
+    context->silence = 1;
+  }
 }
 
 
