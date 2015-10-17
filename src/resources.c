@@ -44,7 +44,7 @@
 
 size_t get_binary_resource_tmp_txt_res_size(void)
 {
-  return (size_t)(((char *)(_binary_resource_tmp_txt_res_start)) - ((char *)(_binary_resource_tmp_txt_res_end)));
+  return (size_t)(((char *)(_binary_resource_tmp_txt_res_end)) - ((char *)(_binary_resource_tmp_txt_res_start)));
 }
 
 

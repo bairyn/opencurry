@@ -44,13 +44,13 @@
 
 size_t get_binary_resource_tests_static_string_test_txt_res_size(void)
 {
-  return (size_t)(((char *)(_binary_resource_tests_static_string_test_txt_res_end)) - ((char *)(_binary_resource_tests_static_string_test_txt_res_end)));
+  return (size_t)(((char *)(_binary_resource_tests_static_string_test_txt_res_end)) - ((char *)(_binary_resource_tests_static_string_test_txt_res_start)));
 }
 
 
-const char  *res_tests_static_string_start(void) { return _binary_resource_tmp_txt_res_start; }
-size_t       res_tests_static_string_size(void)  { return get_binary_resource_tmp_txt_res_size(); }
-const char  *res_tests_static_string_end(void)   { return _binary_resource_tmp_txt_res_end; }
+const char  *res_tests_static_string_start(void) { return _binary_resource_tests_static_string_test_txt_res_start; }
+size_t       res_tests_static_string_size(void)  { return get_binary_resource_tests_static_string_test_txt_res_size(); }
+const char  *res_tests_static_string_end(void)   { return _binary_resource_tests_static_string_test_txt_res_end; }
 
 void res_tests_static_string_test(const char **start, size_t *size, const char **end)
 {
