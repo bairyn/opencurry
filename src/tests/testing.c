@@ -114,7 +114,7 @@ void free_unit_test_context(unit_test_context_t *context)
 {
   if(context)
   {
-    if(!context->free)
+    if(!context->free || context->free == free_unit_test_context)
     {
       if(context->err_buf)
       {
@@ -170,7 +170,7 @@ void print_test_suite_result(unit_test_context_t *context, unit_test_result_t re
 {
   FILE *out;
 
-  if(test_result_failure(result))
+  if(test_result_success(result))
   {
     out = context->out;
 
