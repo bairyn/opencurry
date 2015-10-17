@@ -163,6 +163,11 @@ $(RES_OBJ_DIR)/%.o : $(RES_DIR)/%.res | build-directories
 #------------------------------------------------------------------------------
 # Utility targets.
 
+# Make all, and run all tests.
+.PHONY : all-run-tests
+all-run-tests : all run-test-all
+
+# Run all tests.
 .PHONY : run-test-all
 run-test-all : run-test-cli
 
