@@ -141,6 +141,7 @@ int test_result_need_abort(unit_test_result_t result);
 
 int run_test(unit_test_context_t *context, unit_test_t test);
 
+void print_test_indent(unit_test_context_t *context);
 void print_test_prefix(unit_test_context_t *context, unit_test_t test, int id);
 void print_passed_test_result(unit_test_context_t *context, unit_test_t test, int id, unit_test_result_t result);
 void print_failed_test_result(unit_test_context_t *context, unit_test_t test, int id, unit_test_result_t result);
