@@ -226,25 +226,27 @@ int run_test(unit_test_context_t *context, unit_test_t test)
 
   result = test.run(context);
 
-  if(test_result_success(result))
+  if(!context->aborting)
   {
-    ++context->num_pass;
-    context->last_pass = id;
-
-    if(!context->silence)
+    if(test_result_success(result))
     {
+      ++context->num_pass;
+      context->last_pass = id;
+
       print_passed_test_result(context, test, id, result);
     }
-  }
-  else
-  {
-    ++context->num_fail;
-    context->last_fail = id;
-
-    if(!context->silence)
+    else
     {
+      ++context->num_fail;
+      context->last_fail = id;
+
       print_failed_test_result(context, test, id, result);
     }
+  }
+
+  if(test_result_need_abort(result))
+  {
+    context->aborting = 1;
   }
 
   return result;
@@ -299,11 +301,6 @@ void print_failed_test_result(unit_test_context_t *context, unit_test_t test, in
   fprintf(context->err, "\n");
   fprintf(context->err, "%s\n", (const char *) context->err_buf);
   fprintf(context->err, "\\----------------------------------------------------------------\n\n");
-
-  if(!can_continue)
-  {
-    context->silence = 1;
-  }
 }
 
 

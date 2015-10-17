@@ -77,7 +77,8 @@ struct unit_test_context_s
   void   (*free)(struct unit_test_context_s *self);
 
   /* State. */
-  int    silence;      /* Silence output.  Automatically set on aborting failures. */
+  int    aborting;       /* Silence output, and don't update last_fail and last_pass.
+                            Automatically set on aborting failures. */
 
   int    group_depth;  /* Group depth. */
 
