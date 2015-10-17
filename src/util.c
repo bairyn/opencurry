@@ -33,4 +33,9 @@
 #include "base.h"
 #include "util.h"
 
-void util_placeholder(void) { }
+/* ANSI C implementation of snprintf. */
+int snprintf_TODO(char *str, size_t size, const char *format, ...)
+{
+  /* TODO!! */
+  return 0;
+}

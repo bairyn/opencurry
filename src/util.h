@@ -40,4 +40,11 @@
 #define UTIL_H
 #include "base.h"
 
+/* stddef.h:
+ *   - size_t
+ */
+#include <stddef.h>
+
+int snprintf(char *str, size_t size, const char *format, ...);
+
 #endif /* ifndef UTIL_H */

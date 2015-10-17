@@ -173,8 +173,8 @@ unit_test_result_t assert_success(unit_test_context_t *context);
 unit_test_result_t assert_failure(unit_test_context_t *context, const char *err_msg);
 unit_test_result_t assert_failure_continue(unit_test_context_t *context, const char *err_msg);
 
-unit_test_result_t assert_true(unit_test_context_t *context, const char *err_msg, int check, int model);
-unit_test_result_t assert_true_continue(unit_test_context_t *context, const char *err_msg, int check, int model);
+unit_test_result_t assert_true(unit_test_context_t *context, const char *err_msg, int condition);
+unit_test_result_t assert_true_continue(unit_test_context_t *context, const char *err_msg, int condition);
 
 unit_test_result_t assert_inteq(unit_test_context_t *context, const char *err_msg, int check, int model);
 unit_test_result_t assert_inteq_continue(unit_test_context_t *context, const char *err_msg, int check, int model);
@@ -185,8 +185,8 @@ unit_test_result_t assert_streqn(unit_test_context_t *context, const char *err_m
 unit_test_result_t assert_streqn_continue(unit_test_context_t *context, const char *err_msg, const char *check, const char *model, size_t max_len);
 
 
-unit_test_result_t assert_false(unit_test_context_t *context, const char *err_msg, int check, int model);
-unit_test_result_t assert_false_continue(unit_test_context_t *context, const char *err_msg, int check, int model);
+unit_test_result_t assert_false(unit_test_context_t *context, const char *err_msg, int condition);
+unit_test_result_t assert_false_continue(unit_test_context_t *context, const char *err_msg, int condition);
 
 unit_test_result_t assert_not_inteq(unit_test_context_t *context, const char *err_msg, int check, int model);
 unit_test_result_t assert_not_inteq_continue(unit_test_context_t *context, const char *err_msg, int check, int model);

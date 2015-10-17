@@ -63,6 +63,8 @@
 #include "../base.h"
 #include "testing.h"
 
+#include "../util.h"
+
 /* ---------------------------------------------------------------- */
 /* Types. */
 
@@ -96,7 +98,7 @@ unit_test_context_t *new_unit_test_context( int override_err_buf_len, int overri
   /* Set up initial state. */
   context->group_depth = 0;
 
-  context->num_test    = 0;
+  context->num_test    = 1;
 
   context->num_pass    = 0;
   context->num_fail    = 0;
@@ -112,7 +114,7 @@ void free_unit_test_context(unit_test_context_t *context)
 {
   if(context)
   {
-    if(!context->override_free)
+    if(!context->free)
     {
       if(context->err_buf)
       {
@@ -124,7 +126,7 @@ void free_unit_test_context(unit_test_context_t *context)
     }
     else
     {
-      context->override_free(context);
+      context->free(context);
     }
   }
 }
@@ -138,7 +140,11 @@ int run_test_suite(unit_test_t test)
   unit_test_result_t result;
   unit_test_context_t *context;
 
-  context = new_unit_test_context(0, 0, 0, 0);
+  context =
+    new_unit_test_context
+      ( 0, 0, 0,    0
+      , 0, 0, NULL, NULL
+      );
   {
     result = run_test_suite_with_context(context, test);
   } free_unit_test_context(context);
@@ -180,7 +186,7 @@ void print_test_suite_result(unit_test_context_t *context, unit_test_result_t re
       , "Error: %d tests failed:\n  last failed test #: %d\n  number of tests run: %d\n  can continue testing after last failure?: %s\n\nLast error message:\n%s"
       , (int) (context->num_fail)
       , (int) (context->last_fail)
-      , (int) (context->last_test)
+      , (int) (context->num_test)
       , (result >= 0) ? "yes" : "no (aborted)"
       , (const char *) context->err_buf
       );
@@ -218,19 +224,19 @@ int run_test(unit_test_context_t *context, unit_test_t test)
 
   print_test_prefix(context, test, id);
 
-  result = (*test)(context);
+  result = test.run(context);
 
   if(test_result_success(result))
   {
     ++context->num_pass;
-    context->last_pass = context->last_test;
+    context->last_pass = id;
 
     print_passed_test_result(context, test, id, result);
   }
   else
   {
     ++context->num_fail;
-    context->last_fail = context->last_test;
+    context->last_fail = id;
 
     print_failed_test_result(context, test, id, result);
   }
@@ -243,7 +249,7 @@ void print_test_prefix(unit_test_context_t *context, unit_test_t test, int id)
 {
   int i;
 
-  for(i = 0; i < context->depth; ++i)
+  for(i = 0; i < context->group_depth; ++i)
   {
     fprintf(context->out, "| ");
   }
@@ -278,7 +284,7 @@ void print_failed_test_result(unit_test_context_t *context, unit_test_t test, in
   fprintf(context->err, "Error message:\n");
   fprintf(context->err, "\n");
   fprintf(context->err, "%s\n", (const char *) context->err_buf);
-  fprintf(context->err, "\----------------------------------------------------------------\n\n");
+  fprintf(context->err, "\\----------------------------------------------------------------\n\n");
 }
 
 
@@ -291,11 +297,13 @@ int run_tests_num(unit_test_context_t *context, unit_test_t *tests, size_t num_t
   ++context->group_depth;
   for(i = 0; i < num_tests; ++i)
   {
-    int individual_result = run_test(context, tests[i]);
+    int individual_result;
+    
+    individual_result = run_test(context, tests[i]);
 
     abort = test_result_need_abort(individual_result) || test_result_need_abort(result);
 
-    result |= individial_result;
+    result |= individual_result;
 
     if(abort)
     {
@@ -313,13 +321,13 @@ int run_tests(unit_test_context_t *context, unit_test_t *tests)
   unit_test_t        *test;
   unit_test_result_t result = UNIT_TEST_PASS;
 
-  for(test = tests; *test; ++test)
+  for(test = tests; test->run && test->name && test->description; ++test)
   {
     int individual_result = run_test(context, *test);
 
     abort = test_result_need_abort(individual_result) || test_result_need_abort(result);
 
-    result |= individial_result;
+    result |= individual_result;
 
     if(abort)
     {
@@ -336,14 +344,16 @@ int run_tests(unit_test_context_t *context, unit_test_t *tests)
 void assert_failure_msg(unit_test_context_t *context, char *msg_out, size_t msg_out_len)
 {
   snprintf
-    ( "Assertion failed - no message provided.", (size_t) msg_out_len
+    ( (char *) msg_out, (size_t) msg_out_len
+    , "Assertion failed - no message provided."
     );
 }
 
 void assert_true_msg(unit_test_context_t *context, char *msg_out, size_t msg_out_len, int condition)
 {
   snprintf
-    ( "Boolean assertion failed - the condition be true, but it is false: %d (bool: %d)", (size_t) msg_out_len
+    ( (char *) msg_out, (size_t) msg_out_len
+    , "Boolean assertion failed - the condition be true, but it is false: %d (bool: %d)"
     , (int) condition
     , (int) !!condition
     );
@@ -352,7 +362,8 @@ void assert_true_msg(unit_test_context_t *context, char *msg_out, size_t msg_out
 void assert_inteq_msg(unit_test_context_t *context, char *msg_out, size_t msg_out_len, int check, int model)
 {
   snprintf
-    ("Assertion failed - integers must be equal, but differ:\n  should be:  %d\n actually is: %d.", (size_t) msg_out_len
+    ( (char *) msg_out, (size_t) msg_out_len
+    , "Assertion failed - integers must be equal, but differ:\n  should be:  %d\n actually is: %d."
     , (int) model
     , (int) check
     );
@@ -361,7 +372,8 @@ void assert_inteq_msg(unit_test_context_t *context, char *msg_out, size_t msg_ou
 void assert_streqz_msg(unit_test_context_t *context, char *msg_out, size_t msg_out_len, const char *check, const char *model)
 {
   snprintf
-    ("Assertion failed - strings must be equal, but differ:\n  should be:  %s\n actually is: %s.", (size_t) msg_out_len
+    ( (char *) msg_out, (size_t) msg_out_len
+    , "Assertion failed - strings must be equal, but differ:\n  should be:  %s\n actually is: %s."
     , (const char*) model
     , (const char*) check
     );
@@ -381,7 +393,8 @@ void assert_streqn_msg(unit_test_context_t *context, char *msg_out, size_t msg_o
     modelz[max_len] = 0;
 
     snprintf
-      ("Assertion failed - strings must be equal, but differ:\n  should be:  %s\n actually is: %s.", (size_t) msg_out_len
+      ( (char *) msg_out, (size_t) msg_out_len
+      , "Assertion failed - strings must be equal, but differ:\n  should be:  %s\n actually is: %s."
       , (const char *) modelz
       , (const char *) checkz
       );
@@ -392,7 +405,8 @@ void assert_streqn_msg(unit_test_context_t *context, char *msg_out, size_t msg_o
 void assert_false_msg(unit_test_context_t *context, char *msg_out, size_t msg_out_len, int condition)
 {
   snprintf
-    ( "Inverse boolean assertion failed - the condition be false, but it is true: %d (bool: %d)", (size_t) msg_out_len
+    ( (char *) msg_out, (size_t) msg_out_len
+    , "Inverse boolean assertion failed - the condition be false, but it is true: %d (bool: %d)"
     , (int) condition
     , (int) !!condition
     );
@@ -401,7 +415,8 @@ void assert_false_msg(unit_test_context_t *context, char *msg_out, size_t msg_ou
 void assert_not_inteq_msg(unit_test_context_t *context, char *msg_out, size_t msg_out_len, int check, int model)
 {
   snprintf
-    ("Inverse assertion failed - integers must differ, but they are the same:\n  should differ from:  %d\n  but still is:        %d.", (size_t) msg_out_len
+    ( (char *) msg_out, (size_t) msg_out_len
+    , "Inverse assertion failed - integers must differ, but they are the same:\n  should differ from:  %d\n  but still is:        %d."
     , (int) model
     , (int) check
     );
@@ -410,7 +425,8 @@ void assert_not_inteq_msg(unit_test_context_t *context, char *msg_out, size_t ms
 void assert_not_streqz_msg(unit_test_context_t *context, char *msg_out, size_t msg_out_len, const char *check, const char *model)
 {
   snprintf
-    ("Inverse assertion failed - strings must duffer, but they are the same:\n  should differ from:  %s\n  but still is:        %s.", (size_t) msg_out_len
+    ( (char *) msg_out, (size_t) msg_out_len
+    , "Inverse assertion failed - strings must duffer, but they are the same:\n  should differ from:  %s\n  but still is:        %s."
     , (const char*) model
     , (const char*) check
     );
@@ -430,7 +446,8 @@ void assert_not_streqn_msg(unit_test_context_t *context, char *msg_out, size_t m
     modelz[max_len] = 0;
 
     snprintf
-      ("Inverse assertion failed - strings must duffer, but they are the same:\n  should differ from:  %s\n  but still is:        %s.", (size_t) msg_out_len
+      ( (char *) msg_out, (size_t) msg_out_len
+      , "Inverse assertion failed - strings must duffer, but they are the same:\n  should differ from:  %s\n  but still is:        %s."
       , (const char *) modelz
       , (const char *) checkz
       );
@@ -450,7 +467,7 @@ unit_test_result_t assert_failure(unit_test_context_t *context, const char *err_
   if(err_msg)
     strncpy(context->err_buf, err_msg, context->err_buf_len);
   else
-    assert_failure_msg(context, context->err_buf, context>err_buf_len);
+    assert_failure_msg(context, context->err_buf, context->err_buf_len);
 
   return UNIT_TEST_FAIL;
 }
@@ -460,7 +477,7 @@ unit_test_result_t assert_failure_continue(unit_test_context_t *context, const c
   if(err_msg)
     strncpy(context->err_buf, err_msg, context->err_buf_len);
   else
-    assert_failure_msg(context, context->err_buf, context>err_buf_len);
+    assert_failure_msg(context, context->err_buf, context->err_buf_len);
 
   return UNIT_TEST_FAIL_CONTINUE;
 }
@@ -478,7 +495,7 @@ unit_test_result_t assert_true(unit_test_context_t *context, const char *err_msg
     if(err_msg)
       strncpy(context->err_buf, err_msg, context->err_buf_len);
     else
-      assert_true_msg(context, context->err_buf, context>err_buf_len, condition);
+      assert_true_msg(context, context->err_buf, context->err_buf_len, condition);
 
     return UNIT_TEST_FAIL;
   }
@@ -495,7 +512,7 @@ unit_test_result_t assert_true_continue(unit_test_context_t *context, const char
     if(err_msg)
       strncpy(context->err_buf, err_msg, context->err_buf_len);
     else
-      assert_true_msg(context, context->err_buf, context>err_buf_len, condition);
+      assert_true_msg(context, context->err_buf, context->err_buf_len, condition);
 
     return UNIT_TEST_FAIL_CONTINUE;
   }
@@ -512,7 +529,7 @@ unit_test_result_t assert_inteq(unit_test_context_t *context, const char *err_ms
     if(err_msg)
       strncpy(context->err_buf, err_msg, context->err_buf_len);
     else
-      assert_inteq_msg(context, context->err_buf, context>err_buf_len, check, model);
+      assert_inteq_msg(context, context->err_buf, context->err_buf_len, check, model);
 
     return UNIT_TEST_FAIL;
   }
@@ -529,7 +546,7 @@ unit_test_result_t assert_inteq_continue(unit_test_context_t *context, const cha
     if(err_msg)
       strncpy(context->err_buf, err_msg, context->err_buf_len);
     else
-      assert_inteq_msg(context, context->err_buf, context>err_buf_len, check, model);
+      assert_inteq_msg(context, context->err_buf, context->err_buf_len, check, model);
 
     return UNIT_TEST_FAIL_CONTINUE;
   }
@@ -546,7 +563,7 @@ unit_test_result_t assert_streqz(unit_test_context_t *context, const char *err_m
     if(err_msg)
       strncpy(context->err_buf, err_msg, context->err_buf_len);
     else
-      assert_streqz_msg(context, context->err_buf, context>err_buf_len, check, model);
+      assert_streqz_msg(context, context->err_buf, context->err_buf_len, check, model);
 
     return UNIT_TEST_FAIL;
   }
@@ -563,7 +580,7 @@ unit_test_result_t assert_streqz_continue(unit_test_context_t *context, const ch
     if(err_msg)
       strncpy(context->err_buf, err_msg, context->err_buf_len);
     else
-      assert_streqz_msg(context, context->err_buf, context>err_buf_len, check, model);
+      assert_streqz_msg(context, context->err_buf, context->err_buf_len, check, model);
 
     return UNIT_TEST_FAIL_CONTINUE;
   }
@@ -571,7 +588,7 @@ unit_test_result_t assert_streqz_continue(unit_test_context_t *context, const ch
 
 unit_test_result_t assert_streqn(unit_test_context_t *context, const char *err_msg, const char *check, const char *model, size_t max_len)
 {
-  if(strcmp(check, model, max_len) == 0)
+  if(strncmp(check, model, max_len) == 0)
   {
     return UNIT_TEST_PASS;
   }
@@ -580,7 +597,7 @@ unit_test_result_t assert_streqn(unit_test_context_t *context, const char *err_m
     if(err_msg)
       strncpy(context->err_buf, err_msg, context->err_buf_len);
     else
-      assert_streqn_msg(context, context->err_buf, context>err_buf_len, check, model, max_len);
+      assert_streqn_msg(context, context->err_buf, context->err_buf_len, check, model, max_len);
 
     return UNIT_TEST_FAIL;
   }
@@ -588,7 +605,7 @@ unit_test_result_t assert_streqn(unit_test_context_t *context, const char *err_m
 
 unit_test_result_t assert_streqn_continue(unit_test_context_t *context, const char *err_msg, const char *check, const char *model, size_t max_len)
 {
-  if(strcmp(check, model, max_len) == 0)
+  if(strncmp(check, model, max_len) == 0)
   {
     return UNIT_TEST_PASS;
   }
@@ -597,7 +614,7 @@ unit_test_result_t assert_streqn_continue(unit_test_context_t *context, const ch
     if(err_msg)
       strncpy(context->err_buf, err_msg, context->err_buf_len);
     else
-      assert_streqn_msg(context, context->err_buf, context>err_buf_len, check, model, max_len);
+      assert_streqn_msg(context, context->err_buf, context->err_buf_len, check, model, max_len);
 
     return UNIT_TEST_FAIL_CONTINUE;
   }
@@ -616,7 +633,7 @@ unit_test_result_t assert_false(unit_test_context_t *context, const char *err_ms
     if(err_msg)
       strncpy(context->err_buf, err_msg, context->err_buf_len);
     else
-      assert_false_msg(context, context->err_buf, context>err_buf_len, condition);
+      assert_false_msg(context, context->err_buf, context->err_buf_len, condition);
 
     return UNIT_TEST_FAIL;
   }
@@ -633,7 +650,7 @@ unit_test_result_t assert_false_continue(unit_test_context_t *context, const cha
     if(err_msg)
       strncpy(context->err_buf, err_msg, context->err_buf_len);
     else
-      assert_false_msg(context, context->err_buf, context>err_buf_len, condition);
+      assert_false_msg(context, context->err_buf, context->err_buf_len, condition);
 
     return UNIT_TEST_FAIL_CONTINUE;
   }
@@ -650,7 +667,7 @@ unit_test_result_t assert_not_inteq(unit_test_context_t *context, const char *er
     if(err_msg)
       strncpy(context->err_buf, err_msg, context->err_buf_len);
     else
-      assert_not_inteq_msg(context, context->err_buf, context>err_buf_len, check, model);
+      assert_not_inteq_msg(context, context->err_buf, context->err_buf_len, check, model);
 
     return UNIT_TEST_FAIL;
   }
@@ -667,7 +684,7 @@ unit_test_result_t assert_not_inteq_continue(unit_test_context_t *context, const
     if(err_msg)
       strncpy(context->err_buf, err_msg, context->err_buf_len);
     else
-      assert_not_inteq_msg(context, context->err_buf, context>err_buf_len, check, model);
+      assert_not_inteq_msg(context, context->err_buf, context->err_buf_len, check, model);
 
     return UNIT_TEST_FAIL_CONTINUE;
   }
@@ -684,7 +701,7 @@ unit_test_result_t assert_not_streqz(unit_test_context_t *context, const char *e
     if(err_msg)
       strncpy(context->err_buf, err_msg, context->err_buf_len);
     else
-      assert_not_streqz_msg(context, context->err_buf, context>err_buf_len, check, model);
+      assert_not_streqz_msg(context, context->err_buf, context->err_buf_len, check, model);
 
     return UNIT_TEST_FAIL;
   }
@@ -701,7 +718,7 @@ unit_test_result_t assert_not_streqz_continue(unit_test_context_t *context, cons
     if(err_msg)
       strncpy(context->err_buf, err_msg, context->err_buf_len);
     else
-      assert_not_streqz_msg(context, context->err_buf, context>err_buf_len, check, model);
+      assert_not_streqz_msg(context, context->err_buf, context->err_buf_len, check, model);
 
     return UNIT_TEST_FAIL_CONTINUE;
   }
@@ -709,7 +726,7 @@ unit_test_result_t assert_not_streqz_continue(unit_test_context_t *context, cons
 
 unit_test_result_t assert_not_streqn(unit_test_context_t *context, const char *err_msg, const char *check, const char *model, size_t max_len)
 {
-  if(!(strcmp(check, model, max_len) == 0))
+  if(!(strncmp(check, model, max_len) == 0))
   {
     return UNIT_TEST_PASS;
   }
@@ -718,7 +735,7 @@ unit_test_result_t assert_not_streqn(unit_test_context_t *context, const char *e
     if(err_msg)
       strncpy(context->err_buf, err_msg, context->err_buf_len);
     else
-      assert_not_streqn_msg(context, context->err_buf, context>err_buf_len, check, model, max_len);
+      assert_not_streqn_msg(context, context->err_buf, context->err_buf_len, check, model, max_len);
 
     return UNIT_TEST_FAIL;
   }
@@ -726,7 +743,7 @@ unit_test_result_t assert_not_streqn(unit_test_context_t *context, const char *e
 
 unit_test_result_t assert_not_streqn_continue(unit_test_context_t *context, const char *err_msg, const char *check, const char *model, size_t max_len)
 {
-  if(!(strcmp(check, model, max_len) == 0))
+  if(!(strncmp(check, model, max_len) == 0))
   {
     return UNIT_TEST_PASS;
   }
@@ -735,7 +752,7 @@ unit_test_result_t assert_not_streqn_continue(unit_test_context_t *context, cons
     if(err_msg)
       strncpy(context->err_buf, err_msg, context->err_buf_len);
     else
-      assert_not_streqn_msg(context, context->err_buf, context>err_buf_len, check, model, max_len);
+      assert_not_streqn_msg(context, context->err_buf, context->err_buf_len, check, model, max_len);
 
     return UNIT_TEST_FAIL_CONTINUE;
   }
