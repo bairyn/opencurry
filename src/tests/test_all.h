@@ -40,9 +40,12 @@
 #include "../base.h"
 #include "testing.h"
 
-/* Array of all test groups. */
+int test_all(int argc, char **argv);
+
+
+extern unit_test_t all_test;
 extern unit_test_t all_tests[];
 
-int test_all(int argc, char **argv);
+unit_test_result_t test_all_run(unit_test_context_t *context);
 
 #endif /* ifndef TESTS_TEST_ALL_H */

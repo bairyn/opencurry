@@ -34,7 +34,29 @@
 #include "testing.h"
 #include "test_cli.h"
 
-int test_cli(unit_test_context_t *context)
+int test_cli_cli(int argc, char **argv)
 {
-  return 0;
+  return run_test_suite(cli_test);
 }
+
+/* ---------------------------------------------------------------- */
+
+/* Resource tests. */
+unit_test_t cli_test =
+  {  test_cli_run
+  , "test_cli"
+  , "CLI tests."
+  };
+
+/* Array of CLI tests. */
+unit_test_t resource_tests[] =
+  { NULL
+  };
+
+unit_test_result_t test_cli_run(unit_test_context_t *context)
+{
+  return run_tests(context, cli_tests);
+}
+
+/* ---------------------------------------------------------------- */
+

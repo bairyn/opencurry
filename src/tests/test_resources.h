@@ -42,11 +42,19 @@
 
 #include "../resources.h"
 
-extern unit_test_t resource_tests[];
+int test_resources_cli(int argc, char **argv);
 
-int test_resources(unit_test_context_t *context);
+extern unit_test_t resources_test;
+extern unit_test_t resources_tests[];
 
-int static_string_eq_test(unit_test_context_t *context);
-int static_string_len_test(unit_test_context_t *context);
+unit_test_result_t test_resources_run(unit_test_context_t *context);
+
+/* ---------------------------------------------------------------- */
+
+unit_test_t static_string_len_test;
+unit_test_result_t static_string_len_test_run(unit_test_context_t *context);
+
+unit_test_t static_string_eq_test;
+unit_test_result_t static_string_eq_test_run(unit_test_context_t *context);
 
 #endif /* ifndef TESTS_TEST_RESOURCES_H */

@@ -41,15 +41,30 @@
 
 #include "../resources.h"
 
+int test_resources_cli(int argc, char **argv)
+{
+  return run_test_suite(resources_test);
+}
+
+/* ---------------------------------------------------------------- */
+
+/* Resource tests. */
+unit_test_t resources_test =
+  {  test_resources_run
+  , "test_resources"
+  , "Resource tests."
+  };
+
+/* Array of resources tests. */
 unit_test_t resource_tests[] =
   { static_string_len_test
   , static_string_eq_test
   , NULL
   };
 
-int test_resources(unit_test_context_t *context)
+unit_test_result_t test_resources_run(unit_test_context_t *context)
 {
-  return run_tests(context, resource_tests);
+  return run_tests(context, resources_tests);
 }
 
 /* ---------------------------------------------------------------- */
@@ -57,38 +72,31 @@ int test_resources(unit_test_context_t *context)
 static const char   *static_string     = "This string is checked for equality.\n";
 static unsigned int  static_string_len = 37;
 
-int static_string_len_test(unit_test_context_t *context)
+/* ---------------------------------------------------------------- */
+
+unit_test_t static_string_len_test =
+  {  static_string_len_test_run
+  , "static_string_len_test"
+  , "Ensure the resource data has the correct size."
+  };
+
+unit_test_result_t static_string_len_test_run(unit_test_context_t *context)
 {
   return
-    assert_inteq(context, NULL, 
-  return assert_inteq(context, NULL, (int) );
+    assert_inteq(context, NULL, (int) strlen(static_string),          (int) static_string_len);
+  | assert_inteq(context, NULL, (int) res_tests_static_string_size(), (int) static_string_len);
 }
 
-int static_string_eq_test(unit_test_context_t *context)
+/* ---------------------------------------------------------------- */
+
+unit_test_t static_string_eq_test =
+  {  static_string_eq_test_run
+  , "static_string_eq_test"
+  , "Ensure resource data is equal to the correct string."
+  };
+
+unit_test_result_t static_string_eq_test_run(unit_test_context_t *context)
 {
-  return assert_streq(context, NULL, );
-}
-
-
-int assert_inteq(unit_test_context_t *context, const char *err_msg, int check, int model);
-
-int assert_streqz(unit_test_context_t *context, const char *err_msg, const char *check, const char *model);
-int assert_streqn(unit_test_context_t *context, const char *err_msg, const char *check, const char *model, unsigned int len);
-int assert_streqnz(unit_test_context_t *context, const char *err_msg, const char *check, const char *model, unsigned int max_len);
-
-
-const char   *res_tests_static_string_start(void);
-unsigned int  res_tests_static_string_size(void);
-const char   *res_tests_static_string_end(void);
-void          res_tests_static_string(const char **start, unsigned int *size, const char **end);
-  return 1;
-int assert_success(unit_test_context_t *context);
-int assert_failure(unit_test_context_t *context, const char *err_msg);
-int assert_failure_continue(unit_test_context_t *context, const char *err_msg);
-int assert_streq(unit_test_context_t *context, const char *err_msg, const char *check, const char *model);
-}
-
-int static_string_len_test(unit_test_context_t *context)
-{
-  return 1;
+  return
+    assert_streqn(context, NULL, (const char *) res_tests_static_string_start(), (const char *) static_string, (unsigned int) static_string_len);
 }

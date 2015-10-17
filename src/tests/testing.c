@@ -32,6 +32,7 @@
 
 
 /* stddef.h:
+ *   - size_t
  *   - NULL
  */
 #include <stddef.h>
@@ -40,6 +41,7 @@
  * stdio.h:
  *  - FILE
  *  - fprintf
+ *  - snprintf
  *  - stdout
  *  - stderr
  */
@@ -52,36 +54,57 @@
  */
 #include <stdlib.h>
 
+/* string.h:
+ *   - strcmp
+ *   - strncmp
+ */
+#include <string.h>
+
 #include "../base.h"
 #include "testing.h"
 
 /* ---------------------------------------------------------------- */
 /* Types. */
 
-unit_test_context_t *new_unit_test_context(int override_err_buf_len, int override_seed, int err_buf_len, int seed)
+unit_test_context_t *new_unit_test_context( int override_err_buf_len, int override_seed, int  override_out, int  override_err
+                                          , int err_buf_len,          int seed,          FILE *out,         FILE *err)
 {
   unit_test_context_t *context;
 
-  if(!override_err_buf_len) err_buf_len = DEFAULT_TEST_ERR_BUF_SIZE;
-  if(!override_seed)        seed        = DEFAULT_TEST_SEED;
+  /* Set default arguments. */
+  if(!override_err_buf_len) err_buf_len = DEFAULT_TEST_CONTEXT_ERR_BUF_SIZE;
+  if(!override_seed)        seed        = DEFAULT_TEST_CONTEXT_SEED;
+  if(!override_out)         out         = DEFAULT_TEST_CONTEXT_OUT;
+  if(!override_err)         err         = DEFAULT_TEST_CONTEXT_ERR;
 
-
+  /* Allocate memory. */
   context = calloc(1, sizeof(unit_test_context_t));
 
+
+  /* Set up environment. */
   context->err_buf_len = err_buf_len;
-  context->err_buf = malloc(context->err_buf_len);
-  context->err_buf[0] = 0;
+  context->err_buf     = malloc(context->err_buf_len);
+  context->err_buf[0]  = 0;
 
   context->seed = seed;
 
+  context->out  = out;
+  context->err  = err;
 
-  context->num_pass = 0;
-  context->num_fail = 0;
+  context->free = free_unit_test_context;
 
-  context->last_test = -1;
-  context->last_pass = -1;
-  context->last_fail = -1;
+  /* Set up initial state. */
+  context->group_depth = 0;
 
+  context->num_test    = 0;
+
+  context->num_pass    = 0;
+  context->num_fail    = 0;
+
+  context->last_pass   = -1;
+  context->last_fail   = -1;
+
+  /* Return object. */
   return context;
 }
 
@@ -89,65 +112,67 @@ void free_unit_test_context(unit_test_context_t *context)
 {
   if(context)
   {
-    if(context->err_buf)
+    if(!context->override_free)
     {
-      free(context->err_buf);
-      context->err_buf = (char *) NULL;
-    }
+      if(context->err_buf)
+      {
+        free(context->err_buf);
+        context->err_buf = (char *) NULL;
+      }
 
-    free(context);
+      free(context);
+    }
+    else
+    {
+      context->override_free(context);
+    }
   }
 }
 
 /* ---------------------------------------------------------------- */
 /* Running tests. */
 
-char default_test_group_name[] = DEFAULT_TEST_GROUP_NAME;
-char default_test_name[]       = DEFAULT_TEST_NAME;
-
-/* Run a test suite. */
-int run_test_suite_num(const char *test_group_name, unit_test_t *tests, unsigned int num_tests)
+/* Run a unit test independently, with a new unit test context state. */
+int run_test_suite(unit_test_t test)
 {
-  int result;
+  unit_test_result_t result;
   unit_test_context_t *context;
 
   context = new_unit_test_context(0, 0, 0, 0);
   {
-    result = run_tests_num(context, tests, num_tests, test_group_name);
-    print_test_suite_result(context, result);
+    result = run_test_suite_with_context(context, test);
   } free_unit_test_context(context);
 
   return result;
 }
 
-/* Run a test suite. */
-int run_test_suite(const char *test_group_name, unit_test_t *tests)
+/* Run a unit test independently, with its unit test context already provided.
+ *
+ * The context is not freed upon exit!
+ */
+int run_test_suite_with_context(unit_test_context_t *context, unit_test_t test)
 {
-  int result;
-  unit_test_context_t *context;
+  unit_test_result_t result;
 
-  context = new_unit_test_context(0, 0, 0, 0);
-  {
-    result = run_tests(context, tests, test_group_name);
-    print_test_suite_result(context, result);
-  } free_unit_test_context(context);
+  result = run_test(context, test);
+  print_test_suite_result(context, result);
 
   return result;
 }
 
-void print_test_suite_result(const char *test_group_name, unit_test_context_t *context, int result)
+void print_test_suite_result(unit_test_context_t *context, unit_test_result_t result)
 {
   FILE *out;
 
-  if(!(result == 0))
+  if(test_result_failure(result))
   {
-    out = stdout;
+    out = context->out;
 
     fprintf(out, "pass: %d/%d test groups.\n", (int) (context->num_pass), (int) (context->num_pass));
   }
   else
   {
-    out = stderr;
+    out = context->err;
 
     context->err_buf[context->err_buf_len-1] = 0;
     fprintf
@@ -162,117 +187,556 @@ void print_test_suite_result(const char *test_group_name, unit_test_context_t *c
   }
 }
 
-int run_tests(const char *test_group_name, unit_test_context_t *context, unit_test_t *tests)
+
+int test_result_success(unit_test_result_t result)
 {
-  int result = 0;
-
-  unit_test_t *test;
-
-  for(test = tests; *test; ++test)
-  {
-    result |= run_test(context, *test);
-
-    if(!(result >= 0))
-    {
-      break;
-    }
-  }
-
-  return result;
+  return result == 0;
 }
 
-int run_tests_num(const char *test_group_name, unit_test_context_t *context, unit_test_t *tests, unsigned int num_tests)
+int test_result_failure(unit_test_result_t result)
 {
-  int i;
-  int result = 0;
-
-  for(i = 0; i < num_tests; ++i)
-  {
-    result |= run_test(context, tests[i]);
-
-    if(!(result >= 0))
-    {
-      break;
-    }
-  }
-
-  return result;
+  return result != 0;
 }
 
-int run_test(unit_test_context_t *context, unit_test_t test, const char *test_name)
+int test_result_can_continue(unit_test_result_t result)
 {
-  int result;
+  return result >= 0;
+}
+
+int test_result_need_abort(unit_test_result_t result)
+{
+  return result <  0;
+}
+
+
+int run_test(unit_test_context_t *context, unit_test_t test)
+{
+  int id;
+  unit_test_result_t result;
+
+  id = context->num_test++;
+
+  print_test_prefix(context, test, id);
 
   result = (*test)(context);
-  ++context->last_test;
 
-  if(result == 0)
+  if(test_result_success(result))
   {
     ++context->num_pass;
     context->last_pass = context->last_test;
 
-    print_passed_test_result(context, result);
+    print_passed_test_result(context, test, id, result);
   }
   else
   {
     ++context->num_fail;
     context->last_fail = context->last_test;
 
-    print_failed_test_result(context, result);
+    print_failed_test_result(context, test, id, result);
   }
 
   return result;
 }
 
-void print_passed_test_result(unit_test_context_t *context, int result, const char *test_name)
+
+void print_test_prefix(unit_test_context_t *context, unit_test_t test, int id)
 {
-}
+  int i;
 
-void print_failed_test_result(unit_test_context_t *context, int result, const char *test_name)
-{
-  context->err_buf[context->err_buf_len-1] = 0;
-  fprintf(stderr, "FAIL: test group #%d failed:\n%s", (int) (context->last_fail), (const char *) context->err_buf);
-}
-
-
-
-
-
-/*
-int run_tests(unit_test_t *tests)
-{
-  int result;
-
-  unit_test_t *test;
-  unit_test_context_t *context;
-
-  context = new_unit_test_context(0, 0, 0, 0);
+  for(i = 0; i < context->depth; ++i)
   {
-    for(test = tests; *test; ++test)
+    fprintf(context->out, "| ");
+  }
+
+  fprintf(context->out, "- %s: ", test.name);
+}
+
+void print_passed_test_result(unit_test_context_t *context, unit_test_t test, int id, unit_test_result_t result)
+{
+  fprintf(context->out, "=)\n");
+  /* fprintf(context->out, "=) - %s\n", test.description); */
+}
+
+void print_failed_test_result(unit_test_context_t *context, unit_test_t test, int id, unit_test_result_t result)
+{
+  int can_continue;
+
+  context->err_buf[context->err_buf_len-1] = 0;
+
+  can_continue = test_result_can_continue(result);
+
+  fprintf(context->out, "FAILURE - %s\n", test.description);
+
+  fprintf(context->err, "/----------------------------------------------------------------\n");
+  fprintf(context->err, "FAILURE:\n");
+  fprintf(context->err, "  test number:      %d:\n", id);
+  fprintf(context->err, "  test name:        %s:\n", test.name);
+  fprintf(context->err, "  test description: %s:\n", test.description);
+  fprintf(context->err, "  test result code: %d:\n", (int) result);
+  fprintf(context->err, "  can continue?:    %s:\n", (can_continue) ? "yes" : "no (aborting!)");
+  fprintf(context->err, "\n");
+  fprintf(context->err, "Error message:\n");
+  fprintf(context->err, "\n");
+  fprintf(context->err, "%s\n", (const char *) context->err_buf);
+  fprintf(context->err, "\----------------------------------------------------------------\n\n");
+}
+
+
+int run_tests_num(unit_test_context_t *context, unit_test_t *tests, size_t num_tests)
+{
+  int                i;
+  int                abort = 0;
+  unit_test_result_t result = UNIT_TEST_PASS;
+
+  ++context->group_depth;
+  for(i = 0; i < num_tests; ++i)
+  {
+    int individual_result = run_test(context, tests[i]);
+
+    abort = test_result_need_abort(individual_result) || test_result_need_abort(result);
+
+    result |= individial_result;
+
+    if(abort)
     {
-      result |= (*test)(err_buf, TEST_ERR_BUF_SIZE);
-
-      if(!(result == 0))
-      {
-        err_buf[TEST_ERR_BUF_SIZE-1] = 0;
-        break;
-
-        fprintf(stderr, "FAIL: test group #%d failed:\n%s", (int) (test-tests), (const char *) err_buf);
-        return result;
-      }
+      break;
     }
-
-    if(!(result == 0))
-    {
-      fprintf(stderr, "FAIL: test group #%d failed:\n%s", (int) (test-tests), (const char *) err_buf);
-    }
-    else
-    {
-      fprintf(stdout, "pass: %d/%d test groups.\n", (int) (test-tests), (int) (test-tests));
-    }
-
-  } free_unit_test_context(context);
+  }
+  --context->group_depth;
 
   return result;
 }
-*/
+
+int run_tests(unit_test_context_t *context, unit_test_t *tests)
+{
+  int                abort = 0;
+  unit_test_t        *test;
+  unit_test_result_t result = UNIT_TEST_PASS;
+
+  for(test = tests; *test; ++test)
+  {
+    int individual_result = run_test(context, *test);
+
+    abort = test_result_need_abort(individual_result) || test_result_need_abort(result);
+
+    result |= individial_result;
+
+    if(abort)
+    {
+      break;
+    }
+  }
+
+  return result;
+}
+
+/* ---------------------------------------------------------------- */
+/* Default error messages for assertion failures. */
+
+void assert_failure_msg(unit_test_context_t *context, char *msg_out, size_t msg_out_len)
+{
+  snprintf
+    ( "Assertion failed - no message provided.", (size_t) msg_out_len
+    );
+}
+
+void assert_true_msg(unit_test_context_t *context, char *msg_out, size_t msg_out_len, int condition)
+{
+  snprintf
+    ( "Boolean assertion failed - the condition be true, but it is false: %d (bool: %d)", (size_t) msg_out_len
+    , (int) condition
+    , (int) !!condition
+    );
+}
+
+void assert_inteq_msg(unit_test_context_t *context, char *msg_out, size_t msg_out_len, int check, int model)
+{
+  snprintf
+    ("Assertion failed - integers must be equal, but differ:\n  should be:  %d\n actually is: %d.", (size_t) msg_out_len
+    , (int) model
+    , (int) check
+    );
+}
+
+void assert_streqz_msg(unit_test_context_t *context, char *msg_out, size_t msg_out_len, const char *check, const char *model)
+{
+  snprintf
+    ("Assertion failed - strings must be equal, but differ:\n  should be:  %s\n actually is: %s.", (size_t) msg_out_len
+    , (const char*) model
+    , (const char*) check
+    );
+}
+
+void assert_streqn_msg(unit_test_context_t *context, char *msg_out, size_t msg_out_len, const char *check, const char *model, size_t max_len)
+{
+  char *checkz, *modelz;
+
+  checkz = malloc(2 * (max_len+1));
+  {
+    modelz = checkz + (max_len+1);
+
+    strncpy(checkz, check, max_len);
+    strncpy(modelz, model, max_len);
+    checkz[max_len] = 0;
+    modelz[max_len] = 0;
+
+    snprintf
+      ("Assertion failed - strings must be equal, but differ:\n  should be:  %s\n actually is: %s.", (size_t) msg_out_len
+      , (const char *) modelz
+      , (const char *) checkz
+      );
+  } free(checkz);
+}
+
+
+void assert_false_msg(unit_test_context_t *context, char *msg_out, size_t msg_out_len, int condition)
+{
+  snprintf
+    ( "Inverse boolean assertion failed - the condition be false, but it is true: %d (bool: %d)", (size_t) msg_out_len
+    , (int) condition
+    , (int) !!condition
+    );
+}
+
+void assert_not_inteq_msg(unit_test_context_t *context, char *msg_out, size_t msg_out_len, int check, int model)
+{
+  snprintf
+    ("Inverse assertion failed - integers must differ, but they are the same:\n  should differ from:  %d\n  but still is:        %d.", (size_t) msg_out_len
+    , (int) model
+    , (int) check
+    );
+}
+
+void assert_not_streqz_msg(unit_test_context_t *context, char *msg_out, size_t msg_out_len, const char *check, const char *model)
+{
+  snprintf
+    ("Inverse assertion failed - strings must duffer, but they are the same:\n  should differ from:  %s\n  but still is:        %s.", (size_t) msg_out_len
+    , (const char*) model
+    , (const char*) check
+    );
+}
+
+void assert_not_streqn_msg(unit_test_context_t *context, char *msg_out, size_t msg_out_len, const char *check, const char *model, size_t max_len)
+{
+  char *checkz, *modelz;
+
+  checkz = malloc(2 * (max_len+1));
+  {
+    modelz = checkz + (max_len+1);
+
+    strncpy(checkz, check, max_len);
+    strncpy(modelz, model, max_len);
+    checkz[max_len] = 0;
+    modelz[max_len] = 0;
+
+    snprintf
+      ("Inverse assertion failed - strings must duffer, but they are the same:\n  should differ from:  %s\n  but still is:        %s.", (size_t) msg_out_len
+      , (const char *) modelz
+      , (const char *) checkz
+      );
+  } free(checkz);
+}
+
+/* ---------------------------------------------------------------- */
+/* Assertions with default error messages; non-zero on failure. */
+
+unit_test_result_t assert_success(unit_test_context_t *context)
+{
+  return UNIT_TEST_PASS;
+}
+
+unit_test_result_t assert_failure(unit_test_context_t *context, const char *err_msg)
+{
+  if(err_msg)
+    strncpy(context->err_buf, err_msg, context->err_buf_len);
+  else
+    assert_failure_msg(context, context->err_buf, context>err_buf_len);
+
+  return UNIT_TEST_FAIL;
+}
+
+unit_test_result_t assert_failure_continue(unit_test_context_t *context, const char *err_msg)
+{
+  if(err_msg)
+    strncpy(context->err_buf, err_msg, context->err_buf_len);
+  else
+    assert_failure_msg(context, context->err_buf, context>err_buf_len);
+
+  return UNIT_TEST_FAIL_CONTINUE;
+}
+
+/* ---------------------------------------------------------------- */
+
+unit_test_result_t assert_true(unit_test_context_t *context, const char *err_msg, int condition)
+{
+  if(condition)
+  {
+    return UNIT_TEST_PASS;
+  }
+  else
+  {
+    if(err_msg)
+      strncpy(context->err_buf, err_msg, context->err_buf_len);
+    else
+      assert_true_msg(context, context->err_buf, context>err_buf_len, condition);
+
+    return UNIT_TEST_FAIL;
+  }
+}
+
+unit_test_result_t assert_true_continue(unit_test_context_t *context, const char *err_msg, int condition)
+{
+  if(condition)
+  {
+    return UNIT_TEST_PASS;
+  }
+  else
+  {
+    if(err_msg)
+      strncpy(context->err_buf, err_msg, context->err_buf_len);
+    else
+      assert_true_msg(context, context->err_buf, context>err_buf_len, condition);
+
+    return UNIT_TEST_FAIL_CONTINUE;
+  }
+}
+
+unit_test_result_t assert_inteq(unit_test_context_t *context, const char *err_msg, int check, int model)
+{
+  if(check == model)
+  {
+    return UNIT_TEST_PASS;
+  }
+  else
+  {
+    if(err_msg)
+      strncpy(context->err_buf, err_msg, context->err_buf_len);
+    else
+      assert_inteq_msg(context, context->err_buf, context>err_buf_len, check, model);
+
+    return UNIT_TEST_FAIL;
+  }
+}
+
+unit_test_result_t assert_inteq_continue(unit_test_context_t *context, const char *err_msg, int check, int model)
+{
+  if(check == model)
+  {
+    return UNIT_TEST_PASS;
+  }
+  else
+  {
+    if(err_msg)
+      strncpy(context->err_buf, err_msg, context->err_buf_len);
+    else
+      assert_inteq_msg(context, context->err_buf, context>err_buf_len, check, model);
+
+    return UNIT_TEST_FAIL_CONTINUE;
+  }
+}
+
+unit_test_result_t assert_streqz(unit_test_context_t *context, const char *err_msg, const char *check, const char *model)
+{
+  if(strcmp(check, model) == 0)
+  {
+    return UNIT_TEST_PASS;
+  }
+  else
+  {
+    if(err_msg)
+      strncpy(context->err_buf, err_msg, context->err_buf_len);
+    else
+      assert_streqz_msg(context, context->err_buf, context>err_buf_len, check, model);
+
+    return UNIT_TEST_FAIL;
+  }
+}
+
+unit_test_result_t assert_streqz_continue(unit_test_context_t *context, const char *err_msg, const char *check, const char *model)
+{
+  if(strcmp(check, model) == 0)
+  {
+    return UNIT_TEST_PASS;
+  }
+  else
+  {
+    if(err_msg)
+      strncpy(context->err_buf, err_msg, context->err_buf_len);
+    else
+      assert_streqz_msg(context, context->err_buf, context>err_buf_len, check, model);
+
+    return UNIT_TEST_FAIL_CONTINUE;
+  }
+}
+
+unit_test_result_t assert_streqn(unit_test_context_t *context, const char *err_msg, const char *check, const char *model, size_t max_len)
+{
+  if(strcmp(check, model, max_len) == 0)
+  {
+    return UNIT_TEST_PASS;
+  }
+  else
+  {
+    if(err_msg)
+      strncpy(context->err_buf, err_msg, context->err_buf_len);
+    else
+      assert_streqn_msg(context, context->err_buf, context>err_buf_len, check, model, max_len);
+
+    return UNIT_TEST_FAIL;
+  }
+}
+
+unit_test_result_t assert_streqn_continue(unit_test_context_t *context, const char *err_msg, const char *check, const char *model, size_t max_len)
+{
+  if(strcmp(check, model, max_len) == 0)
+  {
+    return UNIT_TEST_PASS;
+  }
+  else
+  {
+    if(err_msg)
+      strncpy(context->err_buf, err_msg, context->err_buf_len);
+    else
+      assert_streqn_msg(context, context->err_buf, context>err_buf_len, check, model, max_len);
+
+    return UNIT_TEST_FAIL_CONTINUE;
+  }
+}
+
+/* ---------------------------------------------------------------- */
+
+unit_test_result_t assert_false(unit_test_context_t *context, const char *err_msg, int condition)
+{
+  if(!(condition))
+  {
+    return UNIT_TEST_PASS;
+  }
+  else
+  {
+    if(err_msg)
+      strncpy(context->err_buf, err_msg, context->err_buf_len);
+    else
+      assert_false_msg(context, context->err_buf, context>err_buf_len, condition);
+
+    return UNIT_TEST_FAIL;
+  }
+}
+
+unit_test_result_t assert_false_continue(unit_test_context_t *context, const char *err_msg, int condition)
+{
+  if(!(condition))
+  {
+    return UNIT_TEST_PASS;
+  }
+  else
+  {
+    if(err_msg)
+      strncpy(context->err_buf, err_msg, context->err_buf_len);
+    else
+      assert_false_msg(context, context->err_buf, context>err_buf_len, condition);
+
+    return UNIT_TEST_FAIL_CONTINUE;
+  }
+}
+
+unit_test_result_t assert_not_inteq(unit_test_context_t *context, const char *err_msg, int check, int model)
+{
+  if(!(check == model))
+  {
+    return UNIT_TEST_PASS;
+  }
+  else
+  {
+    if(err_msg)
+      strncpy(context->err_buf, err_msg, context->err_buf_len);
+    else
+      assert_not_inteq_msg(context, context->err_buf, context>err_buf_len, check, model);
+
+    return UNIT_TEST_FAIL;
+  }
+}
+
+unit_test_result_t assert_not_inteq_continue(unit_test_context_t *context, const char *err_msg, int check, int model)
+{
+  if(!(check == model))
+  {
+    return UNIT_TEST_PASS;
+  }
+  else
+  {
+    if(err_msg)
+      strncpy(context->err_buf, err_msg, context->err_buf_len);
+    else
+      assert_not_inteq_msg(context, context->err_buf, context>err_buf_len, check, model);
+
+    return UNIT_TEST_FAIL_CONTINUE;
+  }
+}
+
+unit_test_result_t assert_not_streqz(unit_test_context_t *context, const char *err_msg, const char *check, const char *model)
+{
+  if(!(strcmp(check, model) == 0))
+  {
+    return UNIT_TEST_PASS;
+  }
+  else
+  {
+    if(err_msg)
+      strncpy(context->err_buf, err_msg, context->err_buf_len);
+    else
+      assert_not_streqz_msg(context, context->err_buf, context>err_buf_len, check, model);
+
+    return UNIT_TEST_FAIL;
+  }
+}
+
+unit_test_result_t assert_not_streqz_continue(unit_test_context_t *context, const char *err_msg, const char *check, const char *model)
+{
+  if(!(strcmp(check, model) == 0))
+  {
+    return UNIT_TEST_PASS;
+  }
+  else
+  {
+    if(err_msg)
+      strncpy(context->err_buf, err_msg, context->err_buf_len);
+    else
+      assert_not_streqz_msg(context, context->err_buf, context>err_buf_len, check, model);
+
+    return UNIT_TEST_FAIL_CONTINUE;
+  }
+}
+
+unit_test_result_t assert_not_streqn(unit_test_context_t *context, const char *err_msg, const char *check, const char *model, size_t max_len)
+{
+  if(!(strcmp(check, model, max_len) == 0))
+  {
+    return UNIT_TEST_PASS;
+  }
+  else
+  {
+    if(err_msg)
+      strncpy(context->err_buf, err_msg, context->err_buf_len);
+    else
+      assert_not_streqn_msg(context, context->err_buf, context>err_buf_len, check, model, max_len);
+
+    return UNIT_TEST_FAIL;
+  }
+}
+
+unit_test_result_t assert_not_streqn_continue(unit_test_context_t *context, const char *err_msg, const char *check, const char *model, size_t max_len)
+{
+  if(!(strcmp(check, model, max_len) == 0))
+  {
+    return UNIT_TEST_PASS;
+  }
+  else
+  {
+    if(err_msg)
+      strncpy(context->err_buf, err_msg, context->err_buf_len);
+    else
+      assert_not_streqn_msg(context, context->err_buf, context>err_buf_len, check, model, max_len);
+
+    return UNIT_TEST_FAIL_CONTINUE;
+  }
+}

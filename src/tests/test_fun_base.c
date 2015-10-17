@@ -34,7 +34,29 @@
 #include "testing.h"
 #include "test_fun_base.h"
 
-int test_fun_base(unit_test_context_t *context)
+int test_fun_base_cli(int argc, char **argv)
 {
-  return 0;
+  return run_test_suite(fun_base_test);
 }
+
+/* ---------------------------------------------------------------- */
+
+/* Resource tests. */
+unit_test_t fun_base_test =
+  {  test_fun_base_run
+  , "test_fun_base"
+  , "fun_base tests."
+  };
+
+/* Array of fun_base tests. */
+unit_test_t resource_tests[] =
+  { NULL
+  };
+
+unit_test_result_t test_fun_base_run(unit_test_context_t *context)
+{
+  return run_tests(context, fun_base_tests);
+}
+
+/* ---------------------------------------------------------------- */
+

@@ -41,6 +41,17 @@
 #include "../base.h"
 #include "testing.h"
 
-int test_fun_base(unit_test_context_t *context);
+#include "../fun_base.h"
+
+int test_fun_base_cli(int argc, char **argv);
+
+extern unit_test_t fun_base_test;
+extern unit_test_t fun_base_tests[];
+
+unit_test_result_t test_fun_base_run(unit_test_context_t *context);
+
+/* ---------------------------------------------------------------- */
+
+#endif /* ifndef TESTS_TEST_CLI_H */
 
 #endif /* ifndef TESTS_TEST_FUN_BASE_H */

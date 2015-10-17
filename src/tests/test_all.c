@@ -50,21 +50,36 @@
 #include "test_lex.h"
 #include "test_utf8.h"
 
+int test_all(int argc, char **argv)
+{
+  return run_test_suite(test_all_test);
+}
+
+/* ---------------------------------------------------------------- */
+
+/* Root unit test. */
+unit_test_t test_all_test =
+  {  test_all_run
+  , "test_all"
+  , "All tests."
+  }
+
+/* Array of all test groups. */
 unit_test_t all_tests[] =
-  { test_testing
-  , test_resources
-  , test_opencurry
-  , test_cli
-  , test_util
-  , test_fun_prim
-  , test_fun_pair
-  , test_fun_base
-  , test_lex
-  , test_utf8
+  { test_testing,
+  , test_resources,
+  , test_opencurry,
+  , test_cli,
+  , test_util,
+  , test_fun_prim,
+  , test_fun_pair,
+  , test_fun_base,
+  , test_lex,
+  , test_utf8,
   , NULL
   };
 
-int test_all(int argc, char **argv)
+unit_test_result_t test_all_run(unit_test_context_t *context)
 {
-  return run_test_suite(all_tests);
+  return run_tests(context, all_tests);
 }
