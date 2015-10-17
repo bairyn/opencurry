@@ -274,8 +274,8 @@ void print_passed_test_result(unit_test_context_t *context, unit_test_t test, in
 {
   print_test_indent(context);
 
-  /* fprintf(context->out, "  %*c    =)\n", id, ' '); */
-  fprintf(context->out, "  %*c    =): pass: %s\n", id, ' ', test.description);
+  /* fprintf(context->out, "  %*.s   =)\n", 2 * context->group_depth, ""); */
+  fprintf(context->out, "  %*.s   =): pass: %s\n", 2 * context->group_depth, "", test.description);
 }
 
 void print_failed_test_result(unit_test_context_t *context, unit_test_t test, int id, unit_test_result_t result)
@@ -287,7 +287,7 @@ void print_failed_test_result(unit_test_context_t *context, unit_test_t test, in
   can_continue = test_result_can_continue(result);
 
   print_test_indent(context);
-  fprintf(context->out, "  %*c    FAILURE - %s\n", id, ' ', test.description);
+  fprintf(context->out, "  %*.s   FAILURE - %s\n", 2 * context->group_depth, "", test.description);
 
   fprintf(context->err, "/----------------------------------------------------------------\n");
   fprintf(context->err, "FAILURE:\n");
