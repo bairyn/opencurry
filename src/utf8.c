@@ -42,6 +42,11 @@
  */
 #include <stddef.h>
 
+/* string.h:
+ *   - memcpy
+ */
+#include <string.h>
+
 #include "base.h"
 #include "utf8.h"
 
@@ -188,4 +193,55 @@ size_t utf8_encode_one(unsigned char *dest, codepoint_t input)
 
     return 4;
   }
+}
+
+/*
+ * utf8_encode:
+ *
+ * Encode a chunk of codepoints, invoking utf8_encode_one in succession.
+ *
+ * Input:
+ *             unsigned char *dest:            Buffer to write to 
+ *             size_t         dest_max_size:   Maximum number of bytes to write.
+ *             codepoint_t   *input:           Array of codepoints to encode.
+ *             size_t         num_chars:       Maximum number of input codepoints to write.
+ *
+ * Output:
+ *  (optional) size_t        *out_num_encoded: Number of encoded codepoints.
+ *
+ * Return:
+ *             size_t:                         Number of bytes written.
+ */
+/* Returns number of encoded bytes. */
+/* If num_encoded is not null, sets number of encoded codepoints. */
+size_t utf8_encode(unsigned char *dest, size_t dest_max_size, codepoint_t *input, size_t num_chars, size_t *out_num_encoded)
+{
+  size_t codepoints_written;
+
+  size_t buf_written        = 0;
+
+  for (codepoints_written = 0; codepoints_written < num_chars; ++codepoints_written)
+  {
+    size_t        width;
+    unsigned char buf[4];
+
+    width = utf8_encode_one(buf, input[codepoints_written]);
+
+    if(buf_written + width > dest_max_size)
+    {
+      break;
+    }
+    else
+    {
+      memcpy((void *) (dest + buf_written), (const void *) buf, (size_t) width);
+      buf_written += width;
+    }
+  }
+
+  if (out_num_encoded)
+  {
+    *out_num_encoded = codepoints_written;
+  }
+
+  return buf_written;
 }
