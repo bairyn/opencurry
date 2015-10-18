@@ -119,7 +119,7 @@ unit_test_result_t utf8_encode_one_equalities_test_run(unit_test_context_t *cont
 
     result |=
       assert_memeq (context, NULL, (void *)       buf,       (void *)       pair->buf,       4);
-    if (test_result_need_abort(result)) break;
+    /* if (test_result_need_abort(result)) break; */
 
     result |=
       assert_streqn(context, NULL, (const char *) buf,       (const char *) pair->buf,       4);
@@ -222,7 +222,7 @@ unit_test_result_t utf8_encode_equalities_test_run(unit_test_context_t *context)
 
   result |=
     assert_memeq (context, NULL, (void *)       buf,         (void *)       utf8_codepoints_encoding,      utf8_codepoints_encoding_size);
-  if (test_result_need_abort(result)) return result;
+  /* if (test_result_need_abort(result)) return result; */
 
   result |=
     assert_streqn(context, NULL, (const char *) buf,         (const char *) utf8_codepoints_encoding,      utf8_codepoints_encoding_size);
