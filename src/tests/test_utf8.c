@@ -60,6 +60,17 @@ unit_test_t *utf8_tests[] =
   , &utf8_encode_equalities_test
   , &utf8_encode_edge_cases_test
 
+
+  , &utf8_decode_one_equalities_test
+  /* TODO
+  , &utf8_decode_one_edge_cases_test
+  */
+
+  /* TODO
+  , &utf8_decode_equalities_test
+  , &utf8_decode_edge_cases_test
+  */
+
   , NULL
   };
 
@@ -269,3 +280,67 @@ unit_test_result_t utf8_encode_edge_cases_test_run(unit_test_context_t *context)
 
   return result;
 }
+
+/* ---------------------------------------------------------------- */
+/* utf8_decode_one tests                                            */
+/* ---------------------------------------------------------------- */
+
+unit_test_t utf8_decode_one_equalities_test =
+  {  utf8_decode_one_equalities_test_run 
+  , "utf8_decode_one_equalities_test"
+  , "utf8_decode_one: equality tests."
+  };
+
+unit_test_result_t utf8_decode_one_equalities_test_run(unit_test_context_t *context)
+{
+  int i;
+  unit_test_result_t result;
+
+  const struct utf8_codepoint_pair_s *pair;
+
+  result = assert_success(context);
+
+  for(i = 0; i < utf8_codepoint_pairs_size; ++i)
+  {
+    codepoint_t                codepoint;
+    size_t                     width;
+    size_t                     bytes_consumed;
+    utf8_decode_error_status_t error_status;
+
+    pair = &utf8_codepoint_pairs[i];
+
+    codepoint = utf8_decode_one(pair->buf, pair->utf8_size, utf8_default_decode_error_behaviour, &width, &bytes_consumed, &error_status);
+
+    result |=
+      assert_inteq (context, NULL, (int) codepoint,      (int) pair->codepoint);
+    if (test_result_need_abort(result)) break;
+
+    result |=
+      assert_inteq (context, NULL, (int) width,          (int) pair->utf8_size);
+    if (test_result_need_abort(result)) break;
+
+    result |=
+      assert_inteq (context, NULL, (int) bytes_consumed, (int) pair->utf8_size);
+    if (test_result_need_abort(result)) break;
+
+    result |=
+      assert_inteq (context, NULL, (int) error_status,   (int) utf8_decode_no_error);
+    if (test_result_need_abort(result)) break;
+  }
+
+  return result;
+}
+
+/* ---------------------------------------------------------------- */
+
+/* TODO
+unit_test_t utf8_decode_one_edge_cases_test =
+  {  utf8_decode_one_edge_cases_test_run 
+  , "utf8_decode_one_edge_cases_test"
+  , "utf8_decode_one: edge cases tests."
+  };
+
+unit_test_result_t utf8_decode_one_edge_cases_test_run(unit_test_context_t *context)
+{
+}
+*/
