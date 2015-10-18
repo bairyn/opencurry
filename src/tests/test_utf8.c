@@ -55,6 +55,7 @@ unit_test_t utf8_test =
 /* Array of utf8 tests. */
 unit_test_t *utf8_tests[] =
   { &utf8_encode_one_equalities_test
+  , &utf8_encode_one_edge_cases_test
   , NULL
   };
 
@@ -118,6 +119,36 @@ unit_test_result_t utf8_encode_one_equalities_test_run(unit_test_context_t *cont
       assert_streqn(context, NULL, (const char *) buf,       (const char *) pair->buf,       4);
     if (test_result_need_abort(result)) break;
   }
+
+  return result;
+}
+
+/* ---------------------------------------------------------------- */
+
+unit_test_t utf8_encode_one_edge_cases_test =
+  {  utf8_encode_one_edge_cases_test_run 
+  , "utf8_encode_one_edge_cases_test"
+  , "utf8_encode_one: edge cases tests."
+  };
+
+unit_test_result_t utf8_encode_one_edge_cases_test_run(unit_test_context_t *context)
+{
+  size_t                              utf8_size;
+  unit_test_result_t                  result;
+
+  const struct utf8_codepoint_pair_s *pair;
+
+
+  result = assert_success(context);
+
+  pair = &utf8_codepoint_pairs[0];
+
+  /* Test NULL arguments for optional parameters. */
+  utf8_size = utf8_encode_one(NULL, pair->codepoint);
+
+  result |=
+    assert_inteq (context, NULL, (int)          utf8_size, (int)          pair->utf8_size);
+  if (test_result_need_abort(result)) return result;
 
   return result;
 }
