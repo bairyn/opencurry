@@ -488,7 +488,7 @@ void assert_memeq_msg(unit_test_context_t *context, char *msg_out, size_t msg_ou
     if (cols_printed >= width)
     {
       /* Start a new line. */
-      cols_printed = hexdump_indent_spaces;
+      cols_printed = hexdump_indent_spaces + byte_print_width;
 
       written += snprintf
         ( (char *) (msg_out + written), (size_t) (msg_out_len + written)
@@ -545,7 +545,7 @@ void assert_memeq_msg(unit_test_context_t *context, char *msg_out, size_t msg_ou
     if (cols_printed >= width)
     {
       /* Start a new line. */
-      cols_printed = hexdump_indent_spaces;
+      cols_printed = hexdump_indent_spaces + byte_print_width;
 
       written += snprintf
         ( (char *) (msg_out + written), (size_t) (msg_out_len + written)
@@ -683,7 +683,7 @@ void assert_not_memeq_msg(unit_test_context_t *context, char *msg_out, size_t ms
     if (cols_printed >= width)
     {
       /* Start a new line. */
-      cols_printed = hexdump_indent_spaces;
+      cols_printed = hexdump_indent_spaces + byte_print_width;
 
       written += snprintf
         ( (char *) (msg_out + written), (size_t) (msg_out_len + written)
@@ -747,7 +747,7 @@ void assert_not_memeq_msg(unit_test_context_t *context, char *msg_out, size_t ms
     if (cols_printed >= width)
     {
       /* Start a new line. */
-      cols_printed = hexdump_indent_spaces;
+      cols_printed = hexdump_indent_spaces + byte_print_width;
 
       written += snprintf
         ( (char *) (msg_out + written), (size_t) (msg_out_len + written)
