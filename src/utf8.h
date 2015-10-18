@@ -57,6 +57,136 @@ size_t utf8_encode_one(unsigned char *dest, codepoint_t input);
 size_t utf8_encode(unsigned char *dest, size_t dest_max_size, const codepoint_t *input, size_t num_chars, size_t *out_num_encoded);
 
 
-codepoint_t utf8_decode_one(unsigned char *input, size_t input_max_size);
+/* https://en.wikipedia.org/wiki/UTF-8#Invalid_byte_sequences */
+enum utf8_decode_error_status 
+{
+  /* No error. */
+  utf8_decode_no_error                                        = 0,
+
+
+  /* Premature end of input.
+   *
+   * More bytes need to be read to decode a codepoint, but input_max_size
+   * indicates the buffer ends prematurely.
+   *
+   * The least significant bit can be checked to match both of these errors:
+   *  - utf8_decode_insufficient_continuation_bytes_eof
+   *  - utf8_decode_insufficient_continuation_bytes_sufficient_input
+   *
+   * (Note that if both conditions are satisfied, this value trumps; for
+   * example, in case 3 continuation bytes are expected, 2 extra bytes are
+   * available for input, but only the first of the 2 extra bytes is a
+   * continuation byte.)
+   */
+  utf8_decode_insufficient_continuation_bytes_eof             = (1 << 1) | 1,
+
+  /*
+  utf8_decode_red_invalid_byte                                = (2 << 1),
+  */
+
+  /* Too many continuation bytes. */
+  utf8_decode_unexpected_continuation_byte                    = (3 << 1),
+
+  /* Not enough continuation bytes, but more input is available.
+   *
+   * The least significant bit can be checked to match both of these errors:
+   *  - utf8_decode_insufficient_continuation_bytes_eof
+   *  - utf8_decode_insufficient_continuation_bytes_sufficient_input
+   */
+  utf8_decode_insufficient_continuation_bytes_sufficient_input = (4 << 1) | 1,
+
+  /* The input represents a codepoint that could, thus must, be encoded with
+   * fewer bytes.
+   *
+   * Without enforcing absense of overlong encoding of codepoints, then a
+   * codepoint could be encoded with *at least* n bytes, rather than only with
+   * n bytes.
+   *
+   * (On pain of security risks, utf8_decode_error_behaviour_t supports
+   * potentially-unsafe values that cause decoding algorithms to return the
+   * corresponding codepoint for overencoded codepoints anyway, but in this
+   * case the error status is still set.
+   */
+  utf8_decode_overlong_encoding                               = (5 << 1),
+
+  /* A 4-byte sequences decodes to a value greater than 0x10FFFF. */
+  utf8_decode_out_of_bounds                                   = (6 << 1)
+};
+typedef enum utf8_decode_error_status utf8_decode_error_status_t;
+
+/* What to do when decoding fails on invalid input.
+ *
+ * Values of this type determine which codepoint to return.
+ *
+ * If the width exceeds the available bytes of input, the bytes beyond what is
+ * available from the input are treated as 0x00.
+ *
+ * Values are from https://en.wikipedia.org/wiki/UTF-8#Invalid_byte_sequences .
+ */
+#define UTF8_DECODE_ERROR_PO_BIT (1 << 1)
+enum utf8_decode_error_behaviour
+{
+  /*
+   * Tell decoding algorithms to select the default behaviour,
+   * DEFAULT_UTF8_DECODE_ERRROR_BEHAVIOUR.
+   */
+  utf8_default_decode_error_behaviour           = 0,
+
+  /* U+FFFD, width of 1.
+   *
+   * Replace the first invalid byte with the replacement character U+FFFD, and
+   * continue parsing at the next byte.
+   *
+   * This is the default behaviour.
+   */
+  utf8_replacement_character_uFFFD_behaviour    = (1 << 2),
+
+  /* U+DCxx, width of 1.
+   *
+   * This setting causes decoding procedures to replace the first byte of
+   * invalid input with the invalid codepoint U+DCxx, where xx is the value of
+   * the byte.
+   *
+   * (Alternatively, U+DC80 + 0x7F & value of byte.  Also, U+DC00 + first byte.)
+   *
+   * Since the first bit of an invalid byte must be 1, the resulting, invalid
+   * codepoint will be in the range U+DC80 - U+DCFF.
+   */
+  utf8_invalid_character_uDCxx_behaviour        = (2 << 2),
+
+  /* U+00xx, width of 1.
+   *
+   * Directly interpret the first byte of invalid input as the code point.
+   */
+  utf8_codepoint_u00xx_behaviour                = (3 << 2),
+
+
+  /* Don't sanitize overencoded UTF-8 codepoints (security risk!):
+   *
+   * utf8_%_behaviour -> utf8_po_%_behaviour
+   *
+   * By padding with leading 0 bits, an arbitrarily large number of extra bytes
+   * can be added to a UTF-8 encoding to represent the same codepoint.
+   *
+   * Normally UTF-8 forbids this, but these error behaviour values will cause
+   * decoding algorithms to return the encoded codepoint anyway (while still
+   * setting the appropriate error status.)
+   *
+   * (For example, if a codepoint requires at least 2 encoded bytes to be
+   * encoded in UTF-8, then the codepoint can be encoded with not just 2 bytes,
+   * but with any number of bytes greater than 2 also (2, 3, 7, 42, 1024,
+   * etc.))
+   */
+  utf8_po_replacement_character_uFFFD_behaviour = (1 << 2) | UTF8_DECODE_ERROR_PO_BIT,
+  utf8_po_invalid_character_uDCxx_behaviour     = (2 << 2) | UTF8_DECODE_ERROR_PO_BIT,
+  utf8_po_codepoint_u00xx_behaviour             = (3 << 2) | UTF8_DECODE_ERROR_PO_BIT
+};
+typedef enum utf8_decode_error_behaviour utf8_decode_error_behaviour_t;
+#define DEFAULT_UTF8_DECODE_ERRROR_BEHAVIOUR            utf8_replacement_character_uFFFD_behaviour
+#define UTF8_DECODE_ERROR_INSUFFICIENT_INPUT_BYTE_VALUE 0x00
+
+codepoint_t utf8_decode_one(unsigned char *input, size_t input_max_size, utf8_decode_error_behaviour_t error_behaviour, size_t *out_width, size_t *out_bytes_consumed, utf8_decode_error_status_t *out_error_status);
+
+codepoint_t utf8_decode_one_erroneous(unsigned char *input, size_t input_max_size, utf8_decode_error_behaviour_t error_behaviour, size_t *out_width, size_t *out_bytes_consumed);
 
 #endif /* ifndef UTF8_H */

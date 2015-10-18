@@ -40,6 +40,7 @@
 #define UNICODE_H
 #include "base.h"
 
+/* Type for codepoints, representing unicode characters. */
 typedef unsigned int codepoint_t;
 
 #endif /* ifndef UNICODE_H */

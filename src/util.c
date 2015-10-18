@@ -30,6 +30,13 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+/*
+ * stdio.h:
+ *  - fprintf
+ *  - stderr
+ */
+#include <stdio.h>
+
 #include "base.h"
 #include "util.h"
 
@@ -48,4 +55,10 @@ int max_int(int a, int b)
 int min_int(int a, int b)
 {
   return a <= b ? a : b;
+}
+
+/* Should be called only from locations that shouldn't be reached. */
+void report_bug(const char *msg)
+{
+  fprintf(stderr, "**BUG: %s\n", msg);
 }

@@ -50,4 +50,7 @@ int snprintf(char *str, size_t size, const char *format, ...);
 int max_int(int a, int b);
 int min_int(int a, int b);
 
+/* Should be called only from locations that shouldn't be reached. */
+void report_bug(const char *msg);
+
 #endif /* ifndef UTIL_H */
