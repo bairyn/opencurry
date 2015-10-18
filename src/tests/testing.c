@@ -55,6 +55,7 @@
 #include <stdlib.h>
 
 /* string.h:
+ *   - memcmp
  *   - strcmp
  *   - strncmp
  */
@@ -74,10 +75,10 @@ unit_test_context_t *new_unit_test_context( int override_err_buf_len, int overri
   unit_test_context_t *context;
 
   /* Set default arguments. */
-  if(!override_err_buf_len) err_buf_len = DEFAULT_TEST_CONTEXT_ERR_BUF_SIZE;
-  if(!override_seed)        seed        = DEFAULT_TEST_CONTEXT_SEED;
-  if(!override_out)         out         = DEFAULT_TEST_CONTEXT_OUT;
-  if(!override_err)         err         = DEFAULT_TEST_CONTEXT_ERR;
+  if (!override_err_buf_len) err_buf_len = DEFAULT_TEST_CONTEXT_ERR_BUF_SIZE;
+  if (!override_seed)        seed        = DEFAULT_TEST_CONTEXT_SEED;
+  if (!override_out)         out         = DEFAULT_TEST_CONTEXT_OUT;
+  if (!override_err)         err         = DEFAULT_TEST_CONTEXT_ERR;
 
   /* Allocate memory. */
   context = calloc(1, sizeof(unit_test_context_t));
@@ -112,11 +113,11 @@ unit_test_context_t *new_unit_test_context( int override_err_buf_len, int overri
 
 void free_unit_test_context(unit_test_context_t *context)
 {
-  if(context)
+  if (context)
   {
-    if(!context->free || context->free == free_unit_test_context)
+    if (!context->free || context->free == free_unit_test_context)
     {
-      if(context->err_buf)
+      if (context->err_buf)
       {
         free(context->err_buf);
         context->err_buf = (char *) NULL;
@@ -170,7 +171,7 @@ void print_test_suite_result(unit_test_context_t *context, unit_test_result_t re
 {
   FILE *out;
 
-  if(test_result_success(result))
+  if (test_result_success(result))
   {
     out = context->out;
 
@@ -226,9 +227,9 @@ int run_test(unit_test_context_t *context, unit_test_t test)
 
   result = test.run(context);
 
-  if(!context->aborting)
+  if (!context->aborting)
   {
-    if(test_result_success(result))
+    if (test_result_success(result))
     {
       ++context->num_pass;
       context->last_pass = id;
@@ -244,7 +245,7 @@ int run_test(unit_test_context_t *context, unit_test_t test)
     }
   }
 
-  if(test_result_need_abort(result))
+  if (test_result_need_abort(result))
   {
     context->aborting = 1;
   }
@@ -257,7 +258,7 @@ void print_test_indent(unit_test_context_t *context)
 {
   int i;
 
-  for(i = 0; i < context->group_depth; ++i)
+  for (i = 0; i < context->group_depth; ++i)
   {
     fprintf(context->out, "| ");
   }
@@ -311,7 +312,7 @@ int run_tests_num(unit_test_context_t *context, unit_test_t **tests, size_t num_
   unit_test_result_t result = UNIT_TEST_PASS;
 
   ++context->group_depth;
-  for(i = 0; i < num_tests; ++i)
+  for (i = 0; i < num_tests; ++i)
   {
     int individual_result;
     
@@ -321,7 +322,7 @@ int run_tests_num(unit_test_context_t *context, unit_test_t **tests, size_t num_
 
     result |= individual_result;
 
-    if(abort)
+    if (abort)
     {
       break;
     }
@@ -338,7 +339,7 @@ int run_tests(unit_test_context_t *context, unit_test_t **tests)
   unit_test_result_t result = UNIT_TEST_PASS;
 
   ++context->group_depth;
-  for(test = tests; *test; ++test)
+  for (test = tests; *test; ++test)
   {
     int individual_result = run_test(context, **test);
 
@@ -346,7 +347,7 @@ int run_tests(unit_test_context_t *context, unit_test_t **tests)
 
     result |= individual_result;
 
-    if(abort)
+    if (abort)
     {
       break;
     }
@@ -419,6 +420,148 @@ void assert_streqn_msg(unit_test_context_t *context, char *msg_out, size_t msg_o
   } free(checkz);
 }
 
+void assert_memeq_msg(unit_test_context_t *context, char *msg_out, size_t msg_out_len, void *check, void *model, size_t n)
+{
+  int              i, j;
+  size_t           written = 0;
+
+  int              cols_printed;
+  int              hexdump_indent_spaces;
+  int              need_multiple_lines = 0;
+
+  static const int byte_print_width    = sizeof(" 0x00") - 1;
+  static const int width               = ASSERT_MSG_WIDTH;
+
+  /* ---------------------------------------------------------------- */
+  /* Start writing error message. */
+  written += snprintf
+    ( (char *) (msg_out + written), (size_t) (msg_out_len + written)
+    , "Assertion failed - '%d' bytes of memory must be equal, but differ:"
+    , (int) n
+    );
+
+  /* ---------------------------------------------------------------- */
+  /* Hex dump of model: write what the memory should be equal to. */
+
+  written += snprintf
+    ( (char *) (msg_out + written), (size_t) (msg_out_len + written)
+    , "\n"
+    );
+  written += (hexdump_indent_spaces = snprintf
+    ( (char *) (msg_out + written), (size_t) (msg_out_len + written)
+    , "   should be:"
+    ));
+
+  /* Here we also calculate whether this will span multiple lines, in which
+   * case the hex dump starts on its own line for readability.
+   */
+  if (hexdump_indent_spaces + byte_print_width * n >= width)
+  {
+    /* The hexdump will span multiple lines, so start it on its own line. */
+    /* It'll be indented by two extra spaces, one of which we write here. */
+    need_multiple_lines = 1;
+
+    written += snprintf
+      ( (char *) (msg_out + written), (size_t) (msg_out_len + written)
+      , "\n"
+      );
+    written += (hexdump_indent_spaces = snprintf
+      ( (char *) (msg_out + written), (size_t) (msg_out_len + written)
+      , "    "
+      ));
+  }
+
+
+  /* Hex dump: print each byte. */
+  cols_printed = hexdump_indent_spaces;
+  for (i = 0; i < n; ++i)
+  {
+    cols_printed += byte_print_width;
+    if (cols_printed >= width)
+    {
+      /* Start a new line. */
+      cols_printed = hexdump_indent_spaces;
+
+      written += snprintf
+        ( (char *) (msg_out + written), (size_t) (msg_out_len + written)
+        , "\n"
+        );
+
+      for (j = 0; j < hexdump_indent_spaces; ++j)
+      {
+        written += snprintf
+          ( (char *) (msg_out + written), (size_t) (msg_out_len + written)
+          , " "
+          );
+      }
+    }
+
+    /* Print the byte. */
+    written += snprintf
+      ( (char *) (msg_out + written), (size_t) (msg_out_len + written)
+      , " 0x%2X"
+      , (unsigned int) (((unsigned char *) check)[i])
+      );
+  }
+
+  /* ---------------------------------------------------------------- */
+  /* Hex dump of check: write what the memory should be equal to. */
+
+  written += snprintf
+    ( (char *) (msg_out + written), (size_t) (msg_out_len + written)
+    , "\n"
+    );
+  written += snprintf
+    ( (char *) (msg_out + written), (size_t) (msg_out_len + written)
+    , " actually is:"
+    );
+
+  /* Should we start a new line? */
+  if (need_multiple_lines)
+  {
+    written += snprintf
+      ( (char *) (msg_out + written), (size_t) (msg_out_len + written)
+      , "\n"
+      );
+    written += snprintf
+      ( (char *) (msg_out + written), (size_t) (msg_out_len + written)
+      , "    "
+      );
+  }
+
+  /* Hex dump: print each byte. */
+  cols_printed = hexdump_indent_spaces;
+  for (i = 0; i < n; ++i)
+  {
+    cols_printed += byte_print_width;
+    if (cols_printed >= width)
+    {
+      /* Start a new line. */
+      cols_printed = hexdump_indent_spaces;
+
+      written += snprintf
+        ( (char *) (msg_out + written), (size_t) (msg_out_len + written)
+        , "\n"
+        );
+
+      for (j = 0; j < hexdump_indent_spaces; ++j)
+      {
+        written += snprintf
+          ( (char *) (msg_out + written), (size_t) (msg_out_len + written)
+          , " "
+          );
+      }
+    }
+
+    /* Print the byte. */
+    written += snprintf
+      ( (char *) (msg_out + written), (size_t) (msg_out_len + written)
+      , " 0x%2X"
+      , (unsigned int) (((unsigned char *) model)[i])
+      );
+  }
+}
+
 
 void assert_false_msg(unit_test_context_t *context, char *msg_out, size_t msg_out_len, int condition)
 {
@@ -472,6 +615,148 @@ void assert_not_streqn_msg(unit_test_context_t *context, char *msg_out, size_t m
   } free(checkz);
 }
 
+void assert_not_memeq_msg(unit_test_context_t *context, char *msg_out, size_t msg_out_len, void *check, void *model, size_t n)
+{
+  int              i, j;
+  size_t           written = 0;
+
+  int              cols_printed;
+  int              hexdump_indent_spaces;
+  int              need_multiple_lines = 0;
+
+  static const int byte_print_width    = sizeof(" 0x00") - 1;
+  static const int width               = ASSERT_MSG_WIDTH;
+
+  /* ---------------------------------------------------------------- */
+  /* Start writing error message. */
+  written += snprintf
+    ( (char *) (msg_out + written), (size_t) (msg_out_len + written)
+    , "Inverse assertion failed - '%d' bytes of memory must differ, but they are the same:"
+    , (int) n
+    );
+
+  /* ---------------------------------------------------------------- */
+  /* Hex dump of model: write what the memory should be equal to. */
+
+  written += snprintf
+    ( (char *) (msg_out + written), (size_t) (msg_out_len + written)
+    , "\n"
+    );
+  written += (hexdump_indent_spaces = snprintf
+    ( (char *) (msg_out + written), (size_t) (msg_out_len + written)
+    , "  should differ from:"
+    ));
+
+  /* Here we also calculate whether this will span multiple lines, in which
+   * case the hex dump starts on its own line for readability.
+   */
+  if (hexdump_indent_spaces + byte_print_width * n >= width)
+  {
+    /* The hexdump will span multiple lines, so start it on its own line. */
+    /* It'll be indented by two extra spaces, one of which we write here. */
+    need_multiple_lines = 1;
+
+    written += snprintf
+      ( (char *) (msg_out + written), (size_t) (msg_out_len + written)
+      , "\n"
+      );
+    written += (hexdump_indent_spaces = snprintf
+      ( (char *) (msg_out + written), (size_t) (msg_out_len + written)
+      , "    "
+      ));
+  }
+
+
+  /* Hex dump: print each byte. */
+  cols_printed = hexdump_indent_spaces;
+  for (i = 0; i < n; ++i)
+  {
+    cols_printed += byte_print_width;
+    if (cols_printed >= width)
+    {
+      /* Start a new line. */
+      cols_printed = hexdump_indent_spaces;
+
+      written += snprintf
+        ( (char *) (msg_out + written), (size_t) (msg_out_len + written)
+        , "\n"
+        );
+
+      for (j = 0; j < hexdump_indent_spaces; ++j)
+      {
+        written += snprintf
+          ( (char *) (msg_out + written), (size_t) (msg_out_len + written)
+          , " "
+          );
+      }
+    }
+
+    /* Print the byte. */
+    written += snprintf
+      ( (char *) (msg_out + written), (size_t) (msg_out_len + written)
+      , " 0x%2X"
+      , (unsigned int) (((unsigned char *) check)[i])
+      );
+  }
+
+  /* ---------------------------------------------------------------- */
+  /* Hex dump of check: write what the memory should be equal to. */
+
+  written += snprintf
+    ( (char *) (msg_out + written), (size_t) (msg_out_len + written)
+    , "\n"
+    );
+  written += snprintf
+    ( (char *) (msg_out + written), (size_t) (msg_out_len + written)
+    , "  but still is:      "
+    );
+
+  /* Should we start a new line? */
+  if (need_multiple_lines)
+  {
+    written += snprintf
+      ( (char *) (msg_out + written), (size_t) (msg_out_len + written)
+      , "\n"
+      );
+    written += snprintf
+      ( (char *) (msg_out + written), (size_t) (msg_out_len + written)
+      , "    "
+      );
+  }
+
+  /* Hex dump: print each byte. */
+  cols_printed = hexdump_indent_spaces;
+  for (i = 0; i < n; ++i)
+  {
+    cols_printed += byte_print_width;
+    if (cols_printed >= width)
+    {
+      /* Start a new line. */
+      cols_printed = hexdump_indent_spaces;
+
+      written += snprintf
+        ( (char *) (msg_out + written), (size_t) (msg_out_len + written)
+        , "\n"
+        );
+
+      for (j = 0; j < hexdump_indent_spaces; ++j)
+      {
+        written += snprintf
+          ( (char *) (msg_out + written), (size_t) (msg_out_len + written)
+          , " "
+          );
+      }
+    }
+
+    /* Print the byte. */
+    written += snprintf
+      ( (char *) (msg_out + written), (size_t) (msg_out_len + written)
+      , " 0x%2X"
+      , (unsigned int) (((unsigned char *) model)[i])
+      );
+  }
+}
+
 /* ---------------------------------------------------------------- */
 /* Assertions with default error messages; non-zero on failure. */
 
@@ -482,7 +767,7 @@ unit_test_result_t assert_success(unit_test_context_t *context)
 
 unit_test_result_t assert_failure(unit_test_context_t *context, const char *err_msg)
 {
-  if(err_msg)
+  if (err_msg)
     strncpy(context->err_buf, err_msg, context->err_buf_len);
   else
     assert_failure_msg(context, context->err_buf, context->err_buf_len);
@@ -492,7 +777,7 @@ unit_test_result_t assert_failure(unit_test_context_t *context, const char *err_
 
 unit_test_result_t assert_failure_continue(unit_test_context_t *context, const char *err_msg)
 {
-  if(err_msg)
+  if (err_msg)
     strncpy(context->err_buf, err_msg, context->err_buf_len);
   else
     assert_failure_msg(context, context->err_buf, context->err_buf_len);
@@ -504,13 +789,13 @@ unit_test_result_t assert_failure_continue(unit_test_context_t *context, const c
 
 unit_test_result_t assert_true(unit_test_context_t *context, const char *err_msg, int condition)
 {
-  if(condition)
+  if (condition)
   {
     return UNIT_TEST_PASS;
   }
   else
   {
-    if(err_msg)
+    if (err_msg)
       strncpy(context->err_buf, err_msg, context->err_buf_len);
     else
       assert_true_msg(context, context->err_buf, context->err_buf_len, condition);
@@ -521,13 +806,13 @@ unit_test_result_t assert_true(unit_test_context_t *context, const char *err_msg
 
 unit_test_result_t assert_true_continue(unit_test_context_t *context, const char *err_msg, int condition)
 {
-  if(condition)
+  if (condition)
   {
     return UNIT_TEST_PASS;
   }
   else
   {
-    if(err_msg)
+    if (err_msg)
       strncpy(context->err_buf, err_msg, context->err_buf_len);
     else
       assert_true_msg(context, context->err_buf, context->err_buf_len, condition);
@@ -538,13 +823,13 @@ unit_test_result_t assert_true_continue(unit_test_context_t *context, const char
 
 unit_test_result_t assert_inteq(unit_test_context_t *context, const char *err_msg, int check, int model)
 {
-  if(check == model)
+  if (check == model)
   {
     return UNIT_TEST_PASS;
   }
   else
   {
-    if(err_msg)
+    if (err_msg)
       strncpy(context->err_buf, err_msg, context->err_buf_len);
     else
       assert_inteq_msg(context, context->err_buf, context->err_buf_len, check, model);
@@ -555,13 +840,13 @@ unit_test_result_t assert_inteq(unit_test_context_t *context, const char *err_ms
 
 unit_test_result_t assert_inteq_continue(unit_test_context_t *context, const char *err_msg, int check, int model)
 {
-  if(check == model)
+  if (check == model)
   {
     return UNIT_TEST_PASS;
   }
   else
   {
-    if(err_msg)
+    if (err_msg)
       strncpy(context->err_buf, err_msg, context->err_buf_len);
     else
       assert_inteq_msg(context, context->err_buf, context->err_buf_len, check, model);
@@ -572,13 +857,13 @@ unit_test_result_t assert_inteq_continue(unit_test_context_t *context, const cha
 
 unit_test_result_t assert_streqz(unit_test_context_t *context, const char *err_msg, const char *check, const char *model)
 {
-  if(strcmp(check, model) == 0)
+  if (strcmp(check, model) == 0)
   {
     return UNIT_TEST_PASS;
   }
   else
   {
-    if(err_msg)
+    if (err_msg)
       strncpy(context->err_buf, err_msg, context->err_buf_len);
     else
       assert_streqz_msg(context, context->err_buf, context->err_buf_len, check, model);
@@ -589,13 +874,13 @@ unit_test_result_t assert_streqz(unit_test_context_t *context, const char *err_m
 
 unit_test_result_t assert_streqz_continue(unit_test_context_t *context, const char *err_msg, const char *check, const char *model)
 {
-  if(strcmp(check, model) == 0)
+  if (strcmp(check, model) == 0)
   {
     return UNIT_TEST_PASS;
   }
   else
   {
-    if(err_msg)
+    if (err_msg)
       strncpy(context->err_buf, err_msg, context->err_buf_len);
     else
       assert_streqz_msg(context, context->err_buf, context->err_buf_len, check, model);
@@ -606,13 +891,13 @@ unit_test_result_t assert_streqz_continue(unit_test_context_t *context, const ch
 
 unit_test_result_t assert_streqn(unit_test_context_t *context, const char *err_msg, const char *check, const char *model, size_t max_len)
 {
-  if(strncmp(check, model, max_len) == 0)
+  if (strncmp(check, model, max_len) == 0)
   {
     return UNIT_TEST_PASS;
   }
   else
   {
-    if(err_msg)
+    if (err_msg)
       strncpy(context->err_buf, err_msg, context->err_buf_len);
     else
       assert_streqn_msg(context, context->err_buf, context->err_buf_len, check, model, max_len);
@@ -623,16 +908,50 @@ unit_test_result_t assert_streqn(unit_test_context_t *context, const char *err_m
 
 unit_test_result_t assert_streqn_continue(unit_test_context_t *context, const char *err_msg, const char *check, const char *model, size_t max_len)
 {
-  if(strncmp(check, model, max_len) == 0)
+  if (strncmp(check, model, max_len) == 0)
   {
     return UNIT_TEST_PASS;
   }
   else
   {
-    if(err_msg)
+    if (err_msg)
       strncpy(context->err_buf, err_msg, context->err_buf_len);
     else
       assert_streqn_msg(context, context->err_buf, context->err_buf_len, check, model, max_len);
+
+    return UNIT_TEST_FAIL_CONTINUE;
+  }
+}
+
+unit_test_result_t assert_memeq(unit_test_context_t *context, const char *err_msg, void *check, void *model, size_t n)
+{
+  if (memcmp(check, model, n) == 0)
+  {
+    return UNIT_TEST_PASS;
+  }
+  else
+  {
+    if (err_msg)
+      strncpy(context->err_buf, err_msg, context->err_buf_len);
+    else
+      assert_memeq_msg(context, context->err_buf, context->err_buf_len, check, model, n);
+
+    return UNIT_TEST_FAIL;
+  }
+}
+
+unit_test_result_t assert_memeq_continue(unit_test_context_t *context, const char *err_msg, void *check, void *model, size_t n)
+{
+  if (memcmp(check, model, n) == 0)
+  {
+    return UNIT_TEST_PASS;
+  }
+  else
+  {
+    if (err_msg)
+      strncpy(context->err_buf, err_msg, context->err_buf_len);
+    else
+      assert_memeq_msg(context, context->err_buf, context->err_buf_len, check, model, n);
 
     return UNIT_TEST_FAIL_CONTINUE;
   }
@@ -642,13 +961,13 @@ unit_test_result_t assert_streqn_continue(unit_test_context_t *context, const ch
 
 unit_test_result_t assert_false(unit_test_context_t *context, const char *err_msg, int condition)
 {
-  if(!(condition))
+  if (!(condition))
   {
     return UNIT_TEST_PASS;
   }
   else
   {
-    if(err_msg)
+    if (err_msg)
       strncpy(context->err_buf, err_msg, context->err_buf_len);
     else
       assert_false_msg(context, context->err_buf, context->err_buf_len, condition);
@@ -659,13 +978,13 @@ unit_test_result_t assert_false(unit_test_context_t *context, const char *err_ms
 
 unit_test_result_t assert_false_continue(unit_test_context_t *context, const char *err_msg, int condition)
 {
-  if(!(condition))
+  if (!(condition))
   {
     return UNIT_TEST_PASS;
   }
   else
   {
-    if(err_msg)
+    if (err_msg)
       strncpy(context->err_buf, err_msg, context->err_buf_len);
     else
       assert_false_msg(context, context->err_buf, context->err_buf_len, condition);
@@ -676,13 +995,13 @@ unit_test_result_t assert_false_continue(unit_test_context_t *context, const cha
 
 unit_test_result_t assert_not_inteq(unit_test_context_t *context, const char *err_msg, int check, int model)
 {
-  if(!(check == model))
+  if (!(check == model))
   {
     return UNIT_TEST_PASS;
   }
   else
   {
-    if(err_msg)
+    if (err_msg)
       strncpy(context->err_buf, err_msg, context->err_buf_len);
     else
       assert_not_inteq_msg(context, context->err_buf, context->err_buf_len, check, model);
@@ -693,13 +1012,13 @@ unit_test_result_t assert_not_inteq(unit_test_context_t *context, const char *er
 
 unit_test_result_t assert_not_inteq_continue(unit_test_context_t *context, const char *err_msg, int check, int model)
 {
-  if(!(check == model))
+  if (!(check == model))
   {
     return UNIT_TEST_PASS;
   }
   else
   {
-    if(err_msg)
+    if (err_msg)
       strncpy(context->err_buf, err_msg, context->err_buf_len);
     else
       assert_not_inteq_msg(context, context->err_buf, context->err_buf_len, check, model);
@@ -710,13 +1029,13 @@ unit_test_result_t assert_not_inteq_continue(unit_test_context_t *context, const
 
 unit_test_result_t assert_not_streqz(unit_test_context_t *context, const char *err_msg, const char *check, const char *model)
 {
-  if(!(strcmp(check, model) == 0))
+  if (!(strcmp(check, model) == 0))
   {
     return UNIT_TEST_PASS;
   }
   else
   {
-    if(err_msg)
+    if (err_msg)
       strncpy(context->err_buf, err_msg, context->err_buf_len);
     else
       assert_not_streqz_msg(context, context->err_buf, context->err_buf_len, check, model);
@@ -727,13 +1046,13 @@ unit_test_result_t assert_not_streqz(unit_test_context_t *context, const char *e
 
 unit_test_result_t assert_not_streqz_continue(unit_test_context_t *context, const char *err_msg, const char *check, const char *model)
 {
-  if(!(strcmp(check, model) == 0))
+  if (!(strcmp(check, model) == 0))
   {
     return UNIT_TEST_PASS;
   }
   else
   {
-    if(err_msg)
+    if (err_msg)
       strncpy(context->err_buf, err_msg, context->err_buf_len);
     else
       assert_not_streqz_msg(context, context->err_buf, context->err_buf_len, check, model);
@@ -744,13 +1063,13 @@ unit_test_result_t assert_not_streqz_continue(unit_test_context_t *context, cons
 
 unit_test_result_t assert_not_streqn(unit_test_context_t *context, const char *err_msg, const char *check, const char *model, size_t max_len)
 {
-  if(!(strncmp(check, model, max_len) == 0))
+  if (!(strncmp(check, model, max_len) == 0))
   {
     return UNIT_TEST_PASS;
   }
   else
   {
-    if(err_msg)
+    if (err_msg)
       strncpy(context->err_buf, err_msg, context->err_buf_len);
     else
       assert_not_streqn_msg(context, context->err_buf, context->err_buf_len, check, model, max_len);
@@ -761,16 +1080,50 @@ unit_test_result_t assert_not_streqn(unit_test_context_t *context, const char *e
 
 unit_test_result_t assert_not_streqn_continue(unit_test_context_t *context, const char *err_msg, const char *check, const char *model, size_t max_len)
 {
-  if(!(strncmp(check, model, max_len) == 0))
+  if (!(strncmp(check, model, max_len) == 0))
   {
     return UNIT_TEST_PASS;
   }
   else
   {
-    if(err_msg)
+    if (err_msg)
       strncpy(context->err_buf, err_msg, context->err_buf_len);
     else
       assert_not_streqn_msg(context, context->err_buf, context->err_buf_len, check, model, max_len);
+
+    return UNIT_TEST_FAIL_CONTINUE;
+  }
+}
+
+unit_test_result_t assert_not_memeq(unit_test_context_t *context, const char *err_msg, void *check, void *model, size_t n)
+{
+  if (!(memcmp(check, model, n) == 0))
+  {
+    return UNIT_TEST_PASS;
+  }
+  else
+  {
+    if (err_msg)
+      strncpy(context->err_buf, err_msg, context->err_buf_len);
+    else
+      assert_not_memeq_msg(context, context->err_buf, context->err_buf_len, check, model, n);
+
+    return UNIT_TEST_FAIL;
+  }
+}
+
+unit_test_result_t assert_not_memeq_continue(unit_test_context_t *context, const char *err_msg, void *check, void *model, size_t n)
+{
+  if (!(memcmp(check, model, n) == 0))
+  {
+    return UNIT_TEST_PASS;
+  }
+  else
+  {
+    if (err_msg)
+      strncpy(context->err_buf, err_msg, context->err_buf_len);
+    else
+      assert_not_memeq_msg(context, context->err_buf, context->err_buf_len, check, model, n);
 
     return UNIT_TEST_FAIL_CONTINUE;
   }
