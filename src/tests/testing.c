@@ -507,7 +507,7 @@ void assert_memeq_msg(unit_test_context_t *context, char *msg_out, size_t msg_ou
     /* Print the byte. */
     written += snprintf
       ( (char *) (msg_out + written), (size_t) (msg_out_len + written)
-      , " 0x%2X"
+      , " 0x%.2X"
       , (unsigned int) (((unsigned char *) check)[i])
       );
   }
@@ -564,7 +564,7 @@ void assert_memeq_msg(unit_test_context_t *context, char *msg_out, size_t msg_ou
     /* Print the byte. */
     written += snprintf
       ( (char *) (msg_out + written), (size_t) (msg_out_len + written)
-      , " 0x%2X"
+      , " 0x%.2X"
       , (unsigned int) (((unsigned char *) model)[i])
       );
   }
@@ -702,7 +702,7 @@ void assert_not_memeq_msg(unit_test_context_t *context, char *msg_out, size_t ms
     /* Print the byte. */
     written += snprintf
       ( (char *) (msg_out + written), (size_t) (msg_out_len + written)
-      , " 0x%2X"
+      , " 0x%.2X"
       , (unsigned int) (((unsigned char *) check)[i])
       );
   }
@@ -766,7 +766,7 @@ void assert_not_memeq_msg(unit_test_context_t *context, char *msg_out, size_t ms
     /* Print the byte. */
     written += snprintf
       ( (char *) (msg_out + written), (size_t) (msg_out_len + written)
-      , " 0x%2X"
+      , " 0x%.2X"
       , (unsigned int) (((unsigned char *) model)[i])
       );
   }
