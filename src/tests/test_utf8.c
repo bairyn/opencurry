@@ -75,7 +75,7 @@ static const struct utf8_codepoint_pair_s
   { { 0x0037, {0x37, 0x00, 0x00, 0x00}, 1}  /*  U+0037: DIGIT SEVEN       */
   , { 0x02DA, {0xCB, 0x9A, 0x00, 0x00}, 2}  /*  U+02DA: RING ABOVE        */
   , { 0x2665, {0xE2, 0x99, 0xA5, 0x00}, 3}  /*  U+2665: BLACK HEART SUIT  */
-  , {0x1D13D, {0xF0, 0x9D, 0x8C, 0x9D}, 4}  /* U+1D31D: TETRAGRAM FOR JOY */
+  , {0x1D31D, {0xF0, 0x9D, 0x8C, 0x9D}, 4}  /* U+1D31D: TETRAGRAM FOR JOY */
   , {0x1F48C, {0xF0, 0x9F, 0x92, 0x8C}, 4}  /* U+1F48C: LOVE LETTER       */
   };
 static const size_t utf8_codepoint_pairs_size = sizeof(utf8_codepoint_pairs) / sizeof(utf8_codepoint_pairs[0]);
