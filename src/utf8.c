@@ -620,6 +620,12 @@ codepoint_t utf8_decode_one(const unsigned char *input, size_t input_max_size, u
         return utf8_decode_one_erroneous(input, input_max_size, error_behaviour, out_width, out_bytes_consumed);
     }
 
+    /* Write output. */
+    if (out_error_status)   *out_error_status   = utf8_decode_no_error;
+
+    if (out_width)          *out_width          = 2;
+    if (out_bytes_consumed) *out_bytes_consumed = 2;
+
     /* Extract bits. */
     return
       /*  110x xxxx */
@@ -687,6 +693,12 @@ codepoint_t utf8_decode_one(const unsigned char *input, size_t input_max_size, u
       if (!(error_behaviour & UTF8_DECODE_ERROR_PO_BIT))
         return utf8_decode_one_erroneous(input, input_max_size, error_behaviour, out_width, out_bytes_consumed);
     }
+
+    /* Write output. */
+    if (out_error_status)   *out_error_status   = utf8_decode_no_error;
+
+    if (out_width)          *out_width          = 3;
+    if (out_bytes_consumed) *out_bytes_consumed = 3;
 
     /* Extract bits. */
     return
@@ -759,6 +771,12 @@ codepoint_t utf8_decode_one(const unsigned char *input, size_t input_max_size, u
       if (!(error_behaviour & UTF8_DECODE_ERROR_PO_BIT))
         return utf8_decode_one_erroneous(input, input_max_size, error_behaviour, out_width, out_bytes_consumed);
     }
+
+    /* Write output. */
+    if (out_error_status)   *out_error_status   = utf8_decode_no_error;
+
+    if (out_width)          *out_width          = 4;
+    if (out_bytes_consumed) *out_bytes_consumed = 4;
 
     /* Extract bits. */
     return
