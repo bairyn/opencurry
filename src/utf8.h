@@ -185,8 +185,8 @@ typedef enum utf8_decode_error_behaviour utf8_decode_error_behaviour_t;
 #define DEFAULT_UTF8_DECODE_ERRROR_BEHAVIOUR            utf8_replacement_character_uFFFD_behaviour
 #define UTF8_DECODE_ERROR_INSUFFICIENT_INPUT_BYTE_VALUE 0x00
 
-codepoint_t utf8_decode_one(unsigned char *input, size_t input_max_size, utf8_decode_error_behaviour_t error_behaviour, size_t *out_width, size_t *out_bytes_consumed, utf8_decode_error_status_t *out_error_status);
+codepoint_t utf8_decode_one(const unsigned char *input, size_t input_max_size, utf8_decode_error_behaviour_t error_behaviour, size_t *out_width, size_t *out_bytes_consumed, utf8_decode_error_status_t *out_error_status);
 
-codepoint_t utf8_decode_one_erroneous(unsigned char *input, size_t input_max_size, utf8_decode_error_behaviour_t error_behaviour, size_t *out_width, size_t *out_bytes_consumed);
+codepoint_t utf8_decode_one_erroneous(const unsigned char *input, size_t input_max_size, utf8_decode_error_behaviour_t error_behaviour, size_t *out_width, size_t *out_bytes_consumed);
 
 #endif /* ifndef UTF8_H */

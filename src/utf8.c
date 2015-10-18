@@ -539,7 +539,7 @@ size_t utf8_encode(unsigned char *dest, size_t dest_max_size, const codepoint_t 
  *
  * If no bytes are available for input, 
  */
-codepoint_t utf8_decode_one(unsigned char *input, size_t input_max_size, utf8_decode_error_behaviour_t error_behaviour, size_t *out_width, size_t *out_bytes_consumed, utf8_decode_error_status_t *out_error_status)
+codepoint_t utf8_decode_one(const unsigned char *input, size_t input_max_size, utf8_decode_error_behaviour_t error_behaviour, size_t *out_width, size_t *out_bytes_consumed, utf8_decode_error_status_t *out_error_status)
 {
   if (input_max_size < 1)
   {
@@ -831,7 +831,7 @@ codepoint_t utf8_decode_one(unsigned char *input, size_t input_max_size, utf8_de
  *   codepoint_t:
  *     Codepoint derived from input, based on "error_behaviour".
  */
-codepoint_t utf8_decode_one_erroneous(unsigned char *input, size_t input_max_size, utf8_decode_error_behaviour_t error_behaviour, size_t *out_width, size_t *out_bytes_consumed)
+codepoint_t utf8_decode_one_erroneous(const unsigned char *input, size_t input_max_size, utf8_decode_error_behaviour_t error_behaviour, size_t *out_width, size_t *out_bytes_consumed)
 {
   codepoint_t codepoint;
 
