@@ -382,7 +382,7 @@ void assert_inteq_msg(unit_test_context_t *context, char *msg_out, size_t msg_ou
 {
   snprintf
     ( (char *) msg_out, (size_t) msg_out_len
-    , "Assertion failed - integers must be equal, but differ:\n   should be: % d\n actually is: % d."
+    , "Assertion failed - integers must be equal, but differ:\n  should be:   % d\n  actually is: % d."
     , (int) model
     , (int) check
     );
@@ -392,7 +392,7 @@ void assert_streqz_msg(unit_test_context_t *context, char *msg_out, size_t msg_o
 {
   snprintf
     ( (char *) msg_out, (size_t) msg_out_len
-    , "Assertion failed - strings must be equal, but differ:\n   should be: %s\n actually is: %s."
+    , "Assertion failed - strings must be equal, but differ:\n  should be:   %s\n  actually is: %s."
     , (const char*) model
     , (const char*) check
     );
@@ -413,7 +413,7 @@ void assert_streqn_msg(unit_test_context_t *context, char *msg_out, size_t msg_o
 
     snprintf
       ( (char *) msg_out, (size_t) msg_out_len
-      , "Assertion failed - strings must be equal, but differ:\n   should be: %s\n actually is: %s."
+      , "Assertion failed - strings must be equal, but differ:\n  should be:   %s\n  actually is: %s."
       , (const char *) modelz
       , (const char *) checkz
       );
@@ -449,8 +449,9 @@ void assert_memeq_msg(unit_test_context_t *context, char *msg_out, size_t msg_ou
     );
   written += (hexdump_indent_spaces = snprintf
     ( (char *) (msg_out + written), (size_t) (msg_out_len + written)
-    , "   should be:"
+    , "  should be:"  /* A: Print two extra spaces below only without a newline. */
     ));
+  hexdump_indent_spaces += 2;
 
   /* Here we also calculate whether this will span multiple lines, in which
    * case the hex dump starts on its own line for readability.
@@ -469,6 +470,13 @@ void assert_memeq_msg(unit_test_context_t *context, char *msg_out, size_t msg_ou
       ( (char *) (msg_out + written), (size_t) (msg_out_len + written)
       , "    "
       ));
+  }
+  else
+  {
+    written += snprintf
+      ( (char *) (msg_out + written), (size_t) (msg_out_len + written)
+      , "  "  /* A: No newline, so print two extra spaces for alignment. */
+      );
   }
 
 
@@ -513,7 +521,7 @@ void assert_memeq_msg(unit_test_context_t *context, char *msg_out, size_t msg_ou
     );
   written += snprintf
     ( (char *) (msg_out + written), (size_t) (msg_out_len + written)
-    , " actually is:"
+    , "  actually is:"
     );
 
   /* Should we start a new line? */
@@ -708,7 +716,7 @@ void assert_not_memeq_msg(unit_test_context_t *context, char *msg_out, size_t ms
     );
   written += snprintf
     ( (char *) (msg_out + written), (size_t) (msg_out_len + written)
-    , "  but still is:      "
+    , "  but still is:"  /* A: Print six extra spaces below only without a newline. */
     );
 
   /* Should we start a new line? */
@@ -721,6 +729,13 @@ void assert_not_memeq_msg(unit_test_context_t *context, char *msg_out, size_t ms
     written += snprintf
       ( (char *) (msg_out + written), (size_t) (msg_out_len + written)
       , "    "
+      );
+  }
+  else
+  {
+    written += snprintf
+      ( (char *) (msg_out + written), (size_t) (msg_out_len + written)
+      , "      "  /* A: No newline, so print six extra spaces for alignment. */
       );
   }
 
