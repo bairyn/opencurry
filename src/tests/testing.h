@@ -155,6 +155,8 @@ int run_tests(unit_test_context_t *context, unit_test_t **tests);
 /* ---------------------------------------------------------------- */
 /* Default error messages for assertion failures. */
 
+#define DEFAULT_MSG_SIZE 4096  /* (2 << 12) */
+
 #define ASSERT_MSG_WIDTH 80
 
 void assert_failure_msg(unit_test_context_t *context, char *msg_out, size_t msg_out_len, const char *tag);

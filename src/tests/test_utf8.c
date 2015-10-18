@@ -37,6 +37,7 @@
 #include "../utf8.h"
 
 #include "../unicode.h"
+#include "../util.h"
 
 int test_utf8_cli(int argc, char **argv)
 {
@@ -106,6 +107,8 @@ unit_test_t utf8_encode_one_equalities_test =
 
 unit_test_result_t utf8_encode_one_equalities_test_run(unit_test_context_t *context)
 {
+  char tag[DEFAULT_MSG_SIZE];
+
   int i;
   unit_test_result_t result;
 
@@ -122,16 +125,19 @@ unit_test_result_t utf8_encode_one_equalities_test_run(unit_test_context_t *cont
 
     utf8_size = utf8_encode_one(buf, pair->codepoint);
 
+    snprintf(tag, sizeof(tag) / sizeof(tag[0]), "width %d", i);
     result |=
-      assert_inteq (context, NULL, "width",   (int)          utf8_size, (int)          pair->utf8_size);
+      assert_inteq (context, NULL, tag, (int)          utf8_size, (int)          pair->utf8_size);
     if (test_result_need_abort(result)) break;
 
+    snprintf(tag, sizeof(tag) / sizeof(tag[0]), "buf mem %d", i);
     result |=
-      assert_memeq (context, NULL, "buf mem", (void *)       buf,       (void *)       pair->buf,       4);
+      assert_memeq (context, NULL, tag, (void *)       buf,       (void *)       pair->buf,       4);
     /* if (test_result_need_abort(result)) break; */
 
+    snprintf(tag, sizeof(tag) / sizeof(tag[0]), "buf str %d", i);
     result |=
-      assert_streqn(context, NULL, "buf str", (const char *) buf,       (const char *) pair->buf,       4);
+      assert_streqn(context, NULL, tag, (const char *) buf,       (const char *) pair->buf,       4);
     if (test_result_need_abort(result)) break;
   }
 
@@ -291,6 +297,8 @@ unit_test_t utf8_decode_one_equalities_test =
 
 unit_test_result_t utf8_decode_one_equalities_test_run(unit_test_context_t *context)
 {
+  char tag[DEFAULT_MSG_SIZE];
+
   int i;
   unit_test_result_t result;
 
@@ -309,20 +317,24 @@ unit_test_result_t utf8_decode_one_equalities_test_run(unit_test_context_t *cont
 
     codepoint = utf8_decode_one(pair->buf, pair->utf8_size, utf8_default_decode_error_behaviour, &width, &bytes_consumed, &error_status);
 
+    snprintf(tag, sizeof(tag) / sizeof(tag[0]), "codepoint %d", i);
     result |=
-      assert_inteq (context, NULL, "codepoint",      (int) codepoint,      (int) pair->codepoint);
+      assert_inteq (context, NULL, tag, (int) codepoint,      (int) pair->codepoint);
     if (test_result_need_abort(result)) break;
 
+    snprintf(tag, sizeof(tag) / sizeof(tag[0]), "width %d", i);
     result |=
-      assert_inteq (context, NULL, "width",          (int) width,          (int) pair->utf8_size);
+      assert_inteq (context, NULL, tag, (int) width,          (int) pair->utf8_size);
     if (test_result_need_abort(result)) break;
 
+    snprintf(tag, sizeof(tag) / sizeof(tag[0]), "bytes_consumed %d", i);
     result |=
-      assert_inteq (context, NULL, "bytes_consumed", (int) bytes_consumed, (int) pair->utf8_size);
+      assert_inteq (context, NULL, tag, (int) bytes_consumed, (int) pair->utf8_size);
     if (test_result_need_abort(result)) break;
 
+    snprintf(tag, sizeof(tag) / sizeof(tag[0]), "error_status %d", i);
     result |=
-      assert_inteq (context, NULL, "error_status",   (int) error_status,   (int) utf8_decode_no_error);
+      assert_inteq (context, NULL, tag, (int) error_status,   (int) utf8_decode_no_error);
     if (test_result_need_abort(result)) break;
   }
 
@@ -424,6 +436,8 @@ unit_test_t utf8_decode_one_edge_cases_test =
 
 unit_test_result_t utf8_decode_one_edge_cases_test_run(unit_test_context_t *context)
 {
+  char tag[DEFAULT_MSG_SIZE];
+
   int i;
   unit_test_result_t result;
 
@@ -442,20 +456,24 @@ unit_test_result_t utf8_decode_one_edge_cases_test_run(unit_test_context_t *cont
 
     codepoint = utf8_decode_one(pair->buf, pair->utf8_size, pair->error_behaviour, &width, &bytes_consumed, &error_status);
 
+    snprintf(tag, sizeof(tag) / sizeof(tag[0]), "codepoint %d", i);
     result |=
-      assert_inteq (context, NULL, "codepoint",      (int) codepoint,      (int) pair->codepoint);
+      assert_inteq (context, NULL, tag, (int) codepoint,      (int) pair->codepoint);
     if (test_result_need_abort(result)) break;
 
+    snprintf(tag, sizeof(tag) / sizeof(tag[0]), "width %d", i);
     result |=
-      assert_inteq (context, NULL, "width",          (int) width,          (int) pair->utf8_size);
+      assert_inteq (context, NULL, tag, (int) width,          (int) pair->utf8_size);
     if (test_result_need_abort(result)) break;
 
+    snprintf(tag, sizeof(tag) / sizeof(tag[0]), "bytes_consumed %d", i);
     result |=
-      assert_inteq (context, NULL, "bytes_consumed", (int) bytes_consumed, (int) pair->utf8_size);
+      assert_inteq (context, NULL, tag, (int) bytes_consumed, (int) pair->utf8_size);
     if (test_result_need_abort(result)) break;
 
+    snprintf(tag, sizeof(tag) / sizeof(tag[0]), "error_status %d", i);
     result |=
-      assert_inteq (context, NULL, "error_status",   (int) error_status,   (int) pair->error_status);
+      assert_inteq (context, NULL, tag, (int) error_status,   (int) pair->error_status);
     if (test_result_need_abort(result)) break;
   }
 
