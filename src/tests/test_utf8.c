@@ -125,15 +125,15 @@ unit_test_result_t utf8_encode_one_equalities_test_run(unit_test_context_t *cont
     utf8_size = utf8_encode_one(buf, pair->codepoint);
 
     result |=
-      assert_inteq (context, NULL, (int)          utf8_size, (int)          pair->utf8_size);
+      assert_inteq (context, NULL, "width",   (int)          utf8_size, (int)          pair->utf8_size);
     if (test_result_need_abort(result)) break;
 
     result |=
-      assert_memeq (context, NULL, (void *)       buf,       (void *)       pair->buf,       4);
+      assert_memeq (context, NULL, "buf mem", (void *)       buf,       (void *)       pair->buf,       4);
     /* if (test_result_need_abort(result)) break; */
 
     result |=
-      assert_streqn(context, NULL, (const char *) buf,       (const char *) pair->buf,       4);
+      assert_streqn(context, NULL, "buf str", (const char *) buf,       (const char *) pair->buf,       4);
     if (test_result_need_abort(result)) break;
   }
 
@@ -164,7 +164,7 @@ unit_test_result_t utf8_encode_one_edge_cases_test_run(unit_test_context_t *cont
   utf8_size = utf8_encode_one(NULL, pair->codepoint);
 
   result |=
-    assert_inteq (context, NULL, (int)          utf8_size, (int)          pair->utf8_size);
+    assert_inteq (context, NULL, "width", (int) utf8_size, (int) pair->utf8_size);
   if (test_result_need_abort(result)) return result;
 
   return result;
@@ -224,19 +224,19 @@ unit_test_result_t utf8_encode_equalities_test_run(unit_test_context_t *context)
   buf_written = utf8_encode(buf, utf8_codepoints_encoding_size, utf8_codepoints, utf8_codepoints_size, &num_encoded);
 
   result |=
-    assert_inteq (context, NULL, (int)          buf_written, (int)          utf8_codepoints_encoding_size);
+    assert_inteq (context, NULL, "num_written", (int)          buf_written, (int)          utf8_codepoints_encoding_size);
   if (test_result_need_abort(result)) return result;
 
   result |=
-    assert_inteq (context, NULL, (int)          num_encoded, (int)          utf8_codepoints_size);
+    assert_inteq (context, NULL, "num_encoded", (int)          num_encoded, (int)          utf8_codepoints_size);
   if (test_result_need_abort(result)) return result;
 
   result |=
-    assert_memeq (context, NULL, (void *)       buf,         (void *)       utf8_codepoints_encoding,      utf8_codepoints_encoding_size);
+    assert_memeq (context, NULL, "buf mem",     (void *)       buf,         (void *)       utf8_codepoints_encoding,      utf8_codepoints_encoding_size);
   /* if (test_result_need_abort(result)) return result; */
 
   result |=
-    assert_streqn(context, NULL, (const char *) buf,         (const char *) utf8_codepoints_encoding,      utf8_codepoints_encoding_size);
+    assert_streqn(context, NULL, "buf str",     (const char *) buf,         (const char *) utf8_codepoints_encoding,      utf8_codepoints_encoding_size);
   if (test_result_need_abort(result)) return result;
 
   return result;
@@ -264,18 +264,18 @@ unit_test_result_t utf8_encode_edge_cases_test_run(unit_test_context_t *context)
   buf_written = utf8_encode(buf, utf8_codepoints_encoding_size, utf8_codepoints, utf8_codepoints_size, NULL);
 
   result |=
-    assert_inteq (context, NULL, (int)          buf_written, (int)          utf8_codepoints_encoding_size);
+    assert_inteq (context, NULL, "num_written",       (int)          buf_written, (int)          utf8_codepoints_encoding_size);
   if (test_result_need_abort(result)) return result;
 
   /* Test smaller buf limit. */
   buf_written = utf8_encode(buf, utf8_codepoints_encoding_size - 1, utf8_codepoints, utf8_codepoints_size, &num_encoded);
 
   result |=
-    assert_inteq (context, NULL, (int)          buf_written, (int)          utf8_codepoints_encoding_size - utf8_encoding_last_width);
+    assert_inteq (context, NULL, "small num_written", (int)          buf_written, (int)          utf8_codepoints_encoding_size - utf8_encoding_last_width);
   if (test_result_need_abort(result)) return result;
 
   result |=
-    assert_inteq (context, NULL, (int)          num_encoded, (int)          utf8_codepoints_size - 1);
+    assert_inteq (context, NULL, "small num_encoded", (int)          num_encoded, (int)          utf8_codepoints_size - 1);
   if (test_result_need_abort(result)) return result;
 
   return result;
@@ -312,19 +312,19 @@ unit_test_result_t utf8_decode_one_equalities_test_run(unit_test_context_t *cont
     codepoint = utf8_decode_one(pair->buf, pair->utf8_size, utf8_default_decode_error_behaviour, &width, &bytes_consumed, &error_status);
 
     result |=
-      assert_inteq (context, NULL, (int) codepoint,      (int) pair->codepoint);
+      assert_inteq (context, NULL, "codepoint",      (int) codepoint,      (int) pair->codepoint);
     if (test_result_need_abort(result)) break;
 
     result |=
-      assert_inteq (context, NULL, (int) width,          (int) pair->utf8_size);
+      assert_inteq (context, NULL, "width",          (int) width,          (int) pair->utf8_size);
     if (test_result_need_abort(result)) break;
 
     result |=
-      assert_inteq (context, NULL, (int) bytes_consumed, (int) pair->utf8_size);
+      assert_inteq (context, NULL, "bytes_consumed", (int) bytes_consumed, (int) pair->utf8_size);
     if (test_result_need_abort(result)) break;
 
     result |=
-      assert_inteq (context, NULL, (int) error_status,   (int) utf8_decode_no_error);
+      assert_inteq (context, NULL, "error_status",   (int) error_status,   (int) utf8_decode_no_error);
     if (test_result_need_abort(result)) break;
   }
 

@@ -157,61 +157,61 @@ int run_tests(unit_test_context_t *context, unit_test_t **tests);
 
 #define ASSERT_MSG_WIDTH 80
 
-void assert_failure_msg(unit_test_context_t *context, char *msg_out, size_t msg_out_len);
+void assert_failure_msg(unit_test_context_t *context, char *msg_out, size_t msg_out_len, const char *tag);
 
-void assert_true_msg(unit_test_context_t *context, char *msg_out, size_t msg_out_len, int condition);
+void assert_true_msg(unit_test_context_t *context, char *msg_out, size_t msg_out_len, const char *tag, int condition);
 
-void assert_inteq_msg(unit_test_context_t *context, char *msg_out, size_t msg_out_len, int check, int model);
+void assert_inteq_msg(unit_test_context_t *context, char *msg_out, size_t msg_out_len, const char *tag, int check, int model);
 
-void assert_streqz_msg(unit_test_context_t *context, char *msg_out, size_t msg_out_len, const char *check, const char *model);
-void assert_streqn_msg(unit_test_context_t *context, char *msg_out, size_t msg_out_len, const char *check, const char *model, size_t max_len);
+void assert_streqz_msg(unit_test_context_t *context, char *msg_out, size_t msg_out_len, const char *tag, const char *check, const char *model);
+void assert_streqn_msg(unit_test_context_t *context, char *msg_out, size_t msg_out_len, const char *tag, const char *check, const char *model, size_t max_len);
 
-void assert_memeq_msg(unit_test_context_t *context, char *msg_out, size_t msg_out_len, void *check, void *model, size_t n);
+void assert_memeq_msg(unit_test_context_t *context, char *msg_out, size_t msg_out_len, const char *tag, void *check, void *model, size_t n);
 
 
-void assert_false_msg(unit_test_context_t *context, char *msg_out, size_t msg_out_len, int condition);
+void assert_false_msg(unit_test_context_t *context, char *msg_out, size_t msg_out_len, const char *tag, int condition);
 
-void assert_not_inteq_msg(unit_test_context_t *context, char *msg_out, size_t msg_out_len, int check, int model);
+void assert_not_inteq_msg(unit_test_context_t *context, char *msg_out, size_t msg_out_len, const char *tag, int check, int model);
 
-void assert_not_streqz_msg(unit_test_context_t *context, char *msg_out, size_t msg_out_len, const char *check, const char *model);
-void assert_not_streqn_msg(unit_test_context_t *context, char *msg_out, size_t msg_out_len, const char *check, const char *model, size_t max_len);
+void assert_not_streqz_msg(unit_test_context_t *context, char *msg_out, size_t msg_out_len, const char *tag, const char *check, const char *model);
+void assert_not_streqn_msg(unit_test_context_t *context, char *msg_out, size_t msg_out_len, const char *tag, const char *check, const char *model, size_t max_len);
 
-void assert_not_memeq_msg(unit_test_context_t *context, char *msg_out, size_t msg_out_len, void *check, void *model, size_t n);
+void assert_not_memeq_msg(unit_test_context_t *context, char *msg_out, size_t msg_out_len, const char *tag, void *check, void *model, size_t n);
 
 /* ---------------------------------------------------------------- */
 /* Assertions with default error messages; non-zero on failure. */
 
 unit_test_result_t assert_success(unit_test_context_t *context);
-unit_test_result_t assert_failure(unit_test_context_t *context, const char *err_msg);
-unit_test_result_t assert_failure_continue(unit_test_context_t *context, const char *err_msg);
+unit_test_result_t assert_failure(unit_test_context_t *context, const char *err_msg, const char *tag);
+unit_test_result_t assert_failure_continue(unit_test_context_t *context, const char *err_msg, const char *tag);
 
-unit_test_result_t assert_true(unit_test_context_t *context, const char *err_msg, int condition);
-unit_test_result_t assert_true_continue(unit_test_context_t *context, const char *err_msg, int condition);
+unit_test_result_t assert_true(unit_test_context_t *context, const char *err_msg, const char *tag, int condition);
+unit_test_result_t assert_true_continue(unit_test_context_t *context, const char *err_msg, const char *tag, int condition);
 
-unit_test_result_t assert_inteq(unit_test_context_t *context, const char *err_msg, int check, int model);
-unit_test_result_t assert_inteq_continue(unit_test_context_t *context, const char *err_msg, int check, int model);
+unit_test_result_t assert_inteq(unit_test_context_t *context, const char *err_msg, const char *tag, int check, int model);
+unit_test_result_t assert_inteq_continue(unit_test_context_t *context, const char *err_msg, const char *tag, int check, int model);
 
-unit_test_result_t assert_streqz(unit_test_context_t *context, const char *err_msg, const char *check, const char *model);
-unit_test_result_t assert_streqz_continue(unit_test_context_t *context, const char *err_msg, const char *check, const char *model);
-unit_test_result_t assert_streqn(unit_test_context_t *context, const char *err_msg, const char *check, const char *model, size_t max_len);
-unit_test_result_t assert_streqn_continue(unit_test_context_t *context, const char *err_msg, const char *check, const char *model, size_t max_len);
+unit_test_result_t assert_streqz(unit_test_context_t *context, const char *err_msg, const char *tag, const char *check, const char *model);
+unit_test_result_t assert_streqz_continue(unit_test_context_t *context, const char *err_msg, const char *tag, const char *check, const char *model);
+unit_test_result_t assert_streqn(unit_test_context_t *context, const char *err_msg, const char *tag, const char *check, const char *model, size_t max_len);
+unit_test_result_t assert_streqn_continue(unit_test_context_t *context, const char *err_msg, const char *tag, const char *check, const char *model, size_t max_len);
 
-unit_test_result_t assert_memeq(unit_test_context_t *context, const char *err_msg, void *check, void *model, size_t n);
-unit_test_result_t assert_memeq_continue(unit_test_context_t *context, const char *err_msg, void *check, void *model, size_t n);
+unit_test_result_t assert_memeq(unit_test_context_t *context, const char *err_msg, const char *tag, void *check, void *model, size_t n);
+unit_test_result_t assert_memeq_continue(unit_test_context_t *context, const char *err_msg, const char *tag, void *check, void *model, size_t n);
 
 
-unit_test_result_t assert_false(unit_test_context_t *context, const char *err_msg, int condition);
-unit_test_result_t assert_false_continue(unit_test_context_t *context, const char *err_msg, int condition);
+unit_test_result_t assert_false(unit_test_context_t *context, const char *err_msg, const char *tag, int condition);
+unit_test_result_t assert_false_continue(unit_test_context_t *context, const char *err_msg, const char *tag, int condition);
 
-unit_test_result_t assert_not_inteq(unit_test_context_t *context, const char *err_msg, int check, int model);
-unit_test_result_t assert_not_inteq_continue(unit_test_context_t *context, const char *err_msg, int check, int model);
+unit_test_result_t assert_not_inteq(unit_test_context_t *context, const char *err_msg, const char *tag, int check, int model);
+unit_test_result_t assert_not_inteq_continue(unit_test_context_t *context, const char *err_msg, const char *tag, int check, int model);
 
-unit_test_result_t assert_not_streqz(unit_test_context_t *context, const char *err_msg, const char *check, const char *model);
-unit_test_result_t assert_not_streqz_continue(unit_test_context_t *context, const char *err_msg, const char *check, const char *model);
-unit_test_result_t assert_not_streqn(unit_test_context_t *context, const char *err_msg, const char *check, const char *model, size_t max_len);
-unit_test_result_t assert_not_streqn_continue(unit_test_context_t *context, const char *err_msg, const char *check, const char *model, size_t max_len);
+unit_test_result_t assert_not_streqz(unit_test_context_t *context, const char *err_msg, const char *tag, const char *check, const char *model);
+unit_test_result_t assert_not_streqz_continue(unit_test_context_t *context, const char *err_msg, const char *tag, const char *check, const char *model);
+unit_test_result_t assert_not_streqn(unit_test_context_t *context, const char *err_msg, const char *tag, const char *check, const char *model, size_t max_len);
+unit_test_result_t assert_not_streqn_continue(unit_test_context_t *context, const char *err_msg, const char *tag, const char *check, const char *model, size_t max_len);
 
-unit_test_result_t assert_not_memeq(unit_test_context_t *context, const char *err_msg, void *check, void *model, size_t n);
-unit_test_result_t assert_not_memeq_continue(unit_test_context_t *context, const char *err_msg, void *check, void *model, size_t n);
+unit_test_result_t assert_not_memeq(unit_test_context_t *context, const char *err_msg, const char *tag, void *check, void *model, size_t n);
+unit_test_result_t assert_not_memeq_continue(unit_test_context_t *context, const char *err_msg, const char *tag, void *check, void *model, size_t n);
 
 #endif /* ifndef TESTS_TESTING_H */

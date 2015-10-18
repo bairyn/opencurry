@@ -90,8 +90,8 @@ unit_test_t static_string_len_test =
 unit_test_result_t static_string_len_test_run(unit_test_context_t *context)
 {
   return
-    assert_inteq(context, NULL, (int) strlen(static_string),          (int) static_string_len)
-  | assert_inteq(context, NULL, (int) res_tests_static_string_size(), (int) static_string_len)
+    assert_inteq(context, NULL, "local",  (int) strlen(static_string),          (int) static_string_len)
+  | assert_inteq(context, NULL, "size",   (int) res_tests_static_string_size(), (int) static_string_len)
   ;
 }
 
@@ -106,5 +106,5 @@ unit_test_t static_string_eq_test =
 unit_test_result_t static_string_eq_test_run(unit_test_context_t *context)
 {
   return
-    assert_streqn(context, NULL, (const char *) res_tests_static_string_start(), (const char *) static_string, (size_t) res_tests_static_string_size());
+    assert_streqn(context, NULL, "string", (const char *) res_tests_static_string_start(), (const char *) static_string, (size_t) res_tests_static_string_size());
 }
