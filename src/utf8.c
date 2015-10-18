@@ -105,9 +105,9 @@ size_t utf8_encode_one(unsigned char *dest, codepoint_t input)
       /* Byte 0 */
 
       /* 110x xxxx                              */
-      /* 1100 0000 | (0001 1111 & (input >> 8)) */
-      /* 0xC0      | (0x1F      & (input >> 8)) */
-      dest[0] = 0xC0 | (0x1F & (input >> 8));
+      /* 1100 0000 | (0001 1111 & (input >> 6)) */
+      /* 0xC0      | (0x1F      & (input >> 6)) */
+      dest[0] = 0xC0 | (0x1F & (input >> 6));
     }
 
     return 2;
@@ -131,17 +131,17 @@ size_t utf8_encode_one(unsigned char *dest, codepoint_t input)
       /* Byte 1 */
 
       /* 10xx xxxx                              */
-      /* 1000 0000 | (0011 1111 & (input >> 8)) */
-      /* 0x80      | (0x3F      & (input >> 8)) */
-      dest[1] = 0x80 | (0x3F & (input >> 8));
+      /* 1000 0000 | (0011 1111 & (input >> 6)) */
+      /* 0x80      | (0x3F      & (input >> 6)) */
+      dest[1] = 0x80 | (0x3F & (input >> 6));
 
       /* ---------------------------------------------------------------- */
       /* Byte 0 */
 
       /* 1110 xxxx                               */
-      /* 1110 0000 | (0000 1111 & (input >> 16)) */
-      /* 0xE0      | (0x0F      & (input >> 16)) */
-      dest[0] = 0xE0 | (0x0F & (input >> 16));
+      /* 1110 0000 | (0000 1111 & (input >> 12)) */
+      /* 0xE0      | (0x0F      & (input >> 12)) */
+      dest[0] = 0xE0 | (0x0F & (input >> 12));
     }
 
     return 3;
@@ -165,25 +165,25 @@ size_t utf8_encode_one(unsigned char *dest, codepoint_t input)
       /* Byte 2 */
 
       /* 10xx xxxx                              */
-      /* 1000 0000 | (0011 1111 & (input >> 8)) */
-      /* 0x80      | (0x3F      & (input >> 8)) */
-      dest[2] = 0x80 | (0x3F & (input >> 8));
+      /* 1000 0000 | (0011 1111 & (input >> 6)) */
+      /* 0x80      | (0x3F      & (input >> 6)) */
+      dest[2] = 0x80 | (0x3F & (input >> 6));
 
       /* ---------------------------------------------------------------- */
       /* Byte 1 */
 
       /* 10xx xxxx                               */
-      /* 1000 0000 | (0011 1111 & (input >> 16)) */
-      /* 0x80      | (0x3F      & (input >> 16)) */
-      dest[1] = 0x80 | (0x3F & (input >> 16));
+      /* 1000 0000 | (0011 1111 & (input >> 12)) */
+      /* 0x80      | (0x3F      & (input >> 12)) */
+      dest[1] = 0x80 | (0x3F & (input >> 12));
 
       /* ---------------------------------------------------------------- */
       /* Byte 0 */
 
       /* 1111 0xxx                               */
-      /* 1111 0000 | (0000 0111 & (input >> 24)) */
-      /* 0xF0      | (0x07      & (input >> 24)) */
-      dest[0] = 0xF0 | (0x07 & (input >> 24));
+      /* 1111 0000 | (0000 0111 & (input >> 18)) */
+      /* 0xF0      | (0x07      & (input >> 18)) */
+      dest[0] = 0xF0 | (0x07 & (input >> 18));
     }
 
     return 4;
