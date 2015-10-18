@@ -62,9 +62,7 @@ unit_test_t *utf8_tests[] =
 
 
   , &utf8_decode_one_equalities_test
-  /* TODO
   , &utf8_decode_one_edge_cases_test
-  */
 
   /* TODO
   , &utf8_decode_equalities_test
@@ -333,7 +331,91 @@ unit_test_result_t utf8_decode_one_equalities_test_run(unit_test_context_t *cont
 
 /* ---------------------------------------------------------------- */
 
-/* TODO
+static const struct utf8_decode_one_pair_s
+{
+  /* Input. */
+  unsigned char                 buf[4];
+  size_t                        utf8_size;
+
+  utf8_decode_error_behaviour_t error_behaviour;
+
+  /* Output. */
+  codepoint_t                   codepoint;
+
+  size_t                        width;
+  size_t                        bytes_consumed;
+  size_t                        error_status;
+} utf8_decode_one_pairs[] =
+  {
+    /* Valid input. */
+    { {0x37, 0x00, 0x00, 0x00}, 1,  utf8_default_decode_error_behaviour  /*  U+0037: DIGIT SEVEN       */
+    ,  0x0037, 1, 1, utf8_decode_no_error
+    }
+  , { {0xCB, 0x9A, 0x00, 0x00}, 2,  utf8_default_decode_error_behaviour  /*  U+02DA: RING ABOVE        */
+    ,  0x02DA, 2, 2, utf8_decode_no_error
+    }
+  , { {0xE2, 0x99, 0xA5, 0x00}, 3,  utf8_default_decode_error_behaviour  /*  U+2665: BLACK HEART SUIT  */
+    ,  0x2665, 3, 3, utf8_decode_no_error
+    }
+  , { {0xF0, 0x9D, 0x8C, 0x9D}, 4,  utf8_default_decode_error_behaviour  /* U+1D31D: TETRAGRAM FOR JOY */
+    , 0x1D31D, 4, 4, utf8_decode_no_error
+    }
+  , { {0xF0, 0x9F, 0x92, 0x8C}, 4,  utf8_default_decode_error_behaviour  /* U+1F48C: LOVE LETTER       */
+    , 0x1F48C, 4, 4, utf8_decode_no_error
+    }
+
+    /* Testing different behaviours on unexpected continuation bytes. */
+  , { {0x8C, 0x9F, 0x92, 0x8C}, 4,  utf8_replacement_character_uFFFD_behaviour
+    , 0xFFFD, 1, 1, utf8_decode_unexpected_continuation_byte
+    }
+  , { {0x8C, 0x9F, 0x92, 0x8C}, 4,  utf8_invalid_character_uDCxx_behaviour
+    , 0xDC8C, 1, 1, utf8_decode_unexpected_continuation_byte
+    }
+  , { {0x8C, 0x9F, 0x92, 0x8C}, 4,  utf8_codepoint_u00xx_behaviour
+    , 0x008C, 1, 1, utf8_decode_unexpected_continuation_byte
+    }
+
+    /* Testing other errors. */
+  , { {0xF0, 0x9F, 0x92, 0x00}, 3,  utf8_replacement_character_uFFFD_behaviour
+    , 0xFFFD, 1, 1, utf8_decode_insufficient_continuation_bytes_eof
+    }
+  , { {0xF0, 0x9F, 0x92, 0x37}, 4,  utf8_replacement_character_uFFFD_behaviour
+    , 0xFFFD, 1, 1, utf8_decode_insufficient_continuation_bytes_sufficient_input
+    }
+  , { {0xF8, 0x9F, 0x92, 0x8C}, 4,  utf8_replacement_character_uFFFD_behaviour
+    , 0xFFFD, 1, 1, utf8_decode_out_of_bounds
+    }
+
+    /* Testing overlong encoding errors. */
+
+    /* '7' in 2 bytes */
+    /* xxxx xxxx = 0011 0111 = 0x37 */
+    /* 110x xxx  10xx xxxx */
+    /* 1100 000  1011 0111 */
+    /* 0xC0      0xB7      */
+  , { {0xC0, 0xB7, 0x00, 0x00}, 2,  utf8_replacement_character_uFFFD_behaviour
+    , 0xFFFD, 1, 1, utf8_decode_overlong_encoding
+    }
+  , { {0xC0, 0xB7, 0x00, 0x00}, 2,  utf8_po_replacement_character_uFFFD_behaviour
+    , 0x0037, 1, 1, utf8_decode_overlong_encoding
+    }
+
+    /* 'G' in 2 bytes */
+    /* xxxx xxxx = 0100 0111 = 0x47 */
+    /* 110x xxx  10xx xxxx */
+    /* 1100 001  1000 0111 */
+    /* 0xC1      0xB7      */
+  , { {0xC1, 0xB7, 0x00, 0x00}, 2,  utf8_replacement_character_uFFFD_behaviour
+    , 0xFFFD, 1, 1, utf8_decode_overlong_encoding
+    }
+  , { {0xC1, 0xB7, 0x00, 0x00}, 2,  utf8_po_replacement_character_uFFFD_behaviour
+    , 0x0037, 1, 1, utf8_decode_overlong_encoding
+    }
+  };
+static const size_t utf8_decode_one_pairs_size = sizeof(utf8_decode_one_pairs) / sizeof(utf8_decode_one_pairs[0]);
+
+/* ---------------------------------------------------------------- */
+
 unit_test_t utf8_decode_one_edge_cases_test =
   {  utf8_decode_one_edge_cases_test_run 
   , "utf8_decode_one_edge_cases_test"
@@ -342,5 +424,40 @@ unit_test_t utf8_decode_one_edge_cases_test =
 
 unit_test_result_t utf8_decode_one_edge_cases_test_run(unit_test_context_t *context)
 {
+  int i;
+  unit_test_result_t result;
+
+  const struct utf8_decode_one_pair_s *pair;
+
+  result = assert_success(context);
+
+  for(i = 0; i < utf8_decode_one_pairs_size; ++i)
+  {
+    codepoint_t                codepoint;
+    size_t                     width;
+    size_t                     bytes_consumed;
+    utf8_decode_error_status_t error_status;
+
+    pair = &utf8_decode_one_pairs[i];
+
+    codepoint = utf8_decode_one(pair->buf, pair->utf8_size, pair->error_behaviour, &width, &bytes_consumed, &error_status);
+
+    result |=
+      assert_inteq (context, NULL, "codepoint",      (int) codepoint,      (int) pair->codepoint);
+    if (test_result_need_abort(result)) break;
+
+    result |=
+      assert_inteq (context, NULL, "width",          (int) width,          (int) pair->utf8_size);
+    if (test_result_need_abort(result)) break;
+
+    result |=
+      assert_inteq (context, NULL, "bytes_consumed", (int) bytes_consumed, (int) pair->utf8_size);
+    if (test_result_need_abort(result)) break;
+
+    result |=
+      assert_inteq (context, NULL, "error_status",   (int) error_status,   (int) pair->error_status);
+    if (test_result_need_abort(result)) break;
+  }
+
+  return result;
 }
-*/

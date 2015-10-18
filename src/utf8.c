@@ -842,6 +842,10 @@ codepoint_t utf8_decode_one(const unsigned char *input, size_t input_max_size, u
  *   size_t                        *out_width:
  *     Number of bytes assumed to represent codepoint.
  *
+ *     Note: this is not the same as the byte width for a properly encoded
+ *     codepoint!  E.g. out_width could be set to "1" for U+FFFD, a codepoint
+ *     which requires 2 bytes to encode in UTF-8.
+ *
  *   size_t                        *out_bytes_consumed:
  *     Number of bytes read to represent codepoint.
  *
