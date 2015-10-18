@@ -202,11 +202,11 @@ unit_test_result_t utf8_encode_equalities_test_run(unit_test_context_t *context)
   if (test_result_need_abort(result)) return result;
 
   result |=
-    assert_memeq (context, NULL, (void *)       buf,         (void *)       utf8_codepoints,               utf8_codepoints_encoding_size);
+    assert_memeq (context, NULL, (void *)       buf,         (void *)       utf8_codepoints_encoding,      utf8_codepoints_encoding_size);
   if (test_result_need_abort(result)) return result;
 
   result |=
-    assert_streqn(context, NULL, (const char *) buf,         (const char *) utf8_codepoints,               utf8_codepoints_encoding_size);
+    assert_streqn(context, NULL, (const char *) buf,         (const char *) utf8_codepoints_encoding,      utf8_codepoints_encoding_size);
   if (test_result_need_abort(result)) return result;
 
   return result;
