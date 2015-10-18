@@ -174,6 +174,7 @@ static const codepoint_t utf8_codepoints[] =
   , 0x2665  /* BLACK HEART SUIT */
   , 0x2665  /* BLACK HEART SUIT */
     /* TODO */
+  , 0x2665  /* BLACK HEART SUIT */
   };
 static const size_t utf8_codepoints_size = sizeof(utf8_codepoints) / sizeof(utf8_codepoints[0]);
 
@@ -182,8 +183,14 @@ static const unsigned char utf8_codepoints_encoding[] =
   , 0xE2, 0x99, 0xA5  /* U+2665: BLACK HEART SUIT */
   , 0xE2, 0x99, 0xA5  /* U+2665: BLACK HEART SUIT */
     /* TODO */
+  , 0xE2, 0x99, 0xA5  /* U+2665: BLACK HEART SUIT */
   };
 static const size_t utf8_codepoints_encoding_size = sizeof(utf8_codepoints_encoding) / sizeof(utf8_codepoints_encoding[0]);
+
+/* Number of bytes to encode last symbol in utf8_codepoints_encoding.
+ * Used in the unit test "".
+ */
+static const size_t utf8_encoding_last_width = 3;
 
 unit_test_result_t utf8_encode_equalities_test_run(unit_test_context_t *context)
 {
@@ -199,6 +206,10 @@ unit_test_result_t utf8_encode_equalities_test_run(unit_test_context_t *context)
 
   result |=
     assert_inteq (context, NULL, (int)          buf_written, (int)          utf8_codepoints_encoding_size);
+  if (test_result_need_abort(result)) return result;
+
+  result |=
+    assert_inteq (context, NULL, (int)          num_encoded, (int)          utf8_codepoints_size);
   if (test_result_need_abort(result)) return result;
 
   result |=
@@ -226,6 +237,7 @@ unit_test_result_t utf8_encode_edge_cases_test_run(unit_test_context_t *context)
 
   unsigned char      buf[sizeof(utf8_codepoints_encoding) / sizeof(utf8_codepoints_encoding[0])];
   size_t             buf_written;
+  size_t             num_encoded;
 
   result = assert_success(context);
 
@@ -234,6 +246,17 @@ unit_test_result_t utf8_encode_edge_cases_test_run(unit_test_context_t *context)
 
   result |=
     assert_inteq (context, NULL, (int)          buf_written, (int)          utf8_codepoints_encoding_size);
+  if (test_result_need_abort(result)) return result;
+
+  /* Test smaller buf limit. */
+  buf_written = utf8_encode(buf, utf8_codepoints_encoding_size - 1, utf8_codepoints, utf8_codepoints_size, &num_encoded);
+
+  result |=
+    assert_inteq (context, NULL, (int)          buf_written, (int)          utf8_codepoints_encoding_size - utf8_encoding_last_width);
+  if (test_result_need_abort(result)) return result;
+
+  result |=
+    assert_inteq (context, NULL, (int)          num_encoded, (int)          utf8_codepoints_size - 1);
   if (test_result_need_abort(result)) return result;
 
   return result;
