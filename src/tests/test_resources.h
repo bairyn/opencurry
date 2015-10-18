@@ -53,10 +53,10 @@ unit_test_result_t test_resources_run(unit_test_context_t *context);
 
 /* ---------------------------------------------------------------- */
 
-unit_test_t static_string_len_test;
+extern unit_test_t static_string_len_test;
 unit_test_result_t static_string_len_test_run(unit_test_context_t *context);
 
-unit_test_t static_string_eq_test;
+extern unit_test_t static_string_eq_test;
 unit_test_result_t static_string_eq_test_run(unit_test_context_t *context);
 
 #endif /* ifndef TESTS_TEST_RESOURCES_H */

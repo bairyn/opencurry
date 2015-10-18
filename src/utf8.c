@@ -65,7 +65,7 @@
  * Return:
  *  Number of bytes the encoding requires.  Will be 1-4.
  */
-size_t utf8_encode_one(char *dest, codepoint_t input)
+size_t utf8_encode_one(unsigned char *dest, codepoint_t input)
 {
   if      (input <=  0x7F)
   {

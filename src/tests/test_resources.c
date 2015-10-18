@@ -76,8 +76,8 @@ unit_test_result_t test_resources_run(unit_test_context_t *context)
 
 /* ---------------------------------------------------------------- */
 
-static const char   *static_string     = "This string is checked for equality.\n";
-static unsigned int  static_string_len = 37;
+static const char         * const static_string     = "This string is checked for equality.\n";
+static const unsigned int         static_string_len = 37;
 
 /* ---------------------------------------------------------------- */
 
