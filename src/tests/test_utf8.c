@@ -170,20 +170,28 @@ unit_test_t utf8_encode_equalities_test =
   };
 
 static const codepoint_t utf8_codepoints[] =
-  { 0x2665  /* BLACK HEART SUIT */
-  , 0x2665  /* BLACK HEART SUIT */
-  , 0x2665  /* BLACK HEART SUIT */
-    /* TODO */
-  , 0x2665  /* BLACK HEART SUIT */
+  { 0x2665  /* BLACK HEART SUIT                    */
+  , 0x2665  /* BLACK HEART SUIT                    */
+  , 0x2665  /* BLACK HEART SUIT                    */
+  , 0x03B1  /* GREEK SMALL LETTER ALPHA            */
+  , 0x03B3  /* GREEK SMALL LETTER GAMMA            */
+  , 0x03B1  /* GREEK SMALL LETTER ALPHA            */
+  , 0x03C0  /* GREEK SMALL LETTER PI               */
+  , 0x03CE  /* GREEK SMALL LETTER OMEGA WITH TONOS */
+  , 0x2665  /* BLACK HEART SUIT                    */
   };
 static const size_t utf8_codepoints_size = sizeof(utf8_codepoints) / sizeof(utf8_codepoints[0]);
 
 static const unsigned char utf8_codepoints_encoding[] =
-  { 0xE2, 0x99, 0xA5  /* U+2665: BLACK HEART SUIT */
-  , 0xE2, 0x99, 0xA5  /* U+2665: BLACK HEART SUIT */
-  , 0xE2, 0x99, 0xA5  /* U+2665: BLACK HEART SUIT */
-    /* TODO */
-  , 0xE2, 0x99, 0xA5  /* U+2665: BLACK HEART SUIT */
+  { 0xE2, 0x99, 0xA5  /* U+2665: BLACK HEART SUIT                    */
+  , 0xE2, 0x99, 0xA5  /* U+2665: BLACK HEART SUIT                    */
+  , 0xE2, 0x99, 0xA5  /* U+2665: BLACK HEART SUIT                    */
+  , 0xCE, 0xB1        /* U+03B1: GREEK SMALL LETTER ALPHA            */
+  , 0xCE, 0xB3        /* U+03B1: GREEK SMALL LETTER GAMMA            */
+  , 0xCE, 0xB1        /* U+03B1: GREEK SMALL LETTER ALPHA            */
+  , 0xCF, 0x80        /* U+03B1: GREEK SMALL LETTER PI               */
+  , 0xCF, 0x8E        /* U+03B1: GREEK SMALL LETTER OMEGA WITH TONOS */
+  , 0xE2, 0x99, 0xA5  /* U+2665: BLACK HEART SUIT                    */
   };
 static const size_t utf8_codepoints_encoding_size = sizeof(utf8_codepoints_encoding) / sizeof(utf8_codepoints_encoding[0]);
 
