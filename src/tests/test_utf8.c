@@ -56,6 +56,10 @@ unit_test_t utf8_test =
 unit_test_t *utf8_tests[] =
   { &utf8_encode_one_equalities_test
   , &utf8_encode_one_edge_cases_test
+
+  , &utf8_encode_equalities_test
+  , &utf8_encode_edge_cases_test
+
   , NULL
   };
 
@@ -81,6 +85,8 @@ static const struct utf8_codepoint_pair_s
   };
 static const size_t utf8_codepoint_pairs_size = sizeof(utf8_codepoint_pairs) / sizeof(utf8_codepoint_pairs[0]);
 
+/* ---------------------------------------------------------------- */
+/* utf8_encode_one tests                                            */
 /* ---------------------------------------------------------------- */
 
 unit_test_t utf8_encode_one_equalities_test =
@@ -148,6 +154,86 @@ unit_test_result_t utf8_encode_one_edge_cases_test_run(unit_test_context_t *cont
 
   result |=
     assert_inteq (context, NULL, (int)          utf8_size, (int)          pair->utf8_size);
+  if (test_result_need_abort(result)) return result;
+
+  return result;
+}
+
+/* ---------------------------------------------------------------- */
+/* utf8_encode tests                                                */
+/* ---------------------------------------------------------------- */
+
+unit_test_t utf8_encode_equalities_test =
+  {  utf8_encode_equalities_test_run 
+  , "utf8_encode_equalities_test"
+  , "utf8_encode: equality tests."
+  };
+
+static const codepoint_t utf8_codepoints[] =
+  { 0x2665  /* BLACK HEART SUIT */
+  , 0x2665  /* BLACK HEART SUIT */
+  , 0x2665  /* BLACK HEART SUIT */
+    /* TODO */
+  };
+static const size_t utf8_codepoints_size = sizeof(utf8_codepoints) / sizeof(utf8_codepoints[0]);
+
+static const unsigned char utf8_codepoints_encoding[] =
+  { 0xE2, 0x99, 0xA5  /* U+2665: BLACK HEART SUIT */
+  , 0xE2, 0x99, 0xA5  /* U+2665: BLACK HEART SUIT */
+  , 0xE2, 0x99, 0xA5  /* U+2665: BLACK HEART SUIT */
+    /* TODO */
+  };
+static const size_t utf8_codepoints_encoding_size = sizeof(utf8_codepoints_encoding) / sizeof(utf8_codepoints_encoding[0]);
+
+unit_test_result_t utf8_encode_equalities_test_run(unit_test_context_t *context)
+{
+  unit_test_result_t result;
+
+  unsigned char      buf[sizeof(utf8_codepoints_encoding) / sizeof(utf8_codepoints_encoding[0])];
+  size_t             buf_written;
+  size_t             num_encoded;
+
+  result = assert_success(context);
+
+  buf_written = utf8_encode(buf, utf8_codepoints_encoding_size, utf8_codepoints, utf8_codepoints_size, &num_encoded);
+
+  result |=
+    assert_inteq (context, NULL, (int)          buf_written, (int)          utf8_codepoints_encoding_size);
+  if (test_result_need_abort(result)) return result;
+
+  result |=
+    assert_memeq (context, NULL, (void *)       buf,         (void *)       utf8_codepoints,               utf8_codepoints_encoding_size);
+  if (test_result_need_abort(result)) return result;
+
+  result |=
+    assert_streqn(context, NULL, (const char *) buf,         (const char *) utf8_codepoints,               utf8_codepoints_encoding_size);
+  if (test_result_need_abort(result)) return result;
+
+  return result;
+}
+
+/* ---------------------------------------------------------------- */
+
+unit_test_t utf8_encode_edge_cases_test =
+  {  utf8_encode_edge_cases_test_run 
+  , "utf8_encode_edge_cases_test"
+  , "utf8_encode: edge cases tests."
+  };
+
+unit_test_result_t utf8_encode_edge_cases_test_run(unit_test_context_t *context)
+{
+  unit_test_result_t result;
+
+  unsigned char      buf[sizeof(utf8_codepoints_encoding) / sizeof(utf8_codepoints_encoding[0])];
+  size_t             buf_written;
+
+  result = assert_success(context);
+
+  /* Test NULL arguments for optional parameters. */
+  buf_written = utf8_encode(buf, utf8_codepoints_encoding_size, utf8_codepoints, utf8_codepoints_size, NULL);
+
+  result |=
+    assert_inteq (context, NULL, (int)          buf_written, (int)          utf8_codepoints_encoding_size);
   if (test_result_need_abort(result)) return result;
 
   return result;

@@ -57,4 +57,12 @@ unit_test_result_t utf8_encode_one_equalities_test_run(unit_test_context_t *cont
 extern unit_test_t utf8_encode_one_edge_cases_test;
 unit_test_result_t utf8_encode_one_edge_cases_test_run(unit_test_context_t *context);
 
+/* ---------------------------------------------------------------- */
+
+extern unit_test_t utf8_encode_equalities_test;
+unit_test_result_t utf8_encode_equalities_test_run(unit_test_context_t *context);
+
+extern unit_test_t utf8_encode_edge_cases_test;
+unit_test_result_t utf8_encode_edge_cases_test_run(unit_test_context_t *context);
+
 #endif /* ifndef TESTS_TEST_UTF8_H */

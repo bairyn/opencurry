@@ -212,7 +212,7 @@ size_t utf8_encode_one(unsigned char *dest, codepoint_t input)
  * Return:
  *             size_t:                         Number of bytes written.
  */
-size_t utf8_encode(unsigned char *dest, size_t dest_max_size, codepoint_t *input, size_t num_chars, size_t *out_num_encoded)
+size_t utf8_encode(unsigned char *dest, size_t dest_max_size, const codepoint_t *input, size_t num_chars, size_t *out_num_encoded)
 {
   size_t codepoints_written;
 
