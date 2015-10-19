@@ -384,7 +384,7 @@ void assert_inteq_msg(unit_test_context_t *context, char *msg_out, size_t msg_ou
 {
   snprintf
     ( (char *) msg_out, (size_t) msg_out_len
-    , "Assertion '%s' failed - integers must be equal, but differ:\n  should be:   % d\n  actually is: % d."
+    , "Assertion '%s' failed - integers must be equal, but differ:\n  should be:   % d\n  actually is: % d"
     , (const char *) tag
     , (int) model
     , (int) check
@@ -395,7 +395,7 @@ void assert_streqz_msg(unit_test_context_t *context, char *msg_out, size_t msg_o
 {
   snprintf
     ( (char *) msg_out, (size_t) msg_out_len
-    , "Assertion '%s' failed - strings must be equal, but differ:\n  should be:   %s\n  actually is: %s."
+    , "Assertion '%s' failed - strings must be equal, but differ:\n  should be:   %s\n  actually is: %s"
     , (const char *) tag
     , (const char*) model
     , (const char*) check
@@ -417,7 +417,7 @@ void assert_streqn_msg(unit_test_context_t *context, char *msg_out, size_t msg_o
 
     snprintf
       ( (char *) msg_out, (size_t) msg_out_len
-      , "Assertion '%s' failed - strings must be equal, but differ:\n  should be:   %s\n  actually is: %s."
+      , "Assertion '%s' failed - strings must be equal, but differ:\n  should be:   %s\n  actually is: %s"
       , (const char *) tag
       , (const char *) modelz
       , (const char *) checkz
@@ -592,7 +592,7 @@ void assert_not_inteq_msg(unit_test_context_t *context, char *msg_out, size_t ms
 {
   snprintf
     ( (char *) msg_out, (size_t) msg_out_len
-    , "Inverse assertion '%s' failed - integers must differ, but they are the same:\n  should differ from:  %d\n  but still is:        %d."
+    , "Inverse assertion '%s' failed - integers must differ, but they are the same:\n  should differ from:  %d\n  but still is:        %d"
     , (const char *) tag
     , (int) model
     , (int) check
@@ -603,7 +603,7 @@ void assert_not_streqz_msg(unit_test_context_t *context, char *msg_out, size_t m
 {
   snprintf
     ( (char *) msg_out, (size_t) msg_out_len
-    , "Inverse assertion '%s' failed - strings must duffer, but they are the same:\n  should differ from:  %s\n  but still is:        %s."
+    , "Inverse assertion '%s' failed - strings must duffer, but they are the same:\n  should differ from:  %s\n  but still is:        %s"
     , (const char *) tag
     , (const char*) model
     , (const char*) check
@@ -625,7 +625,7 @@ void assert_not_streqn_msg(unit_test_context_t *context, char *msg_out, size_t m
 
     snprintf
       ( (char *) msg_out, (size_t) msg_out_len
-      , "Inverse assertion '%s' failed - strings must duffer, but they are the same:\n  should differ from:  %s\n  but still is:        %s."
+      , "Inverse assertion '%s' failed - strings must duffer, but they are the same:\n  should differ from:  %s\n  but still is:        %s"
       , (const char *) tag
       , (const char *) modelz
       , (const char *) checkz
