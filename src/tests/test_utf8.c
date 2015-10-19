@@ -65,8 +65,8 @@ unit_test_t *utf8_tests[] =
   , &utf8_decode_one_equalities_test
   , &utf8_decode_one_edge_cases_test
 
-  /* TODO
   , &utf8_decode_equalities_test
+  /* TODO
   , &utf8_decode_edge_cases_test
   */
 
@@ -463,6 +463,58 @@ unit_test_result_t utf8_decode_one_edge_cases_test_run(unit_test_context_t *cont
       assert_inteq (context, NULL, tag, (int) width,          (int) pair->width);
     if (test_result_need_abort(result)) break;
   }
+
+  return result;
+}
+
+/* ---------------------------------------------------------------- */
+/* utf8_decode tests                                                */
+/* ---------------------------------------------------------------- */
+
+unit_test_t utf8_decode_equalities_test =
+  {  utf8_decode_equalities_test_run 
+  , "utf8_decode_equalities_test"
+  , "utf8_decode: equality tests."
+  };
+
+unit_test_result_t utf8_decode_equalities_test_run(unit_test_context_t *context)
+{
+  unit_test_result_t result;
+
+  size_t                     num_codepoints;
+  codepoint_t                codepoints[sizeof(utf8_codepoints) / sizeof(utf8_codepoints[0])];
+  size_t                     bytes_read;
+  size_t                     num_trailing_bytes;
+  utf8_decode_error_status_t error_status;
+
+  result = assert_success(context);
+
+  num_codepoints =
+    utf8_decode
+      ( codepoints, utf8_codepoints_size, utf8_codepoints_encoding
+      , utf8_codepoints_encoding_size, 0, utf8_default_decode_error_behaviour
+      , &bytes_read, &num_trailing_bytes, &error_status
+      );
+
+  result |=
+    assert_inteq (context, NULL, "num_codepoints",     (int)    num_codepoints,     (int)    utf8_codepoints_size);
+  if (test_result_need_abort(result)) return result;
+
+  result |=
+    assert_inteq (context, NULL, "bytes_read",         (int)    bytes_read,         (int)    utf8_codepoints_encoding_size);
+  if (test_result_need_abort(result)) return result;
+
+  result |=
+    assert_inteq (context, NULL, "num_trailing_bytes", (int)    num_trailing_bytes, (int)    0);
+  if (test_result_need_abort(result)) return result;
+
+  result |=
+    assert_inteq (context, NULL, "error_status",       (int)    error_status,       (int)    utf8_decode_no_error);
+  if (test_result_need_abort(result)) return result;
+
+  result |=
+    assert_memeq (context, NULL, "buf mem",            (void *) codepoints,         (void *) utf8_codepoints, sizeof(utf8_codepoints));
+  if (test_result_need_abort(result)) return result;
 
   return result;
 }
