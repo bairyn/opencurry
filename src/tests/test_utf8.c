@@ -416,11 +416,11 @@ static const struct utf8_decode_one_pair_s
     /* xxxx xxxx = 0100 0111 = 0x47 */
     /* 110x xxxx  10xx xxxx */
     /* 1100 0001  1000 0111 */
-    /* 0xC1       0xB7      */
-  , { {0xC1, 0xB7, 0x00, 0x00}, 2,  utf8_replacement_character_uFFFD_behaviour
+    /* 0xC1       0x87      */
+  , { {0xC1, 0x87, 0x00, 0x00}, 2,  utf8_replacement_character_uFFFD_behaviour
     , 0xFFFD, 1, 1, utf8_decode_overlong_encoding
     }
-  , { {0xC1, 0xB7, 0x00, 0x00}, 2,  utf8_po_replacement_character_uFFFD_behaviour
+  , { {0xC1, 0x87, 0x00, 0x00}, 2,  utf8_po_replacement_character_uFFFD_behaviour
     , 0x0047, 2, 2, utf8_decode_overlong_encoding
     }
   };
