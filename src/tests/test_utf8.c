@@ -100,7 +100,7 @@ static const size_t utf8_codepoint_pairs_size = sizeof(utf8_codepoint_pairs) / s
 /* ---------------------------------------------------------------- */
 
 unit_test_t utf8_encode_one_equalities_test =
-  {  utf8_encode_one_equalities_test_run 
+  {  utf8_encode_one_equalities_test_run
   , "utf8_encode_one_equalities_test"
   , "utf8_encode_one: equality tests."
   };
@@ -147,7 +147,7 @@ unit_test_result_t utf8_encode_one_equalities_test_run(unit_test_context_t *cont
 /* ---------------------------------------------------------------- */
 
 unit_test_t utf8_encode_one_edge_cases_test =
-  {  utf8_encode_one_edge_cases_test_run 
+  {  utf8_encode_one_edge_cases_test_run
   , "utf8_encode_one_edge_cases_test"
   , "utf8_encode_one: edge case tests."
   };
@@ -179,7 +179,7 @@ unit_test_result_t utf8_encode_one_edge_cases_test_run(unit_test_context_t *cont
 /* ---------------------------------------------------------------- */
 
 unit_test_t utf8_encode_equalities_test =
-  {  utf8_encode_equalities_test_run 
+  {  utf8_encode_equalities_test_run
   , "utf8_encode_equalities_test"
   , "utf8_encode: equality tests."
   };
@@ -262,7 +262,7 @@ unit_test_result_t utf8_encode_equalities_test_run(unit_test_context_t *context)
 /* ---------------------------------------------------------------- */
 
 unit_test_t utf8_encode_edge_cases_test =
-  {  utf8_encode_edge_cases_test_run 
+  {  utf8_encode_edge_cases_test_run
   , "utf8_encode_edge_cases_test"
   , "utf8_encode: edge case tests."
   };
@@ -303,7 +303,7 @@ unit_test_result_t utf8_encode_edge_cases_test_run(unit_test_context_t *context)
 /* ---------------------------------------------------------------- */
 
 unit_test_t utf8_decode_one_equalities_test =
-  {  utf8_decode_one_equalities_test_run 
+  {  utf8_decode_one_equalities_test_run
   , "utf8_decode_one_equalities_test"
   , "utf8_decode_one: equality tests."
   };
@@ -435,7 +435,7 @@ static const size_t utf8_decode_one_pairs_size = sizeof(utf8_decode_one_pairs) /
 /* ---------------------------------------------------------------- */
 
 unit_test_t utf8_decode_one_edge_cases_test =
-  {  utf8_decode_one_edge_cases_test_run 
+  {  utf8_decode_one_edge_cases_test_run
   , "utf8_decode_one_edge_cases_test"
   , "utf8_decode_one: edge case tests."
   };
@@ -485,7 +485,7 @@ unit_test_result_t utf8_decode_one_edge_cases_test_run(unit_test_context_t *cont
 /* ---------------------------------------------------------------- */
 
 unit_test_t utf8_decode_equalities_test =
-  {  utf8_decode_equalities_test_run 
+  {  utf8_decode_equalities_test_run
   , "utf8_decode_equalities_test"
   , "utf8_decode: equality tests."
   };
@@ -657,8 +657,8 @@ static unit_test_t
 
 /* Array of utf8_decode edge tests. */
 static unit_test_t *utf8_edge_cases_tests[] =
-  { &utf8_decode_edge_cases_trailing_test 
-  , &utf8_decode_edge_cases_null_outs_test 
+  { &utf8_decode_edge_cases_trailing_test
+  , &utf8_decode_edge_cases_null_outs_test
 
   , NULL
   };
