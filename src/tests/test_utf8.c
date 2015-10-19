@@ -421,7 +421,7 @@ static const struct utf8_decode_one_pair_s
     , 0xFFFD, 1, 1, utf8_decode_overlong_encoding
     }
   , { {0xC1, 0xB7, 0x00, 0x00}, 2,  utf8_po_replacement_character_uFFFD_behaviour
-    , 0x0037, 2, 2, utf8_decode_overlong_encoding
+    , 0x0047, 2, 2, utf8_decode_overlong_encoding
     }
   };
 static const size_t utf8_decode_one_pairs_size = sizeof(utf8_decode_one_pairs) / sizeof(utf8_decode_one_pairs[0]);
