@@ -463,12 +463,12 @@ unit_test_result_t utf8_decode_one_edge_cases_test_run(unit_test_context_t *cont
 
     snprintf(tag, sizeof(tag) / sizeof(tag[0]), "width %d", i);
     result |=
-      assert_inteq (context, NULL, tag, (int) width,          (int) pair->utf8_size);
+      assert_inteq (context, NULL, tag, (int) width,          (int) pair->width);
     if (test_result_need_abort(result)) break;
 
     snprintf(tag, sizeof(tag) / sizeof(tag[0]), "bytes_consumed %d", i);
     result |=
-      assert_inteq (context, NULL, tag, (int) bytes_consumed, (int) pair->utf8_size);
+      assert_inteq (context, NULL, tag, (int) bytes_consumed, (int) pair->bytes_consumed);
     if (test_result_need_abort(result)) break;
 
     snprintf(tag, sizeof(tag) / sizeof(tag[0]), "error_status %d", i);
