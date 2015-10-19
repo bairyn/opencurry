@@ -402,8 +402,8 @@ static const struct utf8_decode_one_pair_s
 
     /* '7' in 2 bytes */
     /* xxxx xxxx = 0011 0111 = 0x37 */
-    /* 110x xxx  10xx xxxx */
-    /* 1100 000  1011 0111 */
+    /* 110x xxxx  10xx xxxx */
+    /* 1100 0000  1011 0111 */
     /* 0xC0      0xB7      */
   , { {0xC0, 0xB7, 0x00, 0x00}, 2,  utf8_replacement_character_uFFFD_behaviour
     , 0xFFFD, 1, 1, utf8_decode_overlong_encoding
@@ -414,9 +414,9 @@ static const struct utf8_decode_one_pair_s
 
     /* 'G' in 2 bytes */
     /* xxxx xxxx = 0100 0111 = 0x47 */
-    /* 110x xxx  10xx xxxx */
-    /* 1100 001  1000 0111 */
-    /* 0xC1      0xB7      */
+    /* 110x xxxx  10xx xxxx */
+    /* 1100 0001  1000 0111 */
+    /* 0xC1       0xB7      */
   , { {0xC1, 0xB7, 0x00, 0x00}, 2,  utf8_replacement_character_uFFFD_behaviour
     , 0xFFFD, 1, 1, utf8_decode_overlong_encoding
     }
