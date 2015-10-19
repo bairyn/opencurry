@@ -621,7 +621,10 @@ codepoint_t utf8_decode_one(const unsigned char *input, size_t input_max_size, u
     }
 
     /* Write output. */
-    if (out_error_status)   *out_error_status   = utf8_decode_no_error;
+    else
+    {
+      if (out_error_status)   *out_error_status   = utf8_decode_no_error;
+    }
 
     if (out_width)          *out_width          = 2;
     if (out_bytes_consumed) *out_bytes_consumed = 2;
@@ -695,7 +698,10 @@ codepoint_t utf8_decode_one(const unsigned char *input, size_t input_max_size, u
     }
 
     /* Write output. */
-    if (out_error_status)   *out_error_status   = utf8_decode_no_error;
+    else
+    {
+      if (out_error_status)   *out_error_status   = utf8_decode_no_error;
+    }
 
     if (out_width)          *out_width          = 3;
     if (out_bytes_consumed) *out_bytes_consumed = 3;
@@ -773,7 +779,10 @@ codepoint_t utf8_decode_one(const unsigned char *input, size_t input_max_size, u
     }
 
     /* Write output. */
-    if (out_error_status)   *out_error_status   = utf8_decode_no_error;
+    else
+    {
+      if (out_error_status)   *out_error_status   = utf8_decode_no_error;
+    }
 
     if (out_width)          *out_width          = 4;
     if (out_bytes_consumed) *out_bytes_consumed = 4;
