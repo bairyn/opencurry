@@ -310,12 +310,11 @@ unit_test_result_t utf8_decode_one_equalities_test_run(unit_test_context_t *cont
   {
     codepoint_t                codepoint;
     size_t                     width;
-    size_t                     bytes_consumed;
     utf8_decode_error_status_t error_status;
 
     pair = &utf8_codepoint_pairs[i];
 
-    codepoint = utf8_decode_one(pair->buf, pair->utf8_size, utf8_default_decode_error_behaviour, &width, &bytes_consumed, &error_status);
+    codepoint = utf8_decode_one(pair->buf, pair->utf8_size, utf8_default_decode_error_behaviour, &width, &error_status);
 
     snprintf(tag, sizeof(tag) / sizeof(tag[0]), "codepoint %d", i);
     result |=
@@ -325,11 +324,6 @@ unit_test_result_t utf8_decode_one_equalities_test_run(unit_test_context_t *cont
     snprintf(tag, sizeof(tag) / sizeof(tag[0]), "width %d", i);
     result |=
       assert_inteq (context, NULL, tag, (int) width,          (int) pair->utf8_size);
-    if (test_result_need_abort(result)) break;
-
-    snprintf(tag, sizeof(tag) / sizeof(tag[0]), "bytes_consumed %d", i);
-    result |=
-      assert_inteq (context, NULL, tag, (int) bytes_consumed, (int) pair->utf8_size);
     if (test_result_need_abort(result)) break;
 
     snprintf(tag, sizeof(tag) / sizeof(tag[0]), "error_status %d", i);
@@ -355,47 +349,46 @@ static const struct utf8_decode_one_pair_s
   codepoint_t                   codepoint;
 
   size_t                        width;
-  size_t                        bytes_consumed;
   size_t                        error_status;
 } utf8_decode_one_pairs[] =
   {
     /* Valid input. */
     { {0x37, 0x00, 0x00, 0x00}, 1,  utf8_default_decode_error_behaviour  /*  U+0037: DIGIT SEVEN       */
-    ,  0x0037, 1, 1, utf8_decode_no_error
+    ,  0x0037, 1, utf8_decode_no_error
     }
   , { {0xCB, 0x9A, 0x00, 0x00}, 2,  utf8_default_decode_error_behaviour  /*  U+02DA: RING ABOVE        */
-    ,  0x02DA, 2, 2, utf8_decode_no_error
+    ,  0x02DA, 2, utf8_decode_no_error
     }
   , { {0xE2, 0x99, 0xA5, 0x00}, 3,  utf8_default_decode_error_behaviour  /*  U+2665: BLACK HEART SUIT  */
-    ,  0x2665, 3, 3, utf8_decode_no_error
+    ,  0x2665, 3, utf8_decode_no_error
     }
   , { {0xF0, 0x9D, 0x8C, 0x9D}, 4,  utf8_default_decode_error_behaviour  /* U+1D31D: TETRAGRAM FOR JOY */
-    , 0x1D31D, 4, 4, utf8_decode_no_error
+    , 0x1D31D, 4, utf8_decode_no_error
     }
   , { {0xF0, 0x9F, 0x92, 0x8C}, 4,  utf8_default_decode_error_behaviour  /* U+1F48C: LOVE LETTER       */
-    , 0x1F48C, 4, 4, utf8_decode_no_error
+    , 0x1F48C, 4, utf8_decode_no_error
     }
 
     /* Testing different behaviours on unexpected continuation bytes. */
   , { {0x8C, 0x9F, 0x92, 0x8C}, 4,  utf8_replacement_character_uFFFD_behaviour
-    , 0xFFFD, 1, 1, utf8_decode_unexpected_continuation_byte
+    ,  0xFFFD, 1, utf8_decode_unexpected_continuation_byte
     }
   , { {0x8C, 0x9F, 0x92, 0x8C}, 4,  utf8_invalid_character_uDCxx_behaviour
-    , 0xDC8C, 1, 1, utf8_decode_unexpected_continuation_byte
+    ,  0xDC8C, 1, utf8_decode_unexpected_continuation_byte
     }
   , { {0x8C, 0x9F, 0x92, 0x8C}, 4,  utf8_codepoint_u00xx_behaviour
-    , 0x008C, 1, 1, utf8_decode_unexpected_continuation_byte
+    ,  0x008C, 1, utf8_decode_unexpected_continuation_byte
     }
 
     /* Testing other errors. */
   , { {0xF0, 0x9F, 0x92, 0x00}, 3,  utf8_replacement_character_uFFFD_behaviour
-    , 0xFFFD, 1, 1, utf8_decode_insufficient_continuation_bytes_eof
+    ,  0xFFFD, 1, utf8_decode_insufficient_continuation_bytes_eof
     }
   , { {0xF0, 0x9F, 0x92, 0x37}, 4,  utf8_replacement_character_uFFFD_behaviour
-    , 0xFFFD, 1, 1, utf8_decode_insufficient_continuation_bytes_sufficient_input
+    ,  0xFFFD, 1, utf8_decode_insufficient_continuation_bytes_sufficient_input
     }
   , { {0xF8, 0x9F, 0x92, 0x8C}, 4,  utf8_replacement_character_uFFFD_behaviour
-    , 0xFFFD, 1, 1, utf8_decode_out_of_bounds
+    ,  0xFFFD, 1, utf8_decode_out_of_bounds
     }
 
     /* Testing overlong encoding errors. */
@@ -406,10 +399,10 @@ static const struct utf8_decode_one_pair_s
     /* 1100 0000  1011 0111 */
     /* 0xC0      0xB7      */
   , { {0xC0, 0xB7, 0x00, 0x00}, 2,  utf8_replacement_character_uFFFD_behaviour
-    , 0xFFFD, 1, 1, utf8_decode_overlong_encoding
+    ,  0xFFFD, 1, utf8_decode_overlong_encoding
     }
   , { {0xC0, 0xB7, 0x00, 0x00}, 2,  utf8_po_replacement_character_uFFFD_behaviour
-    , 0x0037, 2, 2, utf8_decode_overlong_encoding
+    ,  0x0037, 2, utf8_decode_overlong_encoding
     }
 
     /* 'G' in 2 bytes */
@@ -418,10 +411,10 @@ static const struct utf8_decode_one_pair_s
     /* 1100 0001  1000 0111 */
     /* 0xC1       0x87      */
   , { {0xC1, 0x87, 0x00, 0x00}, 2,  utf8_replacement_character_uFFFD_behaviour
-    , 0xFFFD, 1, 1, utf8_decode_overlong_encoding
+    ,  0xFFFD, 1, utf8_decode_overlong_encoding
     }
   , { {0xC1, 0x87, 0x00, 0x00}, 2,  utf8_po_replacement_character_uFFFD_behaviour
-    , 0x0047, 2, 2, utf8_decode_overlong_encoding
+    ,  0x0047, 2, utf8_decode_overlong_encoding
     }
   };
 static const size_t utf8_decode_one_pairs_size = sizeof(utf8_decode_one_pairs) / sizeof(utf8_decode_one_pairs[0]);
@@ -449,12 +442,11 @@ unit_test_result_t utf8_decode_one_edge_cases_test_run(unit_test_context_t *cont
   {
     codepoint_t                codepoint;
     size_t                     width;
-    size_t                     bytes_consumed;
     utf8_decode_error_status_t error_status;
 
     pair = &utf8_decode_one_pairs[i];
 
-    codepoint = utf8_decode_one(pair->buf, pair->utf8_size, pair->error_behaviour, &width, &bytes_consumed, &error_status);
+    codepoint = utf8_decode_one(pair->buf, pair->utf8_size, pair->error_behaviour, &width, &error_status);
 
     snprintf(tag, sizeof(tag) / sizeof(tag[0]), "error_status %d", i);
     result |=
@@ -469,11 +461,6 @@ unit_test_result_t utf8_decode_one_edge_cases_test_run(unit_test_context_t *cont
     snprintf(tag, sizeof(tag) / sizeof(tag[0]), "width %d", i);
     result |=
       assert_inteq (context, NULL, tag, (int) width,          (int) pair->width);
-    if (test_result_need_abort(result)) break;
-
-    snprintf(tag, sizeof(tag) / sizeof(tag[0]), "bytes_consumed %d", i);
-    result |=
-      assert_inteq (context, NULL, tag, (int) bytes_consumed, (int) pair->bytes_consumed);
     if (test_result_need_abort(result)) break;
   }
 
