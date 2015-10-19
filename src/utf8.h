@@ -202,7 +202,7 @@ codepoint_t utf8_decode_one_erroneous(const unsigned char *input, size_t input_m
 /* Returns number of decoded codepoints. */
 size_t utf8_decode
   ( codepoint_t *dest, size_t dest_max_size, const unsigned char *input, size_t input_max_size, int allow_trailing_bytes, utf8_decode_error_behaviour_t error_behaviour
-  , size_t *out_bytes_read, size_t *out_num_trailing_bytes, utf8_decode_error_status_t *out_sum_error_status
+  , size_t *outnum__bytes_read, size_t *out_num_trailing_bytes, utf8_decode_error_status_t *out_error_status_sum
   );
 
 #endif /* ifndef UTF8_H */

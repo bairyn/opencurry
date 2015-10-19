@@ -982,7 +982,7 @@ codepoint_t utf8_decode_one_erroneous(const unsigned char *input, size_t input_m
  *     invalid input.
  *
  * Output:
- *   (optional) size_t                     *out_bytes_read:
+ *   (optional) size_t                     *out_num_bytes_read:
  *      Total number of bytes read for each decoded codepoint.  (Bytes for
  *      invalid or incomplete input are not included.
  *
@@ -992,7 +992,7 @@ codepoint_t utf8_decode_one_erroneous(const unsigned char *input, size_t input_m
  *
  *      If allow_trailing_bytes is "false", set to 0.
  *
- *   (optional) utf8_decode_error_status_t *out_sum_error_status:
+ *   (optional) utf8_decode_error_status_t *out_error_status_sum:
  *      Indicates whether decoding was succesful.
  *
  *      On invalid UTF-8 input, this is set to the OR-sum of each error.
@@ -1001,16 +1001,18 @@ codepoint_t utf8_decode_one_erroneous(const unsigned char *input, size_t input_m
  *   size_t:
  *     Number of decoded *codepoints*.
  *
- *     (The number of parsed bytes from the input is set to "out_bytes_read" if
+ *     (The number of parsed bytes from the input is set to "out_num_bytes_read" if
  *     not NULL.
  */
 size_t utf8_decode
   ( codepoint_t *dest, size_t dest_max_size, const unsigned char *input, size_t input_max_size, int allow_trailing_bytes, utf8_decode_error_behaviour_t error_behaviour
-  , size_t *out_bytes_read, size_t *out_num_trailing_bytes, utf8_decode_error_status_t *out_sum_error_status
+  , size_t *out_num_bytes_read, size_t *out_num_trailing_bytes, utf8_decode_error_status_t *out_error_status_sum
   )
 {
   size_t num_bytes_read         = 0;
   size_t num_decoded_codepoints;
+
+  size_t num_trailing_bytes     = 0;
 
   utf8_decode_error_status_t error_status_sum = utf8_decode_no_error;
 
@@ -1077,8 +1079,9 @@ size_t utf8_decode
     }
   }
 
-  if (out_bytes_read)       *out_bytes_read       = num_bytes_read;
-  if (out_sum_error_status) *out_sum_error_status = error_status_sum;
+  if (out_num_bytes_read)     *out_num_bytes_read     = num_bytes_read;
+  if (out_num_trailing_bytes) *out_num_trailing_bytes = num_trailing_bytes;
+  if (out_error_status_sum)   *out_error_status_sum   = error_status_sum;
 
   return num_decoded_codepoints;
 }
