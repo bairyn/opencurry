@@ -53,9 +53,6 @@ SHARED_OBJS :=                      \
 	$(OBJ_DIR)/opencurry.o            \
 	$(OBJ_DIR)/cli.o                  \
 	$(OBJ_DIR)/util.o                 \
-	$(OBJ_DIR)/fun_prim.o             \
-	$(OBJ_DIR)/fun_pair.o             \
-	$(OBJ_DIR)/fun_base.o             \
 	$(OBJ_DIR)/lex.o                  \
 	$(OBJ_DIR)/unicode.o              \
 	$(OBJ_DIR)/utf8.o
@@ -74,9 +71,6 @@ TEST_CLI_OBJS :=                    \
 	$(OBJ_DIR)/tests/test_opencurry.o \
 	$(OBJ_DIR)/tests/test_cli.o       \
 	$(OBJ_DIR)/tests/test_util.o      \
-	$(OBJ_DIR)/tests/test_fun_prim.o  \
-	$(OBJ_DIR)/tests/test_fun_pair.o  \
-	$(OBJ_DIR)/tests/test_fun_base.o  \
 	$(OBJ_DIR)/tests/test_lex.o       \
 	$(OBJ_DIR)/tests/test_unicode.o   \
 	$(OBJ_DIR)/tests/test_utf8.o

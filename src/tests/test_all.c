@@ -44,9 +44,6 @@
 #include "test_opencurry.h"
 #include "test_cli.h"
 #include "test_util.h"
-#include "test_fun_prim.h"
-#include "test_fun_pair.h"
-#include "test_fun_base.h"
 #include "test_lex.h"
 #include "test_unicode.h"
 #include "test_utf8.h"
@@ -72,9 +69,6 @@ unit_test_t *all_tests[] =
   , &opencurry_test
   , &cli_test
   , &util_test
-  , &fun_prim_test
-  , &fun_pair_test
-  , &fun_base_test
   , &lex_test
   , &unicode_test
   , &utf8_test
