@@ -537,16 +537,43 @@ size_t utf8_encode(unsigned char *dest, size_t dest_max_size, const codepoint_t 
 /*
  * utf8_decode_one: Decode a single codepoint.
  *
+ * Input:
+ *   const unsigned char *input:           UTF-8 bytes.
+ *   size_t               input_max_size:  Max number of input bytes.
+ *   utf8_decode_error_behaviour_t
+ *                        error_behaviour: How to behave on invalid input.
+ *
+ * Output:
+ *   (optional) size_t *out_width:
+ *     Number of bytes assumed from the input to generate the parsed codepoint.
+ *
+ *     This value is always at most "input_max_size".
+ *
+ *     If more codepoints are to be decoded from the input stream, this value
+ *     represents the distance at which decoding should resume.  For example, a
+ *     value of "2" indicates that the next character should be parsed at 2
+ *     bytes after the last position.
+ *
+ *     Note: this value is not necessarily the same as the number of bytes
+ *     required to encode the returned codepoint, because on invalid input, a
+ *     multi-byte replacement character could be returned where decoding should
+ *     continue at the next byte.
+ *
+ *     Note: on invalid input, if input_max_size is 0, out_width will be 0.
+ *
+ * Return:
+ *   codepoint_t: Decoded codepoint.
+ *
  * If no bytes are available for input, 
  */
-codepoint_t utf8_decode_one(const unsigned char *input, size_t input_max_size, utf8_decode_error_behaviour_t error_behaviour, size_t *out_width, size_t *out_bytes_consumed, utf8_decode_error_status_t *out_error_status)
+codepoint_t utf8_decode_one(const unsigned char *input, size_t input_max_size, utf8_decode_error_behaviour_t error_behaviour, size_t *out_width, utf8_decode_error_status_t *out_error_status)
 {
   if (input_max_size < 1)
   {
     if (out_error_status)
       *out_error_status = utf8_decode_insufficient_continuation_bytes_eof;
 
-    return utf8_decode_one_erroneous(input, input_max_size, error_behaviour, out_width, out_bytes_consumed);
+    return utf8_decode_one_erroneous(input, input_max_size, error_behaviour, out_width);
   }
 
   /* ---------------------------------------------------------------- */
@@ -562,7 +589,6 @@ codepoint_t utf8_decode_one(const unsigned char *input, size_t input_max_size, u
     if (out_error_status)   *out_error_status   = utf8_decode_no_error;
 
     if (out_width)          *out_width          = 1;
-    if (out_bytes_consumed) *out_bytes_consumed = 1;
 
     /*
     return 0x7F & input[0];  /8 redundant 8/
@@ -586,7 +612,7 @@ codepoint_t utf8_decode_one(const unsigned char *input, size_t input_max_size, u
       if (out_error_status)
         *out_error_status = utf8_decode_insufficient_continuation_bytes_eof;
 
-      return utf8_decode_one_erroneous(input, input_max_size, error_behaviour, out_width, out_bytes_consumed);
+      return utf8_decode_one_erroneous(input, input_max_size, error_behaviour, out_width);
     }
 
     /* Are the remaining input bytes continuation bytes? */
@@ -600,7 +626,7 @@ codepoint_t utf8_decode_one(const unsigned char *input, size_t input_max_size, u
           utf8_decode_insufficient_continuation_bytes_sufficient_input;
       }
 
-      return utf8_decode_one_erroneous(input, input_max_size, error_behaviour, out_width, out_bytes_consumed);
+      return utf8_decode_one_erroneous(input, input_max_size, error_behaviour, out_width);
     }
 
     /* Check for overencoding:
@@ -617,7 +643,7 @@ codepoint_t utf8_decode_one(const unsigned char *input, size_t input_max_size, u
       if (out_error_status) *out_error_status = utf8_decode_overlong_encoding;
 
       if (!(error_behaviour & UTF8_DECODE_ERROR_PO_BIT))
-        return utf8_decode_one_erroneous(input, input_max_size, error_behaviour, out_width, out_bytes_consumed);
+        return utf8_decode_one_erroneous(input, input_max_size, error_behaviour, out_width);
     }
 
     /* Write output. */
@@ -627,7 +653,6 @@ codepoint_t utf8_decode_one(const unsigned char *input, size_t input_max_size, u
     }
 
     if (out_width)          *out_width          = 2;
-    if (out_bytes_consumed) *out_bytes_consumed = 2;
 
     /* Extract bits. */
     return
@@ -656,7 +681,7 @@ codepoint_t utf8_decode_one(const unsigned char *input, size_t input_max_size, u
       if (out_error_status)
         *out_error_status = utf8_decode_insufficient_continuation_bytes_eof;
 
-      return utf8_decode_one_erroneous(input, input_max_size, error_behaviour, out_width, out_bytes_consumed);
+      return utf8_decode_one_erroneous(input, input_max_size, error_behaviour, out_width);
     }
 
     /* Are the remaining input bytes continuation bytes? */
@@ -673,7 +698,7 @@ codepoint_t utf8_decode_one(const unsigned char *input, size_t input_max_size, u
           utf8_decode_insufficient_continuation_bytes_sufficient_input;
       }
 
-      return utf8_decode_one_erroneous(input, input_max_size, error_behaviour, out_width, out_bytes_consumed);
+      return utf8_decode_one_erroneous(input, input_max_size, error_behaviour, out_width);
     }
 
     /* Check for overencoding:
@@ -694,7 +719,7 @@ codepoint_t utf8_decode_one(const unsigned char *input, size_t input_max_size, u
       if (out_error_status) *out_error_status = utf8_decode_overlong_encoding;
 
       if (!(error_behaviour & UTF8_DECODE_ERROR_PO_BIT))
-        return utf8_decode_one_erroneous(input, input_max_size, error_behaviour, out_width, out_bytes_consumed);
+        return utf8_decode_one_erroneous(input, input_max_size, error_behaviour, out_width);
     }
 
     /* Write output. */
@@ -704,7 +729,6 @@ codepoint_t utf8_decode_one(const unsigned char *input, size_t input_max_size, u
     }
 
     if (out_width)          *out_width          = 3;
-    if (out_bytes_consumed) *out_bytes_consumed = 3;
 
     /* Extract bits. */
     return
@@ -736,7 +760,7 @@ codepoint_t utf8_decode_one(const unsigned char *input, size_t input_max_size, u
       if (out_error_status)
         *out_error_status = utf8_decode_insufficient_continuation_bytes_eof;
 
-      return utf8_decode_one_erroneous(input, input_max_size, error_behaviour, out_width, out_bytes_consumed);
+      return utf8_decode_one_erroneous(input, input_max_size, error_behaviour, out_width);
     }
 
     /* Are the remaining input bytes continuation bytes? */
@@ -754,7 +778,7 @@ codepoint_t utf8_decode_one(const unsigned char *input, size_t input_max_size, u
           utf8_decode_insufficient_continuation_bytes_sufficient_input;
       }
 
-      return utf8_decode_one_erroneous(input, input_max_size, error_behaviour, out_width, out_bytes_consumed);
+      return utf8_decode_one_erroneous(input, input_max_size, error_behaviour, out_width);
     }
 
     /* Check for overencoding:
@@ -775,7 +799,7 @@ codepoint_t utf8_decode_one(const unsigned char *input, size_t input_max_size, u
       if (out_error_status) *out_error_status = utf8_decode_overlong_encoding;
 
       if (!(error_behaviour & UTF8_DECODE_ERROR_PO_BIT))
-        return utf8_decode_one_erroneous(input, input_max_size, error_behaviour, out_width, out_bytes_consumed);
+        return utf8_decode_one_erroneous(input, input_max_size, error_behaviour, out_width);
     }
 
     /* Write output. */
@@ -785,7 +809,6 @@ codepoint_t utf8_decode_one(const unsigned char *input, size_t input_max_size, u
     }
 
     if (out_width)          *out_width          = 4;
-    if (out_bytes_consumed) *out_bytes_consumed = 4;
 
     /* Extract bits. */
     return
@@ -814,7 +837,7 @@ codepoint_t utf8_decode_one(const unsigned char *input, size_t input_max_size, u
     if (out_error_status)
       *out_error_status = utf8_decode_unexpected_continuation_byte;
 
-    return utf8_decode_one_erroneous(input, input_max_size, error_behaviour, out_width, out_bytes_consumed);
+    return utf8_decode_one_erroneous(input, input_max_size, error_behaviour, out_width);
   }
 
   /* ---------------------------------------------------------------- */
@@ -825,7 +848,7 @@ codepoint_t utf8_decode_one(const unsigned char *input, size_t input_max_size, u
     if (out_error_status)
       *out_error_status = utf8_decode_out_of_bounds;
 
-    return utf8_decode_one_erroneous(input, input_max_size, error_behaviour, out_width, out_bytes_consumed);
+    return utf8_decode_one_erroneous(input, input_max_size, error_behaviour, out_width);
   }
 }
 
@@ -849,11 +872,16 @@ codepoint_t utf8_decode_one(const unsigned char *input, size_t input_max_size, u
  *
  * Outut:
  *   size_t                        *out_width:
- *     Number of bytes assumed to represent codepoint.
+ *     Number of bytes from input interpreted to represent the codepoint.
  *
- *     Note: this is not the same as the byte width for a properly encoded
- *     codepoint!  E.g. out_width could be set to "1" for U+FFFD, a codepoint
- *     which requires 2 bytes to encode in UTF-8.
+ *     This value is always at most "input_max_size".
+ *
+ *     For each of the currently supported behaviours, this will be 1 or 0,
+ *     depending on whether input_max_size is positive.
+ *
+ *     This is different from the number of bytes required to *encode* the
+ *     codepoint.  utf8_encode_one() with a NULL dest argument can be used to
+ *     obtain this value.
  *
  *   size_t                        *out_bytes_consumed:
  *     Number of bytes read to represent codepoint.
@@ -862,7 +890,7 @@ codepoint_t utf8_decode_one(const unsigned char *input, size_t input_max_size, u
  *   codepoint_t:
  *     Codepoint derived from input, based on "error_behaviour".
  */
-codepoint_t utf8_decode_one_erroneous(const unsigned char *input, size_t input_max_size, utf8_decode_error_behaviour_t error_behaviour, size_t *out_width, size_t *out_bytes_consumed)
+codepoint_t utf8_decode_one_erroneous(const unsigned char *input, size_t input_max_size, utf8_decode_error_behaviour_t error_behaviour, size_t *out_width)
 {
   codepoint_t codepoint;
 
@@ -870,6 +898,7 @@ codepoint_t utf8_decode_one_erroneous(const unsigned char *input, size_t input_m
   switch(error_behaviour)
   {
     case utf8_default_decode_error_behaviour:
+    case utf8_stop_on_decode_error:
     default:
       error_behaviour = DEFAULT_UTF8_DECODE_ERRROR_BEHAVIOUR;
       break;
@@ -891,25 +920,164 @@ codepoint_t utf8_decode_one_erroneous(const unsigned char *input, size_t input_m
 
     case utf8_replacement_character_uFFFD_behaviour:
     case utf8_po_replacement_character_uFFFD_behaviour:
-      if(out_width)          *out_width = 1;
-      if(out_bytes_consumed) *out_bytes_consumed = (input_max_size >= 1 ? 1 : 0);
+      if(out_width) *out_width = (input_max_size >= 1 ? 1 : 0);
       codepoint = 0xFFFD;
       break;
 
     case utf8_invalid_character_uDCxx_behaviour:
     case utf8_po_invalid_character_uDCxx_behaviour:
-      if(out_width)          *out_width = 1;
-      if(out_bytes_consumed) *out_bytes_consumed = (input_max_size >= 1 ? 1 : 0);
+      if(out_width) *out_width = (input_max_size >= 1 ? 1 : 0);
       codepoint = 0xDC80 | (input_max_size >= 1 ? *input : UTF8_DECODE_ERROR_INSUFFICIENT_INPUT_BYTE_VALUE);
       break;
 
     case utf8_codepoint_u00xx_behaviour:
     case utf8_po_codepoint_u00xx_behaviour:
-      if(out_width)          *out_width = 1;
-      if(out_bytes_consumed) *out_bytes_consumed = (input_max_size >= 1 ? 1 : 0);
+      if(out_width) *out_width = (input_max_size >= 1 ? 1 : 0);
       codepoint = 0x0080 | (input_max_size >= 1 ? *input : UTF8_DECODE_ERROR_INSUFFICIENT_INPUT_BYTE_VALUE);
       break;
   }
 
   return codepoint;
+}
+
+/*
+ * utf8_decode: decode a chunk of utf-8 encoded codepoints.
+ *
+ * Returns number of decoded *codepoints*.
+ *
+ * Input:
+ *   codepoint_t                  *dest:                 Pointer to array of codepoints
+ *   size_t                        dest_max_size:        Maximum number of codepoints to decode.
+ *
+ *   const unsigned char          *input:                UTF-8 encoded byte sequence to decode.
+ *   size_t                        input_max_size:       Maxmimum number of bytes to decode.
+ *
+ *   int                           allow_trailing_bytes:
+ *     How to handle premature end of input.
+ *
+ *     A chunk of UTF-8 encoded bytes might end in the middle of a multi-byte
+ *     codepoint encoding.
+ *
+ *     Set this to true if more input might be available, and false if no more
+ *     input is available.
+ *
+ *     When "utf8_decode_insufficient_continuation_bytes_eof" is encountered:
+ *
+ *     If true:
+ *       - Don't parse trailing bytes.
+ *       - Set "out_num_trailing_bytes" to number of trailing bytes if not
+ *         NULL.
+ *     If false:
+ *       - Treat final bytes as invalid input, inserting a replacement
+ *         character according to "error_behaviour".
+ *
+ *     When true, whether there are trailing bytes can be determined by
+ *     checking whether the value of "out_num_trailing_bytes" is set to 0 or
+ *     not.
+ *
+ *   utf8_decode_error_behaviour_t error_behaviour:
+ *     What to do when invalid input is encountered.
+ *
+ *     Set to "utf8_stop_on_decode_error" to stop decoding and return on
+ *     invalid input.
+ *
+ * Output:
+ *   (optional) size_t                     *out_bytes_read:
+ *      Total number of bytes read for each decoded codepoint.  (Bytes for
+ *      invalid or incomplete input are not included.
+ *
+ *   (optional) size_t                     *out_num_trailing_bytes:
+ *      If allow_trailing_bytes is "true", set to number of leftover bytes in
+ *      case of premature end of input, otherwise set to 0.
+ *
+ *      If allow_trailing_bytes is "false", set to 0.
+ *
+ *   (optional) utf8_decode_error_status_t *out_sum_error_status:
+ *      Indicates whether decoding was succesful.
+ *
+ *      On invalid UTF-8 input, this is set to the OR-sum of each error.
+ *
+ * Return:
+ *   size_t:
+ *     Number of decoded *codepoints*.
+ *
+ *     (The number of parsed bytes from the input is set to "out_bytes_read" if
+ *     not NULL.
+ */
+size_t utf8_decode
+  ( codepoint_t *dest, size_t dest_max_size, const unsigned char *input, size_t input_max_size, int allow_trailing_bytes, utf8_decode_error_behaviour_t error_behaviour
+  , size_t *out_bytes_read, size_t *out_num_trailing_bytes, utf8_decode_error_status_t *out_sum_error_status
+  )
+{
+  size_t num_bytes_read         = 0;
+  size_t num_decoded_codepoints;
+
+  utf8_decode_error_status_t error_status_sum = utf8_decode_no_error;
+
+  for(num_decoded_codepoints = 0; num_decoded_codepoints < dest_max_size; ++num_decoded_codepoints)
+  {
+    size_t                     width;
+    codepoint_t                codepoint;
+
+    utf8_decode_error_status_t error_status;
+
+    /* Have we reached the end of the input? */
+    if (num_bytes_read >= input_max_size)
+    {
+      break;
+    }
+
+    /* Decode a codepoint. */
+    codepoint =
+      utf8_decode_one
+        ( input + num_bytes_read, input_max_size - num_bytes_read, error_behaviour
+        , &width, &error_status
+        );
+
+    /* Invalid input? */
+    if (error_status != utf8_decode_no_error)
+    {
+      /* Trailing bytes? */
+      if
+        (  allow_trailing_bytes
+        && error_status == utf8_decode_insufficient_continuation_bytes_eof
+        )
+      {
+        if (out_num_trailing_bytes)
+        {
+          *out_num_trailing_bytes = input_max_size - num_bytes_read;
+        }
+
+        /* Stop decoding. */
+        break;
+      }
+      else
+      {
+        error_status_sum |= error_status;
+
+        /* Should we stop? */
+        if (error_behaviour == utf8_stop_on_decode_error)
+        {
+          /* Stop decoding. */
+          break;
+        }
+        else
+        {
+          /* Write replacement codepoint, and continue. */
+          dest[num_decoded_codepoints]  = codepoint;
+          num_bytes_read               += width;
+        }
+      }
+    }
+    else
+    {
+      /* Write decoded codepoint to output buffer ("dest"). */
+      dest[num_decoded_codepoints]  = codepoint;
+      num_bytes_read               += width;
+    }
+  }
+
+  if (out_sum_error_status) *out_sum_error_status = error_status_sum;
+
+  return num_decoded_codepoints;
 }
