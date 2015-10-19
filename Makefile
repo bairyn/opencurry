@@ -38,42 +38,44 @@ ALL_CPPFLAGS := $(USR_CPPFLAGS) $(CPPFLAGS)
 #------------------------------------------------------------------------------
 # Directories.
 
-BUILD_DIRECTORIES :=                \
-	$(BUILD_DIR)                      \
-	$(OBJ_DIR)                        \
-	$(OBJ_DIR)/tests                  \
-	$(RES_OBJ_DIR)                    \
+BUILD_DIRECTORIES :=                 \
+	$(BUILD_DIR)                       \
+	$(OBJ_DIR)                         \
+	$(OBJ_DIR)/tests                   \
+	$(RES_OBJ_DIR)                     \
 	$(TEST_RES_OBJ_DIR)
 
 #------------------------------------------------------------------------------
 # Object files.
 
-SHARED_OBJS :=                      \
-	$(OBJ_DIR)/resources.o            \
-	$(OBJ_DIR)/opencurry.o            \
-	$(OBJ_DIR)/cli.o                  \
-	$(OBJ_DIR)/util.o                 \
-	$(OBJ_DIR)/lex.o                  \
-	$(OBJ_DIR)/unicode.o              \
-	$(OBJ_DIR)/utf8.o
+SHARED_OBJS :=                       \
+	$(OBJ_DIR)/resources.o             \
+	$(OBJ_DIR)/opencurry.o             \
+	$(OBJ_DIR)/cli.o                   \
+	$(OBJ_DIR)/util.o                  \
+	$(OBJ_DIR)/lex.o                   \
+	$(OBJ_DIR)/unicode.o               \
+	$(OBJ_DIR)/utf8.o                  \
+	$(OBJ_DIR)/ansi_c_ast.o
 
-CLI_OBJS :=                         \
-	$(SHARED_OBJS)                    \
+CLI_OBJS :=                          \
+	$(SHARED_OBJS)                     \
 	$(OBJ_DIR)/main.o
-TEST_CLI_OBJS :=                    \
-	$(SHARED_OBJS)                    \
-	$(OBJ_DIR)/tests/main.o           \
-	$(OBJ_DIR)/tests/testing.o        \
-	$(OBJ_DIR)/tests/resources.o      \
-	$(OBJ_DIR)/tests/test_testing.o   \
-	$(OBJ_DIR)/tests/test_all.o       \
-	$(OBJ_DIR)/tests/test_resources.o \
-	$(OBJ_DIR)/tests/test_opencurry.o \
-	$(OBJ_DIR)/tests/test_cli.o       \
-	$(OBJ_DIR)/tests/test_util.o      \
-	$(OBJ_DIR)/tests/test_lex.o       \
-	$(OBJ_DIR)/tests/test_unicode.o   \
-	$(OBJ_DIR)/tests/test_utf8.o
+TEST_CLI_OBJS :=                     \
+	$(SHARED_OBJS)                     \
+	$(OBJ_DIR)/tests/main.o            \
+	$(OBJ_DIR)/tests/testing.o         \
+	$(OBJ_DIR)/tests/resources.o       \
+	$(OBJ_DIR)/tests/test_testing.o    \
+	$(OBJ_DIR)/tests/test_all.o        \
+	$(OBJ_DIR)/tests/test_resources.o  \
+	$(OBJ_DIR)/tests/test_opencurry.o  \
+	$(OBJ_DIR)/tests/test_cli.o        \
+	$(OBJ_DIR)/tests/test_util.o       \
+	$(OBJ_DIR)/tests/test_lex.o        \
+	$(OBJ_DIR)/tests/test_unicode.o    \
+	$(OBJ_DIR)/tests/test_utf8.o       \
+	$(OBJ_DIR)/tests/test_ansi_c_ast.o
 
 #------------------------------------------------------------------------------
 # Resource files, to be statically linked with the binary executable.
