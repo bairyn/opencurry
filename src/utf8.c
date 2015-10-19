@@ -1077,6 +1077,7 @@ size_t utf8_decode
     }
   }
 
+  if (out_bytes_read)       *out_bytes_read       = num_bytes_read;
   if (out_sum_error_status) *out_sum_error_status = error_status_sum;
 
   return num_decoded_codepoints;
