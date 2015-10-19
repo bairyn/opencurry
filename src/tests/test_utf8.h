@@ -79,9 +79,7 @@ unit_test_result_t utf8_decode_one_edge_cases_test_run(unit_test_context_t *cont
 extern unit_test_t utf8_decode_equalities_test;
 unit_test_result_t utf8_decode_equalities_test_run(unit_test_context_t *context);
 
-/* TODO
 extern unit_test_t utf8_decode_edge_cases_test;
 unit_test_result_t utf8_decode_edge_cases_test_run(unit_test_context_t *context);
-*/
 
 #endif /* ifndef TESTS_TEST_UTF8_H */

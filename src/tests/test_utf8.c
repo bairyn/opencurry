@@ -149,7 +149,7 @@ unit_test_result_t utf8_encode_one_equalities_test_run(unit_test_context_t *cont
 unit_test_t utf8_encode_one_edge_cases_test =
   {  utf8_encode_one_edge_cases_test_run 
   , "utf8_encode_one_edge_cases_test"
-  , "utf8_encode_one: edge cases tests."
+  , "utf8_encode_one: edge case tests."
   };
 
 unit_test_result_t utf8_encode_one_edge_cases_test_run(unit_test_context_t *context)
@@ -196,6 +196,19 @@ static const codepoint_t utf8_codepoints[] =
   , 0x2665  /* BLACK HEART SUIT                    */
   };
 static const size_t utf8_codepoints_size = sizeof(utf8_codepoints) / sizeof(utf8_codepoints[0]);
+
+static const codepoint_t utf8_codepoints_replace_last[] =
+  { 0x2665  /* BLACK HEART SUIT                    */
+  , 0x2665  /* BLACK HEART SUIT                    */
+  , 0x2665  /* BLACK HEART SUIT                    */
+  , 0x03B1  /* GREEK SMALL LETTER ALPHA            */
+  , 0x03B3  /* GREEK SMALL LETTER GAMMA            */
+  , 0x03B1  /* GREEK SMALL LETTER ALPHA            */
+  , 0x03C0  /* GREEK SMALL LETTER PI               */
+  , 0x03CE  /* GREEK SMALL LETTER OMEGA WITH TONOS */
+  , 0xFFFD  /* REPLACEMENT CHARACTER               */
+  };
+static const size_t utf8_codepoints_replace_last_size = sizeof(utf8_codepoints_replace_last) / sizeof(utf8_codepoints_replace_last[0]);
 
 static const unsigned char utf8_codepoints_encoding[] =
   { 0xE2, 0x99, 0xA5  /* U+2665: BLACK HEART SUIT                    */
@@ -251,7 +264,7 @@ unit_test_result_t utf8_encode_equalities_test_run(unit_test_context_t *context)
 unit_test_t utf8_encode_edge_cases_test =
   {  utf8_encode_edge_cases_test_run 
   , "utf8_encode_edge_cases_test"
-  , "utf8_encode: edge cases tests."
+  , "utf8_encode: edge case tests."
   };
 
 unit_test_result_t utf8_encode_edge_cases_test_run(unit_test_context_t *context)
@@ -424,7 +437,7 @@ static const size_t utf8_decode_one_pairs_size = sizeof(utf8_decode_one_pairs) /
 unit_test_t utf8_decode_one_edge_cases_test =
   {  utf8_decode_one_edge_cases_test_run 
   , "utf8_decode_one_edge_cases_test"
-  , "utf8_decode_one: edge cases tests."
+  , "utf8_decode_one: edge case tests."
   };
 
 unit_test_result_t utf8_decode_one_edge_cases_test_run(unit_test_context_t *context)
@@ -517,4 +530,140 @@ unit_test_result_t utf8_decode_equalities_test_run(unit_test_context_t *context)
   if (test_result_need_abort(result)) return result;
 
   return result;
+}
+
+/* ---------------------------------------------------------------- */
+
+unit_test_t utf8_decode_edge_cases_test =
+  {  utf8_decode_edge_cases_test_run
+  , "utf8_decode_edge_cases_test"
+  , "utf8_decode: edge case tests."
+  };
+
+static unit_test_result_t utf8_decode_edge_cases_trailing_test_run(unit_test_context_t *context)
+{
+  unit_test_result_t result;
+
+  int                        allow_trailing_bytes;
+
+  size_t                     num_codepoints;
+  codepoint_t                codepoints[sizeof(utf8_codepoints) / sizeof(utf8_codepoints[0])];
+  size_t                     bytes_read;
+  size_t                     num_trailing_bytes;
+  utf8_decode_error_status_t error_status;
+
+  result = assert_success(context);
+
+  /* Allow trailing bytes. */
+  allow_trailing_bytes = 1;
+
+  num_codepoints =
+    utf8_decode
+      ( codepoints, utf8_codepoints_size, utf8_codepoints_encoding
+      , utf8_codepoints_encoding_size - 1, allow_trailing_bytes, utf8_default_decode_error_behaviour
+      , &bytes_read, &num_trailing_bytes, &error_status
+      );
+
+  result |=
+    assert_inteq (context, NULL, "num_codepoints",     (int)    num_codepoints,     (int)    utf8_codepoints_size);
+  if (test_result_need_abort(result)) return result;
+
+  result |=
+    assert_inteq (context, NULL, "bytes_read",         (int)    bytes_read,         (int)    utf8_codepoints_encoding_size - utf8_encoding_last_width);
+  if (test_result_need_abort(result)) return result;
+
+  result |=
+    assert_inteq (context, NULL, "num_trailing_bytes", (int)    num_trailing_bytes, (int)    utf8_encoding_last_width);
+  if (test_result_need_abort(result)) return result;
+
+  result |=
+    assert_inteq (context, NULL, "error_status",       (int)    error_status,       (int)    utf8_decode_no_error);
+  if (test_result_need_abort(result)) return result;
+
+  result |=
+    assert_memeq (context, NULL, "buf mem",            (void *) codepoints,         (void *) utf8_codepoints, sizeof(utf8_codepoints));
+  if (test_result_need_abort(result)) return result;
+
+
+  /* Disallow trailing bytes. */
+  allow_trailing_bytes = 0;
+
+  num_codepoints =
+    utf8_decode
+      ( codepoints, utf8_codepoints_size, utf8_codepoints_encoding
+      , utf8_codepoints_encoding_size - 1, allow_trailing_bytes, utf8_default_decode_error_behaviour
+      , &bytes_read, &num_trailing_bytes, &error_status
+      );
+
+  result |=
+    assert_inteq (context, NULL, "num_codepoints",     (int)    num_codepoints,     (int)    utf8_codepoints_size - 1);
+  if (test_result_need_abort(result)) return result;
+
+  result |=
+    assert_inteq (context, NULL, "bytes_read",         (int)    bytes_read,         (int)    utf8_codepoints_encoding_size - utf8_encoding_last_width + 1);
+  if (test_result_need_abort(result)) return result;
+
+  result |=
+    assert_inteq (context, NULL, "num_trailing_bytes", (int)    num_trailing_bytes, (int)    0);
+  if (test_result_need_abort(result)) return result;
+
+  result |=
+    assert_inteq (context, NULL, "error_status",       (int)    error_status,       (int)    utf8_decode_insufficient_continuation_bytes_eof);
+  if (test_result_need_abort(result)) return result;
+
+  result |=
+    assert_memeq (context, NULL, "buf mem",            (void *) codepoints,         (void *) utf8_codepoints_replace_last, sizeof(utf8_codepoints_replace_last));
+  if (test_result_need_abort(result)) return result;
+
+  return result;
+}
+static unit_test_result_t utf8_decode_edge_cases_null_outs_test_run(unit_test_context_t *context)
+{
+  unit_test_result_t result;
+
+  size_t                     num_codepoints;
+  codepoint_t                codepoints[sizeof(utf8_codepoints) / sizeof(utf8_codepoints[0])];
+
+  result = assert_success(context);
+
+  num_codepoints =
+    utf8_decode
+      ( codepoints, utf8_codepoints_size, utf8_codepoints_encoding
+      , utf8_codepoints_encoding_size, 0, utf8_default_decode_error_behaviour
+      , NULL, NULL, NULL
+      );
+
+  result |=
+    assert_inteq (context, NULL, "num_codepoints",     (int)    num_codepoints,     (int)    utf8_codepoints_size);
+  if (test_result_need_abort(result)) return result;
+
+  result |=
+    assert_memeq (context, NULL, "buf mem",            (void *) codepoints,         (void *) utf8_codepoints, sizeof(utf8_codepoints));
+  if (test_result_need_abort(result)) return result;
+
+  return result;
+}
+static unit_test_t
+  utf8_decode_edge_cases_trailing_test =
+  {  utf8_decode_edge_cases_trailing_test_run
+  , "utf8_decode_edge_cases_trailing_test"
+  , "utf8_decode: trailing bytes tests."
+  },
+  utf8_decode_edge_cases_null_outs_test =
+  {  utf8_decode_edge_cases_null_outs_test_run
+  , "utf8_decode_edge_cases_null_outs_test"
+  , "utf8_decode: optional parameters tests."
+  };
+
+/* Array of utf8_decode edge tests. */
+static unit_test_t *utf8_edge_cases_tests[] =
+  { &utf8_decode_edge_cases_trailing_test 
+  , &utf8_decode_edge_cases_null_outs_test 
+
+  , NULL
+  };
+
+unit_test_result_t utf8_decode_edge_cases_test_run(unit_test_context_t *context)
+{
+  return run_tests(context, utf8_edge_cases_tests);
 }
