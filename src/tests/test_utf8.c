@@ -456,6 +456,11 @@ unit_test_result_t utf8_decode_one_edge_cases_test_run(unit_test_context_t *cont
 
     codepoint = utf8_decode_one(pair->buf, pair->utf8_size, pair->error_behaviour, &width, &bytes_consumed, &error_status);
 
+    snprintf(tag, sizeof(tag) / sizeof(tag[0]), "error_status %d", i);
+    result |=
+      assert_inteq (context, NULL, tag, (int) error_status,   (int) pair->error_status);
+    if (test_result_need_abort(result)) break;
+
     snprintf(tag, sizeof(tag) / sizeof(tag[0]), "codepoint %d", i);
     result |=
       assert_inteq (context, NULL, tag, (int) codepoint,      (int) pair->codepoint);
@@ -469,11 +474,6 @@ unit_test_result_t utf8_decode_one_edge_cases_test_run(unit_test_context_t *cont
     snprintf(tag, sizeof(tag) / sizeof(tag[0]), "bytes_consumed %d", i);
     result |=
       assert_inteq (context, NULL, tag, (int) bytes_consumed, (int) pair->bytes_consumed);
-    if (test_result_need_abort(result)) break;
-
-    snprintf(tag, sizeof(tag) / sizeof(tag[0]), "error_status %d", i);
-    result |=
-      assert_inteq (context, NULL, tag, (int) error_status,   (int) pair->error_status);
     if (test_result_need_abort(result)) break;
   }
 
