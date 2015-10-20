@@ -2,7 +2,7 @@
 # Settings.
 
 NAME             := opencurry
-VERSION          := 0.1.0
+VERSION          := 0.1.0-dev
 
 BUILD_DIR        := build
 OBJ_DIR          := $(BUILD_DIR)/obj
@@ -19,21 +19,63 @@ MKDIR_P          := mkdir -p
 #------------------------------------------------------------------------------
 # Flags.
 
-USR_CFLAGS   :=
-USR_CPPFLAGS :=
+CFLAGS_USR             :=
+CPPFLAGS_USR           :=
 
-ifeq ($(DEBUG),1)
-	CFLAGS   := -std=c89 -pedantic -pedantic-errors -pthread -Wall  -Werror -g
-	CPPFLAGS := -DDEBUG
+CFLAGS_STRICT          := -std=c89 -pedantic -pedantic-errors -pthread -Wall  -Werror
+CPPFLAGS_STRICT        :=
+
+CFLAGS_PTHREAD         := -pthread
+CPPFLAGS_PTHREAD       :=
+
+CFLAGS_BUILD_INFO      :=
+CPPFLAGS_BUILD_INFO    := -DNAME="$(NAME)" -DVERSION="$(VERSION)"
+
+CFLAGS                 :=
+CPPFLAGS               :=
+
+ifneq ($(DEBUG),1)
+	# Debugging disabled.
+	CFLAGS_DEBUG_BASE    :=
+	CPPFLAGS_DEBUG_BASE  :=
+
+	CFLAGS_DEBUG_INFO    :=
+	CPPFLAGS_DEBUG_INFO  := -DNDEBUG
+
+	CFLAGS_DEBUG_OPTIM   := -O2 -s
+	CPPFLAGS_DEBUG_OPTIM :=
 else
-	CFLAGS   := -std=c89 -pedantic -pedantic-errors -pthread -Wall  -Werror -O2
-	CPPFLAGS := -DNDEBUG
+	# Debugging enabled.
+	CFLAGS_DEBUG_BASE    := -g
+	CPPFLAGS_DEBUG_BASE  :=
+
+	CFLAGS_DEBUG_INFO    :=
+	CPPFLAGS_DEBUG_INFO  := -DDEBUG
+
+	CFLAGS_DEBUG_OPTIM   := -Og
+	CPPFLAGS_DEBUG_OPTIM :=
 endif
 
-CPPFLAGS += -DNAME="$(NAME)" -DVERSION="$(VERSION)"
+CFLAGS_DEBUG_FLAGS     := $(CFLAGS_DEBUG_BASE)    \
+                          $(CFLAGS_DEBUG_INFO)    \
+                          $(CFLAGS_DEBUG_OPTIM)
+CPPFLAGS_DEBUG_FLAGS   := $(CPPFLAGS_DEBUG_BASE)  \
+                          $(CPPFLAGS_DEBUG_INFO)  \
+                          $(CPPFLAGS_DEBUG_OPTIM)
 
-ALL_CFLAGS   := $(USR_CFLAGS)   $(CFLAGS)
-ALL_CPPFLAGS := $(USR_CPPFLAGS) $(CPPFLAGS)
+ALL_CFLAGS             := $(CFLAGS)               \
+	                        $(CFLAGS_STRICT)        \
+	                        $(CFLAGS_PTHREAD)       \
+	                        $(CFLAGS_BUILD_INFO)    \
+	                        $(CFLAGS_DEBUG_FLAGS)   \
+	                        $(CFLAGS_USR)
+
+ALL_CPPFLAGS           := $(CPPFLAGS)             \
+	                        $(CPPFLAGS_STRICT)      \
+	                        $(CPPFLAGS_PTHREAD)     \
+	                        $(CPPFLAGS_BUILD_INFO)  \
+	                        $(CPPFLAGS_DEBUG_FLAGS) \
+	                        $(CPPFLAGS_USR)
 
 #------------------------------------------------------------------------------
 # Directories.
