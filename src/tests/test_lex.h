@@ -51,5 +51,4 @@ unit_test_result_t test_lex_run(unit_test_context_t *context);
 
 /* ---------------------------------------------------------------- */
 
-
 #endif /* ifndef TESTS_TEST_LEX_H */
