@@ -98,6 +98,7 @@ SHARED_OBJS :=                       \
 	$(OBJ_DIR)/lex.o                   \
 	$(OBJ_DIR)/unicode.o               \
 	$(OBJ_DIR)/utf8.o                  \
+	$(OBJ_DIR)/integer.o               \
 	$(OBJ_DIR)/ansi_c_ast.o
 
 CLI_OBJS :=                          \
@@ -117,6 +118,7 @@ TEST_CLI_OBJS :=                     \
 	$(OBJ_DIR)/tests/test_lex.o        \
 	$(OBJ_DIR)/tests/test_unicode.o    \
 	$(OBJ_DIR)/tests/test_utf8.o       \
+	$(OBJ_DIR)/tests/test_integer.o    \
 	$(OBJ_DIR)/tests/test_ansi_c_ast.o
 
 #------------------------------------------------------------------------------

@@ -1,5 +1,5 @@
 /*
- * opencurry: tests/test_all.c
+ * opencurry: tests/test_integer.c
  *
  * Copyright (c) 2015, Byron James Johnson
  * All rights reserved.
@@ -30,56 +30,35 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-/* stddef.h:
- *   - NULL
- */
-#include <stddef.h>
-
 #include "../base.h"
 #include "testing.h"
-#include "test_all.h"
-
-#include "test_testing.h"
-#include "test_resources.h"
-#include "test_opencurry.h"
-#include "test_cli.h"
-#include "test_util.h"
-#include "test_lex.h"
-#include "test_unicode.h"
-#include "test_utf8.h"
 #include "test_integer.h"
-#include "test_ansi_c_ast.h"
 
-int test_all(int argc, char **argv)
+#include "../integer.h"
+
+int test_integer_cli(int argc, char **argv)
 {
-  return run_test_suite(test_all_test);
+  return run_test_suite(integer_test);
 }
 
 /* ---------------------------------------------------------------- */
 
-/* Root unit test. */
-unit_test_t test_all_test =
-  {  test_all_run
-  , "test_all"
-  , "All tests."
+/* integer tests. */
+unit_test_t integer_test =
+  {  test_integer_run
+  , "test_integer"
+  , "integer tests."
   };
 
-/* Array of all test groups. */
-unit_test_t *all_tests[] =
-  { &testing_test
-  , &resources_test
-  , &opencurry_test
-  , &cli_test
-  , &util_test
-  , &lex_test
-  , &unicode_test
-  , &utf8_test
-  , &integer_test
-  , &ansi_c_ast_test
-  , NULL
+/* Array of integer tests. */
+unit_test_t *integer_tests[] =
+  { NULL
   };
 
-unit_test_result_t test_all_run(unit_test_context_t *context)
+unit_test_result_t test_integer_run(unit_test_context_t *context)
 {
-  return run_tests(context, all_tests);
+  return run_tests(context, integer_tests);
 }
+
+/* ---------------------------------------------------------------- */
+
