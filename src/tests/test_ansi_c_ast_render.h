@@ -1,5 +1,5 @@
 /*
- * opencurry: tests/test_all.c
+ * opencurry: tests/test_ansi_c_ast_render.h
  *
  * Copyright (c) 2015, Byron James Johnson
  * All rights reserved.
@@ -30,60 +30,25 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-/* stddef.h:
- *   - NULL
+/*
+ * tests/test_ansi_c_ast_render.h
+ * ------
  */
-#include <stddef.h>
 
+#ifndef TESTS_TEST_ANSI_C_AST_RENDER_H
+#define TESTS_TEST_ANSI_C_AST_RENDER_H
 #include "../base.h"
 #include "testing.h"
-#include "test_all.h"
 
-#include "test_testing.h"
-#include "test_resources.h"
-#include "test_opencurry.h"
-#include "test_cli.h"
-#include "test_util.h"
-#include "test_lex.h"
-#include "test_unicode.h"
-#include "test_utf8.h"
-#include "test_integer.h"
-#include "test_ansi_c_ast.h"
-#include "test_ansi_c_ast_base.h"
-#include "test_ansi_c_ast_render.h"
+#include "../util.h"
 
-int test_all(int argc, char **argv)
-{
-  return run_test_suite(test_all_test);
-}
+int test_ansi_c_ast_render_cli(int argc, char **argv);
+
+extern unit_test_t ansi_c_ast_render_test;
+extern unit_test_t *ansi_c_ast_render_tests[];
+
+unit_test_result_t test_ansi_c_ast_render_run(unit_test_context_t *context);
 
 /* ---------------------------------------------------------------- */
 
-/* Root unit test. */
-unit_test_t test_all_test =
-  {  test_all_run
-  , "test_all"
-  , "All tests."
-  };
-
-/* Array of all test groups. */
-unit_test_t *all_tests[] =
-  { &testing_test
-  , &resources_test
-  , &opencurry_test
-  , &cli_test
-  , &util_test
-  , &lex_test
-  , &unicode_test
-  , &utf8_test
-  , &integer_test
-  , &ansi_c_ast_test
-  , &ansi_c_ast_base_test
-  , &ansi_c_ast_render_test
-  , NULL
-  };
-
-unit_test_result_t test_all_run(unit_test_context_t *context)
-{
-  return run_tests(context, all_tests);
-}
+#endif /* ifndef TESTS_TEST_ANSI_C_AST_RENDER_H */
