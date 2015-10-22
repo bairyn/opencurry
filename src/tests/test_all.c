@@ -50,6 +50,7 @@
 #include "test_integer.h"
 #include "test_ansi_c_ast.h"
 #include "test_ansi_c_ast_base.h"
+#include "test_ansi_c_ast_gen.h"
 #include "test_ansi_c_ast_render.h"
 
 int test_all(int argc, char **argv)
@@ -79,6 +80,7 @@ unit_test_t *all_tests[] =
   , &integer_test
   , &ansi_c_ast_test
   , &ansi_c_ast_base_test
+  , &ansi_c_ast_gen_test
   , &ansi_c_ast_render_test
   , NULL
   };
