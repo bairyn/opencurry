@@ -101,6 +101,7 @@ SHARED_OBJS :=                              \
 	$(OBJ_DIR)/integer.o                      \
 	$(OBJ_DIR)/ansi_c_ast.o                   \
 	$(OBJ_DIR)/ansi_c_ast_base.o              \
+	$(OBJ_DIR)/ansi_c_ast_gen.o               \
 	$(OBJ_DIR)/ansi_c_ast_render.o
 
 CLI_OBJS :=                                 \
@@ -123,6 +124,7 @@ TEST_CLI_OBJS :=                            \
 	$(OBJ_DIR)/tests/test_integer.o           \
 	$(OBJ_DIR)/tests/test_ansi_c_ast.o        \
 	$(OBJ_DIR)/tests/test_ansi_c_ast_base.o   \
+	$(OBJ_DIR)/tests/test_ansi_c_ast_gen.o    \
 	$(OBJ_DIR)/tests/test_ansi_c_ast_render.o
 
 #------------------------------------------------------------------------------
