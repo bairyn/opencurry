@@ -48,9 +48,9 @@
 #include <stdio.h>
 
 /* stdlib.h:
- *   - malloc
  *   - calloc
  *   - free
+ *   - malloc
  */
 #include <stdlib.h>
 
