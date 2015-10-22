@@ -51,5 +51,4 @@ unit_test_result_t test_ansi_c_ast_base_run(unit_test_context_t *context);
 
 /* ---------------------------------------------------------------- */
 
-
 #endif /* ifndef TESTS_TEST_ANSI_C_AST_BASE_H */

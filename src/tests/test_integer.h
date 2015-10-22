@@ -53,5 +53,4 @@ unit_test_result_t test_integer_run(unit_test_context_t *context);
 
 /* ---------------------------------------------------------------- */
 
-
 #endif /* ifndef TESTS_TEST_INTEGER_H */
