@@ -69,25 +69,206 @@
 /* ---------------------------------------------------------------- */
 /* Types. */
 
-unit_test_context_t *new_unit_test_context( int override_err_buf_len, int override_seed, int  override_out, int  override_err
-                                          , int err_buf_len,          int seed,          FILE *out,         FILE *err)
+/*
+ * new_unit_test_context:
+ *
+ * Initialize a new "unit_test_context_t" structure.
+ *
+ * "new_unit_test_context_defaults" can
+ * be used to initialize a "unit_test_context_t" value with default values.
+ *
+ *
+ * This procedure prepares a "unit_test_context_t" for use, allocating memory
+ * and setting values in the structure.
+ *
+ * Input:
+ *   unit_test_context_t *initialize_context_noheap:
+ *
+ *     NULL:
+ *       By default, a new "unit_test_context_t" will be allocated on the heap.
+ *       Pass "NULL" for this behaviour.
+ *
+ *     non-NULL:
+ *       This procedure can initialize an existing "unit_test_context_t".  If
+ *       this argument is non-NULL, the procedure will behave the same, except
+ *       it will use the existing structure rather than "malloc"ing a new one,
+ *       (and "is_heap_allocated" will be set accordingly).
+ *
+ *       "free_unit_test_context" will check the value of "is_heap_allocated"
+ *       to determine whether to call "free" on a "unit_test_context_t".
+ *
+ *       Note: re-initializing an existing "unit_test_context_t" results in
+ *       undefined behaviour.  "initialize_context_noheap" should not already
+ *       be initialized.
+ *
+ *   ...
+ */
+unit_test_context_t *new_unit_test_context
+  ( unit_test_context_t *initialize_context_noheap
+
+  , int override_err_buf_size,  int override_int_err_buf_size, int override_details_buf_size
+  , int override_user_buf_size, int override_misc_buf_size
+  , int override_seed,          int override_out,              int override_err
+
+  , int          err_buf_size,  int          int_err_buf_size, int          details_buf_size
+  , int          user_buf_size, int          misc_buf_size
+  , int          seed,          FILE        *out,              FILE        *err
+  )
 {
+  size_t               size;
   unit_test_context_t *context;
 
   /* Set default arguments. */
-  if (!override_err_buf_len) err_buf_len = DEFAULT_TEST_CONTEXT_ERR_BUF_SIZE;
-  if (!override_seed)        seed        = DEFAULT_TEST_CONTEXT_SEED;
-  if (!override_out)         out         = DEFAULT_TEST_CONTEXT_OUT;
-  if (!override_err)         err         = DEFAULT_TEST_CONTEXT_ERR;
+  if (!override_err_buf_size)     err_buf_size     = DEFAULT_TEST_CONTEXT_ERR_BUF_SIZE;
+  if (!override_int_err_buf_size) int_err_buf_size = DEFAULT_TEST_CONTEXT_INT_ERR_BUF_SIZE;
+  if (!override_details_buf_size) details_buf_size = DEFAULT_TEST_CONTEXT_DETAILS_BUF_SIZE;
+  if (!override_user_buf_size)    user_buf_size    = DEFAULT_TEST_CONTEXT_USER_BUF_SIZE;
+  if (!override_misc_buf_size)    misc_buf_size    = DEFAULT_TEST_CONTEXT_MISC_BUF_SIZE;
+  if (!override_seed)             seed             = DEFAULT_TEST_CONTEXT_SEED;
+  if (!override_out)              out              = DEFAULT_TEST_CONTEXT_OUT;
+  if (!override_err)              err              = DEFAULT_TEST_CONTEXT_ERR;
 
   /* Allocate memory. */
-  context = calloc(1, sizeof(unit_test_context_t));
+  if (initialize_context_noheap)
+  {
+    context = initialize_context_noheap;
+    context->is_heap_allocated = 0;
+  }
+  else
+  {
+    const size_t nmemb = 1;
 
+    size  = sizeof(unit_test_context_t);
+
+    context = calloc(nmemb, size);
+    if (!context)
+    {
+      fprintf
+        ( err
+        , "new_unit_test_context:\n"
+          "  Failed to allocate heap memory for new context.\n"
+          "  Requested '%d'*'%d' bytes.\n"
+        , nmemb, size);
+      return NULL;
+    }
+
+    context->is_heap_allocated = 1;
+  }
+
+  context->is_initialized = CONTEXT_PARTIALLY_INITIALIZED;
+
+
+  /* Allocate buffers. */
+  context->err_buf_size     = err_buf_size;
+  context->int_err_buf_size = int_err_buf_size;
+  context->details_buf_size = details_buf_size;
+  context->user_buf_size    = user_buf_size;
+  context->misc_buf_size    = misc_buf_size;
+
+  size = context->err_buf_size;
+  context->err_buf = malloc(size);
+  if(!context->err_buf)
+  {
+    if (context->is_heap_allocated) free(context);
+
+    fprintf
+      ( err
+      , "new_unit_test_context:\n"
+        "  Failed to allocate heap memory for err_buf.\n"
+        "  Requested '%d'*'%d' bytes.\n"
+      , size);
+    return NULL;
+  }
+
+  size = context->int_err_buf_size;
+  context->int_err_buf = malloc(size);
+  if(!context->int_err_buf)
+  {
+    free(context->err_buf);
+
+    if (context->is_heap_allocated) free(context);
+
+    fprintf
+      ( details
+      , "new_unit_test_context:\n"
+        "  Failed to allocate heap memory for int_err_buf.\n"
+        "  Requested '%d'*'%d' bytes.\n"
+      , size);
+    return NULL;
+  }
+
+  size = context->details_buf_size;
+  context->details_buf = malloc(size);
+  if(!context->details_buf)
+  {
+    free(context->err_buf);
+    free(context->int_err_buf);
+
+    if (context->is_heap_allocated) free(context);
+
+    fprintf
+      ( details
+      , "new_unit_test_context:\n"
+        "  Failed to allocate heap memory for details_buf.\n"
+        "  Requested '%d'*'%d' bytes.\n"
+      , size);
+    return NULL;
+  }
+
+  size = context->user_buf_size;
+  context->user_buf = malloc(size);
+  if(!context->user_buf)
+  {
+    free(context->err_buf);
+    free(context->int_err_buf);
+    free(context->details_buf);
+
+    if (context->is_heap_allocated) free(context);
+
+    fprintf
+      ( user
+      , "new_unit_test_context:\n"
+        "  Failed to allocate heap memory for user_buf.\n"
+        "  Requested '%d'*'%d' bytes.\n"
+      , size);
+    return NULL;
+  }
+
+  size = context->misc_buf_size;
+  context->misc_buf = malloc(size);
+  if(!context->misc_buf)
+  {
+    free(context->err_buf);
+    free(context->int_err_buf);
+    free(context->details_buf);
+    free(context->user_buf);
+
+    if (context->is_heap_allocated) free(context);
+
+    fprintf
+      ( misc
+      , "new_unit_test_context:\n"
+        "  Failed to allocate heap memory for misc_buf.\n"
+        "  Requested '%d'*'%d' bytes.\n"
+      , size);
+    return NULL;
+  }
 
   /* Set up environment. */
-  context->err_buf_len = err_buf_len;
-  context->err_buf     = malloc(context->err_buf_len);
-  context->err_buf[0]  = 0;
+  context->err_buf    [0]  = 0;
+  context->int_err_buf[0]  = 0;
+  context->details_buf[0]  = 0;
+  /*
+  (void *) context->user_buf
+  (void *) context->misc_buf
+  */
+
+  context->err_len         = 0;
+  context->int_err_len     = 0;
+  context->details_len     = 0;
+
+  context->is_snprintf_err = 0;
+
 
   context->seed = seed;
 
@@ -107,27 +288,86 @@ unit_test_context_t *new_unit_test_context( int override_err_buf_len, int overri
   context->last_pass    = -1;
   context->last_fail    = -1;
 
+  /* Set metadata. */
+  context->is_initialized = CONTEXT_FULLY_INITIALIZED;
+
   /* Return object. */
   return context;
+}
+
+unit_test_context_t *new_unit_test_context_defaults(unit_test_context_t *initialize_context_noheap)
+{
+  return
+    new_unit_test_context
+      ( initialize_context_noheap
+
+      , 0,                                  0,                                     0
+      , 0,                                  0
+      , 0,                                  0,                                     0
+
+      , DEFAULT_TEST_CONTEXT_ERR_BUF_SIZE,  DEFAULT_TEST_CONTEXT_INT_ERR_BUF_SIZE, DEFAULT_TEST_CONTEXT_DETAILS_BUF_SIZE
+      , DEFAULT_TEST_CONTEXT_USER_BUF_SIZE, DEFAULT_TEST_CONTEXT_MISC_BUF_SIZE
+      , DEFAULT_TEST_CONTEXT_SEED,          DEFAULT_TEST_CONTEXT_OUT,              DEFAULT_TEST_CONTEXT_ERR
+      );
 }
 
 void free_unit_test_context(unit_test_context_t *context)
 {
   if (context)
   {
-    if (!context->free || context->free == free_unit_test_context)
+    /* Already uninitialized? */
+    if (context->is_initialized)
     {
-      if (context->err_buf)
-      {
-        free(context->err_buf);
-        context->err_buf = (char *) NULL;
-      }
+      const int partially_initialized = context->is_initialized == CONTEXT_PARTIALLY_INITIALIZED;
 
-      free(context);
-    }
-    else
-    {
-      context->free(context);
+      /* Does this context have a deinitialization procedure that differs from
+       * this one?
+       */
+      if (partially_initialized || !context->free || context->free == free_unit_test_context)
+      {
+        if (context->err_buf)
+        {
+          free(context->err_buf);
+          context->err_buf = (char *) NULL;
+        }
+
+        if (context->int_err_buf)
+        {
+          free(context->int_err_buf);
+          context->err_buf = (char *) NULL;
+        }
+
+        if (context->details_buf)
+        {
+          free(context->details_buf);
+          context->details_buf = (char *) NULL;
+        }
+
+        if (context->user_buf)
+        {
+          free(context->user_buf);
+          context->user_buf = (void *) NULL;
+        }
+
+        if (context->misc_buf)
+        {
+          free(context->misc_buf);
+          context->misc_buf = (void *) NULL;
+        }
+
+        context->is_initialized = 0;
+
+        if (context->is_heap_allocated)
+        {
+          context->is_heap_allocated = 0;
+
+          free(context);
+        }
+      }
+      else
+      {
+        context->free(context);
+      }
     }
   }
 }
@@ -138,19 +378,27 @@ void free_unit_test_context(unit_test_context_t *context)
 /* Run a unit test independently, with a new unit test context state. */
 int run_test_suite(unit_test_t test)
 {
-  unit_test_result_t result;
+  unit_test_context_t  test_suite_context;
+
+  unit_test_result_t   result;
   unit_test_context_t *context;
 
-  context =
-    new_unit_test_context
-      ( 0, 0, 0,    0
-      , 0, 0, NULL, NULL
-      );
+  context = new_unit_test_context_defaults(&test_suite_context);
   {
+    if (!context)
+    {
+      fprintf
+        ( stderr
+        , "run_test_suite: Error initialize new unit test context.\n"
+        );
+
+      return UNIT_TEST_INTERNAL_ERROR;
+    }
+
     result = run_test_suite_with_context(context, test);
   } free_unit_test_context(context);
 
-  return result;
+  return (int) result;
 }
 
 /* Run a unit test independently, with its unit test context already provided.
@@ -181,15 +429,26 @@ void print_test_suite_result(unit_test_context_t *context, unit_test_result_t re
   {
     out = context->err;
 
-    context->err_buf[context->err_buf_len-1] = 0;
+    context->err_buf[context->err_buf_size - 1] = 0;
+
+    if (context->err_buf_len >= context->err_buf_size)
+    {
+      context->err_buf_len = context->err_buf_size - 1;
+    }
+    context->err_buf[context->err_buf_len] = 0;
+
     fprintf
       ( out
-      , "Error: %d tests failed:\n  last failed test #: %d\n  number of tests run: %d\n  can continue testing after last failure?: %s\n\nLast error message:\n\n%s\n"
+      , "Error: %d tests failed:\n  last failed test #: %d\n  number of tests run: %d\n  can continue testing after last failure?: %s\n\nLast error message%s:\n\n%s%s"
       , (int) (context->num_fail)
       , (int) (context->last_fail)
       , (int) (context->next_test_id)
       , (result >= 0) ? "yes" : "no (aborted)"
+      ,   (!(context->err_buf_len >= context->err_buf_size - 1)
+        ? ""
+        : " (error message buffer maxed out; additional text might be truncated)"
       , (const char *) context->err_buf
+      , context->err_buf_len >= 1 && context->err_buf[context->err_buf_len - 1] == '\n' ? "" : "\n"
       );
   }
 }
@@ -216,7 +475,7 @@ int test_result_need_abort(unit_test_result_t result)
 }
 
 
-int run_test(unit_test_context_t *context, unit_test_t test)
+unit_test_result_t run_test(unit_test_context_t *context, unit_test_t test)
 {
   int id;
   unit_test_result_t result;
@@ -225,6 +484,7 @@ int run_test(unit_test_context_t *context, unit_test_t test)
 
   print_test_prefix(context, test, id);
 
+  reset_err_msg_details(context);
   result = test.run(context);
 
   if (!context->aborting)
@@ -283,7 +543,13 @@ void print_failed_test_result(unit_test_context_t *context, unit_test_t test, in
 {
   int can_continue;
 
-  context->err_buf[context->err_buf_len-1] = 0;
+  context->err_buf[context->err_buf_size - 1] = 0;
+
+  if (context->err_buf_len >= context->err_buf_size)
+  {
+    context->err_buf_len = context->err_buf_size - 1;
+  }
+  context->err_buf[context->err_buf_len] = 0;
 
   can_continue = test_result_can_continue(result);
 
@@ -298,14 +564,19 @@ void print_failed_test_result(unit_test_context_t *context, unit_test_t test, in
   fprintf(context->err, "  test result code: %d\n", (int) result);
   fprintf(context->err, "  can continue?:    %s\n", (can_continue) ? "yes" : "no (aborting!)");
   fprintf(context->err, "\n");
-  fprintf(context->err, "Error message:\n");
+  if (!(context->err_buf_len >= context->err_buf_size - 1)
+    fprintf(context->err, "Error message:\n");
+  else
+    fprintf(context->err, "Error message(buffer maxed out; additional text might be truncated):\n");
   fprintf(context->err, "\n");
-  fprintf(context->err, "%s\n", (const char *) context->err_buf);
+  fprintf(context->err, "%s", (const char *) context->err_buf);
+  if (!(context->err_buf_len >= 1 && context->err_buf[context->err_buf_len - 1] == '\n'))
+    fprintf(context->err, "\n");
   fprintf(context->err, "\\----------------------------------------------------------------\n\n");
 }
 
 
-int run_tests_num(unit_test_context_t *context, unit_test_t **tests, size_t num_tests)
+unit_test_result_t run_tests_num(unit_test_context_t *context, unit_test_t **tests, size_t num_tests)
 {
   int                i;
   int                abort = 0;
@@ -332,7 +603,7 @@ int run_tests_num(unit_test_context_t *context, unit_test_t **tests, size_t num_
   return result;
 }
 
-int run_tests(unit_test_context_t *context, unit_test_t **tests)
+unit_test_result_t run_tests(unit_test_context_t *context, unit_test_t **tests)
 {
   int                abort = 0;
   unit_test_t        **test;
@@ -360,51 +631,241 @@ int run_tests(unit_test_context_t *context, unit_test_t **tests)
 /* ---------------------------------------------------------------- */
 /* Default error messages for assertion failures. */
 
-void assert_failure_msg(unit_test_context_t *context, char *msg_out, size_t msg_out_len, const char *tag)
+/* Clear the details buffer.
+ *
+ * This is called on each invocation of "run_test", immediately before the test
+ * procedure is invoked.
+ */
+void reset_err_msg_details(unit_test_context_t *context)
 {
-  snprintf
-    ( (char *) msg_out, (size_t) msg_out_len
-    , "Assertion '%s' failed - no details provided."
-    , (const char *) tag
-    );
+  context->details_buf[0] = 0;
+  context->details_buf_len = 0;
 }
 
-void assert_true_msg(unit_test_context_t *context, char *msg_out, size_t msg_out_len, const char *tag, int condition)
+/* Append to the details buffer. */
+/* TODO: varags */
+size_t test_add_details_msg(unit_test_context_t *context, const char *msg, size_t max_size)
 {
-  snprintf
-    ( (char *) msg_out, (size_t) msg_out_len
-    , "Boolean assertion '%s' failed - the condition be true, but it is false: %d (bool: %d)"
+}
+
+/*
+ * These procedures return the number of characters written, excluding the NULL
+ * terminating character.
+ *
+ * In some cases of errors with "snprintf", more bytes than the 
+ */
+
+/*
+ * Error handling for "snprintf".
+ *
+ * Call with the return value of "snprintf" to handle "snprintf" errors.
+ *
+ * On success, the original "snprintf_result" result is simply returned.  This
+ * value represents the number of bytes written, excluding the NULL terminator.
+ * "out_is_err" is set to 0 if a reference provided.
+ *
+ * On failure, a new descriptive error message is written instead, with the
+ * number of bytes written returned, and "out_is_err" if provided as a non-NULL
+ * pointer is set to 1.
+ */
+size_t assert_msg_check_snprintf(unit_test_context_t *context, int snprintf_result, char *msg_out, size_t msg_out_size, const char *tag, int *out_is_err)
+{
+  if (!(snprintf_result < 0))
+  {
+    if (out_is_err) *out_is_err = 0;
+    return (size_t) snprintf_result;
+  }
+  else
+  {
+    char   *buf;
+
+    int     len;
+    size_t  size_terminator;
+
+    if (out_is_err) *out_is_err = 1;
+
+    size_terminator = msg_out_size - 1;
+
+    buf = malloc(msg_out_size);
+
+    if (!buf)
+    {
+      const char *err_msg =
+        "ERROR: assert_msg_check_snprintf: out of memory: failed to allocate memory to generate message.\n";
+
+      strncpy
+        ( msg_out
+        , err_msg
+        , size_terminator
+        );
+
+      return (size_t) strlen(err_msg);
+    }
+
+    strncpy(buf, msg_out, size_terminator);
+
+    len = snprintf
+      ( (char *) msg_out, (size_t) size_terminator
+      , "assert_msg_check_snprintf:\n"
+        "  Error generating error message!\n"
+        "  A call to \"snprintf\" failed with error code '%d'.\n"
+        "\n"
+        "  %s%s.\n"
+        "\n"
+        "Original error buffer, with trailing newline:\n"
+        "%s\n"
+      , snprintf_result
+      , tag ? "tag: " : "(no tag provided)"
+      , tag ? tag     : ""
+      , buf
+      );
+
+    if (len < 0)
+    {
+      const char *err_msg =
+        "ERROR: assert_msg_check_snprintf: failed to generate message explaining a failure to generate a message.\n";
+
+      strncpy
+        ( msg_out
+        , err_msg
+        , size_terminator
+        );
+
+      return (size_t) strlen(err_msg);
+    }
+
+    return (size_t) len;
+  }
+}
+
+/*
+ * Append the details buffer if it's not empty with a preceding newline
+ * character to the context's error buffer.
+ *
+ * Keeps the first "len" bytes in the error buffer.
+ *
+ * Returns the new total number of bytes written.
+ *
+ * (If the error message buffer lacks a trailing newline character, one is
+ * added automatically.)
+ */
+size_t assert_msg_append_details(unit_test_context_t *context, size_t len, char *msg_out, size_t msg_out_size)
+{
+  int    l;
+  size_t size_terminator;
+
+  size_terminator = msg_out_size - 1;  /* Make room for terminating NULL byte. */
+
+  if (!context->details_buf_len)
+  {
+    return len;
+  }
+
+  /* Ensure buffer is null terminated. */
+  context->details_buf[context->details_buf_size - 1] = 0;
+
+  /* Ensure len is no out of bounds.               */
+  /* Also ensure 1 extra byte for NULL terminator. */
+  if (context->details_buf_len >= context->details_buf_size)
+  {
+    context->details_buf_len = context->details_buf_size - 1;
+  }
+  context->details_buf[context->details_buf_len] = 0;
+
+  l = snprintf
+    ( (char *) (msg_out + len), (size_t) (size_terminator - len)
+    , "\n\n%s"
+    , context->err_buf_len >= 1 && context->err_buf[context->err_buf_len - 1] == '\n' ? "" : "\n"
+    , (const char *) context->details_buf
+    );
+  if (l < 0) return assert_msg_check_snprintf(context, l, msg_out, msg_out_size, tag, &context->snprintf_err);
+  len += l;
+
+  return (size_t) len;
+}
+
+size_t assert_failure_msg(unit_test_context_t *context, char *msg_out, size_t msg_out_size, const char *tag)
+{
+  int    l;
+  size_t size_terminator;
+
+  size_terminator = msg_out_size - 1;  /* Make room for terminating NULL byte. */
+
+  l = snprintf
+    ( (char *) msg_out, (size_t) size_terminator
+    , "Assertion '%s' failed - no details provided.\n"
+    , (const char *) tag
+    );
+  if (l < 0) return assert_msg_check_snprintf(context, l, msg_out, msg_out_size, tag, &context->snprintf_err);
+
+  return assert_msg_append_details(context, (size_t) l, msg_out, msg_out_size);
+}
+
+size_t assert_true_msg(unit_test_context_t *context, char *msg_out, size_t msg_out_size, const char *tag, int condition)
+{
+  int    l;
+  size_t size_terminator;
+
+  size_terminator = msg_out_size - 1;  /* Make room for terminating NULL byte. */
+
+  l = snprintf
+    ( (char *) msg_out, (size_t) size_terminator
+    , "Boolean assertion '%s' failed - the condition be true, but it is false: %d (bool: %d)\n"
     , (const char *) tag
     , (int) condition
     , (int) !!condition
     );
+  if (l < 0) return assert_msg_check_snprintf(context, l, msg_out, msg_out_size, tag, &context->snprintf_err);
+
+  return assert_msg_append_details(context, (size_t) l, msg_out, msg_out_size);
 }
 
-void assert_inteq_msg(unit_test_context_t *context, char *msg_out, size_t msg_out_len, const char *tag, int check, int model)
+size_t assert_inteq_msg(unit_test_context_t *context, char *msg_out, size_t msg_out_size, const char *tag, int check, int model)
 {
-  snprintf
-    ( (char *) msg_out, (size_t) msg_out_len
-    , "Assertion '%s' failed - integers must be equal, but differ:\n  should be:   % d\n  actually is: % d"
+  int    l;
+  size_t size_terminator;
+
+  size_terminator = msg_out_size - 1;  /* Make room for terminating NULL byte. */
+
+  l = snprintf
+    ( (char *) msg_out, (size_t) size_terminator
+    , "Assertion '%s' failed - integers must be equal, but differ:\n  should be:   % d\n  actually is: % d\n"
     , (const char *) tag
     , (int) model
     , (int) check
     );
+  if (l < 0) return assert_msg_check_snprintf(context, l, msg_out, msg_out_size, tag, &context->snprintf_err);
+
+  return assert_msg_append_details(context, (size_t) l, msg_out, msg_out_size);
 }
 
-void assert_streqz_msg(unit_test_context_t *context, char *msg_out, size_t msg_out_len, const char *tag, const char *check, const char *model)
+size_t assert_streqz_msg(unit_test_context_t *context, char *msg_out, size_t msg_out_size, const char *tag, const char *check, const char *model)
 {
-  snprintf
-    ( (char *) msg_out, (size_t) msg_out_len
-    , "Assertion '%s' failed - strings must be equal, but differ:\n  should be:   %s\n  actually is: %s"
+  int    l;
+  size_t size_terminator;
+
+  size_terminator = msg_out_size - 1;  /* Make room for terminating NULL byte. */
+
+  l = snprintf
+    ( (char *) msg_out, (size_t) size_terminator
+    , "Assertion '%s' failed - strings must be equal, but differ:\n  should be:   %s\n  actually is: %s\n"
     , (const char *) tag
     , (const char*) model
     , (const char*) check
     );
+  if (l < 0) return assert_msg_check_snprintf(context, l, msg_out, msg_out_size, tag, &context->snprintf_err);
+
+  return assert_msg_append_details(context, (size_t) l, msg_out, msg_out_size);
 }
 
-void assert_streqn_msg(unit_test_context_t *context, char *msg_out, size_t msg_out_len, const char *tag, const char *check, const char *model, size_t max_len)
+size_t assert_streqn_msg(unit_test_context_t *context, char *msg_out, size_t msg_out_size, const char *tag, const char *check, const char *model, size_t max_len)
 {
-  char *checkz, *modelz;
+  int     l;
+  size_t  size_terminator;
+
+  char   *checkz, *modelz;
+
+  size_terminator = msg_out_size - 1;  /* Make room for terminating NULL byte. */
 
   checkz = malloc(2 * (max_len+1));
   {
@@ -415,18 +876,24 @@ void assert_streqn_msg(unit_test_context_t *context, char *msg_out, size_t msg_o
     checkz[max_len] = 0;
     modelz[max_len] = 0;
 
-    snprintf
-      ( (char *) msg_out, (size_t) msg_out_len
-      , "Assertion '%s' failed - strings must be equal, but differ:\n  should be:   %s\n  actually is: %s"
+    l = snprintf
+      ( (char *) msg_out, (size_t) size_terminator
+      , "Assertion '%s' failed - strings must be equal, but differ:\n  should be:   %s\n  actually is: %s\n"
       , (const char *) tag
       , (const char *) modelz
       , (const char *) checkz
       );
   } free(checkz);
+    if (l < 0) return assert_msg_check_snprintf(context, l, msg_out, msg_out_size, tag, &context->snprintf_err);
+
+  return assert_msg_append_details(context, (size_t) l, msg_out, msg_out_size);
 }
 
-void assert_memeq_msg(unit_test_context_t *context, char *msg_out, size_t msg_out_len, const char *tag, void *check, void *model, size_t n)
+size_t assert_memeq_msg(unit_test_context_t *context, char *msg_out, size_t msg_out_size, const char *tag, void *check, void *model, size_t n)
 {
+  int              l;
+  size_t           size_terminator;
+
   int              i, j;
   size_t           written = 0;
 
@@ -437,26 +904,36 @@ void assert_memeq_msg(unit_test_context_t *context, char *msg_out, size_t msg_ou
   static const int byte_print_width    = sizeof(" 0x00") - 1;
   static const int width               = ASSERT_MSG_WIDTH;
 
+  size_terminator = msg_out_size - 1;  /* Make room for terminating NULL byte. */
+
   /* ---------------------------------------------------------------- */
   /* Start writing error message. */
-  written += snprintf
-    ( (char *) (msg_out + written), (size_t) (msg_out_len + written)
+  l = snprintf
+    ( (char *) (msg_out + written), (size_t) (size_terminator - written)
     , "Assertion '%s' failed - '%d' bytes of memory must be equal, but differ:"
     , (const char *) tag
     , (int) n
     );
+  if (l < 0) return assert_msg_check_snprintf(context, l, msg_out, msg_out_size, tag, &context->snprintf_err);
+  written += l;
 
   /* ---------------------------------------------------------------- */
   /* Hex dump of model: write what the memory should be equal to. */
 
-  written += snprintf
-    ( (char *) (msg_out + written), (size_t) (msg_out_len + written)
+  l = snprintf
+    ( (char *) (msg_out + written), (size_t) (size_terminator - written)
     , "\n"
     );
-  written += (hexdump_indent_spaces = snprintf
-    ( (char *) (msg_out + written), (size_t) (msg_out_len + written)
+  if (l < 0) return assert_msg_check_snprintf(context, l, msg_out, msg_out_size, tag, &context->snprintf_err);
+  written += l;
+
+  l = hexdump_indent_spaces = snprintf
+    ( (char *) (msg_out + written), (size_t) (size_terminator - written)
     , "  should be:"  /* A: Print two extra spaces below only without a newline. */
-    ));
+    );
+  if (l < 0) return assert_msg_check_snprintf(context, l, msg_out, msg_out_size, tag, &context->snprintf_err);
+  written += l;
+
   hexdump_indent_spaces += 2;
 
   /* Here we also calculate whether this will span multiple lines, in which
@@ -468,21 +945,28 @@ void assert_memeq_msg(unit_test_context_t *context, char *msg_out, size_t msg_ou
     /* It'll be indented by two extra spaces, one of which we write here. */
     need_multiple_lines = 1;
 
-    written += snprintf
-      ( (char *) (msg_out + written), (size_t) (msg_out_len + written)
+    l = snprintf
+      ( (char *) (msg_out + written), (size_t) (size_terminator - written)
       , "\n"
       );
-    written += (hexdump_indent_spaces = snprintf
-      ( (char *) (msg_out + written), (size_t) (msg_out_len + written)
+    if (l < 0) return assert_msg_check_snprintf(context, l, msg_out, msg_out_size, tag, &context->snprintf_err);
+    written += l;
+
+    l = hexdump_indent_spaces = snprintf
+      ( (char *) (msg_out + written), (size_t) (size_terminator - written)
       , "    "
-      ));
+      );
+    if (l < 0) return assert_msg_check_snprintf(context, l, msg_out, msg_out_size, tag, &context->snprintf_err);
+    written += l;
   }
   else
   {
-    written += snprintf
-      ( (char *) (msg_out + written), (size_t) (msg_out_len + written)
+    l = snprintf
+      ( (char *) (msg_out + written), (size_t) (size_terminator - written)
       , "  "  /* A: No newline, so print two extra spaces for alignment. */
       );
+    if (l < 0) return assert_msg_check_snprintf(context, l, msg_out, msg_out_size, tag, &context->snprintf_err);
+    written += l;
   }
 
 
@@ -496,51 +980,67 @@ void assert_memeq_msg(unit_test_context_t *context, char *msg_out, size_t msg_ou
       /* Start a new line. */
       cols_printed = hexdump_indent_spaces + byte_print_width;
 
-      written += snprintf
-        ( (char *) (msg_out + written), (size_t) (msg_out_len + written)
+      l = snprintf
+        ( (char *) (msg_out + written), (size_t) (size_terminator - written)
         , "\n"
         );
+      if (l < 0) return assert_msg_check_snprintf(context, l, msg_out, msg_out_size, tag, &context->snprintf_err);
+      written += l;
 
       for (j = 0; j < hexdump_indent_spaces; ++j)
       {
-        written += snprintf
-          ( (char *) (msg_out + written), (size_t) (msg_out_len + written)
+        l = snprintf
+          ( (char *) (msg_out + written), (size_t) (size_terminator - written)
           , " "
           );
+        if (l < 0) return assert_msg_check_snprintf(context, l, msg_out, msg_out_size, tag, &context->snprintf_err);
+        written += l;
       }
     }
 
     /* Print the byte. */
-    written += snprintf
-      ( (char *) (msg_out + written), (size_t) (msg_out_len + written)
+    l = snprintf
+      ( (char *) (msg_out + written), (size_t) (size_terminator - written)
       , " 0x%.2X"
       , (unsigned int) (((unsigned char *) model)[i])
       );
+    if (l < 0) return assert_msg_check_snprintf(context, l, msg_out, msg_out_size, tag, &context->snprintf_err);
+    written += l;
   }
 
   /* ---------------------------------------------------------------- */
   /* Hex dump of check: write what the memory should be equal to. */
 
-  written += snprintf
-    ( (char *) (msg_out + written), (size_t) (msg_out_len + written)
+  l = snprintf
+    ( (char *) (msg_out + written), (size_t) (size_terminator - written)
     , "\n"
     );
-  written += snprintf
-    ( (char *) (msg_out + written), (size_t) (msg_out_len + written)
+  if (l < 0) return assert_msg_check_snprintf(context, l, msg_out, msg_out_size, tag, &context->snprintf_err);
+  written += l;
+
+  l = snprintf
+    ( (char *) (msg_out + written), (size_t) (size_terminator - written)
     , "  actually is:"
     );
+  if (l < 0) return assert_msg_check_snprintf(context, l, msg_out, msg_out_size, tag, &context->snprintf_err);
+  written += l;
 
   /* Should we start a new line? */
   if (need_multiple_lines)
   {
-    written += snprintf
-      ( (char *) (msg_out + written), (size_t) (msg_out_len + written)
+    l = snprintf
+      ( (char *) (msg_out + written), (size_t) (size_terminator - written)
       , "\n"
       );
-    written += snprintf
-      ( (char *) (msg_out + written), (size_t) (msg_out_len + written)
+    if (l < 0) return assert_msg_check_snprintf(context, l, msg_out, msg_out_size, tag, &context->snprintf_err);
+    written += l;
+
+    l = snprintf
+      ( (char *) (msg_out + written), (size_t) (size_terminator - written)
       , "    "
       );
+    if (l < 0) return assert_msg_check_snprintf(context, l, msg_out, msg_out_size, tag, &context->snprintf_err);
+    written += l;
   }
 
   /* Hex dump: print each byte. */
@@ -553,66 +1053,108 @@ void assert_memeq_msg(unit_test_context_t *context, char *msg_out, size_t msg_ou
       /* Start a new line. */
       cols_printed = hexdump_indent_spaces + byte_print_width;
 
-      written += snprintf
-        ( (char *) (msg_out + written), (size_t) (msg_out_len + written)
+      l = snprintf
+        ( (char *) (msg_out + written), (size_t) (size_terminator - written)
         , "\n"
         );
+      if (l < 0) return assert_msg_check_snprintf(context, l, msg_out, msg_out_size, tag, &context->snprintf_err);
+      written += l;
 
       for (j = 0; j < hexdump_indent_spaces; ++j)
       {
-        written += snprintf
-          ( (char *) (msg_out + written), (size_t) (msg_out_len + written)
+        l = snprintf
+          ( (char *) (msg_out + written), (size_t) (size_terminator - written)
           , " "
           );
+        if (l < 0) return assert_msg_check_snprintf(context, l, msg_out, msg_out_size, tag, &context->snprintf_err);
+        written += l;
       }
     }
 
     /* Print the byte. */
-    written += snprintf
-      ( (char *) (msg_out + written), (size_t) (msg_out_len + written)
+    l = snprintf
+      ( (char *) (msg_out + written), (size_t) (size_terminator - written)
       , " 0x%.2X"
       , (unsigned int) (((unsigned char *) check)[i])
       );
+    if (l < 0) return assert_msg_check_snprintf(context, l, msg_out, msg_out_size, tag, &context->snprintf_err);
+    written += l;
   }
+
+  l = snprintf
+    ( (char *) (msg_out + written), (size_t) (size_terminator - written)
+    , "\n"
+    );
+  if (l < 0) return assert_msg_check_snprintf(context, l, msg_out, msg_out_size, tag, &context->snprintf_err);
+  written += l;
+
+  return assert_msg_append_details(context, (size_t) written, msg_out, msg_out_size);
 }
 
 
-void assert_false_msg(unit_test_context_t *context, char *msg_out, size_t msg_out_len, const char *tag, int condition)
+size_t assert_false_msg(unit_test_context_t *context, char *msg_out, size_t msg_out_size, const char *tag, int condition)
 {
-  snprintf
-    ( (char *) msg_out, (size_t) msg_out_len
-    , "Inverse boolean assertion '%s' failed - the condition be false, but it is true: %d (bool: %d)"
+  int    l;
+  size_t size_terminator;
+
+  size_terminator = msg_out_size - 1;  /* Make room for terminating NULL byte. */
+
+  l = snprintf
+    ( (char *) msg_out, (size_t) size_terminator
+    , "Inverse boolean assertion '%s' failed - the condition be false, but it is true: %d (bool: %d)\n"
     , (const char *) tag
     , (int) condition
     , (int) !!condition
     );
+  if (l < 0) return assert_msg_check_snprintf(context, l, msg_out, msg_out_size, tag, &context->snprintf_err);
+
+  return assert_msg_append_details(context, (size_t) l, msg_out, msg_out_size);
 }
 
-void assert_not_inteq_msg(unit_test_context_t *context, char *msg_out, size_t msg_out_len, const char *tag, int check, int model)
+size_t assert_not_inteq_msg(unit_test_context_t *context, char *msg_out, size_t msg_out_size, const char *tag, int check, int model)
 {
-  snprintf
-    ( (char *) msg_out, (size_t) msg_out_len
-    , "Inverse assertion '%s' failed - integers must differ, but they are the same:\n  should differ from:  %d\n  but still is:        %d"
+  int    l;
+  size_t size_terminator;
+
+  size_terminator = msg_out_size - 1;  /* Make room for terminating NULL byte. */
+
+  l = snprintf
+    ( (char *) msg_out, (size_t) size_terminator
+    , "Inverse assertion '%s' failed - integers must differ, but they are the same:\n  should differ from:  %d\n  but still is:        %d\n"
     , (const char *) tag
     , (int) model
     , (int) check
     );
+  if (l < 0) return assert_msg_check_snprintf(context, l, msg_out, msg_out_size, tag, &context->snprintf_err);
+
+  return assert_msg_append_details(context, (size_t) l, msg_out, msg_out_size);
 }
 
-void assert_not_streqz_msg(unit_test_context_t *context, char *msg_out, size_t msg_out_len, const char *tag, const char *check, const char *model)
+size_t assert_not_streqz_msg(unit_test_context_t *context, char *msg_out, size_t msg_out_size, const char *tag, const char *check, const char *model)
 {
-  snprintf
-    ( (char *) msg_out, (size_t) msg_out_len
-    , "Inverse assertion '%s' failed - strings must duffer, but they are the same:\n  should differ from:  %s\n  but still is:        %s"
+  int    l;
+  size_t size_terminator;
+
+  size_terminator = msg_out_size - 1;  /* Make room for terminating NULL byte. */
+
+  l = snprintf
+    ( (char *) msg_out, (size_t) size_terminator
+    , "Inverse assertion '%s' failed - strings must duffer, but they are the same:\n  should differ from:  %s\n  but still is:        %s\n"
     , (const char *) tag
     , (const char*) model
     , (const char*) check
     );
+  if (l < 0) return assert_msg_check_snprintf(context, l, msg_out, msg_out_size, tag, &context->snprintf_err);
+
+  return assert_msg_append_details(context, (size_t) l, msg_out, msg_out_size);
 }
 
-void assert_not_streqn_msg(unit_test_context_t *context, char *msg_out, size_t msg_out_len, const char *tag, const char *check, const char *model, size_t max_len)
+size_t assert_not_streqn_msg(unit_test_context_t *context, char *msg_out, size_t msg_out_size, const char *tag, const char *check, const char *model, size_t max_len)
 {
-  char *checkz, *modelz;
+  int     l;
+  size_t  size_terminator;
+
+  char   *checkz, *modelz;
 
   checkz = malloc(2 * (max_len+1));
   {
@@ -624,17 +1166,23 @@ void assert_not_streqn_msg(unit_test_context_t *context, char *msg_out, size_t m
     modelz[max_len] = 0;
 
     snprintf
-      ( (char *) msg_out, (size_t) msg_out_len
-      , "Inverse assertion '%s' failed - strings must duffer, but they are the same:\n  should differ from:  %s\n  but still is:        %s"
+      ( (char *) msg_out, (size_t) size_terminator
+      , "Inverse assertion '%s' failed - strings must duffer, but they are the same:\n  should differ from:  %s\n  but still is:        %s\n"
       , (const char *) tag
       , (const char *) modelz
       , (const char *) checkz
       );
   } free(checkz);
+    if (l < 0) return assert_msg_check_snprintf(context, l, msg_out, msg_out_size, tag, &context->snprintf_err);
+
+  return assert_msg_append_details(context, (size_t) l, msg_out, msg_out_size);
 }
 
-void assert_not_memeq_msg(unit_test_context_t *context, char *msg_out, size_t msg_out_len, const char *tag, void *check, void *model, size_t n)
+size_t assert_not_memeq_msg(unit_test_context_t *context, char *msg_out, size_t msg_out_size, const char *tag, void *check, void *model, size_t n)
 {
+  int              l;
+  size_t           size_terminator;
+
   int              i, j;
   size_t           written = 0;
 
@@ -647,24 +1195,31 @@ void assert_not_memeq_msg(unit_test_context_t *context, char *msg_out, size_t ms
 
   /* ---------------------------------------------------------------- */
   /* Start writing error message. */
-  written += snprintf
-    ( (char *) (msg_out + written), (size_t) (msg_out_len + written)
+  l = snprintf
+    ( (char *) (msg_out + written), (size_t) (size_terminator - written)
     , "Inverse assertion '%s' failed - '%d' bytes of memory must differ, but they are the same:"
     , (const char *) tag
     , (int) n
     );
+  if (l < 0) return assert_msg_check_snprintf(context, l, msg_out, msg_out_size, tag, &context->snprintf_err);
+  written += l;
 
   /* ---------------------------------------------------------------- */
   /* Hex dump of model: write what the memory should be equal to. */
 
-  written += snprintf
-    ( (char *) (msg_out + written), (size_t) (msg_out_len + written)
+  l = snprintf
+    ( (char *) (msg_out + written), (size_t) (size_terminator - written)
     , "\n"
     );
-  written += (hexdump_indent_spaces = snprintf
-    ( (char *) (msg_out + written), (size_t) (msg_out_len + written)
+  if (l < 0) return assert_msg_check_snprintf(context, l, msg_out, msg_out_size, tag, &context->snprintf_err);
+  written += l;
+
+  l = hexdump_indent_spaces = snprintf
+    ( (char *) (msg_out + written), (size_t) (size_terminator - written)
     , "  should differ from:"
-    ));
+    );
+  if (l < 0) return assert_msg_check_snprintf(context, l, msg_out, msg_out_size, tag, &context->snprintf_err);
+  written += l;
 
   /* Here we also calculate whether this will span multiple lines, in which
    * case the hex dump starts on its own line for readability.
@@ -675,14 +1230,19 @@ void assert_not_memeq_msg(unit_test_context_t *context, char *msg_out, size_t ms
     /* It'll be indented by two extra spaces, one of which we write here. */
     need_multiple_lines = 1;
 
-    written += snprintf
-      ( (char *) (msg_out + written), (size_t) (msg_out_len + written)
+    l = snprintf
+      ( (char *) (msg_out + written), (size_t) (size_terminator - written)
       , "\n"
       );
-    written += (hexdump_indent_spaces = snprintf
-      ( (char *) (msg_out + written), (size_t) (msg_out_len + written)
+    if (l < 0) return assert_msg_check_snprintf(context, l, msg_out, msg_out_size, tag, &context->snprintf_err);
+    written += l;
+
+    l = hexdump_indent_spaces = snprintf
+      ( (char *) (msg_out + written), (size_t) (size_terminator - written)
       , "    "
-      ));
+      );
+    if (l < 0) return assert_msg_check_snprintf(context, l, msg_out, msg_out_size, tag, &context->snprintf_err);
+    written += l;
   }
 
 
@@ -696,58 +1256,76 @@ void assert_not_memeq_msg(unit_test_context_t *context, char *msg_out, size_t ms
       /* Start a new line. */
       cols_printed = hexdump_indent_spaces + byte_print_width;
 
-      written += snprintf
-        ( (char *) (msg_out + written), (size_t) (msg_out_len + written)
+      l = snprintf
+        ( (char *) (msg_out + written), (size_t) (size_terminator - written)
         , "\n"
         );
+      if (l < 0) return assert_msg_check_snprintf(context, l, msg_out, msg_out_size, tag, &context->snprintf_err);
+      written += l;
 
       for (j = 0; j < hexdump_indent_spaces; ++j)
       {
-        written += snprintf
-          ( (char *) (msg_out + written), (size_t) (msg_out_len + written)
+        l = snprintf
+          ( (char *) (msg_out + written), (size_t) (size_terminator - written)
           , " "
           );
+        if (l < 0) return assert_msg_check_snprintf(context, l, msg_out, msg_out_size, tag, &context->snprintf_err);
+        written += l;
       }
     }
 
     /* Print the byte. */
-    written += snprintf
-      ( (char *) (msg_out + written), (size_t) (msg_out_len + written)
+    l = snprintf
+      ( (char *) (msg_out + written), (size_t) (size_terminator - written)
       , " 0x%.2X"
       , (unsigned int) (((unsigned char *) model)[i])
       );
+    if (l < 0) return assert_msg_check_snprintf(context, l, msg_out, msg_out_size, tag, &context->snprintf_err);
+    written += l;
   }
 
   /* ---------------------------------------------------------------- */
   /* Hex dump of check: write what the memory should be equal to. */
 
-  written += snprintf
-    ( (char *) (msg_out + written), (size_t) (msg_out_len + written)
+  l = snprintf
+    ( (char *) (msg_out + written), (size_t) (size_terminator - written)
     , "\n"
     );
-  written += snprintf
-    ( (char *) (msg_out + written), (size_t) (msg_out_len + written)
+  if (l < 0) return assert_msg_check_snprintf(context, l, msg_out, msg_out_size, tag, &context->snprintf_err);
+  written += l;
+
+  l = snprintf
+    ( (char *) (msg_out + written), (size_t) (size_terminator - written)
     , "  but still is:"  /* A: Print six extra spaces below only without a newline. */
     );
+  if (l < 0) return assert_msg_check_snprintf(context, l, msg_out, msg_out_size, tag, &context->snprintf_err);
+  written += l;
 
   /* Should we start a new line? */
   if (need_multiple_lines)
   {
-    written += snprintf
-      ( (char *) (msg_out + written), (size_t) (msg_out_len + written)
+    l = snprintf
+      ( (char *) (msg_out + written), (size_t) (size_terminator - written)
       , "\n"
       );
-    written += snprintf
-      ( (char *) (msg_out + written), (size_t) (msg_out_len + written)
+    if (l < 0) return assert_msg_check_snprintf(context, l, msg_out, msg_out_size, tag, &context->snprintf_err);
+    written += l;
+
+    l = snprintf
+      ( (char *) (msg_out + written), (size_t) (size_terminator - written)
       , "    "
       );
+    if (l < 0) return assert_msg_check_snprintf(context, l, msg_out, msg_out_size, tag, &context->snprintf_err);
+    written += l;
   }
   else
   {
-    written += snprintf
-      ( (char *) (msg_out + written), (size_t) (msg_out_len + written)
+    l = snprintf
+      ( (char *) (msg_out + written), (size_t) (size_terminator - written)
       , "      "  /* A: No newline, so print six extra spaces for alignment. */
       );
+    if (l < 0) return assert_msg_check_snprintf(context, l, msg_out, msg_out_size, tag, &context->snprintf_err);
+    written += l;
   }
 
   /* Hex dump: print each byte. */
@@ -760,27 +1338,42 @@ void assert_not_memeq_msg(unit_test_context_t *context, char *msg_out, size_t ms
       /* Start a new line. */
       cols_printed = hexdump_indent_spaces + byte_print_width;
 
-      written += snprintf
-        ( (char *) (msg_out + written), (size_t) (msg_out_len + written)
+      l = snprintf
+        ( (char *) (msg_out + written), (size_t) (size_terminator - written)
         , "\n"
         );
+      if (l < 0) return assert_msg_check_snprintf(context, l, msg_out, msg_out_size, tag, &context->snprintf_err);
+      written += l;
 
       for (j = 0; j < hexdump_indent_spaces; ++j)
       {
-        written += snprintf
-          ( (char *) (msg_out + written), (size_t) (msg_out_len + written)
+        l = snprintf
+          ( (char *) (msg_out + written), (size_t) (size_terminator - written)
           , " "
           );
+        if (l < 0) return assert_msg_check_snprintf(context, l, msg_out, msg_out_size, tag, &context->snprintf_err);
+        written += l;
       }
     }
 
     /* Print the byte. */
-    written += snprintf
-      ( (char *) (msg_out + written), (size_t) (msg_out_len + written)
+    l = snprintf
+      ( (char *) (msg_out + written), (size_t) (size_terminator - written)
       , " 0x%.2X"
       , (unsigned int) (((unsigned char *) check)[i])
       );
+    if (l < 0) return assert_msg_check_snprintf(context, l, msg_out, msg_out_size, tag, &context->snprintf_err);
+    written += l;
   }
+
+  l = snprintf
+    ( (char *) (msg_out + written), (size_t) (size_terminator - written)
+    , "\n"
+    );
+  if (l < 0) return assert_msg_check_snprintf(context, l, msg_out, msg_out_size, tag, &context->snprintf_err);
+  written += l;
+
+  return assert_msg_append_details(context, (size_t) written, msg_out, msg_out_size);
 }
 
 /* ---------------------------------------------------------------- */
@@ -796,7 +1389,7 @@ unit_test_result_t assert_failure(unit_test_context_t *context, const char *err_
   if (err_msg)
     strncpy(context->err_buf, err_msg, context->err_buf_len);
   else
-    assert_failure_msg(context, context->err_buf, context->err_buf_len, tag);
+    context->err_buf_len = assert_failure_msg(context, context->err_buf, context->err_buf_len, tag);
 
   return UNIT_TEST_FAIL;
 }
@@ -806,7 +1399,7 @@ unit_test_result_t assert_failure_continue(unit_test_context_t *context, const c
   if (err_msg)
     strncpy(context->err_buf, err_msg, context->err_buf_len);
   else
-    assert_failure_msg(context, context->err_buf, context->err_buf_len, tag);
+    context->err_buf_len = assert_failure_msg(context, context->err_buf, context->err_buf_len, tag);
 
   return UNIT_TEST_FAIL_CONTINUE;
 }
@@ -824,7 +1417,7 @@ unit_test_result_t assert_true(unit_test_context_t *context, const char *err_msg
     if (err_msg)
       strncpy(context->err_buf, err_msg, context->err_buf_len);
     else
-      assert_true_msg(context, context->err_buf, context->err_buf_len, tag, condition);
+      context->err_buf_len = assert_true_msg(context, context->err_buf, context->err_buf_len, tag, condition);
 
     return UNIT_TEST_FAIL;
   }
@@ -841,7 +1434,7 @@ unit_test_result_t assert_true_continue(unit_test_context_t *context, const char
     if (err_msg)
       strncpy(context->err_buf, err_msg, context->err_buf_len);
     else
-      assert_true_msg(context, context->err_buf, context->err_buf_len, tag, condition);
+      context->err_buf_len = assert_true_msg(context, context->err_buf, context->err_buf_len, tag, condition);
 
     return UNIT_TEST_FAIL_CONTINUE;
   }
@@ -858,7 +1451,7 @@ unit_test_result_t assert_inteq(unit_test_context_t *context, const char *err_ms
     if (err_msg)
       strncpy(context->err_buf, err_msg, context->err_buf_len);
     else
-      assert_inteq_msg(context, context->err_buf, context->err_buf_len, tag, check, model);
+      context->err_buf_len = assert_inteq_msg(context, context->err_buf, context->err_buf_len, tag, check, model);
 
     return UNIT_TEST_FAIL;
   }
@@ -875,7 +1468,7 @@ unit_test_result_t assert_inteq_continue(unit_test_context_t *context, const cha
     if (err_msg)
       strncpy(context->err_buf, err_msg, context->err_buf_len);
     else
-      assert_inteq_msg(context, context->err_buf, context->err_buf_len, tag, check, model);
+      context->err_buf_len = assert_inteq_msg(context, context->err_buf, context->err_buf_len, tag, check, model);
 
     return UNIT_TEST_FAIL_CONTINUE;
   }
@@ -892,7 +1485,7 @@ unit_test_result_t assert_streqz(unit_test_context_t *context, const char *err_m
     if (err_msg)
       strncpy(context->err_buf, err_msg, context->err_buf_len);
     else
-      assert_streqz_msg(context, context->err_buf, context->err_buf_len, tag, check, model);
+      context->err_buf_len = assert_streqz_msg(context, context->err_buf, context->err_buf_len, tag, check, model);
 
     return UNIT_TEST_FAIL;
   }
@@ -909,7 +1502,7 @@ unit_test_result_t assert_streqz_continue(unit_test_context_t *context, const ch
     if (err_msg)
       strncpy(context->err_buf, err_msg, context->err_buf_len);
     else
-      assert_streqz_msg(context, context->err_buf, context->err_buf_len, tag, check, model);
+      context->err_buf_len = assert_streqz_msg(context, context->err_buf, context->err_buf_len, tag, check, model);
 
     return UNIT_TEST_FAIL_CONTINUE;
   }
@@ -926,7 +1519,7 @@ unit_test_result_t assert_streqn(unit_test_context_t *context, const char *err_m
     if (err_msg)
       strncpy(context->err_buf, err_msg, context->err_buf_len);
     else
-      assert_streqn_msg(context, context->err_buf, context->err_buf_len, tag, check, model, max_len);
+      context->err_buf_len = assert_streqn_msg(context, context->err_buf, context->err_buf_len, tag, check, model, max_len);
 
     return UNIT_TEST_FAIL;
   }
@@ -943,7 +1536,7 @@ unit_test_result_t assert_streqn_continue(unit_test_context_t *context, const ch
     if (err_msg)
       strncpy(context->err_buf, err_msg, context->err_buf_len);
     else
-      assert_streqn_msg(context, context->err_buf, context->err_buf_len, tag, check, model, max_len);
+      context->err_buf_len = assert_streqn_msg(context, context->err_buf, context->err_buf_len, tag, check, model, max_len);
 
     return UNIT_TEST_FAIL_CONTINUE;
   }
@@ -960,7 +1553,7 @@ unit_test_result_t assert_memeq(unit_test_context_t *context, const char *err_ms
     if (err_msg)
       strncpy(context->err_buf, err_msg, context->err_buf_len);
     else
-      assert_memeq_msg(context, context->err_buf, context->err_buf_len, tag, check, model, n);
+      context->err_buf_len = assert_memeq_msg(context, context->err_buf, context->err_buf_len, tag, check, model, n);
 
     return UNIT_TEST_FAIL;
   }
@@ -977,7 +1570,7 @@ unit_test_result_t assert_memeq_continue(unit_test_context_t *context, const cha
     if (err_msg)
       strncpy(context->err_buf, err_msg, context->err_buf_len);
     else
-      assert_memeq_msg(context, context->err_buf, context->err_buf_len, tag, check, model, n);
+      context->err_buf_len = assert_memeq_msg(context, context->err_buf, context->err_buf_len, tag, check, model, n);
 
     return UNIT_TEST_FAIL_CONTINUE;
   }
@@ -996,7 +1589,7 @@ unit_test_result_t assert_false(unit_test_context_t *context, const char *err_ms
     if (err_msg)
       strncpy(context->err_buf, err_msg, context->err_buf_len);
     else
-      assert_false_msg(context, context->err_buf, context->err_buf_len, tag, condition);
+      context->err_buf_len = assert_false_msg(context, context->err_buf, context->err_buf_len, tag, condition);
 
     return UNIT_TEST_FAIL;
   }
@@ -1013,7 +1606,7 @@ unit_test_result_t assert_false_continue(unit_test_context_t *context, const cha
     if (err_msg)
       strncpy(context->err_buf, err_msg, context->err_buf_len);
     else
-      assert_false_msg(context, context->err_buf, context->err_buf_len, tag, condition);
+      context->err_buf_len = assert_false_msg(context, context->err_buf, context->err_buf_len, tag, condition);
 
     return UNIT_TEST_FAIL_CONTINUE;
   }
@@ -1030,7 +1623,7 @@ unit_test_result_t assert_not_inteq(unit_test_context_t *context, const char *er
     if (err_msg)
       strncpy(context->err_buf, err_msg, context->err_buf_len);
     else
-      assert_not_inteq_msg(context, context->err_buf, context->err_buf_len, tag, check, model);
+      context->err_buf_len = assert_not_inteq_msg(context, context->err_buf, context->err_buf_len, tag, check, model);
 
     return UNIT_TEST_FAIL;
   }
@@ -1047,7 +1640,7 @@ unit_test_result_t assert_not_inteq_continue(unit_test_context_t *context, const
     if (err_msg)
       strncpy(context->err_buf, err_msg, context->err_buf_len);
     else
-      assert_not_inteq_msg(context, context->err_buf, context->err_buf_len, tag, check, model);
+      context->err_buf_len = assert_not_inteq_msg(context, context->err_buf, context->err_buf_len, tag, check, model);
 
     return UNIT_TEST_FAIL_CONTINUE;
   }
@@ -1064,7 +1657,7 @@ unit_test_result_t assert_not_streqz(unit_test_context_t *context, const char *e
     if (err_msg)
       strncpy(context->err_buf, err_msg, context->err_buf_len);
     else
-      assert_not_streqz_msg(context, context->err_buf, context->err_buf_len, tag, check, model);
+      context->err_buf_len = assert_not_streqz_msg(context, context->err_buf, context->err_buf_len, tag, check, model);
 
     return UNIT_TEST_FAIL;
   }
@@ -1081,7 +1674,7 @@ unit_test_result_t assert_not_streqz_continue(unit_test_context_t *context, cons
     if (err_msg)
       strncpy(context->err_buf, err_msg, context->err_buf_len);
     else
-      assert_not_streqz_msg(context, context->err_buf, context->err_buf_len, tag, check, model);
+      context->err_buf_len = assert_not_streqz_msg(context, context->err_buf, context->err_buf_len, tag, check, model);
 
     return UNIT_TEST_FAIL_CONTINUE;
   }
@@ -1098,7 +1691,7 @@ unit_test_result_t assert_not_streqn(unit_test_context_t *context, const char *e
     if (err_msg)
       strncpy(context->err_buf, err_msg, context->err_buf_len);
     else
-      assert_not_streqn_msg(context, context->err_buf, context->err_buf_len, tag, check, model, max_len);
+      context->err_buf_len = assert_not_streqn_msg(context, context->err_buf, context->err_buf_len, tag, check, model, max_len);
 
     return UNIT_TEST_FAIL;
   }
@@ -1115,7 +1708,7 @@ unit_test_result_t assert_not_streqn_continue(unit_test_context_t *context, cons
     if (err_msg)
       strncpy(context->err_buf, err_msg, context->err_buf_len);
     else
-      assert_not_streqn_msg(context, context->err_buf, context->err_buf_len, tag, check, model, max_len);
+      context->err_buf_len = assert_not_streqn_msg(context, context->err_buf, context->err_buf_len, tag, check, model, max_len);
 
     return UNIT_TEST_FAIL_CONTINUE;
   }
@@ -1132,7 +1725,7 @@ unit_test_result_t assert_not_memeq(unit_test_context_t *context, const char *er
     if (err_msg)
       strncpy(context->err_buf, err_msg, context->err_buf_len);
     else
-      assert_not_memeq_msg(context, context->err_buf, context->err_buf_len, tag, check, model, n);
+      context->err_buf_len = assert_not_memeq_msg(context, context->err_buf, context->err_buf_len, tag, check, model, n);
 
     return UNIT_TEST_FAIL;
   }
@@ -1149,7 +1742,7 @@ unit_test_result_t assert_not_memeq_continue(unit_test_context_t *context, const
     if (err_msg)
       strncpy(context->err_buf, err_msg, context->err_buf_len);
     else
-      assert_not_memeq_msg(context, context->err_buf, context->err_buf_len, tag, check, model, n);
+      context->err_buf_len = assert_not_memeq_msg(context, context->err_buf, context->err_buf_len, tag, check, model, n);
 
     return UNIT_TEST_FAIL_CONTINUE;
   }

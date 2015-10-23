@@ -66,49 +66,110 @@
  */
 struct unit_test_context_s
 {
-  /* Environment. */
-  char   *err_buf;
-  size_t err_buf_len;
-  int    seed;
+  /* Whether the value has been initialized. */
+  int      is_initialized    : 2;
+  /* Whether the value was initialized on the heap.
+   * free_unit_test_context_t checks this value to determine whether to call
+   * "free".
+   */
+  int      is_heap_allocated : 1;
 
-  FILE   *out;
-  FILE   *err;
+  /* Environment. */
+
+  /* How to emit output. */
+  FILE    *out;
+  FILE    *err;
+
+  /* Error message buffer. */
+  char    *err_buf;
+  size_t   err_buf_size;
+  size_t   err_buf_len;
+
+  /* Internal error message buffer. */
+  char    *int_err_buf;
+  size_t   int_err_buf_size;
+  size_t   int_err_buf_len;
+  int      is_snprintf_err;
+
+  /*
+   * Buffer to record extra information in case a test fails.
+   * The assertion message generator procedures use this when an assertion
+   * fails to append to the error buffer, before resetting this one.
+   */
+  char    *details_buf;
+  size_t   details_buf_size;
+  size_t   details_buf_len;
+
+  /*
+   * Extra buffer for individual unit tests, not used by "testing".
+   *
+   * This may be reset at the beginning of any "unit_test_t".
+   */
+  void    *user_buf;
+  size_t   user_buf_size;
+
+  /*
+   * Extra data buffer.
+   */
+  void    *misc_buf;
+  size_t   misc_buf_size;
+
+  int      seed;
 
   void   (*free)(struct unit_test_context_s *self);
 
   /* State. */
-  int    aborting;       /* Silence output, and don't update last_fail and last_pass.
+  int      aborting;       /* Silence output, and don't update last_fail and last_pass.
                             Automatically set on aborting failures. */
 
-  int    group_depth;  /* Group depth. */
+  int      group_depth;  /* Group depth. */
 
-  int    next_test_id; /* Number of the id of the next test that would be run.   */
+  int      next_test_id; /* Number of the id of the next test that would be run.   */
                        /* This is incremented immediately before a test is run.  */
                        /* The current test id is equal to this minus 1.          */
 
-  int    num_pass;     /* Number of tests passed so far. */
-  int    num_fail;     /* Number of tests failed so far. */
+  int      num_pass;     /* Number of tests passed so far. */
+  int      num_fail;     /* Number of tests failed so far. */
 
-  int    last_fail;    /* Number of the last test that failed; default -1. */
-  int    last_pass;    /* Number of the last test that passed; default -1. */
+  int      last_fail;    /* Number of the last test that failed; default -1. */
+  int      last_pass;    /* Number of the last test that passed; default -1. */
 };
 typedef struct unit_test_context_s unit_test_context_t;
 
-#define DEFAULT_TEST_CONTEXT_ERR_BUF_SIZE (65536)
-#define DEFAULT_TEST_CONTEXT_SEED         (42)
-#define DEFAULT_TEST_CONTEXT_OUT stdout
-#define DEFAULT_TEST_CONTEXT_ERR stderr
-unit_test_context_t *new_unit_test_context( int override_err_buf_len, int override_seed, int  override_out, int  override_err
-                                          , int err_buf_len,          int seed,          FILE *out,         FILE *err);
+#define CONTEXT_UNINITIALIZED         0
+#define CONTEXT_FULLY_INITIALIZED     1
+#define CONTEXT_PARTIALLY_INITIALIZED 2
+
+#define DEFAULT_TEST_CONTEXT_ERR_BUF_SIZE     (65536)
+#define DEFAULT_TEST_CONTEXT_INT_ERR_BUF_SIZE (65536)
+#define DEFAULT_TEST_CONTEXT_DETAILS_BUF_SIZE (16 * 65536)
+#define DEFAULT_TEST_CONTEXT_USER_BUF_SIZE    (32 * 65536)
+#define DEFAULT_TEST_CONTEXT_MISC_BUF_SIZE    (4  * 65536)
+#define DEFAULT_TEST_CONTEXT_SEED             (42)
+#define DEFAULT_TEST_CONTEXT_OUT              stdout
+#define DEFAULT_TEST_CONTEXT_ERR              stderr
+unit_test_context_t *new_unit_test_context
+  ( unit_test_context_t *initialize_context_noheap
+
+  , int override_err_buf_size,  int override_int_err_buf_size, int override_details_buf_size
+  , int override_user_buf_size, int override_misc_buf_size
+  , int override_seed,          int override_out,              int override_err
+
+  , int          err_buf_size,  int          int_err_buf_size, int          details_buf_size
+  , int          user_buf_size, int          misc_buf_size
+  , int          seed,          FILE        *out,              FILE        *err
+  );
+unit_test_context_t *new_unit_test_context_defaults(unit_test_context_t *initialize_context_noheap);
 void                free_unit_test_context(unit_test_context_t *context);
 
 /* ---------------------------------------------------------------- */
 /* Unit test type. */
 
 /* Unit test result codes. */
-#define UNIT_TEST_PASS          ( 0)
-#define UNIT_TEST_FAIL          (-1)
-#define UNIT_TEST_FAIL_CONTINUE ( 1)
+#define UNIT_TEST_PASS           ( 0)
+#define UNIT_TEST_FAIL           (-1)
+#define UNIT_TEST_FAIL_CONTINUE  ( 1)
+#define UNIT_TEST_INTERNAL_ERROR (-3)
 typedef int unit_test_result_t;
 
 /* A unit test is a function, coupled with a name and description:
@@ -142,43 +203,52 @@ int test_result_failure(unit_test_result_t result);
 int test_result_can_continue(unit_test_result_t result);
 int test_result_need_abort(unit_test_result_t result);
 
-int run_test(unit_test_context_t *context, unit_test_t test);
+unit_test_result_t run_test(unit_test_context_t *context, unit_test_t test);
 
 void print_test_indent(unit_test_context_t *context);
 void print_test_prefix(unit_test_context_t *context, unit_test_t test, int id);
 void print_passed_test_result(unit_test_context_t *context, unit_test_t test, int id, unit_test_result_t result);
 void print_failed_test_result(unit_test_context_t *context, unit_test_t test, int id, unit_test_result_t result);
 
-int run_tests_num(unit_test_context_t *context, unit_test_t **tests, size_t num_tests);
-int run_tests(unit_test_context_t *context, unit_test_t **tests);
+unit_test_result_t run_tests_num(unit_test_context_t *context, unit_test_t **tests, size_t num_tests);
+unit_test_result_t run_tests(unit_test_context_t *context, unit_test_t **tests);
 
 /* ---------------------------------------------------------------- */
 /* Default error messages for assertion failures. */
 
-#define DEFAULT_MSG_SIZE 4096  /* (2 << 12) */
+#define DEFAULT_TAG_SIZE 4096  /* (2 << 12) */
 
 #define ASSERT_MSG_WIDTH 80
 
-void assert_failure_msg(unit_test_context_t *context, char *msg_out, size_t msg_out_len, const char *tag);
+void reset_err_msg_details(unit_test_context_t *context);
+size_t test_add_details_msg(unit_test_context_t *context, const char *msg, size_t max_size);
 
-void assert_true_msg(unit_test_context_t *context, char *msg_out, size_t msg_out_len, const char *tag, int condition);
-
-void assert_inteq_msg(unit_test_context_t *context, char *msg_out, size_t msg_out_len, const char *tag, int check, int model);
-
-void assert_streqz_msg(unit_test_context_t *context, char *msg_out, size_t msg_out_len, const char *tag, const char *check, const char *model);
-void assert_streqn_msg(unit_test_context_t *context, char *msg_out, size_t msg_out_len, const char *tag, const char *check, const char *model, size_t max_len);
-
-void assert_memeq_msg(unit_test_context_t *context, char *msg_out, size_t msg_out_len, const char *tag, void *check, void *model, size_t n);
+size_t assert_snprintf_error_msg(unit_test_context_t *context, int snprintf_error_code, char *msg_out, size_t msg_out_size, const char *tag);
+size_t assert_msg_check_snprintf(unit_test_context_t *context, int snprintf_result, char *msg_out, size_t msg_out_size, const char *tag, int *out_is_err);
 
 
-void assert_false_msg(unit_test_context_t *context, char *msg_out, size_t msg_out_len, const char *tag, int condition);
+size_t assert_msg_append_details(unit_test_context_t *context, size_t len, char *msg_out, size_t msg_out_size);
 
-void assert_not_inteq_msg(unit_test_context_t *context, char *msg_out, size_t msg_out_len, const char *tag, int check, int model);
+size_t assert_failure_msg(unit_test_context_t *context, char *msg_out, size_t msg_out_size, const char *tag);
 
-void assert_not_streqz_msg(unit_test_context_t *context, char *msg_out, size_t msg_out_len, const char *tag, const char *check, const char *model);
-void assert_not_streqn_msg(unit_test_context_t *context, char *msg_out, size_t msg_out_len, const char *tag, const char *check, const char *model, size_t max_len);
+size_t assert_true_msg(unit_test_context_t *context, char *msg_out, size_t msg_out_size, const char *tag, int condition);
 
-void assert_not_memeq_msg(unit_test_context_t *context, char *msg_out, size_t msg_out_len, const char *tag, void *check, void *model, size_t n);
+size_t assert_inteq_msg(unit_test_context_t *context, char *msg_out, size_t msg_out_size, const char *tag, int check, int model);
+
+size_t assert_streqz_msg(unit_test_context_t *context, char *msg_out, size_t msg_out_size, const char *tag, const char *check, const char *model);
+size_t assert_streqn_msg(unit_test_context_t *context, char *msg_out, size_t msg_out_size, const char *tag, const char *check, const char *model, size_t max_len);
+
+size_t assert_memeq_msg(unit_test_context_t *context, char *msg_out, size_t msg_out_size, const char *tag, void *check, void *model, size_t n);
+
+
+size_t assert_false_msg(unit_test_context_t *context, char *msg_out, size_t msg_out_size, const char *tag, int condition);
+
+size_t assert_not_inteq_msg(unit_test_context_t *context, char *msg_out, size_t msg_out_size, const char *tag, int check, int model);
+
+size_t assert_not_streqz_msg(unit_test_context_t *context, char *msg_out, size_t msg_out_size, const char *tag, const char *check, const char *model);
+size_t assert_not_streqn_msg(unit_test_context_t *context, char *msg_out, size_t msg_out_size, const char *tag, const char *check, const char *model, size_t max_len);
+
+size_t assert_not_memeq_msg(unit_test_context_t *context, char *msg_out, size_t msg_out_size, const char *tag, void *check, void *model, size_t n);
 
 /* ---------------------------------------------------------------- */
 /* Assertions with default error messages; non-zero on failure. */
