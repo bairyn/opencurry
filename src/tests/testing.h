@@ -81,15 +81,20 @@ struct unit_test_context_s
   FILE    *err;
 
   /* Error message buffer. */
+  /* Twice "halfsize" is allocated to this buffer.  The second half is reserved
+   * to record the error buffer for the first failing unit test. */
   char    *err_buf;
-  size_t   err_buf_size;
+  size_t   err_buf_halfsize;
   size_t   err_buf_len;
+  size_t   err_buf_first_err_len;
+  int      err_buf_is_heap;
 
   /* Internal error message buffer. */
   char    *int_err_buf;
   size_t   int_err_buf_size;
   size_t   int_err_buf_len;
   int      is_snprintf_err;
+  int      int_err_buf_is_heap;
 
   /*
    * Buffer to record extra information in case a test fails.
@@ -99,6 +104,7 @@ struct unit_test_context_s
   char    *details_buf;
   size_t   details_buf_size;
   size_t   details_buf_len;
+  int      details_buf_is_heap;
 
   /*
    * Extra buffer for individual unit tests, not used by "testing".
@@ -107,14 +113,22 @@ struct unit_test_context_s
    */
   void    *user_buf;
   size_t   user_buf_size;
+  int      user_buf_is_heap;
 
   /*
    * Extra data buffer.
    */
   void    *misc_buf;
   size_t   misc_buf_size;
+  int      misc_buf_is_heap;
 
-  int      seed;
+  /*
+   * Data for pseudo-random number generation.
+   */
+  unsigned int seed;
+  unsigned int seed_initial;
+  unsigned int seed_first_err_start;
+  unsigned int seed_first_err_end;
 
   void   (*free)(struct unit_test_context_s *self);
 
@@ -134,7 +148,9 @@ struct unit_test_context_s
 
   int      last_fail;    /* Number of the last test that failed; default -1.       */
   int      last_pass;    /* Number of the last test that passed; default -1.       */
-  int      last_skip;    /* Number of the last test that passed; default -1.       */
+  int      last_skip;    /* Number of the last test that was skipped; default -1.  */
+
+  int      first_fail;   /* ID of the first test that failed; default -1.          */
 };
 typedef struct unit_test_context_s unit_test_context_t;
 
@@ -142,7 +158,7 @@ typedef struct unit_test_context_s unit_test_context_t;
 #define CONTEXT_FULLY_INITIALIZED     1
 #define CONTEXT_PARTIALLY_INITIALIZED 2
 
-#define DEFAULT_TEST_CONTEXT_ERR_BUF_SIZE     (65536)
+#define DEFAULT_TEST_CONTEXT_ERR_BUF_HALFSIZE (65536)
 #define DEFAULT_TEST_CONTEXT_INT_ERR_BUF_SIZE (65536)
 #define DEFAULT_TEST_CONTEXT_DETAILS_BUF_SIZE (16 * 65536)
 #define DEFAULT_TEST_CONTEXT_USER_BUF_SIZE    (32 * 65536)
@@ -153,13 +169,13 @@ typedef struct unit_test_context_s unit_test_context_t;
 unit_test_context_t *new_unit_test_context
   ( unit_test_context_t *initialize_context_noheap
 
-  , int override_err_buf_size,  int override_int_err_buf_size, int override_details_buf_size
-  , int override_user_buf_size, int override_misc_buf_size
-  , int override_seed,          int override_out,              int override_err
+  , int override_err_buf_halfsize, int override_int_err_buf_size, int override_details_buf_size
+  , int override_user_buf_size,    int override_misc_buf_size
+  , int override_seed,             int override_out,              int override_err
 
-  , int          err_buf_size,  int          int_err_buf_size, int          details_buf_size
-  , int          user_buf_size, int          misc_buf_size
-  , int          seed,          FILE        *out,              FILE        *err
+  , size_t       err_buf_halfsize, size_t       int_err_buf_size, size_t       details_buf_size
+  , size_t       user_buf_size,    size_t       misc_buf_size
+  , unsigned int seed,             FILE        *out,              FILE        *err
   );
 unit_test_context_t *new_unit_test_context_defaults(unit_test_context_t *initialize_context_noheap);
 void                free_unit_test_context(unit_test_context_t *context);
@@ -212,14 +228,20 @@ int is_test_result_aborting(unit_test_result_t result);
 unit_test_result_t run_test(unit_test_context_t *context, unit_test_t test);
 
   /* (Internal API procedures, unlikely to be useful to users.) */
-  void process_test_result(unit_test_context_t *context, unit_test_t test, int id, unit_test_result_t result);
+  void process_test_result(unit_test_context_t *context, unit_test_t test, int id, unit_test_result_t result, unsigned int seed_start);
+  void process_first_test_failure(unit_test_context_t *context, unit_test_t test, int id, unit_test_result_t result, unsigned int seed_start);
 
   void print_test_indent(unit_test_context_t *context);
   void print_test_prefix(unit_test_context_t *context, unit_test_t test, int id);
-  void print_test_result(unit_test_context_t *context, unit_test_t test, int id, unit_test_result_t result);
-  void print_passed_test_result(unit_test_context_t *context, unit_test_t test, int id, unit_test_result_t result);
-  void print_failed_test_result(unit_test_context_t *context, unit_test_t test, int id, unit_test_result_t result);
-  void print_skipped_test_result(unit_test_context_t *context, unit_test_t test, int id, unit_test_result_t result);
+  void print_test_result(unit_test_context_t *context, unit_test_t test, int id, unit_test_result_t result, unsigned int seed_start);
+  void print_passed_test_result(unit_test_context_t *context, unit_test_t test, int id, unit_test_result_t result, unsigned int seed_start);
+  void print_failed_test_result(unit_test_context_t *context, unit_test_t test, int id, unit_test_result_t result, unsigned int seed_start);
+  void print_skipped_test_result(unit_test_context_t *context, unit_test_t test, int id, unit_test_result_t result, unsigned int seed_start);
+
+  void ensure_buf_limits(unit_test_context_t *context, char *buf);
+
+  size_t test_add_internal_error_msg(unit_test_context_t *context, const char *msg);
+  void context_internal_error(unit_test_context_t *context, const char *msg);
 
 unit_test_result_t run_tests_num(unit_test_context_t *context, unit_test_t **tests, size_t num_tests);
 unit_test_result_t run_tests(unit_test_context_t *context, unit_test_t **tests);

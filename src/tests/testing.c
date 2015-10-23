@@ -56,6 +56,7 @@
 
 /* string.h:
  *   - memcmp
+ *   - memcpy
  *   - strcmp
  *   - strncmp
  */
@@ -106,20 +107,20 @@
 unit_test_context_t *new_unit_test_context
   ( unit_test_context_t *initialize_context_noheap
 
-  , int override_err_buf_size,  int override_int_err_buf_size, int override_details_buf_size
-  , int override_user_buf_size, int override_misc_buf_size
-  , int override_seed,          int override_out,              int override_err
+  , int override_err_buf_halfsize, int override_int_err_buf_size, int override_details_buf_size
+  , int override_user_buf_size,    int override_misc_buf_size
+  , int override_seed,             int override_out,              int override_err
 
-  , int          err_buf_size,  int          int_err_buf_size, int          details_buf_size
-  , int          user_buf_size, int          misc_buf_size
-  , int          seed,          FILE        *out,              FILE        *err
+  , size_t       err_buf_halfsize, size_t       int_err_buf_size, size_t       details_buf_size
+  , size_t       user_buf_size,    size_t       misc_buf_size
+  , unsigned int seed,             FILE        *out,              FILE        *err
   )
 {
   size_t               size;
   unit_test_context_t *context;
 
   /* Set default arguments. */
-  if (!override_err_buf_size)     err_buf_size     = DEFAULT_TEST_CONTEXT_ERR_BUF_SIZE;
+  if (!override_err_buf_halfsize) err_buf_halfsize = DEFAULT_TEST_CONTEXT_ERR_BUF_HALFSIZE;
   if (!override_int_err_buf_size) int_err_buf_size = DEFAULT_TEST_CONTEXT_INT_ERR_BUF_SIZE;
   if (!override_details_buf_size) details_buf_size = DEFAULT_TEST_CONTEXT_DETAILS_BUF_SIZE;
   if (!override_user_buf_size)    user_buf_size    = DEFAULT_TEST_CONTEXT_USER_BUF_SIZE;
@@ -159,13 +160,13 @@ unit_test_context_t *new_unit_test_context
 
 
   /* Allocate buffers. */
-  context->err_buf_size     = err_buf_size;
+  context->err_buf_halfsize = err_buf_halfsize;
   context->int_err_buf_size = int_err_buf_size;
   context->details_buf_size = details_buf_size;
   context->user_buf_size    = user_buf_size;
   context->misc_buf_size    = misc_buf_size;
 
-  size = context->err_buf_size;
+  size = 2 * context->err_buf_halfsize;
   context->err_buf = malloc(size);
   if(!context->err_buf)
   {
@@ -178,6 +179,10 @@ unit_test_context_t *new_unit_test_context
         "  Requested '%d' bytes.\n"
       , (int) size);
     return NULL;
+  }
+  else
+  {
+    context->err_buf_is_heap = 1;
   }
 
   size = context->int_err_buf_size;
@@ -195,6 +200,10 @@ unit_test_context_t *new_unit_test_context
         "  Requested '%d' bytes.\n"
       , (int) size);
     return NULL;
+  }
+  else
+  {
+    context->int_err_buf_is_heap = 1;
   }
 
   size = context->details_buf_size;
@@ -214,6 +223,10 @@ unit_test_context_t *new_unit_test_context
       , (int) size);
     return NULL;
   }
+  else
+  {
+    context->details_buf_is_heap = 1;
+  }
 
   size = context->user_buf_size;
   context->user_buf = malloc(size);
@@ -232,6 +245,10 @@ unit_test_context_t *new_unit_test_context
         "  Requested '%d' bytes.\n"
       , (int) size);
     return NULL;
+  }
+  else
+  {
+    context->user_buf_is_heap = 1;
   }
 
   size = context->misc_buf_size;
@@ -253,47 +270,73 @@ unit_test_context_t *new_unit_test_context
       , (int) size);
     return NULL;
   }
+  else
+  {
+    context->misc_buf_is_heap = 1;
+  }
 
   /* Set up environment. */
-  context->err_buf    [0]  = 0;
-  context->int_err_buf[0]  = 0;
-  context->details_buf[0]  = 0;
+  context->err_buf    [0]                             = 0;
+    context->err_buf    [context->err_buf_halfsize + 0] = 0;
+  context->int_err_buf[0]                             = 0;
+  context->details_buf[0]                             = 0;
   /*
   (void *) context->user_buf
   (void *) context->misc_buf
   */
 
-  context->err_buf_len     = 0;
-  context->int_err_buf_len = 0;
-  context->details_buf_len = 0;
+  context->err_buf_len           = 0;
+    context->err_buf_first_err_len = 0;
+  context->int_err_buf_len       = 0;
+  context->details_buf_len       = 0;
 
   context->is_snprintf_err = 0;
 
 
-  context->seed = seed;
+  context->seed           = seed;
+  context->seed_initial   = seed;
+  context->seed_first_err_start = -1;
+  context->seed_first_err_end   = -1;
 
-  context->out  = out;
-  context->err  = err;
+  context->out            = out;
+  context->err            = err;
 
-  context->free = free_unit_test_context;
+  context->free           = free_unit_test_context;
 
   /* Set up initial state. */
-  context->aborting     = 0;
+  context->aborting       = 0;
 
-  context->group_depth  = 0;
+  context->group_depth    = 0;
 
-  context->next_test_id = 1;
+  context->next_test_id   = 1;
 
-  context->num_pass     = 0;
-  context->num_fail     = 0;
-  context->num_skip     = 0;
+  context->num_pass       = 0;
+  context->num_fail       = 0;
+  context->num_skip       = 0;
 
-  context->last_pass    = -1;
-  context->last_fail    = -1;
-  context->last_skip    = -1;
+  context->last_pass      = -1;
+  context->last_fail      = -1;
+  context->last_skip      = -1;
+
+  context->first_fail     = -1;
 
   /* Set metadata. */
   context->is_initialized = CONTEXT_FULLY_INITIALIZED;
+
+  /* Insert precautionary NULL terminators at the end of each buffer. */
+  if (context->err_buf_halfsize > 0)
+  {
+    context->err_buf[context->err_buf_halfsize - 1] = 0;
+      context->err_buf[context->err_buf_halfsize + context->err_buf_halfsize - 1] = 0;
+  }
+  if (context->int_err_buf_size > 0)
+  {
+    context->int_err_buf[context->int_err_buf_size - 1] = 0;
+  }
+  if (context->details_buf_size > 0)
+  {
+    context->details_buf[context->details_buf_size - 1] = 0;
+  }
 
   /* Return object. */
   return context;
@@ -305,13 +348,13 @@ unit_test_context_t *new_unit_test_context_defaults(unit_test_context_t *initial
     new_unit_test_context
       ( initialize_context_noheap
 
-      , 0,                                  0,                                     0
-      , 0,                                  0
-      , 0,                                  0,                                     0
+      , 0,                                     0,                                     0
+      , 0,                                     0
+      , 0,                                     0,                                     0
 
-      , DEFAULT_TEST_CONTEXT_ERR_BUF_SIZE,  DEFAULT_TEST_CONTEXT_INT_ERR_BUF_SIZE, DEFAULT_TEST_CONTEXT_DETAILS_BUF_SIZE
-      , DEFAULT_TEST_CONTEXT_USER_BUF_SIZE, DEFAULT_TEST_CONTEXT_MISC_BUF_SIZE
-      , DEFAULT_TEST_CONTEXT_SEED,          DEFAULT_TEST_CONTEXT_OUT,              DEFAULT_TEST_CONTEXT_ERR
+      , DEFAULT_TEST_CONTEXT_ERR_BUF_HALFSIZE, DEFAULT_TEST_CONTEXT_INT_ERR_BUF_SIZE, DEFAULT_TEST_CONTEXT_DETAILS_BUF_SIZE
+      , DEFAULT_TEST_CONTEXT_USER_BUF_SIZE,    DEFAULT_TEST_CONTEXT_MISC_BUF_SIZE
+      , DEFAULT_TEST_CONTEXT_SEED,             DEFAULT_TEST_CONTEXT_OUT,              DEFAULT_TEST_CONTEXT_ERR
       );
 }
 
@@ -393,7 +436,7 @@ int run_test_suite(unit_test_t test)
     {
       fprintf
         ( stderr
-        , "run_test_suite: Error initialize new unit test context.\n"
+        , "run_test_suite: Error initializing new unit test context.\n"
         );
 
       return UNIT_TEST_INTERNAL_ERROR;
@@ -421,6 +464,8 @@ int run_test_suite_with_context(unit_test_context_t *context, unit_test_t test)
 
 void print_test_suite_result(unit_test_context_t *context, unit_test_result_t result)
 {
+  const static int print_last_instead_of_first_error = 0;
+
   FILE *out;
 
   if (is_test_result_success(result))
@@ -433,27 +478,49 @@ void print_test_suite_result(unit_test_context_t *context, unit_test_result_t re
   {
     out = context->err;
 
-    context->err_buf[context->err_buf_size - 1] = 0;
 
-    if (context->err_buf_len >= context->err_buf_size)
+    ensure_buf_limits(context, context->err_buf);
+
+    context->err_buf[context->err_buf_halfsize - 1] = 0;
+    if (print_last_instead_of_first_error)
     {
-      context->err_buf_len = context->err_buf_size - 1;
+      fprintf
+        ( out
+        , "Error: %d tests failed:\n  last failed test #: %d\n  number of tests run: %d\n  can continue testing after last failure?: %s\n\nLast error message%s:\n\n%s%s"
+        , (int) (context->num_fail)
+        , (int) (context->last_fail)
+        , (int) (context->next_test_id - context->num_skip)
+        , (result >= 0) ? "yes" : "no (aborted)"
+        ,   (!(context->err_buf_len >= context->err_buf_halfsize - 1))
+          ? ""
+          : " (error message buffer maxed out; additional text might be truncated)"
+        , (const char *) context->err_buf
+        , context->err_buf_len >= 1 && context->err_buf[context->err_buf_len - 1] == '\n' ? "" : "\n"
+        );
     }
-    context->err_buf[context->err_buf_len] = 0;
+    else
+    {
+      fprintf
+        ( out
+        , "Error: %d tests failed:\n"
+          "  can continue testing after last failure?: %s\n"
+          "  first failed test #: %d\n"
+          "  number of tests run: %d\n"
+          "\n"
+          "First error message%s: %s%s"
 
-    fprintf
-      ( out
-      , "Error: %d tests failed:\n  last failed test #: %d\n  number of tests run: %d\n  can continue testing after last failure?: %s\n\nLast error message%s:\n\n%s%s"
-      , (int) (context->num_fail)
-      , (int) (context->last_fail)
-      , (int) (context->next_test_id - context->num_skip)
-      , (result >= 0) ? "yes" : "no (aborted)"
-      ,   (!(context->err_buf_len >= context->err_buf_size - 1))
-        ? ""
-        : " (error message buffer maxed out; additional text might be truncated)"
-      , (const char *) context->err_buf
-      , context->err_buf_len >= 1 && context->err_buf[context->err_buf_len - 1] == '\n' ? "" : "\n"
-      );
+        , (int) (context->num_fail)
+        , (result >= 0) ? "yes" : "no (aborted)"
+
+        , (int) (context->last_fail)
+        , (int) (context->next_test_id - context->num_skip)
+        ,   (!(context->err_buf_len >= context->err_buf_halfsize - 1))
+          ? ""
+          : " (error message buffer maxed out; additional text might be truncated)"
+        , (const char *) context->err_buf + context->err_buf_halfsize
+        , context->err_buf_first_err_len >= 1 && context->err_buf[context->err_buf_halfsize + context->err_buf_first_err_len - 1] == '\n' ? "" : "\n"
+        );
+    }
   }
 }
 
@@ -487,11 +554,15 @@ int is_test_result_aborting(unit_test_result_t result)
 /* Run a "unit_test_t", updating the context state and emitting output. */
 unit_test_result_t run_test(unit_test_context_t *context, unit_test_t test)
 {
-  int id;
+  int                id;
   unit_test_result_t result;
+
+  unsigned int       seed_start;
 
   /* Set the "id" of this test. */
   id = context->next_test_id++;
+
+  seed_start = context->seed;
 
   /* Print the id and name of the test. */
   print_test_prefix(context, test, id);
@@ -518,16 +589,16 @@ unit_test_result_t run_test(unit_test_context_t *context, unit_test_t test)
   /* This test, and all child tests, are done. */
 
   /* Update context state. */
-  process_test_result(context, test, id, result);
+  process_test_result(context, test, id, result, seed_start);
 
   /* Print the result. */
-  print_test_result(context, test, id, result);
+  print_test_result(context, test, id, result, seed_start);
 
   return result;
 }
 
 /* Update "context" state reflect the result of the unit test. */
-void process_test_result(unit_test_context_t *context, unit_test_t test, int id, unit_test_result_t result)
+void process_test_result(unit_test_context_t *context, unit_test_t test, int id, unit_test_result_t result, unsigned int seed_start)
 {
   /* Determine whether we need to set the "aborting" flag. */
   if (is_test_result_aborting(result))
@@ -535,22 +606,55 @@ void process_test_result(unit_test_context_t *context, unit_test_t test, int id,
     context->aborting = 1;
   }
 
+  if (result == UNIT_TEST_INTERNAL_ERROR)
+  {
+    context_internal_error(context, "process_test_result: result is UNIT_TEST_INTERNAL_ERROR.");
+  }
+
   /* Update result-type state. */
   if      (is_test_result_success(result))
   {
+    /* Test passed. */
+
     ++context->num_pass;
     context->last_pass = id;
   }
   else if (is_test_result_skip(result))
   {
+    /* Test skipped. */
+
     ++context->num_skip;
     context->last_skip = id;
   }
   else
   {
+    /* Test failed. */
+
+    int is_first_failure = context->num_fail == 0;
+
     ++context->num_fail;
     context->last_fail = id;
+
+    if (is_first_failure)
+    {
+      process_first_test_failure(context, test, id, result, seed_start);
+    }
   }
+}
+
+void process_first_test_failure(unit_test_context_t *context, unit_test_t test, int id, unit_test_result_t result, unsigned int seed_start)
+{
+  /* ID. */
+  context->first_fail            = id;
+
+  /* seed. */
+  context->seed_first_err_start  = seed_start;
+  context->seed_first_err_end    = context->seed;
+
+  /* error buf. */
+  ensure_buf_limits(context, context->err_buf);
+  memcpy(context->err_buf + context->err_buf_halfsize, context->err_buf, context->err_buf_len);
+  context->err_buf_first_err_len = context->err_buf_len;
 }
 
 void print_test_indent(unit_test_context_t *context)
@@ -570,23 +674,23 @@ void print_test_prefix(unit_test_context_t *context, unit_test_t test, int id)
   fprintf(context->out, "- %d: %s:\n", id, test.name);
 }
 
-void print_test_result(unit_test_context_t *context, unit_test_t test, int id, unit_test_result_t result)
+void print_test_result(unit_test_context_t *context, unit_test_t test, int id, unit_test_result_t result, unsigned int seed_start)
 {
   if      (is_test_result_success(result))
   {
-    print_passed_test_result (context, test, id, result);
+    print_passed_test_result (context, test, id, result, seed_start);
   }
   else if (is_test_result_skip(result))
   {
-    print_skipped_test_result(context, test, id, result);
+    print_skipped_test_result(context, test, id, result, seed_start);
   }
   else
   {
-    print_failed_test_result (context, test, id, result);
+    print_failed_test_result (context, test, id, result, seed_start);
   }
 }
 
-void print_passed_test_result(unit_test_context_t *context, unit_test_t test, int id, unit_test_result_t result)
+void print_passed_test_result(unit_test_context_t *context, unit_test_t test, int id, unit_test_result_t result, unsigned int seed_start)
 {
   print_test_indent(context);
 
@@ -594,17 +698,12 @@ void print_passed_test_result(unit_test_context_t *context, unit_test_t test, in
   fprintf(context->out, "  %*.s   =): pass: %s\n", 2 * context->group_depth, "", test.description);
 }
 
-void print_failed_test_result(unit_test_context_t *context, unit_test_t test, int id, unit_test_result_t result)
+void print_failed_test_result(unit_test_context_t *context, unit_test_t test, int id, unit_test_result_t result, unsigned int seed_start)
 {
   int can_continue;
 
-  context->err_buf[context->err_buf_size - 1] = 0;
-
-  if (context->err_buf_len >= context->err_buf_size)
-  {
-    context->err_buf_len = context->err_buf_size - 1;
-  }
-  context->err_buf[context->err_buf_len] = 0;
+  ensure_buf_limits(context, context->err_buf);
+  context->err_buf[context->err_buf_halfsize - 1] = 0;
 
   can_continue = is_test_result_can_continue(result);
 
@@ -613,13 +712,14 @@ void print_failed_test_result(unit_test_context_t *context, unit_test_t test, in
 
   fprintf(context->err, "/----------------------------------------------------------------\n");
   fprintf(context->err, "FAILURE:\n");
-  fprintf(context->err, "  test number:      %d\n", id);
-  fprintf(context->err, "  test name:        %s\n", test.name);
-  fprintf(context->err, "  test description: %s\n", test.description);
-  fprintf(context->err, "  test result code: %d\n", (int) result);
-  fprintf(context->err, "  can continue?:    %s\n", (can_continue) ? "yes" : "no (aborting!)");
+  fprintf(context->err, "  test number:        %d\n", id);
+  fprintf(context->err, "  test name:          %s\n", test.name);
+  fprintf(context->err, "  test description:   %s\n", test.description);
+  fprintf(context->err, "  test result code:   %d\n", (int) result);
+  fprintf(context->err, "  seed at test start: %d\n", (int) seed_start);
+  fprintf(context->err, "  can continue?:      %s\n", (can_continue) ? "yes" : "no (aborting!)");
   fprintf(context->err, "\n");
-  if (!(context->err_buf_len >= context->err_buf_size - 1))
+  if (!(context->err_buf_len >= context->err_buf_halfsize - 1))
     fprintf(context->err, "Error message:\n");
   else
     fprintf(context->err, "Error message(buffer maxed out; additional text might be truncated):\n");
@@ -630,12 +730,116 @@ void print_failed_test_result(unit_test_context_t *context, unit_test_t test, in
   fprintf(context->err, "\\----------------------------------------------------------------\n\n");
 }
 
-void print_skipped_test_result(unit_test_context_t *context, unit_test_t test, int id, unit_test_result_t result)
+void print_skipped_test_result(unit_test_context_t *context, unit_test_t test, int id, unit_test_result_t result, unsigned int seed_start)
 {
   print_test_indent(context);
 
   /* fprintf(context->out, "  %*.s   skipped * context->group_depth, ""); */
   fprintf(context->out, "  %*.s   skipped: %s\n", 2 * context->group_depth, "", test.description);
+}
+
+void ensure_buf_limits(unit_test_context_t *context, char *buf)
+{
+  size_t  size;
+  size_t *len;
+
+  if      (!buf)
+  {
+    ensure_buf_limits(context, context->err_buf);
+    ensure_buf_limits(context, context->err_buf + context->err_buf_halfsize);
+    ensure_buf_limits(context, context->int_err_buf);
+    ensure_buf_limits(context, context->details_buf);
+
+    ensure_buf_limits(context, context->user_buf);
+    ensure_buf_limits(context, context->misc_buf);
+
+    return;
+  }
+  else if (buf == context->err_buf)
+  {
+    buf  =  context->err_buf;
+    size =  context->err_buf_halfsize;
+    len  = &context->err_buf_len;
+  }
+  else if (buf == context->err_buf + context->err_buf_halfsize)
+  {
+    buf  =  context->err_buf + context->err_buf_halfsize;
+    size =  context->err_buf_halfsize;
+    len  = &context->err_buf_first_err_len;
+  }
+  else if (buf == context->int_err_buf)
+  {
+    buf  =  context->details_buf;
+    size =  context->details_buf_size;
+    len  = &context->details_buf_len;
+  }
+  else if (buf == context->details_buf)
+  {
+    buf  =  context->details_buf;
+    size =  context->details_buf_size;
+    len  = &context->details_buf_len;
+  }
+  else if (buf == context->user_buf)
+  {
+    return;
+  }
+  else if (buf == context->misc_buf)
+  {
+    return;
+  }
+  else
+  {
+    context_internal_error
+      ( context
+      , "ERROR: ensure_buf_limits called with non-NULL \"buf\" argument that isn't one of \"context\"'s buffers!"
+      );
+
+    return;
+  }
+
+  if (*len >= size)
+  {
+    *len = size - 1;
+  }
+  buf[*len] = 0;
+}
+
+size_t test_add_internal_error_msg(unit_test_context_t *context, const char *msg)
+{
+  int    l;
+  size_t size_terminator;
+
+  size_terminator = context->int_err_buf_size - 1;  /* Make room for terminating NULL byte. */
+
+  ensure_buf_limits(context, context->int_err_buf);
+
+  l = snprintf
+    ( (char *) (context->int_err_buf + context->int_err_buf_len), (size_t) (size_terminator - context->int_err_buf_len)
+    , "%s"
+    , msg
+    );
+  if (l < 0) return (context->int_err_buf_len = assert_msg_check_snprintf(context, l, context->int_err_buf, context->int_err_buf_size, "(context_internal_error)", &context->is_snprintf_err));
+
+  return (context->int_err_buf_len = (size_t) l);
+}
+
+void context_internal_error(unit_test_context_t *context, const char *msg)
+{
+  test_add_internal_error_msg(context, msg);
+
+  context->aborting = 1;
+
+  fprintf
+    ( context->err
+    , "\n"
+      "\n"
+      "****************************************************************\n"
+      "context_internal_error: an internal error occurred:\n"
+      "\n"
+      "%s\n"
+      "****************************************************************\n"
+    , msg
+    );
 }
 
 
