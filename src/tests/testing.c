@@ -512,7 +512,7 @@ void print_test_suite_result(unit_test_context_t *context, unit_test_result_t re
         , (int) (context->num_fail)
         , (result >= 0) ? "yes" : "no (aborted)"
 
-        , (int) (context->last_fail)
+        , (int) (context->first_fail)
         , (int) (context->next_test_id - context->num_skip)
         ,   (!(context->err_buf_len >= context->err_buf_halfsize - 1))
           ? ""
@@ -569,20 +569,12 @@ unit_test_result_t run_test(unit_test_context_t *context, unit_test_t test)
 
   /* Reset details buffer, run, and obtain result. */
   reset_err_msg_details(context);
-  if (context->aborting)
-  {
-    /* Aborted.  Skip the test, and assume a non-passing result. */
-    result = UNIT_TEST_SKIPPED;
-  }
-  else
-  {
-    /* Call the test procedure. */
+  /* Call the test procedure. */
 
-    /* This might recursively call child tests via "run_test*" procedures
-     * provided by this API.
-     */
-    result = test.run(context);
-  }
+  /* This might recursively call child tests via "run_test*" procedures
+   * provided by this API.
+   */
+  result = test.run(context);
 
   /* ---------------------------------------------------------------- */
 
@@ -600,12 +592,6 @@ unit_test_result_t run_test(unit_test_context_t *context, unit_test_t test)
 /* Update "context" state reflect the result of the unit test. */
 void process_test_result(unit_test_context_t *context, unit_test_t test, int id, unit_test_result_t result, unsigned int seed_start)
 {
-  /* Determine whether we need to set the "aborting" flag. */
-  if (is_test_result_aborting(result))
-  {
-    context->aborting = 1;
-  }
-
   if (result == UNIT_TEST_INTERNAL_ERROR)
   {
     context_internal_error(context, "process_test_result: result is UNIT_TEST_INTERNAL_ERROR.");
@@ -669,6 +655,14 @@ void print_test_indent(unit_test_context_t *context)
 
 void print_test_prefix(unit_test_context_t *context, unit_test_t test, int id)
 {
+  if (context->aborting)
+  {
+    /* We've already printed a failure message for a test that aborted, so omit
+     * printing the output for parent tests.
+     */
+    return;
+  }
+
   print_test_indent(context);
 
   fprintf(context->out, "- %d: %s:\n", id, test.name);
@@ -676,6 +670,22 @@ void print_test_prefix(unit_test_context_t *context, unit_test_t test, int id)
 
 void print_test_result(unit_test_context_t *context, unit_test_t test, int id, unit_test_result_t result, unsigned int seed_start)
 {
+  if (context->aborting)
+  {
+    /* We've already printed a failure message for a test that aborted, so omit
+     * printing the output for parent tests.
+     */
+    return;
+  }
+
+  if (is_test_result_aborting(result))
+  {
+    /* We'll abort after this test, so set "aborting" so we know not to print
+     * more test results, for the parents that will probably also fail.
+     */
+    context->aborting = 1;
+  }
+
   if      (is_test_result_success(result))
   {
     print_passed_test_result (context, test, id, result, seed_start);
