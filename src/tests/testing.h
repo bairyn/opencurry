@@ -67,12 +67,12 @@
 struct unit_test_context_s
 {
   /* Whether the value has been initialized. */
-  int      is_initialized    : 2;
+  int      is_initialized;
   /* Whether the value was initialized on the heap.
    * free_unit_test_context_t checks this value to determine whether to call
    * "free".
    */
-  int      is_heap_allocated : 1;
+  int      is_heap_allocated;
 
   /* Environment. */
 
@@ -119,20 +119,22 @@ struct unit_test_context_s
   void   (*free)(struct unit_test_context_s *self);
 
   /* State. */
-  int      aborting;       /* Silence output, and don't update last_fail and last_pass.
-                            Automatically set on aborting failures. */
+  int      aborting;     /* Silence output, and don't update last_fail and         *
+                          * last_pass.  Automatically set on aborting failures.    */
 
   int      group_depth;  /* Group depth. */
 
   int      next_test_id; /* Number of the id of the next test that would be run.   */
-                       /* This is incremented immediately before a test is run.  */
-                       /* The current test id is equal to this minus 1.          */
+                         /* This is incremented immediately before a test is run.  */
+                         /* The current test id is equal to this minus 1.          */
 
-  int      num_pass;     /* Number of tests passed so far. */
-  int      num_fail;     /* Number of tests failed so far. */
+  int      num_pass;     /* Number of tests passed so far.                         */
+  int      num_fail;     /* Number of tests failed so far.                         */
+  int      num_skip;     /* Number of tests skipped so far.                        */
 
-  int      last_fail;    /* Number of the last test that failed; default -1. */
-  int      last_pass;    /* Number of the last test that passed; default -1. */
+  int      last_fail;    /* Number of the last test that failed; default -1.       */
+  int      last_pass;    /* Number of the last test that passed; default -1.       */
+  int      last_skip;    /* Number of the last test that passed; default -1.       */
 };
 typedef struct unit_test_context_s unit_test_context_t;
 
@@ -166,10 +168,12 @@ void                free_unit_test_context(unit_test_context_t *context);
 /* Unit test type. */
 
 /* Unit test result codes. */
-#define UNIT_TEST_PASS           ( 0)
-#define UNIT_TEST_FAIL           (-1)
-#define UNIT_TEST_FAIL_CONTINUE  ( 1)
-#define UNIT_TEST_INTERNAL_ERROR (-3)
+#define UNIT_TEST_PASS             ( 0)
+#define UNIT_TEST_FAIL             (-1)
+#define UNIT_TEST_FAIL_CONTINUE    ( 1)
+#define UNIT_TEST_INTERNAL_ERROR   (-3)
+#define UNIT_TEST_SKIPPED          (-4)
+#define UNIT_TEST_SKIPPED_CONTINUE ( 4)
 typedef int unit_test_result_t;
 
 /* A unit test is a function, coupled with a name and description:
@@ -196,19 +200,26 @@ typedef struct unit_test_s unit_test_t;
 int run_test_suite(unit_test_t test);
 int run_test_suite_with_context(unit_test_context_t *context, unit_test_t test);
 
-void print_test_suite_result(unit_test_context_t *context, unit_test_result_t result);
+  /* (Internal API procedures, unlikely to be useful to users.) */
+  void print_test_suite_result(unit_test_context_t *context, unit_test_result_t result);
 
-int test_result_success(unit_test_result_t result);
-int test_result_failure(unit_test_result_t result);
-int test_result_can_continue(unit_test_result_t result);
-int test_result_need_abort(unit_test_result_t result);
+int is_test_result_success(unit_test_result_t result);
+int is_test_result_failure(unit_test_result_t result);
+int is_test_result_skip(unit_test_result_t result);
+int is_test_result_can_continue(unit_test_result_t result);
+int is_test_result_aborting(unit_test_result_t result);
 
 unit_test_result_t run_test(unit_test_context_t *context, unit_test_t test);
 
-void print_test_indent(unit_test_context_t *context);
-void print_test_prefix(unit_test_context_t *context, unit_test_t test, int id);
-void print_passed_test_result(unit_test_context_t *context, unit_test_t test, int id, unit_test_result_t result);
-void print_failed_test_result(unit_test_context_t *context, unit_test_t test, int id, unit_test_result_t result);
+  /* (Internal API procedures, unlikely to be useful to users.) */
+  void process_test_result(unit_test_context_t *context, unit_test_t test, int id, unit_test_result_t result);
+
+  void print_test_indent(unit_test_context_t *context);
+  void print_test_prefix(unit_test_context_t *context, unit_test_t test, int id);
+  void print_test_result(unit_test_context_t *context, unit_test_t test, int id, unit_test_result_t result);
+  void print_passed_test_result(unit_test_context_t *context, unit_test_t test, int id, unit_test_result_t result);
+  void print_failed_test_result(unit_test_context_t *context, unit_test_t test, int id, unit_test_result_t result);
+  void print_skipped_test_result(unit_test_context_t *context, unit_test_t test, int id, unit_test_result_t result);
 
 unit_test_result_t run_tests_num(unit_test_context_t *context, unit_test_t **tests, size_t num_tests);
 unit_test_result_t run_tests(unit_test_context_t *context, unit_test_t **tests);
@@ -221,13 +232,13 @@ unit_test_result_t run_tests(unit_test_context_t *context, unit_test_t **tests);
 #define ASSERT_MSG_WIDTH 80
 
 void reset_err_msg_details(unit_test_context_t *context);
-size_t test_add_details_msg(unit_test_context_t *context, const char *msg, size_t max_size);
+size_t test_add_details_msg(unit_test_context_t *context, const char *msg);
 
 size_t assert_snprintf_error_msg(unit_test_context_t *context, int snprintf_error_code, char *msg_out, size_t msg_out_size, const char *tag);
 size_t assert_msg_check_snprintf(unit_test_context_t *context, int snprintf_result, char *msg_out, size_t msg_out_size, const char *tag, int *out_is_err);
 
 
-size_t assert_msg_append_details(unit_test_context_t *context, size_t len, char *msg_out, size_t msg_out_size);
+size_t assert_msg_append_details(unit_test_context_t *context, size_t len, char *msg_out, size_t msg_out_size, const char *tag);
 
 size_t assert_failure_msg(unit_test_context_t *context, char *msg_out, size_t msg_out_size, const char *tag);
 

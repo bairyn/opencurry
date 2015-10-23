@@ -36,7 +36,9 @@
 
 #include "../ansi_c_ast_base.h"
 
-unit_test_result_t assert_eq_c_ast(unit_test_context_t *context, const char *tag, const c_ast_t *check, const c_ast_t *model)
+#include "../util.h"
+
+unit_test_result_t assert_eq_c_ast(unit_test_context_t *context, const char *tag, const ac_ast_t *check, const ac_ast_t *model)
 {
   int i;
   char alltag[DEFAULT_TAG_SIZE];
@@ -47,7 +49,7 @@ unit_test_result_t assert_eq_c_ast(unit_test_context_t *context, const char *tag
   result = assert_success(context);
 
 
-  tag ||= "";
+  if (!tag) tag = "";
 
 
   i = 0;
@@ -55,7 +57,7 @@ unit_test_result_t assert_eq_c_ast(unit_test_context_t *context, const char *tag
   refs[i++] = (void *) model;
 
   /* Add our location in the AST. */
-  test_add_details_msg("c_ast:\n");
+  test_add_details_msg(context, "c_ast:\n");
 
   /* Check references are not NULL. */
   for (i = 0; i < sizeof(refs) / sizeof(refs[0]); ++i)
@@ -64,40 +66,40 @@ unit_test_result_t assert_eq_c_ast(unit_test_context_t *context, const char *tag
     if (!refs[i])
       result |=
         assert_failure(context, NULL, alltag);
-    if (test_result_need_abort(result)) break;
+    if (is_test_result_aborting(result)) break;
   }
 
   /* Check types are equal. */
   snprintf(alltag, sizeof(alltag) / sizeof(alltag[0]), "type (%s)", tag);
   result |=
     assert_inteq (context, NULL, alltag, (int) check->type, (int) model->type);
-  if (test_result_need_abort(result)) return result;
+  if (is_test_result_aborting(result)) return result;
 
   switch (check->type)
   {
     default:
-    ac_ast_empt:
+    case ac_ast_empt:
       break;
 
-    ac_ast_anno:
-      assert_eq_ac_anno(context, tag, (const ac_anno_t *) check->values.anno.anno, (const ac_anno_t *) check->values.ast.ast);
+    case ac_ast_anno:
+      assert_eq_ac_anno(context, tag, (const ac_anno_t *) check->values.anno.anno, (const ac_anno_t *) check->values.anno.anno, 1);
       break;
 
-    ac_ast_anno:
-      assert_eq_ac_item(context, tag, (const ac_anno_t *) check->values.anno.anno, (const ac_anno_t *) check->values.ast.ast);
+    case ac_ast_item:
+      assert_eq_ac_item(context, tag, (const ac_item_t *) check->values.item.item, (const ac_item_t *) check->values.item.item, 1);
       break;
   };
 
   return result;
 }
 
-unit_test_result_t assert_eq_ac_anno(unit_test_context_t *context, const char *tag, const c_ast_t *check, const c_ast_t *model, int depth)
+unit_test_result_t assert_eq_ac_anno(unit_test_context_t *context, const char *tag, const ac_anno_t *check, const ac_anno_t *model, int depth)
 {
   /* TODO */
   return assert_success(context);
 }
 
-unit_test_result_t assert_eq_ac_item(unit_test_context_t *context, const char *tag, const c_ast_t *check, const c_ast_t *model, int depth)
+unit_test_result_t assert_eq_ac_item(unit_test_context_t *context, const char *tag, const ac_item_t *check, const ac_item_t *model, int depth)
 {
   /* TODO */
   return assert_success(context);

@@ -44,7 +44,7 @@
 
 #include "../ansi_c_ast_base.h"
 
-unit_test_result_t assert_eq_c_ast(unit_test_context_t *context, const char *tag, const c_ast_t *check, const c_ast_t *model);
+unit_test_result_t assert_eq_c_ast(unit_test_context_t *context, const char *tag, const ac_ast_t *check, const ac_ast_t *model);
 
 unit_test_result_t assert_eq_ac_anno(unit_test_context_t *context, const char *tag, const ac_anno_t *check, const ac_anno_t *model, int depth);
 unit_test_result_t assert_eq_ac_item(unit_test_context_t *context, const char *tag, const ac_item_t *check, const ac_item_t *model, int depth);

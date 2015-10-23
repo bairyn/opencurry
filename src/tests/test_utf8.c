@@ -128,17 +128,17 @@ unit_test_result_t utf8_encode_one_equalities_test_run(unit_test_context_t *cont
     snprintf(tag, sizeof(tag) / sizeof(tag[0]), "width %d", i);
     result |=
       assert_inteq (context, NULL, tag, (int)          utf8_size, (int)          pair->utf8_size);
-    if (test_result_need_abort(result)) break;
+    if (is_test_result_aborting(result)) break;
 
     snprintf(tag, sizeof(tag) / sizeof(tag[0]), "buf mem %d", i);
     result |=
       assert_memeq (context, NULL, tag, (void *)       buf,       (void *)       pair->buf,       4);
-    /* if (test_result_need_abort(result)) break; */
+    /* if (is_test_result_aborting(result)) break; */
 
     snprintf(tag, sizeof(tag) / sizeof(tag[0]), "buf str %d", i);
     result |=
       assert_streqn(context, NULL, tag, (const char *) buf,       (const char *) pair->buf,       4);
-    if (test_result_need_abort(result)) break;
+    if (is_test_result_aborting(result)) break;
   }
 
   return result;
@@ -169,7 +169,7 @@ unit_test_result_t utf8_encode_one_edge_cases_test_run(unit_test_context_t *cont
 
   result |=
     assert_inteq (context, NULL, "width", (int) utf8_size, (int) pair->utf8_size);
-  if (test_result_need_abort(result)) return result;
+  if (is_test_result_aborting(result)) return result;
 
   return result;
 }
@@ -242,19 +242,19 @@ unit_test_result_t utf8_encode_equalities_test_run(unit_test_context_t *context)
 
   result |=
     assert_inteq (context, NULL, "num_written", (int)          buf_written, (int)          utf8_codepoints_encoding_size);
-  if (test_result_need_abort(result)) return result;
+  if (is_test_result_aborting(result)) return result;
 
   result |=
     assert_inteq (context, NULL, "num_encoded", (int)          num_encoded, (int)          utf8_codepoints_size);
-  if (test_result_need_abort(result)) return result;
+  if (is_test_result_aborting(result)) return result;
 
   result |=
     assert_memeq (context, NULL, "buf mem",     (void *)       buf,         (void *)       utf8_codepoints_encoding,      utf8_codepoints_encoding_size);
-  /* if (test_result_need_abort(result)) return result; */
+  /* if (is_test_result_aborting(result)) return result; */
 
   result |=
     assert_streqn(context, NULL, "buf str",     (const char *) buf,         (const char *) utf8_codepoints_encoding,      utf8_codepoints_encoding_size);
-  if (test_result_need_abort(result)) return result;
+  if (is_test_result_aborting(result)) return result;
 
   return result;
 }
@@ -282,18 +282,18 @@ unit_test_result_t utf8_encode_edge_cases_test_run(unit_test_context_t *context)
 
   result |=
     assert_inteq (context, NULL, "num_written",       (int)          buf_written, (int)          utf8_codepoints_encoding_size);
-  if (test_result_need_abort(result)) return result;
+  if (is_test_result_aborting(result)) return result;
 
   /* Test smaller buf limit. */
   buf_written = utf8_encode(buf, utf8_codepoints_encoding_size - 1, utf8_codepoints, utf8_codepoints_size, &num_encoded);
 
   result |=
     assert_inteq (context, NULL, "small num_written", (int)          buf_written, (int)          utf8_codepoints_encoding_size - utf8_encoding_last_width);
-  if (test_result_need_abort(result)) return result;
+  if (is_test_result_aborting(result)) return result;
 
   result |=
     assert_inteq (context, NULL, "small num_encoded", (int)          num_encoded, (int)          utf8_codepoints_size - 1);
-  if (test_result_need_abort(result)) return result;
+  if (is_test_result_aborting(result)) return result;
 
   return result;
 }
@@ -332,17 +332,17 @@ unit_test_result_t utf8_decode_one_equalities_test_run(unit_test_context_t *cont
     snprintf(tag, sizeof(tag) / sizeof(tag[0]), "codepoint %d", i);
     result |=
       assert_inteq (context, NULL, tag, (int) codepoint,      (int) pair->codepoint);
-    if (test_result_need_abort(result)) break;
+    if (is_test_result_aborting(result)) break;
 
     snprintf(tag, sizeof(tag) / sizeof(tag[0]), "width %d", i);
     result |=
       assert_inteq (context, NULL, tag, (int) width,          (int) pair->utf8_size);
-    if (test_result_need_abort(result)) break;
+    if (is_test_result_aborting(result)) break;
 
     snprintf(tag, sizeof(tag) / sizeof(tag[0]), "error_status %d", i);
     result |=
       assert_inteq (context, NULL, tag, (int) error_status,   (int) utf8_decode_no_error);
-    if (test_result_need_abort(result)) break;
+    if (is_test_result_aborting(result)) break;
   }
 
   return result;
@@ -464,17 +464,17 @@ unit_test_result_t utf8_decode_one_edge_cases_test_run(unit_test_context_t *cont
     snprintf(tag, sizeof(tag) / sizeof(tag[0]), "error_status %d", i);
     result |=
       assert_inteq (context, NULL, tag, (int) error_status,   (int) pair->error_status);
-    if (test_result_need_abort(result)) break;
+    if (is_test_result_aborting(result)) break;
 
     snprintf(tag, sizeof(tag) / sizeof(tag[0]), "codepoint %d", i);
     result |=
       assert_inteq (context, NULL, tag, (int) codepoint,      (int) pair->codepoint);
-    if (test_result_need_abort(result)) break;
+    if (is_test_result_aborting(result)) break;
 
     snprintf(tag, sizeof(tag) / sizeof(tag[0]), "width %d", i);
     result |=
       assert_inteq (context, NULL, tag, (int) width,          (int) pair->width);
-    if (test_result_need_abort(result)) break;
+    if (is_test_result_aborting(result)) break;
   }
 
   return result;
@@ -511,23 +511,23 @@ unit_test_result_t utf8_decode_equalities_test_run(unit_test_context_t *context)
 
   result |=
     assert_inteq (context, NULL, "num_codepoints",     (int)    num_codepoints,     (int)    utf8_codepoints_size);
-  if (test_result_need_abort(result)) return result;
+  if (is_test_result_aborting(result)) return result;
 
   result |=
     assert_inteq (context, NULL, "bytes_read",         (int)    bytes_read,         (int)    utf8_codepoints_encoding_size);
-  if (test_result_need_abort(result)) return result;
+  if (is_test_result_aborting(result)) return result;
 
   result |=
     assert_inteq (context, NULL, "num_trailing_bytes", (int)    num_trailing_bytes, (int)    0);
-  if (test_result_need_abort(result)) return result;
+  if (is_test_result_aborting(result)) return result;
 
   result |=
     assert_inteq (context, NULL, "error_status",       (int)    error_status,       (int)    utf8_decode_no_error);
-  if (test_result_need_abort(result)) return result;
+  if (is_test_result_aborting(result)) return result;
 
   result |=
     assert_memeq (context, NULL, "buf mem",            (void *) codepoints,         (void *) utf8_codepoints, sizeof(utf8_codepoints));
-  if (test_result_need_abort(result)) return result;
+  if (is_test_result_aborting(result)) return result;
 
   return result;
 }
@@ -566,23 +566,23 @@ static unit_test_result_t utf8_decode_edge_cases_trailing_test_run(unit_test_con
 
   result |=
     assert_inteq (context, NULL, "num_codepoints",     (int)    num_codepoints,     (int)    utf8_codepoints_size);
-  if (test_result_need_abort(result)) return result;
+  if (is_test_result_aborting(result)) return result;
 
   result |=
     assert_inteq (context, NULL, "bytes_read",         (int)    bytes_read,         (int)    utf8_codepoints_encoding_size - utf8_encoding_last_width);
-  if (test_result_need_abort(result)) return result;
+  if (is_test_result_aborting(result)) return result;
 
   result |=
     assert_inteq (context, NULL, "num_trailing_bytes", (int)    num_trailing_bytes, (int)    utf8_encoding_last_width);
-  if (test_result_need_abort(result)) return result;
+  if (is_test_result_aborting(result)) return result;
 
   result |=
     assert_inteq (context, NULL, "error_status",       (int)    error_status,       (int)    utf8_decode_no_error);
-  if (test_result_need_abort(result)) return result;
+  if (is_test_result_aborting(result)) return result;
 
   result |=
     assert_memeq (context, NULL, "buf mem",            (void *) codepoints,         (void *) utf8_codepoints, sizeof(utf8_codepoints));
-  if (test_result_need_abort(result)) return result;
+  if (is_test_result_aborting(result)) return result;
 
 
   /* Disallow trailing bytes. */
@@ -597,23 +597,23 @@ static unit_test_result_t utf8_decode_edge_cases_trailing_test_run(unit_test_con
 
   result |=
     assert_inteq (context, NULL, "num_codepoints",     (int)    num_codepoints,     (int)    utf8_codepoints_size - 1);
-  if (test_result_need_abort(result)) return result;
+  if (is_test_result_aborting(result)) return result;
 
   result |=
     assert_inteq (context, NULL, "bytes_read",         (int)    bytes_read,         (int)    utf8_codepoints_encoding_size - utf8_encoding_last_width + 1);
-  if (test_result_need_abort(result)) return result;
+  if (is_test_result_aborting(result)) return result;
 
   result |=
     assert_inteq (context, NULL, "num_trailing_bytes", (int)    num_trailing_bytes, (int)    0);
-  if (test_result_need_abort(result)) return result;
+  if (is_test_result_aborting(result)) return result;
 
   result |=
     assert_inteq (context, NULL, "error_status",       (int)    error_status,       (int)    utf8_decode_insufficient_continuation_bytes_eof);
-  if (test_result_need_abort(result)) return result;
+  if (is_test_result_aborting(result)) return result;
 
   result |=
     assert_memeq (context, NULL, "buf mem",            (void *) codepoints,         (void *) utf8_codepoints_replace_last, sizeof(utf8_codepoints_replace_last));
-  if (test_result_need_abort(result)) return result;
+  if (is_test_result_aborting(result)) return result;
 
   return result;
 }
@@ -635,11 +635,11 @@ static unit_test_result_t utf8_decode_edge_cases_null_outs_test_run(unit_test_co
 
   result |=
     assert_inteq (context, NULL, "num_codepoints",     (int)    num_codepoints,     (int)    utf8_codepoints_size);
-  if (test_result_need_abort(result)) return result;
+  if (is_test_result_aborting(result)) return result;
 
   result |=
     assert_memeq (context, NULL, "buf mem",            (void *) codepoints,         (void *) utf8_codepoints, sizeof(utf8_codepoints));
-  if (test_result_need_abort(result)) return result;
+  if (is_test_result_aborting(result)) return result;
 
   return result;
 }

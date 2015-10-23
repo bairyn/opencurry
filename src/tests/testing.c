@@ -148,7 +148,7 @@ unit_test_context_t *new_unit_test_context
         , "new_unit_test_context:\n"
           "  Failed to allocate heap memory for new context.\n"
           "  Requested '%d'*'%d' bytes.\n"
-        , nmemb, size);
+        , (int) nmemb, (int) size);
       return NULL;
     }
 
@@ -175,8 +175,8 @@ unit_test_context_t *new_unit_test_context
       ( err
       , "new_unit_test_context:\n"
         "  Failed to allocate heap memory for err_buf.\n"
-        "  Requested '%d'*'%d' bytes.\n"
-      , size);
+        "  Requested '%d' bytes.\n"
+      , (int) size);
     return NULL;
   }
 
@@ -189,11 +189,11 @@ unit_test_context_t *new_unit_test_context
     if (context->is_heap_allocated) free(context);
 
     fprintf
-      ( details
+      ( err
       , "new_unit_test_context:\n"
         "  Failed to allocate heap memory for int_err_buf.\n"
-        "  Requested '%d'*'%d' bytes.\n"
-      , size);
+        "  Requested '%d' bytes.\n"
+      , (int) size);
     return NULL;
   }
 
@@ -207,11 +207,11 @@ unit_test_context_t *new_unit_test_context
     if (context->is_heap_allocated) free(context);
 
     fprintf
-      ( details
+      ( err
       , "new_unit_test_context:\n"
         "  Failed to allocate heap memory for details_buf.\n"
-        "  Requested '%d'*'%d' bytes.\n"
-      , size);
+        "  Requested '%d' bytes.\n"
+      , (int) size);
     return NULL;
   }
 
@@ -226,11 +226,11 @@ unit_test_context_t *new_unit_test_context
     if (context->is_heap_allocated) free(context);
 
     fprintf
-      ( user
+      ( err
       , "new_unit_test_context:\n"
         "  Failed to allocate heap memory for user_buf.\n"
-        "  Requested '%d'*'%d' bytes.\n"
-      , size);
+        "  Requested '%d' bytes.\n"
+      , (int) size);
     return NULL;
   }
 
@@ -246,11 +246,11 @@ unit_test_context_t *new_unit_test_context
     if (context->is_heap_allocated) free(context);
 
     fprintf
-      ( misc
+      ( err
       , "new_unit_test_context:\n"
         "  Failed to allocate heap memory for misc_buf.\n"
-        "  Requested '%d'*'%d' bytes.\n"
-      , size);
+        "  Requested '%d' bytes.\n"
+      , (int) size);
     return NULL;
   }
 
@@ -263,9 +263,9 @@ unit_test_context_t *new_unit_test_context
   (void *) context->misc_buf
   */
 
-  context->err_len         = 0;
-  context->int_err_len     = 0;
-  context->details_len     = 0;
+  context->err_buf_len     = 0;
+  context->int_err_buf_len = 0;
+  context->details_buf_len = 0;
 
   context->is_snprintf_err = 0;
 
@@ -278,15 +278,19 @@ unit_test_context_t *new_unit_test_context
   context->free = free_unit_test_context;
 
   /* Set up initial state. */
+  context->aborting     = 0;
+
   context->group_depth  = 0;
 
   context->next_test_id = 1;
 
   context->num_pass     = 0;
   context->num_fail     = 0;
+  context->num_skip     = 0;
 
   context->last_pass    = -1;
   context->last_fail    = -1;
+  context->last_skip    = -1;
 
   /* Set metadata. */
   context->is_initialized = CONTEXT_FULLY_INITIALIZED;
@@ -419,7 +423,7 @@ void print_test_suite_result(unit_test_context_t *context, unit_test_result_t re
 {
   FILE *out;
 
-  if (test_result_success(result))
+  if (is_test_result_success(result))
   {
     out = context->out;
 
@@ -442,9 +446,9 @@ void print_test_suite_result(unit_test_context_t *context, unit_test_result_t re
       , "Error: %d tests failed:\n  last failed test #: %d\n  number of tests run: %d\n  can continue testing after last failure?: %s\n\nLast error message%s:\n\n%s%s"
       , (int) (context->num_fail)
       , (int) (context->last_fail)
-      , (int) (context->next_test_id)
+      , (int) (context->next_test_id - context->num_skip)
       , (result >= 0) ? "yes" : "no (aborted)"
-      ,   (!(context->err_buf_len >= context->err_buf_size - 1)
+      ,   (!(context->err_buf_len >= context->err_buf_size - 1))
         ? ""
         : " (error message buffer maxed out; additional text might be truncated)"
       , (const char *) context->err_buf
@@ -454,65 +458,100 @@ void print_test_suite_result(unit_test_context_t *context, unit_test_result_t re
 }
 
 
-int test_result_success(unit_test_result_t result)
+int is_test_result_success(unit_test_result_t result)
 {
-  return result == 0;
+  return result == UNIT_TEST_PASS;
 }
 
-int test_result_failure(unit_test_result_t result)
+int is_test_result_failure(unit_test_result_t result)
 {
-  return result != 0;
+  return result == UNIT_TEST_FAIL || UNIT_TEST_FAIL_CONTINUE;
 }
 
-int test_result_can_continue(unit_test_result_t result)
+int is_test_result_skip(unit_test_result_t result)
+{
+  return result == UNIT_TEST_SKIPPED || result == UNIT_TEST_SKIPPED_CONTINUE;
+}
+
+int is_test_result_can_continue(unit_test_result_t result)
 {
   return result >= 0;
 }
 
-int test_result_need_abort(unit_test_result_t result)
+int is_test_result_aborting(unit_test_result_t result)
 {
   return result <  0;
 }
 
 
+/* Run a "unit_test_t", updating the context state and emitting output. */
 unit_test_result_t run_test(unit_test_context_t *context, unit_test_t test)
 {
   int id;
   unit_test_result_t result;
 
+  /* Set the "id" of this test. */
   id = context->next_test_id++;
 
+  /* Print the id and name of the test. */
   print_test_prefix(context, test, id);
 
+  /* Reset details buffer, run, and obtain result. */
   reset_err_msg_details(context);
-  result = test.run(context);
-
-  if (!context->aborting)
+  if (context->aborting)
   {
-    if (test_result_success(result))
-    {
-      ++context->num_pass;
-      context->last_pass = id;
+    /* Aborted.  Skip the test, and assume a non-passing result. */
+    result = UNIT_TEST_SKIPPED;
+  }
+  else
+  {
+    /* Call the test procedure. */
 
-      print_passed_test_result(context, test, id, result);
-    }
-    else
-    {
-      ++context->num_fail;
-      context->last_fail = id;
-
-      print_failed_test_result(context, test, id, result);
-    }
+    /* This might recursively call child tests via "run_test*" procedures
+     * provided by this API.
+     */
+    result = test.run(context);
   }
 
-  if (test_result_need_abort(result))
-  {
-    context->aborting = 1;
-  }
+  /* ---------------------------------------------------------------- */
+
+  /* This test, and all child tests, are done. */
+
+  /* Update context state. */
+  process_test_result(context, test, id, result);
+
+  /* Print the result. */
+  print_test_result(context, test, id, result);
 
   return result;
 }
 
+/* Update "context" state reflect the result of the unit test. */
+void process_test_result(unit_test_context_t *context, unit_test_t test, int id, unit_test_result_t result)
+{
+  /* Determine whether we need to set the "aborting" flag. */
+  if (is_test_result_aborting(result))
+  {
+    context->aborting = 1;
+  }
+
+  /* Update result-type state. */
+  if      (is_test_result_success(result))
+  {
+    ++context->num_pass;
+    context->last_pass = id;
+  }
+  else if (is_test_result_skip(result))
+  {
+    ++context->num_skip;
+    context->last_skip = id;
+  }
+  else
+  {
+    ++context->num_fail;
+    context->last_fail = id;
+  }
+}
 
 void print_test_indent(unit_test_context_t *context)
 {
@@ -529,6 +568,22 @@ void print_test_prefix(unit_test_context_t *context, unit_test_t test, int id)
   print_test_indent(context);
 
   fprintf(context->out, "- %d: %s:\n", id, test.name);
+}
+
+void print_test_result(unit_test_context_t *context, unit_test_t test, int id, unit_test_result_t result)
+{
+  if      (is_test_result_success(result))
+  {
+    print_passed_test_result (context, test, id, result);
+  }
+  else if (is_test_result_skip(result))
+  {
+    print_skipped_test_result(context, test, id, result);
+  }
+  else
+  {
+    print_failed_test_result (context, test, id, result);
+  }
 }
 
 void print_passed_test_result(unit_test_context_t *context, unit_test_t test, int id, unit_test_result_t result)
@@ -551,7 +606,7 @@ void print_failed_test_result(unit_test_context_t *context, unit_test_t test, in
   }
   context->err_buf[context->err_buf_len] = 0;
 
-  can_continue = test_result_can_continue(result);
+  can_continue = is_test_result_can_continue(result);
 
   print_test_indent(context);
   fprintf(context->out, "  %*.s   FAILURE - %s\n", 2 * context->group_depth, "", test.description);
@@ -564,7 +619,7 @@ void print_failed_test_result(unit_test_context_t *context, unit_test_t test, in
   fprintf(context->err, "  test result code: %d\n", (int) result);
   fprintf(context->err, "  can continue?:    %s\n", (can_continue) ? "yes" : "no (aborting!)");
   fprintf(context->err, "\n");
-  if (!(context->err_buf_len >= context->err_buf_size - 1)
+  if (!(context->err_buf_len >= context->err_buf_size - 1))
     fprintf(context->err, "Error message:\n");
   else
     fprintf(context->err, "Error message(buffer maxed out; additional text might be truncated):\n");
@@ -575,12 +630,20 @@ void print_failed_test_result(unit_test_context_t *context, unit_test_t test, in
   fprintf(context->err, "\\----------------------------------------------------------------\n\n");
 }
 
+void print_skipped_test_result(unit_test_context_t *context, unit_test_t test, int id, unit_test_result_t result)
+{
+  print_test_indent(context);
+
+  /* fprintf(context->out, "  %*.s   skipped * context->group_depth, ""); */
+  fprintf(context->out, "  %*.s   skipped: %s\n", 2 * context->group_depth, "", test.description);
+}
+
 
 unit_test_result_t run_tests_num(unit_test_context_t *context, unit_test_t **tests, size_t num_tests)
 {
   int                i;
-  int                abort = 0;
-  unit_test_result_t result = UNIT_TEST_PASS;
+  int                aborting = 0;
+  unit_test_result_t result_sum = UNIT_TEST_PASS;
 
   ++context->group_depth;
   for (i = 0; i < num_tests; ++i)
@@ -589,43 +652,43 @@ unit_test_result_t run_tests_num(unit_test_context_t *context, unit_test_t **tes
     
     individual_result = run_test(context, *tests[i]);
 
-    abort = test_result_need_abort(individual_result) || test_result_need_abort(result);
+    aborting = is_test_result_aborting(individual_result) || is_test_result_aborting(result_sum);
 
-    result |= individual_result;
+    result_sum |= individual_result;
 
-    if (abort)
+    if (aborting)
     {
       break;
     }
   }
   --context->group_depth;
 
-  return result;
+  return result_sum;
 }
 
 unit_test_result_t run_tests(unit_test_context_t *context, unit_test_t **tests)
 {
-  int                abort = 0;
+  int                aborting = 0;
   unit_test_t        **test;
-  unit_test_result_t result = UNIT_TEST_PASS;
+  unit_test_result_t result_sum = UNIT_TEST_PASS;
 
   ++context->group_depth;
   for (test = tests; *test; ++test)
   {
     int individual_result = run_test(context, **test);
 
-    abort = test_result_need_abort(individual_result) || test_result_need_abort(result);
+    aborting = is_test_result_aborting(individual_result) || is_test_result_aborting(result_sum);
 
-    result |= individual_result;
+    result_sum |= individual_result;
 
-    if (abort)
+    if (aborting)
     {
       break;
     }
   }
   --context->group_depth;
 
-  return result;
+  return result_sum;
 }
 
 /* ---------------------------------------------------------------- */
@@ -644,8 +707,26 @@ void reset_err_msg_details(unit_test_context_t *context)
 
 /* Append to the details buffer. */
 /* TODO: varags */
-size_t test_add_details_msg(unit_test_context_t *context, const char *msg, size_t max_size)
+size_t test_add_details_msg(unit_test_context_t *context, const char *msg)
 {
+  int    l;
+  size_t size_terminator;
+
+  size_terminator = context->details_buf_size - 1;  /* Make room for terminating NULL byte. */
+
+  if (context->details_buf_len >= context->details_buf_size)
+  {
+    context->details_buf_len = context->details_buf_size - 1;
+  }
+
+  l = snprintf
+    ( (char *) (context->details_buf + context->details_buf_len), (size_t) (size_terminator - context->details_buf_len)
+    , "%s"
+    , msg
+    );
+  if (l < 0) return (context->details_buf_len = assert_msg_check_snprintf(context, l, context->details_buf, context->details_buf_size, "(test_add_details_msg)", &context->is_snprintf_err));
+
+  return (context->details_buf_len = (size_t) l);
 }
 
 /*
@@ -749,7 +830,7 @@ size_t assert_msg_check_snprintf(unit_test_context_t *context, int snprintf_resu
  * (If the error message buffer lacks a trailing newline character, one is
  * added automatically.)
  */
-size_t assert_msg_append_details(unit_test_context_t *context, size_t len, char *msg_out, size_t msg_out_size)
+size_t assert_msg_append_details(unit_test_context_t *context, size_t len, char *msg_out, size_t msg_out_size, const char *tag)
 {
   int    l;
   size_t size_terminator;
@@ -778,7 +859,7 @@ size_t assert_msg_append_details(unit_test_context_t *context, size_t len, char 
     , context->err_buf_len >= 1 && context->err_buf[context->err_buf_len - 1] == '\n' ? "" : "\n"
     , (const char *) context->details_buf
     );
-  if (l < 0) return assert_msg_check_snprintf(context, l, msg_out, msg_out_size, tag, &context->snprintf_err);
+  if (l < 0) return assert_msg_check_snprintf(context, l, msg_out, msg_out_size, tag, &context->is_snprintf_err);
   len += l;
 
   return (size_t) len;
@@ -796,9 +877,9 @@ size_t assert_failure_msg(unit_test_context_t *context, char *msg_out, size_t ms
     , "Assertion '%s' failed - no details provided.\n"
     , (const char *) tag
     );
-  if (l < 0) return assert_msg_check_snprintf(context, l, msg_out, msg_out_size, tag, &context->snprintf_err);
+  if (l < 0) return assert_msg_check_snprintf(context, l, msg_out, msg_out_size, tag, &context->is_snprintf_err);
 
-  return assert_msg_append_details(context, (size_t) l, msg_out, msg_out_size);
+  return assert_msg_append_details(context, (size_t) l, msg_out, msg_out_size, tag);
 }
 
 size_t assert_true_msg(unit_test_context_t *context, char *msg_out, size_t msg_out_size, const char *tag, int condition)
@@ -815,9 +896,9 @@ size_t assert_true_msg(unit_test_context_t *context, char *msg_out, size_t msg_o
     , (int) condition
     , (int) !!condition
     );
-  if (l < 0) return assert_msg_check_snprintf(context, l, msg_out, msg_out_size, tag, &context->snprintf_err);
+  if (l < 0) return assert_msg_check_snprintf(context, l, msg_out, msg_out_size, tag, &context->is_snprintf_err);
 
-  return assert_msg_append_details(context, (size_t) l, msg_out, msg_out_size);
+  return assert_msg_append_details(context, (size_t) l, msg_out, msg_out_size, tag);
 }
 
 size_t assert_inteq_msg(unit_test_context_t *context, char *msg_out, size_t msg_out_size, const char *tag, int check, int model)
@@ -834,9 +915,9 @@ size_t assert_inteq_msg(unit_test_context_t *context, char *msg_out, size_t msg_
     , (int) model
     , (int) check
     );
-  if (l < 0) return assert_msg_check_snprintf(context, l, msg_out, msg_out_size, tag, &context->snprintf_err);
+  if (l < 0) return assert_msg_check_snprintf(context, l, msg_out, msg_out_size, tag, &context->is_snprintf_err);
 
-  return assert_msg_append_details(context, (size_t) l, msg_out, msg_out_size);
+  return assert_msg_append_details(context, (size_t) l, msg_out, msg_out_size, tag);
 }
 
 size_t assert_streqz_msg(unit_test_context_t *context, char *msg_out, size_t msg_out_size, const char *tag, const char *check, const char *model)
@@ -853,9 +934,9 @@ size_t assert_streqz_msg(unit_test_context_t *context, char *msg_out, size_t msg
     , (const char*) model
     , (const char*) check
     );
-  if (l < 0) return assert_msg_check_snprintf(context, l, msg_out, msg_out_size, tag, &context->snprintf_err);
+  if (l < 0) return assert_msg_check_snprintf(context, l, msg_out, msg_out_size, tag, &context->is_snprintf_err);
 
-  return assert_msg_append_details(context, (size_t) l, msg_out, msg_out_size);
+  return assert_msg_append_details(context, (size_t) l, msg_out, msg_out_size, tag);
 }
 
 size_t assert_streqn_msg(unit_test_context_t *context, char *msg_out, size_t msg_out_size, const char *tag, const char *check, const char *model, size_t max_len)
@@ -884,9 +965,9 @@ size_t assert_streqn_msg(unit_test_context_t *context, char *msg_out, size_t msg
       , (const char *) checkz
       );
   } free(checkz);
-    if (l < 0) return assert_msg_check_snprintf(context, l, msg_out, msg_out_size, tag, &context->snprintf_err);
+    if (l < 0) return assert_msg_check_snprintf(context, l, msg_out, msg_out_size, tag, &context->is_snprintf_err);
 
-  return assert_msg_append_details(context, (size_t) l, msg_out, msg_out_size);
+  return assert_msg_append_details(context, (size_t) l, msg_out, msg_out_size, tag);
 }
 
 size_t assert_memeq_msg(unit_test_context_t *context, char *msg_out, size_t msg_out_size, const char *tag, void *check, void *model, size_t n)
@@ -914,7 +995,7 @@ size_t assert_memeq_msg(unit_test_context_t *context, char *msg_out, size_t msg_
     , (const char *) tag
     , (int) n
     );
-  if (l < 0) return assert_msg_check_snprintf(context, l, msg_out, msg_out_size, tag, &context->snprintf_err);
+  if (l < 0) return assert_msg_check_snprintf(context, l, msg_out, msg_out_size, tag, &context->is_snprintf_err);
   written += l;
 
   /* ---------------------------------------------------------------- */
@@ -924,14 +1005,14 @@ size_t assert_memeq_msg(unit_test_context_t *context, char *msg_out, size_t msg_
     ( (char *) (msg_out + written), (size_t) (size_terminator - written)
     , "\n"
     );
-  if (l < 0) return assert_msg_check_snprintf(context, l, msg_out, msg_out_size, tag, &context->snprintf_err);
+  if (l < 0) return assert_msg_check_snprintf(context, l, msg_out, msg_out_size, tag, &context->is_snprintf_err);
   written += l;
 
   l = hexdump_indent_spaces = snprintf
     ( (char *) (msg_out + written), (size_t) (size_terminator - written)
     , "  should be:"  /* A: Print two extra spaces below only without a newline. */
     );
-  if (l < 0) return assert_msg_check_snprintf(context, l, msg_out, msg_out_size, tag, &context->snprintf_err);
+  if (l < 0) return assert_msg_check_snprintf(context, l, msg_out, msg_out_size, tag, &context->is_snprintf_err);
   written += l;
 
   hexdump_indent_spaces += 2;
@@ -949,14 +1030,14 @@ size_t assert_memeq_msg(unit_test_context_t *context, char *msg_out, size_t msg_
       ( (char *) (msg_out + written), (size_t) (size_terminator - written)
       , "\n"
       );
-    if (l < 0) return assert_msg_check_snprintf(context, l, msg_out, msg_out_size, tag, &context->snprintf_err);
+    if (l < 0) return assert_msg_check_snprintf(context, l, msg_out, msg_out_size, tag, &context->is_snprintf_err);
     written += l;
 
     l = hexdump_indent_spaces = snprintf
       ( (char *) (msg_out + written), (size_t) (size_terminator - written)
       , "    "
       );
-    if (l < 0) return assert_msg_check_snprintf(context, l, msg_out, msg_out_size, tag, &context->snprintf_err);
+    if (l < 0) return assert_msg_check_snprintf(context, l, msg_out, msg_out_size, tag, &context->is_snprintf_err);
     written += l;
   }
   else
@@ -965,7 +1046,7 @@ size_t assert_memeq_msg(unit_test_context_t *context, char *msg_out, size_t msg_
       ( (char *) (msg_out + written), (size_t) (size_terminator - written)
       , "  "  /* A: No newline, so print two extra spaces for alignment. */
       );
-    if (l < 0) return assert_msg_check_snprintf(context, l, msg_out, msg_out_size, tag, &context->snprintf_err);
+    if (l < 0) return assert_msg_check_snprintf(context, l, msg_out, msg_out_size, tag, &context->is_snprintf_err);
     written += l;
   }
 
@@ -984,7 +1065,7 @@ size_t assert_memeq_msg(unit_test_context_t *context, char *msg_out, size_t msg_
         ( (char *) (msg_out + written), (size_t) (size_terminator - written)
         , "\n"
         );
-      if (l < 0) return assert_msg_check_snprintf(context, l, msg_out, msg_out_size, tag, &context->snprintf_err);
+      if (l < 0) return assert_msg_check_snprintf(context, l, msg_out, msg_out_size, tag, &context->is_snprintf_err);
       written += l;
 
       for (j = 0; j < hexdump_indent_spaces; ++j)
@@ -993,7 +1074,7 @@ size_t assert_memeq_msg(unit_test_context_t *context, char *msg_out, size_t msg_
           ( (char *) (msg_out + written), (size_t) (size_terminator - written)
           , " "
           );
-        if (l < 0) return assert_msg_check_snprintf(context, l, msg_out, msg_out_size, tag, &context->snprintf_err);
+        if (l < 0) return assert_msg_check_snprintf(context, l, msg_out, msg_out_size, tag, &context->is_snprintf_err);
         written += l;
       }
     }
@@ -1004,7 +1085,7 @@ size_t assert_memeq_msg(unit_test_context_t *context, char *msg_out, size_t msg_
       , " 0x%.2X"
       , (unsigned int) (((unsigned char *) model)[i])
       );
-    if (l < 0) return assert_msg_check_snprintf(context, l, msg_out, msg_out_size, tag, &context->snprintf_err);
+    if (l < 0) return assert_msg_check_snprintf(context, l, msg_out, msg_out_size, tag, &context->is_snprintf_err);
     written += l;
   }
 
@@ -1015,14 +1096,14 @@ size_t assert_memeq_msg(unit_test_context_t *context, char *msg_out, size_t msg_
     ( (char *) (msg_out + written), (size_t) (size_terminator - written)
     , "\n"
     );
-  if (l < 0) return assert_msg_check_snprintf(context, l, msg_out, msg_out_size, tag, &context->snprintf_err);
+  if (l < 0) return assert_msg_check_snprintf(context, l, msg_out, msg_out_size, tag, &context->is_snprintf_err);
   written += l;
 
   l = snprintf
     ( (char *) (msg_out + written), (size_t) (size_terminator - written)
     , "  actually is:"
     );
-  if (l < 0) return assert_msg_check_snprintf(context, l, msg_out, msg_out_size, tag, &context->snprintf_err);
+  if (l < 0) return assert_msg_check_snprintf(context, l, msg_out, msg_out_size, tag, &context->is_snprintf_err);
   written += l;
 
   /* Should we start a new line? */
@@ -1032,14 +1113,14 @@ size_t assert_memeq_msg(unit_test_context_t *context, char *msg_out, size_t msg_
       ( (char *) (msg_out + written), (size_t) (size_terminator - written)
       , "\n"
       );
-    if (l < 0) return assert_msg_check_snprintf(context, l, msg_out, msg_out_size, tag, &context->snprintf_err);
+    if (l < 0) return assert_msg_check_snprintf(context, l, msg_out, msg_out_size, tag, &context->is_snprintf_err);
     written += l;
 
     l = snprintf
       ( (char *) (msg_out + written), (size_t) (size_terminator - written)
       , "    "
       );
-    if (l < 0) return assert_msg_check_snprintf(context, l, msg_out, msg_out_size, tag, &context->snprintf_err);
+    if (l < 0) return assert_msg_check_snprintf(context, l, msg_out, msg_out_size, tag, &context->is_snprintf_err);
     written += l;
   }
 
@@ -1057,7 +1138,7 @@ size_t assert_memeq_msg(unit_test_context_t *context, char *msg_out, size_t msg_
         ( (char *) (msg_out + written), (size_t) (size_terminator - written)
         , "\n"
         );
-      if (l < 0) return assert_msg_check_snprintf(context, l, msg_out, msg_out_size, tag, &context->snprintf_err);
+      if (l < 0) return assert_msg_check_snprintf(context, l, msg_out, msg_out_size, tag, &context->is_snprintf_err);
       written += l;
 
       for (j = 0; j < hexdump_indent_spaces; ++j)
@@ -1066,7 +1147,7 @@ size_t assert_memeq_msg(unit_test_context_t *context, char *msg_out, size_t msg_
           ( (char *) (msg_out + written), (size_t) (size_terminator - written)
           , " "
           );
-        if (l < 0) return assert_msg_check_snprintf(context, l, msg_out, msg_out_size, tag, &context->snprintf_err);
+        if (l < 0) return assert_msg_check_snprintf(context, l, msg_out, msg_out_size, tag, &context->is_snprintf_err);
         written += l;
       }
     }
@@ -1077,7 +1158,7 @@ size_t assert_memeq_msg(unit_test_context_t *context, char *msg_out, size_t msg_
       , " 0x%.2X"
       , (unsigned int) (((unsigned char *) check)[i])
       );
-    if (l < 0) return assert_msg_check_snprintf(context, l, msg_out, msg_out_size, tag, &context->snprintf_err);
+    if (l < 0) return assert_msg_check_snprintf(context, l, msg_out, msg_out_size, tag, &context->is_snprintf_err);
     written += l;
   }
 
@@ -1085,10 +1166,10 @@ size_t assert_memeq_msg(unit_test_context_t *context, char *msg_out, size_t msg_
     ( (char *) (msg_out + written), (size_t) (size_terminator - written)
     , "\n"
     );
-  if (l < 0) return assert_msg_check_snprintf(context, l, msg_out, msg_out_size, tag, &context->snprintf_err);
+  if (l < 0) return assert_msg_check_snprintf(context, l, msg_out, msg_out_size, tag, &context->is_snprintf_err);
   written += l;
 
-  return assert_msg_append_details(context, (size_t) written, msg_out, msg_out_size);
+  return assert_msg_append_details(context, (size_t) written, msg_out, msg_out_size, tag);
 }
 
 
@@ -1106,9 +1187,9 @@ size_t assert_false_msg(unit_test_context_t *context, char *msg_out, size_t msg_
     , (int) condition
     , (int) !!condition
     );
-  if (l < 0) return assert_msg_check_snprintf(context, l, msg_out, msg_out_size, tag, &context->snprintf_err);
+  if (l < 0) return assert_msg_check_snprintf(context, l, msg_out, msg_out_size, tag, &context->is_snprintf_err);
 
-  return assert_msg_append_details(context, (size_t) l, msg_out, msg_out_size);
+  return assert_msg_append_details(context, (size_t) l, msg_out, msg_out_size, tag);
 }
 
 size_t assert_not_inteq_msg(unit_test_context_t *context, char *msg_out, size_t msg_out_size, const char *tag, int check, int model)
@@ -1125,9 +1206,9 @@ size_t assert_not_inteq_msg(unit_test_context_t *context, char *msg_out, size_t 
     , (int) model
     , (int) check
     );
-  if (l < 0) return assert_msg_check_snprintf(context, l, msg_out, msg_out_size, tag, &context->snprintf_err);
+  if (l < 0) return assert_msg_check_snprintf(context, l, msg_out, msg_out_size, tag, &context->is_snprintf_err);
 
-  return assert_msg_append_details(context, (size_t) l, msg_out, msg_out_size);
+  return assert_msg_append_details(context, (size_t) l, msg_out, msg_out_size, tag);
 }
 
 size_t assert_not_streqz_msg(unit_test_context_t *context, char *msg_out, size_t msg_out_size, const char *tag, const char *check, const char *model)
@@ -1144,9 +1225,9 @@ size_t assert_not_streqz_msg(unit_test_context_t *context, char *msg_out, size_t
     , (const char*) model
     , (const char*) check
     );
-  if (l < 0) return assert_msg_check_snprintf(context, l, msg_out, msg_out_size, tag, &context->snprintf_err);
+  if (l < 0) return assert_msg_check_snprintf(context, l, msg_out, msg_out_size, tag, &context->is_snprintf_err);
 
-  return assert_msg_append_details(context, (size_t) l, msg_out, msg_out_size);
+  return assert_msg_append_details(context, (size_t) l, msg_out, msg_out_size, tag);
 }
 
 size_t assert_not_streqn_msg(unit_test_context_t *context, char *msg_out, size_t msg_out_size, const char *tag, const char *check, const char *model, size_t max_len)
@@ -1155,6 +1236,8 @@ size_t assert_not_streqn_msg(unit_test_context_t *context, char *msg_out, size_t
   size_t  size_terminator;
 
   char   *checkz, *modelz;
+
+  size_terminator = msg_out_size - 1;  /* Make room for terminating NULL byte. */
 
   checkz = malloc(2 * (max_len+1));
   {
@@ -1165,7 +1248,7 @@ size_t assert_not_streqn_msg(unit_test_context_t *context, char *msg_out, size_t
     checkz[max_len] = 0;
     modelz[max_len] = 0;
 
-    snprintf
+    l = snprintf
       ( (char *) msg_out, (size_t) size_terminator
       , "Inverse assertion '%s' failed - strings must duffer, but they are the same:\n  should differ from:  %s\n  but still is:        %s\n"
       , (const char *) tag
@@ -1173,9 +1256,9 @@ size_t assert_not_streqn_msg(unit_test_context_t *context, char *msg_out, size_t
       , (const char *) checkz
       );
   } free(checkz);
-    if (l < 0) return assert_msg_check_snprintf(context, l, msg_out, msg_out_size, tag, &context->snprintf_err);
+    if (l < 0) return assert_msg_check_snprintf(context, l, msg_out, msg_out_size, tag, &context->is_snprintf_err);
 
-  return assert_msg_append_details(context, (size_t) l, msg_out, msg_out_size);
+  return assert_msg_append_details(context, (size_t) l, msg_out, msg_out_size, tag);
 }
 
 size_t assert_not_memeq_msg(unit_test_context_t *context, char *msg_out, size_t msg_out_size, const char *tag, void *check, void *model, size_t n)
@@ -1193,6 +1276,8 @@ size_t assert_not_memeq_msg(unit_test_context_t *context, char *msg_out, size_t 
   static const int byte_print_width    = sizeof(" 0x00") - 1;
   static const int width               = ASSERT_MSG_WIDTH;
 
+  size_terminator = msg_out_size - 1;  /* Make room for terminating NULL byte. */
+
   /* ---------------------------------------------------------------- */
   /* Start writing error message. */
   l = snprintf
@@ -1201,7 +1286,7 @@ size_t assert_not_memeq_msg(unit_test_context_t *context, char *msg_out, size_t 
     , (const char *) tag
     , (int) n
     );
-  if (l < 0) return assert_msg_check_snprintf(context, l, msg_out, msg_out_size, tag, &context->snprintf_err);
+  if (l < 0) return assert_msg_check_snprintf(context, l, msg_out, msg_out_size, tag, &context->is_snprintf_err);
   written += l;
 
   /* ---------------------------------------------------------------- */
@@ -1211,14 +1296,14 @@ size_t assert_not_memeq_msg(unit_test_context_t *context, char *msg_out, size_t 
     ( (char *) (msg_out + written), (size_t) (size_terminator - written)
     , "\n"
     );
-  if (l < 0) return assert_msg_check_snprintf(context, l, msg_out, msg_out_size, tag, &context->snprintf_err);
+  if (l < 0) return assert_msg_check_snprintf(context, l, msg_out, msg_out_size, tag, &context->is_snprintf_err);
   written += l;
 
   l = hexdump_indent_spaces = snprintf
     ( (char *) (msg_out + written), (size_t) (size_terminator - written)
     , "  should differ from:"
     );
-  if (l < 0) return assert_msg_check_snprintf(context, l, msg_out, msg_out_size, tag, &context->snprintf_err);
+  if (l < 0) return assert_msg_check_snprintf(context, l, msg_out, msg_out_size, tag, &context->is_snprintf_err);
   written += l;
 
   /* Here we also calculate whether this will span multiple lines, in which
@@ -1234,14 +1319,14 @@ size_t assert_not_memeq_msg(unit_test_context_t *context, char *msg_out, size_t 
       ( (char *) (msg_out + written), (size_t) (size_terminator - written)
       , "\n"
       );
-    if (l < 0) return assert_msg_check_snprintf(context, l, msg_out, msg_out_size, tag, &context->snprintf_err);
+    if (l < 0) return assert_msg_check_snprintf(context, l, msg_out, msg_out_size, tag, &context->is_snprintf_err);
     written += l;
 
     l = hexdump_indent_spaces = snprintf
       ( (char *) (msg_out + written), (size_t) (size_terminator - written)
       , "    "
       );
-    if (l < 0) return assert_msg_check_snprintf(context, l, msg_out, msg_out_size, tag, &context->snprintf_err);
+    if (l < 0) return assert_msg_check_snprintf(context, l, msg_out, msg_out_size, tag, &context->is_snprintf_err);
     written += l;
   }
 
@@ -1260,7 +1345,7 @@ size_t assert_not_memeq_msg(unit_test_context_t *context, char *msg_out, size_t 
         ( (char *) (msg_out + written), (size_t) (size_terminator - written)
         , "\n"
         );
-      if (l < 0) return assert_msg_check_snprintf(context, l, msg_out, msg_out_size, tag, &context->snprintf_err);
+      if (l < 0) return assert_msg_check_snprintf(context, l, msg_out, msg_out_size, tag, &context->is_snprintf_err);
       written += l;
 
       for (j = 0; j < hexdump_indent_spaces; ++j)
@@ -1269,7 +1354,7 @@ size_t assert_not_memeq_msg(unit_test_context_t *context, char *msg_out, size_t 
           ( (char *) (msg_out + written), (size_t) (size_terminator - written)
           , " "
           );
-        if (l < 0) return assert_msg_check_snprintf(context, l, msg_out, msg_out_size, tag, &context->snprintf_err);
+        if (l < 0) return assert_msg_check_snprintf(context, l, msg_out, msg_out_size, tag, &context->is_snprintf_err);
         written += l;
       }
     }
@@ -1280,7 +1365,7 @@ size_t assert_not_memeq_msg(unit_test_context_t *context, char *msg_out, size_t 
       , " 0x%.2X"
       , (unsigned int) (((unsigned char *) model)[i])
       );
-    if (l < 0) return assert_msg_check_snprintf(context, l, msg_out, msg_out_size, tag, &context->snprintf_err);
+    if (l < 0) return assert_msg_check_snprintf(context, l, msg_out, msg_out_size, tag, &context->is_snprintf_err);
     written += l;
   }
 
@@ -1291,14 +1376,14 @@ size_t assert_not_memeq_msg(unit_test_context_t *context, char *msg_out, size_t 
     ( (char *) (msg_out + written), (size_t) (size_terminator - written)
     , "\n"
     );
-  if (l < 0) return assert_msg_check_snprintf(context, l, msg_out, msg_out_size, tag, &context->snprintf_err);
+  if (l < 0) return assert_msg_check_snprintf(context, l, msg_out, msg_out_size, tag, &context->is_snprintf_err);
   written += l;
 
   l = snprintf
     ( (char *) (msg_out + written), (size_t) (size_terminator - written)
     , "  but still is:"  /* A: Print six extra spaces below only without a newline. */
     );
-  if (l < 0) return assert_msg_check_snprintf(context, l, msg_out, msg_out_size, tag, &context->snprintf_err);
+  if (l < 0) return assert_msg_check_snprintf(context, l, msg_out, msg_out_size, tag, &context->is_snprintf_err);
   written += l;
 
   /* Should we start a new line? */
@@ -1308,14 +1393,14 @@ size_t assert_not_memeq_msg(unit_test_context_t *context, char *msg_out, size_t 
       ( (char *) (msg_out + written), (size_t) (size_terminator - written)
       , "\n"
       );
-    if (l < 0) return assert_msg_check_snprintf(context, l, msg_out, msg_out_size, tag, &context->snprintf_err);
+    if (l < 0) return assert_msg_check_snprintf(context, l, msg_out, msg_out_size, tag, &context->is_snprintf_err);
     written += l;
 
     l = snprintf
       ( (char *) (msg_out + written), (size_t) (size_terminator - written)
       , "    "
       );
-    if (l < 0) return assert_msg_check_snprintf(context, l, msg_out, msg_out_size, tag, &context->snprintf_err);
+    if (l < 0) return assert_msg_check_snprintf(context, l, msg_out, msg_out_size, tag, &context->is_snprintf_err);
     written += l;
   }
   else
@@ -1324,7 +1409,7 @@ size_t assert_not_memeq_msg(unit_test_context_t *context, char *msg_out, size_t 
       ( (char *) (msg_out + written), (size_t) (size_terminator - written)
       , "      "  /* A: No newline, so print six extra spaces for alignment. */
       );
-    if (l < 0) return assert_msg_check_snprintf(context, l, msg_out, msg_out_size, tag, &context->snprintf_err);
+    if (l < 0) return assert_msg_check_snprintf(context, l, msg_out, msg_out_size, tag, &context->is_snprintf_err);
     written += l;
   }
 
@@ -1342,7 +1427,7 @@ size_t assert_not_memeq_msg(unit_test_context_t *context, char *msg_out, size_t 
         ( (char *) (msg_out + written), (size_t) (size_terminator - written)
         , "\n"
         );
-      if (l < 0) return assert_msg_check_snprintf(context, l, msg_out, msg_out_size, tag, &context->snprintf_err);
+      if (l < 0) return assert_msg_check_snprintf(context, l, msg_out, msg_out_size, tag, &context->is_snprintf_err);
       written += l;
 
       for (j = 0; j < hexdump_indent_spaces; ++j)
@@ -1351,7 +1436,7 @@ size_t assert_not_memeq_msg(unit_test_context_t *context, char *msg_out, size_t 
           ( (char *) (msg_out + written), (size_t) (size_terminator - written)
           , " "
           );
-        if (l < 0) return assert_msg_check_snprintf(context, l, msg_out, msg_out_size, tag, &context->snprintf_err);
+        if (l < 0) return assert_msg_check_snprintf(context, l, msg_out, msg_out_size, tag, &context->is_snprintf_err);
         written += l;
       }
     }
@@ -1362,7 +1447,7 @@ size_t assert_not_memeq_msg(unit_test_context_t *context, char *msg_out, size_t 
       , " 0x%.2X"
       , (unsigned int) (((unsigned char *) check)[i])
       );
-    if (l < 0) return assert_msg_check_snprintf(context, l, msg_out, msg_out_size, tag, &context->snprintf_err);
+    if (l < 0) return assert_msg_check_snprintf(context, l, msg_out, msg_out_size, tag, &context->is_snprintf_err);
     written += l;
   }
 
@@ -1370,10 +1455,10 @@ size_t assert_not_memeq_msg(unit_test_context_t *context, char *msg_out, size_t 
     ( (char *) (msg_out + written), (size_t) (size_terminator - written)
     , "\n"
     );
-  if (l < 0) return assert_msg_check_snprintf(context, l, msg_out, msg_out_size, tag, &context->snprintf_err);
+  if (l < 0) return assert_msg_check_snprintf(context, l, msg_out, msg_out_size, tag, &context->is_snprintf_err);
   written += l;
 
-  return assert_msg_append_details(context, (size_t) written, msg_out, msg_out_size);
+  return assert_msg_append_details(context, (size_t) written, msg_out, msg_out_size, tag);
 }
 
 /* ---------------------------------------------------------------- */
