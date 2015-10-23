@@ -112,6 +112,7 @@ TEST_CLI_OBJS :=                            \
 	$(OBJ_DIR)/tests/main.o                   \
 	$(OBJ_DIR)/tests/testing.o                \
 	$(OBJ_DIR)/tests/resources.o              \
+	$(OBJ_DIR)/tests/ansi_c_ast_base.o        \
 	$(OBJ_DIR)/tests/test_testing.o           \
 	$(OBJ_DIR)/tests/test_all.o               \
 	$(OBJ_DIR)/tests/test_resources.o         \
