@@ -34,6 +34,8 @@
 #include "testing.h"
 #include "test_ansi_c_ast_gen.h"
 
+#include "ansi_c_ast_base.h"
+
 #include "../ansi_c_ast_gen.h"
 
 int test_ansi_c_ast_gen_cli(int argc, char **argv)
@@ -52,7 +54,9 @@ unit_test_t ansi_c_ast_gen_test =
 
 /* Array of ansi_c_ast_gen tests. */
 unit_test_t *ansi_c_ast_gen_tests[] =
-  { NULL
+  { &ansi_c_ast_gen_0_equalities_test
+
+  , NULL
   };
 
 unit_test_result_t test_ansi_c_ast_gen_run(unit_test_context_t *context)
@@ -61,4 +65,65 @@ unit_test_result_t test_ansi_c_ast_gen_run(unit_test_context_t *context)
 }
 
 /* ---------------------------------------------------------------- */
+/* Testing helpers.                                                 */
+/* ---------------------------------------------------------------- */
 
+/* ---------------------------------------------------------------- */
+/* Static test data for all local tests.                            */
+/* ---------------------------------------------------------------- */
+
+/* ---------------------------------------------------------------- */
+/* ansi_c_ast_gen_0_equalities_test:                                */
+/* ---------------------------------------------------------------- */
+
+/* Testing generated C AST through ansi_c_ast_gen API results in    */
+/* expected AST.                                                    */
+
+/* ---------------------------------------------------------------- */
+/* gen_0 test: Expected AST model, hand-coded.                      */
+/* ---------------------------------------------------------------- */
+
+static const c_ast_t gen_0_model =
+  {
+  };
+
+/* ---------------------------------------------------------------- */
+/* gen_0 test: Generate AST to test through API.                    */
+/* ---------------------------------------------------------------- */
+
+static c_ast_bufs_t *gen_0_check_gen(c_ast_bufs_t *ast)
+{
+  /* TODO */
+
+  return ast;
+}
+
+/* ---------------------------------------------------------------- */
+
+unit_test_t ansi_c_ast_gen_0_equalities_test =
+  {  ansi_c_ast_gen_0_equalities_test_run
+  , "ansi_c_ast_gen_0_equalities_test"
+  , "ansi_c_ast_gen API equality check: ansi_c_ast_gen API generated AST is correct."
+  };
+
+unit_test_result_t ansi_c_ast_gen_0_equalities_test_run(unit_test_context_t *context)
+{
+  char                tag[DEFAULT_TAG_SIZE];
+
+  const c_ast_bufs_t *model = &gen_0_model;
+  c_ast_bufs_t       *check;
+
+  unit_test_result_t  result;
+
+  result = assert_success(context);
+
+  check = new_ac_ast_bufs();
+  {
+    snprintf(tag, sizeof(tag) / sizeof(tag[0]), "gen_0");
+    result |=
+      assert_eq_c_ast(context, NULL, tag, (const c_ast_bufs_t *) (check->elems->slots), (const c_ast_bufs_t *) model);
+    if (test_result_need_abort(result)) return result;
+  } free_ac_ast_bufs_recursive(check);
+
+  return result;
+}

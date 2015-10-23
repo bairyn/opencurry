@@ -48,8 +48,9 @@
 /* ANSI C AST with memory references to components. */
 
 ac_ast_element_type_info_t ac_ast_element_type_info[num_ac_ast_element_type_ids] =
-  { { type_ac_anno, DEF_NUM_AC_ANNO, sizeof(ac_anno_t) }
-  , { type_ac_ast,  DEF_NUM_AC_AST,  sizeof(ac_ast_t)  }
+  { { type_ac_ast,  DEF_NUM_AC_AST,  sizeof(ac_ast_t)  }
+
+  , { type_ac_anno, DEF_NUM_AC_ANNO, sizeof(ac_anno_t) }
   };
 const size_t ac_ast_element_type_info_num =
   sizeof(ac_ast_element_type_info) / sizeof(ac_ast_element_type_info[0]);

@@ -30,7 +30,16 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+/*
+ * ansi_c_ast_gen.c
+ * ----------------
+ *
+ * Programatic generation of ANSI C abstract syntax trees.
+ */
+
 #include "base.h"
 #include "ansi_c_ast_gen.h"
+
+#include "ansi_c_ast_base.h"
 
 void ansi_c_ast_gen_placeholder(void) { }

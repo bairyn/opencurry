@@ -32,14 +32,15 @@
 
 /*
  * ansi_c_ast_gen.h
- * ------
+ * ----------------
  *
  * Programatic generation of ANSI C abstract syntax trees.
  */
 
-
 #ifndef ANSI_C_AST_GEN_H
 #define ANSI_C_AST_GEN_H
 #include "base.h"
+
+#include "ansi_c_ast_base.h"
 
 #endif /* ifndef ANSI_C_AST_GEN_H */

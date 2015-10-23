@@ -107,7 +107,7 @@ unit_test_t utf8_encode_one_equalities_test =
 
 unit_test_result_t utf8_encode_one_equalities_test_run(unit_test_context_t *context)
 {
-  char tag[DEFAULT_MSG_SIZE];
+  char tag[DEFAULT_TAG_SIZE];
 
   int i;
   unit_test_result_t result;
@@ -310,7 +310,7 @@ unit_test_t utf8_decode_one_equalities_test =
 
 unit_test_result_t utf8_decode_one_equalities_test_run(unit_test_context_t *context)
 {
-  char tag[DEFAULT_MSG_SIZE];
+  char tag[DEFAULT_TAG_SIZE];
 
   int i;
   unit_test_result_t result;
@@ -442,7 +442,7 @@ unit_test_t utf8_decode_one_edge_cases_test =
 
 unit_test_result_t utf8_decode_one_edge_cases_test_run(unit_test_context_t *context)
 {
-  char tag[DEFAULT_MSG_SIZE];
+  char tag[DEFAULT_TAG_SIZE];
 
   int i;
   unit_test_result_t result;

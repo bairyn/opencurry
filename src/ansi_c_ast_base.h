@@ -104,8 +104,8 @@ struct ac_anno_s
 /*
  * ac_ast
  *   -> (empty)
- *    | ac_annotation ac_ast
- *    | ac_item       ac_ast
+ *    | ac_anno ac_ast
+ *    | ac_item ac_ast
  */
 #define DEF_NUM_AC_AST (8 * 1024)
 typedef struct ac_ast_s ac_ast_t;
@@ -123,7 +123,7 @@ struct ac_ast_s
     /* (empty) */
 
     struct ac_ast_anno_s
-    { ac_item_t *item;
+    { ac_anno_t *anno;
       ac_ast_t  *ast;
     } anno;
 
@@ -137,9 +137,10 @@ struct ac_ast_s
 /* ---------------------------------------------------------------- */
 /* ANSI C AST with memory references to components. */
 
+/* "type_ac_ast" must be first. */
 enum ac_ast_element_type_id_e
-{ type_ac_anno,
-  type_ac_ast,
+{ type_ac_ast,
+  type_ac_anno,
 
   num_ac_ast_element_type_ids
 };
@@ -173,7 +174,7 @@ typedef struct ac_ast_buf_s ac_ast_buf_t;
 struct ac_ast_buf_s
 {
   /* Array of element slots. */
-  void   *slots;
+  void          *slots;
 
   /* Bitfield representing which slots are in use. */
   unsigned char *used;
@@ -183,7 +184,7 @@ struct ac_ast_buf_s
    *
    * Must be at least "elem_size * num_alloc_slots".
    */
-  size_t  size_slots;
+  size_t         size_slots;
 
   /*
    * Memory allocated to element-slots-in-use buffer.
@@ -192,17 +193,17 @@ struct ac_ast_buf_s
    * slots, rounded up to the nearest minimum multiple of 8, since each byte in
    * "used" represents 8 element slots.
    */
-  size_t  size_used;
+  size_t         size_used;
 
 
   /* Number of element slots allocated in buffer. */
-  size_t  num_slots;
+  size_t         num_slots;
 
   /* Number of element slots in use in buffer. */
-  size_t  num_used;
+  size_t         num_used;
 
   /* Number of any free element slot. */
-  size_t  next_free;
+  size_t         next_free;
 };
 
 /*
@@ -217,16 +218,15 @@ typedef struct ac_ast_bufs_s ac_ast_bufs_t;
 struct ac_ast_bufs_s
 {
   /*
+   * Arrays of elements, for each type of element.
+   */
+  ac_ast_buf_t          elems[num_ac_ast_element_type_ids];
+
+  /*
    * Normally NULL, but support a simple linked list for additional memory
    * allocation.
    */
   struct ac_ast_bufs_s *next;
-
-
-  /*
-   * Arrays of elements, for each type of element.
-   */
-  ac_ast_buf_t          elems[num_ac_ast_element_type_ids];
 };
 
 /* ---------------------------------------------------------------- */

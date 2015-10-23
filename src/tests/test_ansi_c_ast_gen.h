@@ -51,4 +51,7 @@ unit_test_result_t test_ansi_c_ast_gen_run(unit_test_context_t *context);
 
 /* ---------------------------------------------------------------- */
 
+extern unit_test_t ansi_c_ast_gen_0_equalities_test;
+unit_test_result_t ansi_c_ast_gen_0_equalities_test_run(unit_test_context_t *context);
+
 #endif /* ifndef TESTS_TEST_ANSI_C_AST_GEN_H */
