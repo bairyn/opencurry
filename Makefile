@@ -95,6 +95,7 @@ SHARED_OBJS :=                              \
 	$(OBJ_DIR)/opencurry.o                    \
 	$(OBJ_DIR)/cli.o                          \
 	$(OBJ_DIR)/util.o                         \
+	$(OBJ_DIR)/mempool.o                      \
 	$(OBJ_DIR)/type.o                         \
 	$(OBJ_DIR)/bnf.o                          \
 	$(OBJ_DIR)/lex.o                          \
@@ -121,6 +122,7 @@ TEST_CLI_OBJS :=                            \
 	$(OBJ_DIR)/tests/test_opencurry.o         \
 	$(OBJ_DIR)/tests/test_cli.o               \
 	$(OBJ_DIR)/tests/test_util.o              \
+	$(OBJ_DIR)/tests/test_mempool.o           \
 	$(OBJ_DIR)/tests/test_type.o              \
 	$(OBJ_DIR)/tests/test_bnf.o               \
 	$(OBJ_DIR)/tests/test_lex.o               \
