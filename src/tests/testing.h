@@ -253,6 +253,8 @@ unit_test_result_t run_tests(unit_test_context_t *context, unit_test_t **tests);
 
 #define ASSERT_MSG_WIDTH 80
 
+void reset_err_buf(unit_test_context_t *context);
+
 void reset_err_msg_details(unit_test_context_t *context);
 size_t test_add_details_msg(unit_test_context_t *context, const char *msg);
 

@@ -567,7 +567,8 @@ unit_test_result_t run_test(unit_test_context_t *context, unit_test_t test)
   /* Print the id and name of the test. */
   print_test_prefix(context, test, id);
 
-  /* Reset details buffer, run, and obtain result. */
+  /* Reset error and details buffers, run, and obtain result. */
+  reset_err_buf(context);
   reset_err_msg_details(context);
   /* Call the test procedure. */
 
@@ -585,6 +586,7 @@ unit_test_result_t run_test(unit_test_context_t *context, unit_test_t test)
 
   /* Print the result. */
   print_test_result(context, test, id, result, seed_start);
+  reset_err_buf(context);
 
   return result;
 }
@@ -907,6 +909,17 @@ unit_test_result_t run_tests(unit_test_context_t *context, unit_test_t **tests)
 
 /* ---------------------------------------------------------------- */
 /* Default error messages for assertion failures. */
+
+/* Clear the error buffer.
+ *
+ * This is called on each invocation of "run_test", immediately before the test
+ * procedure is invoked.
+ */
+void reset_err_buf(unit_test_context_t *context)
+{
+  context->err_buf[0] = 0;
+  context->err_buf_len = 0;
+}
 
 /* Clear the details buffer.
  *
