@@ -30,19 +30,179 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+/* TODO: do we need NULL? */
 /* stddef.h:
  *   - NULL
  */
 #include <stddef.h>
 
 /* stdlib.h:
+ *   , calloc
  *   - free
  *   - malloc
+ *   , realloc
  */
 #include <stdlib.h>
 
 #include "base.h"
 #include "type.h"
+
+/* ---------------------------------------------------------------- */
+/* type_t                                                           */
+/* ---------------------------------------------------------------- */
+
+type_t type_type =
+  { &type_type
+
+  , TODO
+  }
+
+/* ---------------------------------------------------------------- */
+/* Memory managers.                                                 */
+/* ---------------------------------------------------------------- */
+
+type_t memory_manager_type =
+  { &type_type
+
+  , TODO
+  }
+
+const memory_manager_t malloc_manager =
+  { &memory_manaager_type
+
+  , malloc
+  , free
+  , calloc
+  , realloc
+  };
+
+void *memory_manager_malloc(const memory_manager_t *memory_manager, size_t size)
+{
+  void *(*malloc_func)(size_t size);
+
+  if (!memory_manager)
+    memory_manager = malloc_manager;
+
+  if (memory_manager->malloc)
+  {
+    malloc_func = memory_manager->malloc;
+  }
+  else
+  {
+    malloc_func = malloc_manager->malloc;
+  }
+
+  return malloc_func(size);
+}
+
+void *memory_manager_free(const memory_manager_t *memory_manager, void *ptr)
+{
+  void *(*free_func)(void *ptr);
+
+  if (!memory_manager)
+    memory_manager = malloc_manager;
+
+  if (memory_manager->free)
+  {
+    free_func = memory_manager->free;
+  }
+  else
+  {
+    free_func = free_manager->malloc;
+  }
+
+  return free_func(ptr);
+}
+
+void *memory_manager_calloc(const memory_manager_t *memory_manager, size_t nmemb, size_t size)
+{
+  if (!memory_manager)
+    memory_manager = malloc_manager;
+
+  if (memory_manager->calloc)
+  {
+    return memory_manager->calloc(nmemb, size);
+  }
+  else
+  {
+    size_t total_size;
+
+    total_size = nmemb * size;
+
+    return memory_manager_malloc(memory_manager, total_size)
+  }
+}
+
+void *memory_manager_realloc(const memory_manager_t *memory_manager, void *ptr, size_t size)
+{
+  if (!memory_manager)
+    memory_manager = malloc_manager;
+
+  if (memory_manager->realloc)
+  {
+    return memory_manager->realloc(ptr, size);
+  }
+  else
+  {
+    memory_manager_free(memory_manager, ptr);
+
+    return memory_manager_malloc(memory_manager, size);
+  }
+}
+
+/* ---------------------------------------------------------------- */
+/* Template constructors, available for types to use.               */
+/* ---------------------------------------------------------------- */
+
+type_t template_cons_type =
+  { &type_type
+
+  , TODO
+  }
+
+type_t memory_tracker_type =
+  { &type_type
+
+  , TODO
+  }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 /* TODO */
 #ifdef TODO

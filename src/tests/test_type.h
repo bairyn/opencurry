@@ -51,4 +51,6 @@ unit_test_result_t test_type_run(unit_test_context_t *context);
 
 /* ---------------------------------------------------------------- */
 
+/* TODO: intpair_t */
+
 #endif /* ifndef TESTS_TEST_TYPE_H */
