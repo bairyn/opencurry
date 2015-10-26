@@ -47,6 +47,9 @@
 #include "base.h"
 #include "type.h"
 
+/* TODO */
+#ifdef TODO
+
 /* ---------------------------------------------------------------- */
 /* type_t                                                           */
 /* ---------------------------------------------------------------- */
@@ -735,5 +738,7 @@ size_t type_size_type_init(type_t *self)
 {
   return sizeof(type_init_t);
 }
+/* TODO */
+#endif /* TODO */
 /* TODO */
 #endif /* TODO */

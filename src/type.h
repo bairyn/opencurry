@@ -38,17 +38,23 @@
 
 #ifndef TYPE_H
 #define TYPE_H
-/* stdlib.h:
- *   - calloc
- *   - free
- *   - malloc
- *   - realloc
+/* stddef.h:
+ *   - ptrdiff_t
+ *   - size_t
  */
-#include <stdlib.h>
+#include <stddef.h>
 
 #include "base.h"
 
 /* TODO: NULL "type" to indicate initialization once referenced? */
+
+/* ---------------------------------------------------------------- */
+/* Out-of-order forward declarations.                               */
+/* ---------------------------------------------------------------- */
+
+/* TODO */
+
+typedef struct type_s type_t;
 
 /* ---------------------------------------------------------------- */
 /* tval                                                             */
@@ -157,6 +163,56 @@
 typedef void tval;
 
 /* ---------------------------------------------------------------- */
+/* Memory managers.                                                 */
+/* ---------------------------------------------------------------- */
+
+extern type_t memory_manager_type;
+typedef struct memory_manager_s memory_manager_t;
+struct memory_manager_s
+{
+  type_t *type;
+
+  void *(*malloc) (size_t  size);
+  void  (*free)   (void   *ptr);
+  void *(*calloc) (size_t  nmemb, size_t size);
+  void *(*realloc)(void   *ptr,   size_t size);
+};
+
+extern const memory_manager_t malloc_manager;
+
+/* Both the reference and individual function pointers may be NULL. */
+/*                                                                  */
+/* Behaviour in case of NULL "calloc" and "realloc" pointers will   */
+/* based on the behaviour of the "malloc" and "free" fields.        */
+
+void *memory_manager_malloc (const memory_manager_t *memory_manager, size_t  size);
+void *memory_manager_free   (const memory_manager_t *memory_manager, void   *ptr);
+void *memory_manager_calloc (const memory_manager_t *memory_manager, size_t  nmemb, size_t size);
+void *memory_manager_realloc(const memory_manager_t *memory_manager, void   *ptr,   size_t size);
+
+
+extern type_t memory_tracker_type;
+typedef struct memory_tracker_s memory_tracker_t;
+struct memory_tracker_s
+{
+  type_t *type;
+
+  memory_manager_t *memory_manager;
+
+  int      is_heap_allocated;
+  void   **dynamically_allocated_buffers;
+  size_t   dynamically_allocated_buffers_num;
+  size_t   dynamically_allocated_buffers_size;
+
+  /* If a "tval"'s "needinit" is not NULL, then procedures          */
+  /* accessing the "tval" should call this before continuing.       */
+  /*                                                                */
+  /* This exists to allow top-level declarations to be initialized  */
+  /* with a procedure.                                              */
+  void     (*needinit)(tval *self);
+};
+
+/* ---------------------------------------------------------------- */
 /* type_t                                                           */
 /* ---------------------------------------------------------------- */
 
@@ -185,7 +241,8 @@ typedef enum type_heap_info_e type_heap_info_t;
  */
 #define TYPE_VALID_TVAL        0
 #define TYPE_NOVALID_TVAL_GEN_1 1
-typedef struct type_s type_t;
+extern type_t type_type;
+/* Forward declaration: typedef struct type_s type_t; */
 struct type_s
 {
   /* Make "type_t" itself a type by setting the first field as "type_t *".  */
@@ -194,30 +251,40 @@ struct type_s
 
   /* ---------------------------------------------------------------- */
 
-  struct memory_tracker_s *memory;
+  memory_tracker_t memory;
 
   /* ---------------------------------------------------------------- */
   /* Basic struct info.                                               */
   /* ---------------------------------------------------------------- */
 
-  /* The type of "tval *" parameters.  Should return "self".          */
-  type_t     *(*id)          (type_t *self);
-
+  /* Whether values of this type are "tval"s.                         */
+  /*                                                                  */
+  /* "self":                                                          */
+  /*   Normally they are; in this case "id" should return "self".     */
+  /*                                                                  */
+  /* "NULL":                                                          */
+  /*   Sometimes, however, e.g. in the case of "type_t" for C's       */
+  /*   primitive data types, value pointers lack polymorphism with    */
+  /*   "type_t *".  In this case, "id" should return NULL.            */
+  type_t     *(*typed)   (type_t *self);
 
   /* Name of the type.  (Not necessarily unique.)                     */
-  const char *(*name)        (type_t *self);
+  const char *(*name)    (type_t *self);
 
   /* General information about the type.                              */
-  const char *(*info)        (type_t *self);
+  /*                                                                  */
+  /* Both the result of "info" and "info" itself may be NULL.         */
+  const char *(*info)    (type_t *self);
 
   /* Size of a value of this type.                                    */
-  size_t      (*size)        (type_t *self, const tval_t *val);
-
-  /* Size of any value of this type.                                  */
   /*                                                                  */
-  /* This must be NULL if values can have a variable size.            */
-  /* Otherwise, this must return the size of a value of this type.    */
-  size_t      (*uniform_size)(type_t *self);
+  /* Types can be variable-width or constant-width:                   */
+  /*                                                                  */
+  /*   Variable-width types should return "0" when "val" is NULL.     */
+  /*                                                                  */
+  /*   Constant-width types should return the size of any value when  */
+  /*   "val" is NULL.                                                 */
+  size_t      (*size)    (type_t *self, const tval *val);
 
 
   /* ---------------------------------------------------------------- */
@@ -443,7 +510,6 @@ struct type_s
    * types might want to define their own variant.
    */
 
-
   /* Initialize a value of this type.                                 */
   /*                                                                  */
   /* ---------------------------------------------------------------- */
@@ -467,6 +533,16 @@ struct type_s
   /*                                                                  */
   /* ---------------------------------------------------------------- */
   /*                                                                  */
+  /* Note: the type of "cons" is not necessarily the same as this     */
+  /* type.                                                            */
+  /*                                                                  */
+  /* Each type defines its own constructor ("cons") type, which       */
+  /* may be different.                                                */
+  /*                                                                  */
+  /* A common constructor type is "template_cons_t".                  */
+  /*                                                                  */
+  /* ---------------------------------------------------------------- */
+  /*                                                                  */
   /* Returns NULL on failure to initialize.                           */
   tval   *(*init)     (type_t *self, tval *cons);
 
@@ -485,184 +561,14 @@ struct type_s
   /* Copying.                                                         */
   /* ---------------------------------------------------------------- */
 
-  /* TODO: -1 for unbounded recursive */
-  TODO    (*dup)      (type_t *self, tval *dest, const tval *src, int rec);
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-  /*
-   * 3 Variants for copying data:
-   *
-   * These descriptions informally describe an intuition that depends on the
-   * contexts in which they are used.
-   *
-   * In particular, what constitutes a level of indirection is unspecified
-   * here, and what constitutes a level of indirection according to one type is
-   * not necessarily what constitutes a level of indirection according to
-   * another (but, particularly when that alternate type is a
-   * "type_t"-associated type, it usually is).
-   *
-   * For example, "int **" could plausible be treated as each of the following:
-   *   1) A 4-4 matrix.
-   *
-   *   2) A reference to an "int *"-represented file handle.
-   *   3) A reference to a vector represented by 4 integers.
-   *
-   *   4) A reference to a reference of an integer.
-   *
-   * Importantly, each pointer "reference" could be considered *incidental* to
-   * a structure, e.g. as part of an efficient way to link two structures, but
-   * they could also be considered to be proper "references" that conceptually
-   * add a level of indirection.
-   *
-   * Depending on what the type considers a level of indirection for a field of
-   * this type, the 3 copying variants could do different things:
-   *   1): "direct":    dest =   src;
-   *       "shallow":  *dest =  *src;
-   *       "deep":    **dest = **src;
-   *
-   *   2),
-   *   3): "direct":    dest =   src;
-   *       "shallow":  *dest =  *src;
-   *       "deep":     *dest =  *src;
-   *
-   *   4): "direct":    dest =   src;
-   *       "shallow":   dest =   src;
-   *       "deep":      dest =   src;
-   *
-   * deep:
-   *   Mutating the state of either "src" or "src"'s dependents should not
-   *   affect the state of "dest" and its referents.
-   *
-   *   TODO
-   *
-   *   Referents, e.g. file handles or pointers considered as "references", can
-   *   still be copied as such.
-   *
-   * shallow:
-   *   Mutating the fields of "src" should not affect the fields of "dest".
-   *
-   *   The most flexibility is given to implementations of "shallow" cloning.
-   *
-   *   TODO
-   *
-   * direct:
-   *   All references and values should be TODO
-   * If "src" is at first independent from "dest"
-   */
-  void                (*deep_dup)        (type_t *self, tval *dest,                 const tval *src);
-  void                (*shallow_dup)     (type_t *self, tval *dest,                 const tval *src);
-  void                (*direct_dup)      (type_t *self, tval *dest,                 const tval *src);
-
-  tval               *(*new_deep_copy)   (type_t *self, const tval *src);
-  tval               *(*new_shallow_copy)(type_t *self, const tval *src);
-  tval               *(*new_direct_copy) (type_t *self, const tval *src);
-
-
-  const char        **(*name)            (type_t *self);
-  const char        **(*info)            (type_t *self);
-  size_t              (*size)            (type_t *self);
-
-  /*
-   * Whether values of this type are necessarily valid "tval"s.
-   *
-   * This should be "false" if the described type doesn't always contain
-   * "type_t *" in the first field.
-   */
-  int                 (*valid_tval)      (type_t *self);
-
-  void               *(*user_buf)        (type_t *self);
-  size_t              (*user_buf_size)   (type_t *self);
-
-
-  unsigned char         user_static[USER_STATIC_SIZE];
-  size_t                user_static_num;
-  size_t                user_static_size;
-
-  void                 *user_buf;
-  size_t                user_buf_size;
-
-  type_heap_info_t      heap_info;
-};
-
-/* TODO */
-#ifdef TODO
-extern type_t type_type;
-
-/* ---------------------------------------------------------------- */
-/* Memory managers.                                                 */
-/* ---------------------------------------------------------------- */
-
-extern type_t memory_manager_type;
-typedef struct memory_manager_s memory_manager_t;
-struct memory_manager_s
-{
-  type_t *type;
-
-  void *(*malloc) (size_t  size);
-  void  (*free)   (void   *ptr);
-  void *(*calloc) (size_t  nmemb, size_t size);
-  void *(*realloc)(void   *ptr,   size_t size);
-};
-
-extern const memory_manager_t malloc_manager;
-
-/* Both the reference and individual function pointers may be NULL. */
-/*                                                                  */
-/* Behaviour in case of NULL "calloc" and "realloc" pointers will   */
-/* based on the behaviour of the "malloc" and "free" fields.        */
-
-void *memory_manager_malloc (const memory_manager_t *memory_manager, size_t  size);
-void *memory_manager_free   (const memory_manager_t *memory_manager, void   *ptr);
-void *memory_manager_calloc (const memory_manager_t *memory_manager, size_t  nmemb, size_t size);
-void *memory_manager_realloc(const memory_manager_t *memory_manager, void   *ptr,   size_t size);
-
-
-extern type_t memory_tracker_type;
-typedef struct memory_tracker_s memory_tracker_t;
-struct memory_tracker_s
-{
-  type_t *type;
-
-  memory_manager_t *memory_manager;
-
-  int      is_heap_allocated;
-  void   **dynamically_allocated_buffers;
-  size_t   dynamically_allocated_buffers_num;
-  size_t   dynamically_allocated_buffers_size;
+  /* Pass non-zero argument to recursively make copies of subfields.  */
+  /*                                                                  */
+  /* Some implementations support NULL "dest" pointers, indicating    */
+  /* a new one should be dynamically allocated, using management      */
+  /* associated with "src" in case of differences.                    */
+  /*                                                                  */
+  /* Returns NULL on failure.                                         */
+  tval   *(*dup)      (type_t *self, tval *dest, const tval *src, int rec);
 };
 
 /* ---------------------------------------------------------------- */
@@ -711,9 +617,18 @@ struct template_cons_s
    * How to determine which fields from "initials" are relevant, and for which
    * fields a default value should be chosen.
    *
-   * By default, all values equal to zero
+   * If this is NULL, then by default initializers are expected to choose
+   * default values for values equal to zero or NULL.
+   *
+   * If this is not NULL, then this function is called with a reference to each
+   * field to determine which should be chosen from "initials" and which should
+   * be assigned a default value.
+   *
+   * override_at(field):
+   *   0: Choose a default value for the corresponding field.
+   *   1: Choose the value from "initials" for the corresponding field.
    */
-  unsigned long long default_value;
+  int (*override_at)(ptrdiff_t field);
 
   /*
    * Optional: can be NULL.
@@ -724,146 +639,6 @@ struct template_cons_s
   char   *out_init_error_msg;
   size_t  init_error_msg_size;
 };
-
-
-   * > typedef struct intpair_cons_s intpair_cons_t;
-   * > struct intpair_cons_s
-   * > {
-   * >   type_t *type;
-   * >
-   * >   /-* Set to NULL to "malloc" a new one.             *-/
-   * >   intpair_t *val;
-   * >
-   * >   /-* Set to NULL to default to "malloc" and "free". *-/
-   * >   intpair_t (*malloc)(size_t     size);
-   * >   void      (*free)  (intpair_t *val);
-   * >
-   * >   intpair_t *initials;
-   * >   intpair_t *force_non_defaults;
-   * > };
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-typedef struct type_init_params_s type_init_params_t;
-struct type_init_params_t
-{
-  type_t *type;
-
-  /* ---------------------------------------------------------------- */
-  /* Minimum required arguments to construct a "type_t".              */
-  /* ---------------------------------------------------------------- */
-
-  /* ---------------------------------------------------------------- */
-  /* Optional arguments.                                              */
-  /* ---------------------------------------------------------------- */
-
-  int override_id;
-  int override_init_type;
-  int override_init;
-  int override_free;
-  int override_verify_init;
-  int override_new;
-  int override_deep_dup;
-  int override_shallow_dup;
-  int override_new_deep_copy;
-  int override_new_shallow_copy;
-  int override_new_direct_copy;
-  int override_name;
-  int override_info;
-  int override_size;
-  int override_valid_tval;
-  int override_user_static;
-  int override_user_static_size;
-  int override_user_buf;
-  int override_user_buf_size;
-
-  type_t             *(*id)              (type_t *self);
-  type_t             *(*init_type)       (type_t *self);
-  void                (*init)            (type_t *self, tval *val,                  const tval *initialization);
-  void                (*free)            (type_t *self, tval *val);
-  int                 (*verify_init)     (type_t *self, const tval *initialization, char *out_err_msg,          size_t err_msg_size);
-  tval               *(*new)             (type_t *self, const tval *initialization);
-  void                (*deep_dup)        (type_t *self, tval *dest,                 const tval *src);
-  void                (*shallow_dup)     (type_t *self, tval *dest,                 const tval *src);
-  void                (*direct_dup)      (type_t *self, tval *dest,                 const tval *src);
-  tval               *(*new_deep_copy)   (type_t *self, const tval *src);
-  tval               *(*new_shallow_copy)(type_t *self, const tval *src);
-  tval               *(*new_direct_copy) (type_t *self, const tval *src);
-  const char        **(*name)            (type_t *self);
-  const char        **(*info)            (type_t *self);
-  size_t              (*size)            (type_t *self);
-  int                 (*valid_tval)      (type_t *self);
-  void               *(*user_buf)        (type_t *self);
-  size_t              (*user_buf_size)   (type_t *self);
-  unsigned char         user_static[USER_STATIC_SIZE];
-  size_t                user_static_size;
-  void                 *user_buf;
-  size_t                user_buf_size;
-};
-
-extern type_t type_init_params_type;
-
-/* TODO */
-#endif /* TODO */
 
 /* ---------------------------------------------------------------- */
 
