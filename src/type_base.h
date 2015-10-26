@@ -45,13 +45,11 @@
 
 #include "base.h"
 
-/* TODO: NULL "type" to indicate initialization once referenced? */
-
 /* ---------------------------------------------------------------- */
 /* Out-of-order forward declarations.                               */
 /* ---------------------------------------------------------------- */
 
-/* TODO */
+/* Declarations for types used before their definitions. */
 
 typedef struct type_s type_t;
 
