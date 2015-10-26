@@ -57,6 +57,10 @@ typedef struct type_s type_t;
 /* tval                                                             */
 /* ---------------------------------------------------------------- */
 
+/* TODO: update documentation to reflect change from "type_t *" to "typed" for
+ * procedurally generated types! */
+typedef const type_t *(*typed_t)(void);
+
 /*
  * tval:
  *
@@ -163,95 +167,161 @@ typedef void tval;
 /* Memory managers.                                                 */
 /* ---------------------------------------------------------------- */
 
-extern type_t memory_manager_type;
+extern const typed_t memory_manager_type;
 typedef struct memory_manager_s memory_manager_t;
 struct memory_manager_s
 {
-  type_t *type;
+  typed_t type;
 
-  void *(*malloc) (size_t  size);
-  void  (*free)   (void   *ptr);
-  void *(*calloc) (size_t  nmemb, size_t size);
-  void *(*realloc)(void   *ptr,   size_t size);
+  void *(*malloc) (const memory_manager_t *self, size_t  size);
+  void  (*free)   (const memory_manager_t *self, void   *ptr);
+  void *(*calloc) (const memory_manager_t *self, size_t  nmemb, size_t size);
+  void *(*realloc)(const memory_manager_t *self, void   *ptr,   size_t size);
+
+  void   *state;
+  size_t  state_size;
 };
+
+/* A "memory_manager_t" with NULLS. */
+extern const memory_manager_t default_manager;
 
 extern const memory_manager_t malloc_manager;
 
 /* Both the reference and individual function pointers may be NULL. */
 /*                                                                  */
 /* Behaviour in case of NULL "calloc" and "realloc" pointers will   */
-/* based on the behaviour of the "malloc" and "free" fields.        */
-
+/* be based on the behaviour of the "malloc" and "free" fields.     */
+/*                                                                  */
+/* If only one of "malloc" and "free" is NULL, behaviour is         */
+/* undefined.                                                       */
 void *memory_manager_malloc (const memory_manager_t *memory_manager, size_t  size);
-void *memory_manager_free   (const memory_manager_t *memory_manager, void   *ptr);
+void  memory_manager_free   (const memory_manager_t *memory_manager, void   *ptr);
 void *memory_manager_calloc (const memory_manager_t *memory_manager, size_t  nmemb, size_t size);
 void *memory_manager_realloc(const memory_manager_t *memory_manager, void   *ptr,   size_t size);
 
 
-extern type_t memory_tracker_type;
+extern const typed_t memory_tracker_type;
 typedef struct memory_tracker_s memory_tracker_t;
 struct memory_tracker_s
 {
-  type_t *type;
+  typed_t type;
 
-  memory_manager_t *memory_manager;
+  memory_manager_t memory_manager;
 
+
+  /* Was the associated object allocated on the heap? */
   int      is_heap_allocated;
+
+  /* Array of "void *".  NULL elements are unused slots. */
+  /*                                                     */
+  /* This itself may be NULL.                            */
+  /*                                                     */
+  /* The first element must be freed last:               */
+  /*   This allows the first element to refer to this    */
+  /*   buffer itself.                                    */
   void   **dynamically_allocated_buffers;
   size_t   dynamically_allocated_buffers_num;
   size_t   dynamically_allocated_buffers_size;
-
-  /* If a "tval"'s "needinit" is not NULL, then procedures          */
-  /* accessing the "tval" should call this before continuing.       */
-  /*                                                                */
-  /* This exists to allow top-level declarations to be initialized  */
-  /* with a procedure.                                              */
-  void     (*needinit)(tval *self);
 };
+
+/* A default memory tracker appropriate for top-level declarations. */
+/* Uses "default_manager" with a NULL buffer-array pointer.         */
+/* 0 dynamically allocated buffer slots.                            */
+extern const memory_tracker_t memory_tracker_default;
+
+/* ---------------------------------------------------------------- */
+/* struct_info_t and field_info_t                                   */
+/* ---------------------------------------------------------------- */
+
+/* TODO */
+
+extern const typed_t field_info_type;
+typedef struct field_info_s field_info_t;
+struct field_info_s
+{
+  typed_t type;
+
+  ptrdiff_t  field_pos;
+  size_t     field_size;
+  type_t    *field_type;
+
+  /* Optional information. */
+
+  /* Type initializers can use this when initializing  */
+  /* a struct from a template.                         */
+  /*                                                   */
+  /* Can be NULL.                                      */
+  /*                                                   */
+  /* In the most common case, this function will check */
+  /* check whether the field in the source is 0 or     */
+  /* NULL, and if so, write a default value.           */
+  int (*initializer_check_default)(field_info_t *self, void *dest_mem, const void *src_mem);
+};
+
+/* TODO */
+
+#define STRUCT_INFO_NUM_FIELDS 1024
+extern const typed_t struct_info_type;
+typedef struct struct_info_s struct_info_t;
+struct struct_info_s
+{
+  typed_t type;
+
+  ptrdiff_t fields_pos[STRUCT_INFO_NUM_FIELDS];
+
+  struct_info_t *tail;
+
+
+  /* Optional information. */
+
+  int       has_memory_tracker;
+
+  /* Index into fields_pos. */
+  size_t    memory_tracker_field;
+};
+
+/*
+ * struct_dup:
+ *
+ * Assign each field in "dest" the value of the field in "src" according to
+ * "struct_info".
+ *
+ * Behaviour for default values:
+ *   If "struct_info" describes how to check whether a field in "src"
+ *   indicates a default value should be chosen, and if so, what the default
+ *   value is, it will be used.
+ *
+ *   Normally "struct_info" does this by supplying a default value for "src"
+ *   field values equal to "0" or NULL.
+ */
+void struct_dup(const struct_info_t *struct_info, tval *dest, const tval *src);
 
 /* ---------------------------------------------------------------- */
 /* type_t                                                           */
 /* ---------------------------------------------------------------- */
 
-/* A structure that describes a "type", a structure with associated procedures
- * for initialization and such.
- *
- * A "type_t" describes a struct.  Such structs should have the first field set
- * to "type_t *".
- */
-#define USER_STATIC_SIZE 256
-enum type_heap_info_e
-{
-  type_heap_none    = 0,
-
-  type_heap_self    = (0 << 1) | (1 << 0),
-  type_heap_dynamic = (1 << 1) | (0 << 0),
-
-  type_heap_dynamic_self
-                    = (1 << 1) | (1 << 1)
-};
-typedef enum type_heap_info_e type_heap_info_t;
-
 /*
- * Information about a type, with methods to construct and allocate memory to
- * new values.
+ * type_t:
+ *
+ * A "type_t" describes a kind for values, possibly with information about its
+ * name, that about its size, procedures to initialize values and allocate
+ * memory for values of this type, and optionally, if the type is a struct,
+ * information about the struct's fields.
  */
-#define TYPE_VALID_TVAL        0
-#define TYPE_NOVALID_TVAL_GEN_1 1
-extern type_t type_type;
+extern const typed_t type_type;
 /* Forward declaration: typedef struct type_s type_t; */
 struct type_s
 {
   /* Make "type_t" itself a type by setting the first field as "type_t *".  */
   /* All initialized "type_t" values should have "type" set to "type_type". */
-  type_t *type;
+  typed_t type;
 
   /* ---------------------------------------------------------------- */
 
   memory_tracker_t memory;
 
   /* ---------------------------------------------------------------- */
-  /* Basic struct info.                                               */
+  /* Basic type info.                                                 */
   /* ---------------------------------------------------------------- */
 
   /* Whether values of this type are "tval"s.                         */
@@ -263,15 +333,15 @@ struct type_s
   /*   Sometimes, however, e.g. in the case of "type_t" for C's       */
   /*   primitive data types, value pointers lack polymorphism with    */
   /*   "type_t *".  In this case, "id" should return NULL.            */
-  type_t     *(*typed)   (type_t *self);
+  type_t              *(*typed)    (const type_t *self);
 
   /* Name of the type.  (Not necessarily unique.)                     */
-  const char *(*name)    (type_t *self);
+  const char          *(*name)     (const type_t *self);
 
   /* General information about the type.                              */
   /*                                                                  */
   /* Both the result of "info" and "info" itself may be NULL.         */
-  const char *(*info)    (type_t *self);
+  const char          *(*info)     (const type_t *self);
 
   /* Size of a value of this type.                                    */
   /*                                                                  */
@@ -281,7 +351,11 @@ struct type_s
   /*                                                                  */
   /*   Constant-width types should return the size of any value when  */
   /*   "val" is NULL.                                                 */
-  size_t      (*size)    (type_t *self, const tval *val);
+  size_t               (*size)     (const type_t *self, const tval *val);
+
+  /* If this type describes a struct, return information about its    */
+  /* fields; otherwise return NULL.                                   */
+  const struct_info_t *(*is_struct)(const type_t *self);
 
 
   /* ---------------------------------------------------------------- */
@@ -507,6 +581,11 @@ struct type_s
    * types might want to define their own variant.
    */
 
+  /* The type of the "cons" constructor parameter for "init".         */
+  /*                                                                  */
+  /* "init" must be called with a "cons" value of this type.          */
+  typed_t              (*cons_type)(const type_t *self);
+
   /* Initialize a value of this type.                                 */
   /*                                                                  */
   /* ---------------------------------------------------------------- */
@@ -541,18 +620,13 @@ struct type_s
   /* ---------------------------------------------------------------- */
   /*                                                                  */
   /* Returns NULL on failure to initialize.                           */
-  tval   *(*init)     (type_t *self, tval *cons);
-
-  /* The type of the "cons" constructor parameter for "init".         */
-  /*                                                                  */
-  /* "init" must be called with a "cons" value of this type.          */
-  type_t *(*cons_type)(type_t *self);
+  tval                *(*init)     (const type_t *self, tval *cons);
 
   /* Deinitialization a value, freeing resources allocated by "init". */
   /*                                                                  */
   /* Support for idempotence (multiple calls to "free") is            */
   /* recommended but not required.                                    */
-  void    (*free)     (type_t *self, tval *val);
+  void                 (*free)     (const type_t *self, tval *val);
 
   /* ---------------------------------------------------------------- */
   /* Copying.                                                         */
@@ -565,14 +639,21 @@ struct type_s
   /* associated with "src" in case of differences.                    */
   /*                                                                  */
   /* Returns NULL on failure.                                         */
-  tval   *(*dup)      (type_t *self, tval *dest, const tval *src, int rec);
+  tval                *(*dup)      (const type_t *self, tval *dest, const tval *src, int rec);
+
+  /* ---------------------------------------------------------------- */
+
+  const char *parity;
 };
+
+type_t *type_typed(const type_t *self);
+type_t *type_untyped(const type_t *self);
 
 /* ---------------------------------------------------------------- */
 /* Template constructors, available for types to use.               */
 /* ---------------------------------------------------------------- */
 
-extern type_t template_cons_type;
+extern const typed_t template_cons_type;
 typedef struct template_cons_s template_cons_t;
 struct template_cons_s
 {
@@ -583,7 +664,7 @@ struct template_cons_s
    *
    * Set to NULL to tell the initializer to "malloc" a new one.
    */
-  tval *val;
+  tval *dest;
 
   /*
    * Set NULL to tell the initializer to select
@@ -611,23 +692,6 @@ struct template_cons_s
   const tval *initials;
 
   /*
-   * How to determine which fields from "initials" are relevant, and for which
-   * fields a default value should be chosen.
-   *
-   * If this is NULL, then by default initializers are expected to choose
-   * default values for values equal to zero or NULL.
-   *
-   * If this is not NULL, then this function is called with a reference to each
-   * field to determine which should be chosen from "initials" and which should
-   * be assigned a default value.
-   *
-   * override_at(field):
-   *   0: Choose a default value for the corresponding field.
-   *   1: Choose the value from "initials" for the corresponding field.
-   */
-  int (*override_at)(ptrdiff_t field);
-
-  /*
    * Optional: can be NULL.
    *
    * This allows initializers to write informative error messages in case
@@ -636,6 +700,22 @@ struct template_cons_s
   char   *out_init_error_msg;
   size_t  init_error_msg_size;
 };
+
+/* TODO. */
+/* This can be used by initializers. */
+/* This does not necessarily perform full initialization for a given type. */
+/* The type's "free" procedure can be used for this. */
+tval *template_cons_dup_struct(const template_cons_t *cons, const tval *default_initials, const struct_info_t *struct_info);
+
+/* Free memory allocated by "template_cons_dup_struct" and memory referred to
+ * by "memory_tracker".
+ *
+ * This does not necessarily perform full cleanup for a given type.
+ * The type's "free" procedure can be used for this.
+ *
+ * "template_cons_" can be used to implement "free".
+ */
+void  template_cons_free_struct(tval *val, const struct_info_t *struct_info);
 
 /* ---------------------------------------------------------------- */
 
