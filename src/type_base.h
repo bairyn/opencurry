@@ -1,5 +1,5 @@
 /*
- * opencurry: type.h
+ * opencurry: type_base.h
  *
  * Copyright (c) 2015, Byron James Johnson
  * All rights reserved.
@@ -31,13 +31,12 @@
  */
 
 /*
- * type.h
- * ------
+ * type_base.h
+ * -----------
  */
 
-
-#ifndef TYPE_H
-#define TYPE_H
+#ifndef TYPE_BASE_H
+#define TYPE_BASE_H
 /* stddef.h:
  *   - ptrdiff_t
  *   - size_t
@@ -642,4 +641,4 @@ struct template_cons_s
 
 /* ---------------------------------------------------------------- */
 
-#endif /* ifndef TYPE_H */
+#endif /* ifndef TYPE_BASE_H */

@@ -45,7 +45,7 @@
 #include "test_cli.h"
 #include "test_util.h"
 #include "test_mempool.h"
-#include "test_type.h"
+#include "test_type_base.h"
 #include "test_bnf.h"
 #include "test_lex.h"
 #include "test_unicode.h"
@@ -78,7 +78,7 @@ unit_test_t *all_tests[] =
   , &cli_test
   , &util_test
   , &mempool_test
-  , &type_test
+  , &type_base_test
   , &bnf_test
   , &lex_test
   , &unicode_test

@@ -1,5 +1,5 @@
 /*
- * opencurry: tests/test_type.c
+ * opencurry: tests/test_type_base.c
  *
  * Copyright (c) 2015, Byron James Johnson
  * All rights reserved.
@@ -32,32 +32,32 @@
 
 #include "../base.h"
 #include "testing.h"
-#include "test_type.h"
+#include "test_type_base.h"
 
-#include "../type.h"
+#include "../type_base.h"
 
-int test_type_cli(int argc, char **argv)
+int test_type_base_cli(int argc, char **argv)
 {
-  return run_test_suite(type_test);
+  return run_test_suite(type_base_test);
 }
 
 /* ---------------------------------------------------------------- */
 
-/* type tests. */
-unit_test_t type_test =
-  {  test_type_run
-  , "test_type"
-  , "type tests."
+/* type_base tests. */
+unit_test_t type_base_test =
+  {  test_type_base_run
+  , "test_type_base"
+  , "type_base tests."
   };
 
-/* Array of type tests. */
-unit_test_t *type_tests[] =
+/* Array of type_base tests. */
+unit_test_t *type_base_tests[] =
   { NULL
   };
 
-unit_test_result_t test_type_run(unit_test_context_t *context)
+unit_test_result_t test_type_base_run(unit_test_context_t *context)
 {
-  return run_tests(context, type_tests);
+  return run_tests(context, type_base_tests);
 }
 
 /* ---------------------------------------------------------------- */

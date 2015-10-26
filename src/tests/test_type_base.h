@@ -1,5 +1,5 @@
 /*
- * opencurry: tests/test_type.h
+ * opencurry: tests/test_type_base.h
  *
  * Copyright (c) 2015, Byron James Johnson
  * All rights reserved.
@@ -31,26 +31,26 @@
  */
 
 /*
- * tests/test_type.h
+ * tests/test_type_base.h
  * ------
  */
 
-#ifndef TESTS_TEST_TYPE_H
-#define TESTS_TEST_TYPE_H
+#ifndef TESTS_TEST_TYPE_BASE_H
+#define TESTS_TEST_TYPE_BASE_H
 #include "../base.h"
 #include "testing.h"
 
 #include "../util.h"
 
-int test_type_cli(int argc, char **argv);
+int test_type_base_cli(int argc, char **argv);
 
-extern unit_test_t type_test;
-extern unit_test_t *type_tests[];
+extern unit_test_t type_base_test;
+extern unit_test_t *type_base_tests[];
 
-unit_test_result_t test_type_run(unit_test_context_t *context);
+unit_test_result_t test_type_base_run(unit_test_context_t *context);
 
 /* ---------------------------------------------------------------- */
 
 /* TODO: intpair_t */
 
-#endif /* ifndef TESTS_TEST_TYPE_H */
+#endif /* ifndef TESTS_TEST_TYPE_BASE_H */

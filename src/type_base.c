@@ -1,5 +1,5 @@
 /*
- * opencurry: type.c
+ * opencurry: type_base.c
  *
  * Copyright (c) 2015, Byron James Johnson
  * All rights reserved.
@@ -45,7 +45,7 @@
 #include <stdlib.h>
 
 #include "base.h"
-#include "type.h"
+#include "type_base.h"
 
 /* TODO */
 #ifdef TODO
