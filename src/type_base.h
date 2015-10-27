@@ -245,7 +245,7 @@ struct field_info_s
 {
   typed_t type;
 
-  size_t        field_pos;
+  ptrdiff_t     field_pos;
   size_t        field_size;
   const type_t *field_type;
 
@@ -666,8 +666,6 @@ struct type_s
   tval                *(*dup)      (const type_t *self, tval *dest, const tval *src, int rec);
 
   /* ---------------------------------------------------------------- */
-
-  void *user;
 
   const char *parity;
 };

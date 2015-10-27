@@ -89,8 +89,6 @@ const type_t memory_manager_type_def =
   , /* free      */ memory_manager_type_free
   , /* dup       */ memory_manager_type_dup
 
-  , /* user      */ NULL
-
   , /* parity    */ ""
   };
 
@@ -111,95 +109,120 @@ static size_t               memory_manager_type_size     (const type_t *self, co
 
 static const struct_info_t *memory_manager_type_is_struct(const type_t *self)
   {
-    static const memory_manager_t empty;
+    static const struct_info_t *struct_info = NULL;
+    if (!struct_info)
+    {
+      field_info_t *field_info;
+      size_t fields_len;
 
-    static const struct_info_t struct_info =
-    { struct_info_type
+      const memory_manager_t empty;
 
-    , {
-      /* typed_t type */
-        { field_info_type
-        , offsetof(memory_manager_t, type)
-        , sizeof(empty.type)
-        , /* TODO */ NULL
+      static struct_info_t struct_info_def;
+      struct_info = &struct_info_def;
 
-        , 0
-        , NULL
-        }
+      /* ---------------------------------------------------------------- */
 
-      /* void *(*malloc) (const memory_manager_t *self, size_t  size); */
-      , { field_info_type
-        , offsetof(memory_manager_t, malloc)
-        , sizeof(empty.malloc)
-        , /* TODO */ NULL
+      struct_info_def.type = struct_info_type;
 
-        , 0
-        , NULL
-        }
+      fields_len = 0;
+      {
+        /* type_t type */
+        field_info = &struct_info_def.fields[fields_len++];
 
-      /* void  (*free)   (const memory_manager_t *self, void   *ptr); */
-      , { field_info_type
-        , offsetof(memory_manager_t, free)
-        , sizeof(empty.free)
-        , /* TODO */ NULL
+        field_info->type       = field_info_type;
 
-        , 0
-        , NULL
-        }
+        field_info->field_pos  = (const unsigned char *) &empty.type - (const unsigned char *) &empty;
+        field_info->field_size = sizeof(empty.type);
+        field_info->field_type = typed_type();
 
-      /* void *(*calloc) (const memory_manager_t *self, size_t  nmemb, size_t size); */
-      , { field_info_type
-        , offsetof(memory_manager_t, calloc)
-        , sizeof(empty.calloc)
-        , /* TODO */ NULL
+        field_info->is_recurse = 0;
+        field_info->initializer_check_default = NULL;
 
-        , 0
-        , NULL
-        }
+        /* void *(*malloc) (const memory_manager_t *self, size_t  size); */
+        field_info = &struct_info_def.fields[fields_len++];
 
-      /* void *(*realloc)(const memory_manager_t *self, void   *ptr,   size_t size); */
-      , { field_info_type
-        , offsetof(memory_manager_t, realloc)
-        , sizeof(empty.realloc)
-        , /* TODO */ NULL
+        field_info->type       = field_info_type;
 
-        , 0
-        , NULL
-        }
+        field_info->field_pos  = (const unsigned char *) &empty.malloc - (const unsigned char *) &empty;
+        field_info->field_size = sizeof(empty.malloc);
+        field_info->field_type = funp_type();
 
-      /* void   *state; */
-      , { field_info_type
-        , offsetof(memory_manager_t, state)
-        , sizeof(empty.state)
-        , /* TODO */ NULL
+        field_info->is_recurse = 0;
+        field_info->initializer_check_default = NULL;
 
-        , 0
-        , NULL
-        }
+        /* void  (*free)   (const memory_manager_t *self, void   *ptr); */
+        field_info = &struct_info_def.fields[fields_len++];
 
-      /* size_t  state_size; */
-      , { field_info_type
-        , offsetof(memory_manager_t, state_size)
-        , sizeof(empty.state_size)
-        , /* TODO */ NULL
+        field_info->type       = field_info_type;
 
-        , 0
-        , NULL
-        }
+        field_info->field_pos  = (const unsigned char *) &empty.free - (const unsigned char *) &empty;
+        field_info->field_size = sizeof(empty.free);
+        field_info->field_type = funp_type();
 
-      /* terminating_field_info: end of fields. */
-      , { field_info_type, (size_t) (-1) }
+        field_info->is_recurse = 0;
+        field_info->initializer_check_default = NULL;
+
+        /* void *(*calloc) (const memory_manager_t *self, size_t  nmemb, size_t size); */
+        field_info = &struct_info_def.fields[fields_len++];
+
+        field_info->type       = field_info_type;
+
+        field_info->field_pos  = (const unsigned char *) &empty.calloc - (const unsigned char *) &empty;
+        field_info->field_size = sizeof(empty.calloc);
+        field_info->field_type = funp_type();
+
+        field_info->is_recurse = 0;
+        field_info->initializer_check_default = NULL;
+
+        /* void *(*realloc)(const memory_manager_t *self, void   *ptr,   size_t size); */
+        field_info = &struct_info_def.fields[fields_len++];
+
+        field_info->type       = field_info_type;
+
+        field_info->field_pos  = (const unsigned char *) &empty.realloc - (const unsigned char *) &empty;
+        field_info->field_size = sizeof(empty.realloc);
+        field_info->field_type = funp_type();
+
+        field_info->is_recurse = 0;
+        field_info->initializer_check_default = NULL;
+
+        /* void   *state; */
+        field_info = &struct_info_def.fields[fields_len++];
+
+        field_info->type       = field_info_type;
+
+        field_info->field_pos  = (const unsigned char *) &empty.state - (const unsigned char *) &empty;
+        field_info->field_size = sizeof(empty.state);
+        field_info->field_type = objp_type();
+
+        field_info->is_recurse = 0;
+        field_info->initializer_check_default = NULL;
+
+        /* size_t  state_size; */
+        field_info = &struct_info_def.fields[fields_len++];
+
+        field_info->type       = field_info_type;
+
+        field_info->field_pos  = (const unsigned char *) &empty.state_size - (const unsigned char *) &empty;
+        field_info->field_size = sizeof(empty.state_size);
+        field_info->field_type = size_type();
+
+        field_info->is_recurse = 0;
+        field_info->initializer_check_default = NULL;
+
+        /* terminating_field_info: end of fields. */
+        struct_info_def.fields[fields_len] = terminating_field_info;
       }
-    , 7
 
-    , NULL
+      struct_info_def.fields_len           = fields_len;
+      struct_info_def.tail                 = NULL;
 
-    /* No memory tracker field. */
-    , 0
-    , 0
-    };
+      /* No memory tracker field. */
+      struct_info_def.has_memory_tracker   = 0;
+      struct_info_def.memory_tracker_field = 0;
+    }
 
-    return &struct_info;
+    return struct_info;
   }
 
 static typed_t              memory_manager_type_cons_type(const type_t *self)
@@ -363,8 +386,6 @@ const type_t memory_tracker_type_def =
   , /* free      */ memory_tracker_type_free
   , /* dup       */ memory_tracker_type_dup
 
-  , /* user      */ NULL
-
   , /* parity    */ ""
   };
 
@@ -384,87 +405,7 @@ static size_t               memory_tracker_type_size     (const type_t *self, co
   { return sizeof(memory_tracker_t); }
 
 static const struct_info_t *memory_tracker_type_is_struct(const type_t *self)
-  {
-    static const memory_tracker_t empty;
-
-    static const struct_info_t struct_info =
-    { struct_info_type
-
-    , {
-      /* typed_t type */
-        { field_info_type
-        , offsetof(memory_tracker_t, type)
-        , sizeof(empty.type)
-        , /* TODO */ NULL
-
-        , 0
-        , NULL
-        }
-
-      /* memory_manager_t memory_manager; */
-      , { field_info_type
-        , offsetof(memory_tracker_t, memory_manager)
-        , sizeof(empty.memory_manager)
-        , /* TODO */ NULL
-
-        , 0
-        , NULL
-        }
-
-      /* int      is_heap_allocated; */
-      , { field_info_type
-        , offsetof(memory_tracker_t, is_heap_allocated)
-        , sizeof(empty.is_heap_allocated)
-        , /* TODO */ NULL
-
-        , 0
-        , NULL
-        }
-
-      /* void   **dynamically_allocated_buffers; */
-      , { field_info_type
-        , offsetof(memory_tracker_t, dynamically_allocated_buffers)
-        , sizeof(empty.dynamically_allocated_buffers)
-        , /* TODO */ NULL
-
-        , 0
-        , NULL
-        }
-
-      /* size_t   dynamically_allocated_buffers_num; */
-      , { field_info_type
-        , offsetof(memory_tracker_t, dynamically_allocated_buffers_num)
-        , sizeof(empty.dynamically_allocated_buffers_num)
-        , /* TODO */ NULL
-
-        , 0
-        , NULL
-        }
-
-      /* size_t   dynamically_allocated_buffers_size; */
-      , { field_info_type
-        , offsetof(memory_tracker_t, dynamically_allocated_buffers_size)
-        , sizeof(empty.dynamically_allocated_buffers_size)
-        , /* TODO */ NULL
-
-        , 0
-        , NULL
-        }
-
-      /* terminating_field_info: end of fields. */
-      , { field_info_type, (size_t) (-1) }
-      }
-    , 6
-
-    , NULL
-
-    /* No memory tracker field. */
-    , 0
-    , 0
-    };
-
-    return &struct_info;
-  }
+  TODO
 
 static typed_t              memory_tracker_type_cons_type(const type_t *self)
   { return template_cons_type; }
@@ -552,8 +493,6 @@ const type_t field_info_type_def =
   , /* free      */ field_info_type_free
   , /* dup       */ field_info_type_dup
 
-  , /* user      */ NULL
-
   , /* parity    */ ""
   };
 
@@ -573,87 +512,7 @@ static size_t               field_info_type_size     (const type_t *self, const 
   { return sizeof(memory_tracker_t); }
 
 static const struct_info_t *field_info_type_is_struct(const type_t *self)
-  {
-    static const field_info_t empty;
-
-    static const struct_info_t struct_info =
-    { struct_info_type
-
-    , {
-      /* typed_t type */
-        { field_info_type
-        , offsetof(field_info_t, type)
-        , sizeof(empty.type)
-        , /* TODO */ NULL
-
-        , 0
-        , NULL
-        }
-
-      /* size_t        field_pos; */
-      , { field_info_type
-        , offsetof(field_info_t, field_pos)
-        , sizeof(empty.field_pos)
-        , /* TODO */ NULL
-
-        , 0
-        , NULL
-        }
-
-      /* size_t        field_size; */
-      , { field_info_type
-        , offsetof(field_info_t, field_size)
-        , sizeof(empty.field_size)
-        , /* TODO */ NULL
-
-        , 0
-        , NULL
-        }
-
-      /* const type_t *field_type; */
-      , { field_info_type
-        , offsetof(field_info_t, field_type)
-        , sizeof(empty.field_type)
-        , /* TODO */ NULL
-
-        , 0
-        , NULL
-        }
-
-      /* int           is_recurse; */
-      , { field_info_type
-        , offsetof(field_info_t, is_recurse)
-        , sizeof(empty.is_recurse)
-        , /* TODO */ NULL
-
-        , 0
-        , NULL
-        }
-
-      /* int (*initializer_check_default)(field_info_t *self, void *dest_mem, const void *src_mem); */
-      , { field_info_type
-        , offsetof(field_info_t, initializer_check_default)
-        , sizeof(empty.initializer_check_default)
-        , /* TODO */ NULL
-
-        , 0
-        , NULL
-        }
-
-      /* terminating_field_info: end of fields. */
-      , { field_info_type, (size_t) (-1) }
-      }
-    , 6
-
-    , NULL
-
-    /* No memory tracker field. */
-    , 0
-    , 0
-    };
-
-    return &struct_info;
-  }
+  TODO
 
 static typed_t              field_info_type_cons_type(const type_t *self)
   { return template_cons_type; }
@@ -728,8 +587,6 @@ const type_t struct_info_type_def =
   , /* free      */ struct_info_type_free
   , /* dup       */ struct_info_type_dup
 
-  , /* user      */ NULL
-
   , /* parity    */ ""
   };
 
@@ -749,87 +606,7 @@ static size_t               struct_info_type_size     (const type_t *self, const
   { return sizeof(memory_tracker_t); }
 
 static const struct_info_t *struct_info_type_is_struct(const type_t *self)
-  {
-    static const struct_info_t empty;
-
-    static const struct_info_t struct_info =
-    { struct_info_type
-
-    , {
-      /* typed_t type */
-        { struct_info_type
-        , offsetof(struct_info_t, type)
-        , sizeof(empty.type)
-        , /* TODO */ NULL
-
-        , 0
-        , NULL
-        }
-
-      /* field_info_t fields[STRUCT_INFO_NUM_FIELDS]; */
-      , { struct_info_type
-        , offsetof(struct_info_t, fields)
-        , sizeof(empty.fields)
-        , /* TODO */ NULL
-
-        , 0
-        , NULL
-        }
-
-      /* size_t       fields_len; */
-      , { struct_info_type
-        , offsetof(struct_info_t, fields_len)
-        , sizeof(empty.fields_len)
-        , /* TODO */ NULL
-
-        , 0
-        , NULL
-        }
-
-      /* struct_info_t *tail; */
-      , { struct_info_type
-        , offsetof(struct_info_t, tail)
-        , sizeof(empty.tail)
-        , /* TODO */ NULL
-
-        , 0
-        , NULL
-        }
-
-      /* int       has_memory_tracker; */
-      , { struct_info_type
-        , offsetof(struct_info_t, has_memory_tracker)
-        , sizeof(empty.has_memory_tracker)
-        , /* TODO */ NULL
-
-        , 0
-        , NULL
-        }
-
-      /* size_t    memory_tracker_field; */
-      , { struct_info_type
-        , offsetof(struct_info_t, memory_tracker_field)
-        , sizeof(empty.memory_tracker_field)
-        , /* TODO */ NULL
-
-        , 0
-        , NULL
-        }
-
-      /* terminating_field_info: end of fields. */
-      , { field_info_type, (size_t) (-1) }
-      }
-    , 6
-
-    , NULL
-
-    /* No memory tracker field. */
-    , 0
-    , 0
-    };
-
-    return &struct_info;
-  }
+  TODO
 
 static typed_t              struct_info_type_cons_type(const type_t *self)
   { return template_cons_type; }
@@ -918,8 +695,6 @@ const type_t type_type_def =
   , /* free      */ type_type_free
   , /* dup       */ type_type_dup
 
-  , /* user      */ NULL
-
   , /* parity    */ ""
   };
 
@@ -938,157 +713,7 @@ static size_t               type_type_size     (const type_t *self, const tval *
   { return sizeof(memory_tracker_t); }
 
 static const struct_info_t *type_type_is_struct(const type_t *self)
-  {
-    static const type_t empty;
-
-    static const struct_info_t struct_info =
-    { struct_info_type
-
-    , {
-      /* typed_t type */
-        { type_type
-        , offsetof(type_t, type)
-        , sizeof(empty.type)
-        , /* TODO */ NULL
-
-        , 0
-        , NULL
-        }
-
-      /* memory_tracker_t memory; */
-      , { type_type
-        , offsetof(type_t, memory)
-        , sizeof(empty.memory)
-        , /* TODO */ NULL
-
-        , 0
-        , NULL
-        }
-
-      /* const type_t        *(*typed)    (const type_t *self); */
-      , { type_type
-        , offsetof(type_t, typed)
-        , sizeof(empty.typed)
-        , /* TODO */ NULL
-
-        , 0
-        , NULL
-        }
-
-      /* const char          *(*name)     (const type_t *self); */
-      , { type_type
-        , offsetof(type_t, name)
-        , sizeof(empty.name)
-        , /* TODO */ NULL
-
-        , 0
-        , NULL
-        }
-
-      /* const char          *(*info)     (const type_t *self); */
-      , { type_type
-        , offsetof(type_t, info)
-        , sizeof(empty.info)
-        , /* TODO */ NULL
-
-        , 0
-        , NULL
-        }
-
-      /* size_t               (*size)     (const type_t *self, const tval *val); */
-      , { type_type
-        , offsetof(type_t, size)
-        , sizeof(empty.size)
-        , /* TODO */ NULL
-
-        , 0
-        , NULL
-        }
-
-      /* const struct_info_t *(*is_struct)(const type_t *self); */
-      , { type_type
-        , offsetof(type_t, is_struct)
-        , sizeof(empty.is_struct)
-        , /* TODO */ NULL
-
-        , 0
-        , NULL
-        }
-
-      /* typed_t              (*cons_type)(const type_t *self); */
-      , { type_type
-        , offsetof(type_t, cons_type)
-        , sizeof(empty.cons_type)
-        , /* TODO */ NULL
-
-        , 0
-        , NULL
-        }
-
-      /* tval                *(*init)     (const type_t *self, tval *cons); */
-      , { type_type
-        , offsetof(type_t, init)
-        , sizeof(empty.init)
-        , /* TODO */ NULL
-
-        , 0
-        , NULL
-        }
-
-      /* void                 (*free)     (const type_t *self, tval *val); */
-      , { type_type
-        , offsetof(type_t, free)
-        , sizeof(empty.free)
-        , /* TODO */ NULL
-
-        , 0
-        , NULL
-        }
-
-      /* tval                *(*dup)      (const type_t *self, tval *dest, const tval *src, int rec); */
-      , { type_type
-        , offsetof(type_t, dup)
-        , sizeof(empty.dup)
-        , /* TODO */ NULL
-
-        , 0
-        , NULL
-        }
-
-      /* void *user; */
-      , { type_type
-        , offsetof(type_t, user)
-        , sizeof(empty.user)
-        , /* TODO */ NULL
-
-        , 0
-        , NULL
-        }
-
-      /* const char *parity; */
-      , { type_type
-        , offsetof(type_t, parity)
-        , sizeof(empty.parity)
-        , /* TODO */ NULL
-
-        , 0
-        , NULL
-        }
-
-      /* terminating_field_info: end of fields. */
-      , { field_info_type, (size_t) (-1) }
-      }
-    , 13
-
-    , NULL
-
-    /* No memory tracker field. */
-    , 1
-    , 1
-    };
-
-    return &struct_info;
-  }
+  TODO
 
 static typed_t              type_type_cons_type(const type_t *self)
   { return template_cons_type; }
@@ -1149,8 +774,6 @@ const type_t default_type =
   , /* init      */ NULL
   , /* free      */ default_type_free
   , /* dup       */ default_type_dup
-
-  , /* user      */ NULL
 
   , /* parity    */ ""
   };
