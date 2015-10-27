@@ -120,6 +120,7 @@ static const struct_info_t *memory_manager_type_is_struct(const type_t *self)
         , sizeof(empty.type)
         , /* TODO */ NULL
 
+        , 0
         , NULL
         }
 
@@ -129,6 +130,7 @@ static const struct_info_t *memory_manager_type_is_struct(const type_t *self)
         , sizeof(empty.malloc)
         , /* TODO */ NULL
 
+        , 0
         , NULL
         }
 
@@ -138,6 +140,7 @@ static const struct_info_t *memory_manager_type_is_struct(const type_t *self)
         , sizeof(empty.free)
         , /* TODO */ NULL
 
+        , 0
         , NULL
         }
 
@@ -147,6 +150,7 @@ static const struct_info_t *memory_manager_type_is_struct(const type_t *self)
         , sizeof(empty.calloc)
         , /* TODO */ NULL
 
+        , 0
         , NULL
         }
 
@@ -156,6 +160,7 @@ static const struct_info_t *memory_manager_type_is_struct(const type_t *self)
         , sizeof(empty.realloc)
         , /* TODO */ NULL
 
+        , 0
         , NULL
         }
 
@@ -165,6 +170,7 @@ static const struct_info_t *memory_manager_type_is_struct(const type_t *self)
         , sizeof(empty.state)
         , /* TODO */ NULL
 
+        , 0
         , NULL
         }
 
@@ -174,6 +180,7 @@ static const struct_info_t *memory_manager_type_is_struct(const type_t *self)
         , sizeof(empty.state_size)
         , /* TODO */ NULL
 
+        , 0
         , NULL
         }
       }
@@ -214,15 +221,7 @@ static void                 memory_manager_type_free     (const type_t *self, tv
 
 static tval                *memory_manager_type_dup      (const type_t *self, tval *dest, const tval *src, int rec)
   {
-    struct_dup(self->is_struct(self), dest, src);
-
-    if (rec)
-    {
-      if (rec < 0)
-        ++rec;
-
-      /* Recursively dup select fields. */
-    }
+    struct_dup(self->is_struct(self), dest, src, rec);
 
     return dest;
   }
@@ -325,6 +324,165 @@ void *memory_manager_realloc(const memory_manager_t *memory_manager, void *ptr, 
     return memory_manager_malloc(memory_manager, size);
   }
 }
+
+/* ---------------------------------------------------------------- */
+
+/* memory_tracker type. */
+
+static const type_t        *memory_tracker_type_typed    (const type_t *self);
+static const char          *memory_tracker_type_name     (const type_t *self);
+static const char          *memory_tracker_type_info     (const type_t *self);
+static size_t               memory_tracker_type_size     (const type_t *self, const tval *val);
+static const struct_info_t *memory_tracker_type_is_struct(const type_t *self);
+static typed_t              memory_tracker_type_cons_type(const type_t *self);
+static tval                *memory_tracker_type_init     (const type_t *self, tval *cons);
+static void                 memory_tracker_type_free     (const type_t *self, tval *val);
+static tval                *memory_tracker_type_dup      (const type_t *self, tval *dest, const tval *src, int rec);
+
+const type_t memory_tracker_type_def =
+  { type_type
+
+    /* memory_tracker_default */
+  , /* memory    */ { memory_tracker_type, { memory_manager_type } }
+
+  , /* typed     */ memory_tracker_type_typed
+
+  , /* name      */ memory_tracker_type_name
+  , /* info      */ memory_tracker_type_info
+  , /* size      */ memory_tracker_type_size
+  , /* is_struct */ memory_tracker_type_is_struct
+
+  , /* cons_type */ memory_tracker_type_cons_type
+  , /* init      */ memory_tracker_type_init
+  , /* free      */ memory_tracker_type_free
+  , /* dup       */ memory_tracker_type_dup
+
+  , /* parity    */ ""
+  };
+
+const type_t *memory_tracker_type(void)
+  { return &memory_tracker_type_def; }
+
+static const type_t        *memory_tracker_type_typed    (const type_t *self)
+  { return type_typed(self); }
+static const char          *memory_tracker_type_name     (const type_t *self)
+  { return "memory_tracker"; }
+
+static const char          *memory_tracker_type_info     (const type_t *self)
+  { return "typedef struct memory_tracker_s memory_tracker_t"; }
+
+static size_t               memory_tracker_type_size     (const type_t *self, const tval *val)
+  { return sizeof(memory_tracker_t); }
+
+static const struct_info_t *memory_tracker_type_is_struct(const type_t *self)
+  {
+    static const memory_tracker_t empty;
+
+    static const struct_info_t struct_info =
+    { struct_info_type
+
+    , {
+      /* typed_t type */
+        { field_info_type
+        , offsetof(memory_tracker_t, type)
+        , sizeof(empty.type)
+        , /* TODO */ NULL
+
+        , 0
+        , NULL
+        }
+
+      /* memory_manager_t memory_manager; */
+      , { field_info_type
+        , offsetof(memory_tracker_t, memory_manager)
+        , sizeof(empty.memory_manager)
+        , /* TODO */ NULL
+
+        , 0
+        , NULL
+        }
+
+      /* int      is_heap_allocated; */
+      , { field_info_type
+        , offsetof(memory_tracker_t, is_heap_allocated)
+        , sizeof(empty.is_heap_allocated)
+        , /* TODO */ NULL
+
+        , 0
+        , NULL
+        }
+
+      /* void   **dynamically_allocated_buffers; */
+      , { field_info_type
+        , offsetof(memory_tracker_t, dynamically_allocated_buffers)
+        , sizeof(empty.dynamically_allocated_buffers)
+        , /* TODO */ NULL
+
+        , 0
+        , NULL
+        }
+
+      /* size_t   dynamically_allocated_buffers_num; */
+      , { field_info_type
+        , offsetof(memory_tracker_t, dynamically_allocated_buffers_num)
+        , sizeof(empty.dynamically_allocated_buffers_num)
+        , /* TODO */ NULL
+
+        , 0
+        , NULL
+        }
+
+      /* size_t   dynamically_allocated_buffers_size; */
+      , { field_info_type
+        , offsetof(memory_tracker_t, dynamically_allocated_buffers_size)
+        , sizeof(empty.dynamically_allocated_buffers_size)
+        , /* TODO */ NULL
+
+        , 0
+        , NULL
+        }
+      }
+    , 6
+
+    , NULL
+
+    /* No memory tracker field. */
+    , 0
+    , 0
+    };
+
+    return &struct_info;
+  }
+
+static typed_t              memory_tracker_type_cons_type(const type_t *self)
+  { return template_cons_type; }
+
+static tval                *memory_tracker_type_init     (const type_t *self, tval *cons)
+  {
+    static memory_tracker_t *defaults = NULL;
+    if (!defaults)
+    {
+      static memory_tracker_t memory_tracker_defaults;
+
+      memory_tracker_defaults = memory_tracker_default;
+
+      defaults = &memory_tracker_defaults;
+    }
+
+    return template_cons_dup_struct(cons, defaults, self->is_struct(self));
+  }
+
+static void                 memory_tracker_type_free     (const type_t *self, tval *val)
+  {
+    template_cons_free_struct(val, self->is_struct(self));
+  }
+
+static tval                *memory_tracker_type_dup      (const type_t *self, tval *dest, const tval *src, int rec)
+  {
+    struct_dup(self->is_struct(self), dest, src, rec);
+
+    return dest;
+  }
 
 /* ---------------------------------------------------------------- */
 

@@ -251,6 +251,9 @@ struct field_info_s
 
   /* Optional information. */
 
+  /* Should "dup" recursively copy this field? */
+  int           is_recurse;
+
   /* Type initializers can use this when initializing  */
   /* a struct from a template.                         */
   /*                                                   */
@@ -299,8 +302,14 @@ struct struct_info_s
  *
  *   Normally "struct_info" does this by supplying a default value for "src"
  *   field values equal to "0" or NULL.
+ *
+ * rec:
+ *   Whether to recursively duplicate subfields marked in "struct_info" for
+ *   recursive traversal.
+ *
+ *   Set to a negative number to limit traversal depth.
  */
-void struct_dup(const struct_info_t *struct_info, tval *dest, const tval *src);
+void struct_dup(const struct_info_t *struct_info, tval *dest, const tval *src, int rec);
 
 /* ---------------------------------------------------------------- */
 /* type_t                                                           */
@@ -652,6 +661,8 @@ struct type_s
 
   const char *parity;
 };
+
+const struct_info_t *type_is_not_struct(const type_t *self);
 
 const type_t *type_typed(const type_t *self);
 const type_t *type_untyped(const type_t *self);
