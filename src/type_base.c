@@ -104,7 +104,7 @@ static const char          *memory_manager_type_info     (const type_t *self)
   { return "typedef struct memory_manager_s memory_manager_t"; }
 
 static size_t               memory_manager_type_size     (const type_t *self, const tval *val)
-  { return sizeof(memory_tracker_t); }
+  { return sizeof(memory_manager_t); }
 
 static const struct_info_t *memory_manager_type_is_struct(const type_t *self)
   {
@@ -509,3 +509,343 @@ const memory_tracker_t memory_tracker_default =
 /* ---------------------------------------------------------------- */
 /* struct_info_t and field_info_t                                   */
 /* ---------------------------------------------------------------- */
+
+/* field_info type. */
+
+static const type_t        *field_info_type_typed    (const type_t *self);
+static const char          *field_info_type_name     (const type_t *self);
+static const char          *field_info_type_info     (const type_t *self);
+static size_t               field_info_type_size     (const type_t *self, const tval *val);
+static const struct_info_t *field_info_type_is_struct(const type_t *self);
+static typed_t              field_info_type_cons_type(const type_t *self);
+static tval                *field_info_type_init     (const type_t *self, tval *cons);
+static void                 field_info_type_free     (const type_t *self, tval *val);
+static tval                *field_info_type_dup      (const type_t *self, tval *dest, const tval *src, int rec);
+
+const type_t field_info_type_def =
+  { type_type
+
+    /* memory_tracker_default */
+  , /* memory    */ { memory_tracker_type, { memory_manager_type } }
+
+  , /* typed     */ field_info_type_typed
+
+  , /* name      */ field_info_type_name
+  , /* info      */ field_info_type_info
+  , /* size      */ field_info_type_size
+  , /* is_struct */ field_info_type_is_struct
+
+  , /* cons_type */ field_info_type_cons_type
+  , /* init      */ field_info_type_init
+  , /* free      */ field_info_type_free
+  , /* dup       */ field_info_type_dup
+
+  , /* parity    */ ""
+  };
+
+const type_t *field_info_type(void)
+  { return &field_info_type_def; }
+
+static const type_t        *field_info_type_typed    (const type_t *self)
+  { return type_typed(self); }
+static const char          *field_info_type_name     (const type_t *self)
+  { return "field_info"; }
+
+static const char          *field_info_type_info     (const type_t *self)
+  { return "typedef struct field_info_s field_info_t"; }
+
+static size_t               field_info_type_size     (const type_t *self, const tval *val)
+  { return sizeof(memory_tracker_t); }
+
+static const struct_info_t *field_info_type_is_struct(const type_t *self)
+  {
+    static const field_info_t empty;
+
+    static const struct_info_t struct_info =
+    { struct_info_type
+
+    , {
+      /* typed_t type */
+        { field_info_type
+        , offsetof(field_info_t, type)
+        , sizeof(empty.type)
+        , /* TODO */ NULL
+
+        , 0
+        , NULL
+        }
+
+      /* size_t        field_pos; */
+      , { field_info_type
+        , offsetof(field_info_t, field_pos)
+        , sizeof(empty.field_pos)
+        , /* TODO */ NULL
+
+        , 0
+        , NULL
+        }
+
+      /* size_t        field_size; */
+      , { field_info_type
+        , offsetof(field_info_t, field_size)
+        , sizeof(empty.field_size)
+        , /* TODO */ NULL
+
+        , 0
+        , NULL
+        }
+
+      /* const type_t *field_type; */
+      , { field_info_type
+        , offsetof(field_info_t, field_type)
+        , sizeof(empty.field_type)
+        , /* TODO */ NULL
+
+        , 0
+        , NULL
+        }
+
+      /* int           is_recurse; */
+      , { field_info_type
+        , offsetof(field_info_t, is_recurse)
+        , sizeof(empty.is_recurse)
+        , /* TODO */ NULL
+
+        , 0
+        , NULL
+        }
+
+      /* int (*initializer_check_default)(field_info_t *self, void *dest_mem, const void *src_mem); */
+      , { field_info_type
+        , offsetof(field_info_t, initializer_check_default)
+        , sizeof(empty.initializer_check_default)
+        , /* TODO */ NULL
+
+        , 0
+        , NULL
+        }
+      }
+    , 6
+
+    , NULL
+
+    /* No memory tracker field. */
+    , 0
+    , 0
+    };
+
+    return &struct_info;
+  }
+
+static typed_t              field_info_type_cons_type(const type_t *self)
+  { return template_cons_type; }
+
+static tval                *field_info_type_init     (const type_t *self, tval *cons)
+  {
+    static field_info_t *defaults = NULL;
+    if (!defaults)
+    {
+      static field_info_t field_info_defaults;
+
+      field_info_defaults = default_field_info;
+
+      defaults = &field_info_defaults;
+    }
+
+    return template_cons_dup_struct(cons, defaults, self->is_struct(self));
+  }
+
+static void                 field_info_type_free     (const type_t *self, tval *val)
+  {
+    template_cons_free_struct(val, self->is_struct(self));
+  }
+
+static tval                *field_info_type_dup      (const type_t *self, tval *dest, const tval *src, int rec)
+  {
+    struct_dup(self->is_struct(self), dest, src, rec);
+
+    return dest;
+  }
+
+const field_info_t default_field_info =
+  { field_info_type
+
+  , 0
+  , 0
+  , NULL /* TODO: void_type? */
+
+  , 0
+  , NULL
+  };
+
+/* ---------------------------------------------------------------- */
+
+/* struct_info type. */
+
+static const type_t        *struct_info_type_typed    (const type_t *self);
+static const char          *struct_info_type_name     (const type_t *self);
+static const char          *struct_info_type_info     (const type_t *self);
+static size_t               struct_info_type_size     (const type_t *self, const tval *val);
+static const struct_info_t *struct_info_type_is_struct(const type_t *self);
+static typed_t              struct_info_type_cons_type(const type_t *self);
+static tval                *struct_info_type_init     (const type_t *self, tval *cons);
+static void                 struct_info_type_free     (const type_t *self, tval *val);
+static tval                *struct_info_type_dup      (const type_t *self, tval *dest, const tval *src, int rec);
+
+const type_t struct_info_type_def =
+  { type_type
+
+    /* memory_tracker_default */
+  , /* memory    */ { memory_tracker_type, { memory_manager_type } }
+
+  , /* typed     */ struct_info_type_typed
+
+  , /* name      */ struct_info_type_name
+  , /* info      */ struct_info_type_info
+  , /* size      */ struct_info_type_size
+  , /* is_struct */ struct_info_type_is_struct
+
+  , /* cons_type */ struct_info_type_cons_type
+  , /* init      */ struct_info_type_init
+  , /* free      */ struct_info_type_free
+  , /* dup       */ struct_info_type_dup
+
+  , /* parity    */ ""
+  };
+
+const type_t *struct_info_type(void)
+  { return &struct_info_type_def; }
+
+static const type_t        *struct_info_type_typed    (const type_t *self)
+  { return type_typed(self); }
+static const char          *struct_info_type_name     (const type_t *self)
+  { return "struct_info"; }
+
+static const char          *struct_info_type_info     (const type_t *self)
+  { return "typedef struct struct_info_s struct_info_t"; }
+
+static size_t               struct_info_type_size     (const type_t *self, const tval *val)
+  { return sizeof(memory_tracker_t); }
+
+static const struct_info_t *struct_info_type_is_struct(const type_t *self)
+  {
+    static const struct_info_t empty;
+
+    static const struct_info_t struct_info =
+    { struct_info_type
+
+    , {
+      /* typed_t type */
+        { struct_info_type
+        , offsetof(struct_info_t, type)
+        , sizeof(empty.type)
+        , /* TODO */ NULL
+
+        , 0
+        , NULL
+        }
+
+      /* field_info_t fields[STRUCT_INFO_NUM_FIELDS]; */
+      , { struct_info_type
+        , offsetof(struct_info_t, fields)
+        , sizeof(empty.fields)
+        , /* TODO */ NULL
+
+        , 0
+        , NULL
+        }
+
+      /* size_t       fields_len; */
+      , { struct_info_type
+        , offsetof(struct_info_t, fields_len)
+        , sizeof(empty.fields_len)
+        , /* TODO */ NULL
+
+        , 0
+        , NULL
+        }
+
+      /* struct_info_t *tail; */
+      , { struct_info_type
+        , offsetof(struct_info_t, tail)
+        , sizeof(empty.tail)
+        , /* TODO */ NULL
+
+        , 0
+        , NULL
+        }
+
+      /* int       has_memory_tracker; */
+      , { struct_info_type
+        , offsetof(struct_info_t, has_memory_tracker)
+        , sizeof(empty.has_memory_tracker)
+        , /* TODO */ NULL
+
+        , 0
+        , NULL
+        }
+
+      /* size_t    memory_tracker_field; */
+      , { struct_info_type
+        , offsetof(struct_info_t, memory_tracker_field)
+        , sizeof(empty.memory_tracker_field)
+        , /* TODO */ NULL
+
+        , 0
+        , NULL
+        }
+
+      }
+    , 6
+
+    , NULL
+
+    /* No memory tracker field. */
+    , 0
+    , 0
+    };
+
+    return &struct_info;
+  }
+
+static typed_t              struct_info_type_cons_type(const type_t *self)
+  { return template_cons_type; }
+
+static tval                *struct_info_type_init     (const type_t *self, tval *cons)
+  {
+    static struct_info_t *defaults = NULL;
+    if (!defaults)
+    {
+      static struct_info_t struct_info_defaults;
+
+      struct_info_defaults = default_struct_info;
+
+      defaults = &struct_info_defaults;
+    }
+
+    return template_cons_dup_struct(cons, defaults, self->is_struct(self));
+  }
+
+static void                 struct_info_type_free     (const type_t *self, tval *val)
+  {
+    template_cons_free_struct(val, self->is_struct(self));
+  }
+
+static tval                *struct_info_type_dup      (const type_t *self, tval *dest, const tval *src, int rec)
+  {
+    struct_dup(self->is_struct(self), dest, src, rec);
+
+    return dest;
+  }
+
+const struct_info_t default_struct_info =
+  { struct_info_type
+
+  , { { field_info_type } }
+  , 0
+
+  , NULL
+
+  , 0
+  , 0
+  };

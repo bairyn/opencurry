@@ -265,6 +265,8 @@ struct field_info_s
   int (*initializer_check_default)(field_info_t *self, void *dest_mem, const void *src_mem);
 };
 
+extern const field_info_t default_field_info;
+
 /* TODO */
 
 #define STRUCT_INFO_NUM_FIELDS 1024
@@ -288,6 +290,8 @@ struct struct_info_s
   /* Index into fields_pos. */
   size_t    memory_tracker_field;
 };
+
+extern const struct_info_t default_struct_info;
 
 /*
  * struct_dup:
