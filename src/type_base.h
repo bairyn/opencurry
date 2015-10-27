@@ -316,7 +316,7 @@ void struct_dup(const struct_info_t *struct_info, tval *dest, const tval *src, i
 /* ---------------------------------------------------------------- */
 
 /*
- * type_t:
+ * type_t: Type representations.
  *
  * A "type_t" describes a kind for values, possibly with information about its
  * name, that about its size, procedures to initialize values and allocate
