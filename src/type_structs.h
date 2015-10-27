@@ -1,5 +1,5 @@
 /*
- * opencurry: tests/test_all.c
+ * opencurry: type_structs.h
  *
  * Copyright (c) 2015, Byron James Johnson
  * All rights reserved.
@@ -30,70 +30,17 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-/* stddef.h:
- *   - NULL
+/*
+ * type_structs.h
+ * --------------
+ *
+ * Creation and management of struct-based type representations.
  */
-#include <stddef.h>
 
-#include "../base.h"
-#include "testing.h"
-#include "test_all.h"
+#ifndef TYPE_STRUCTS_H
+#define TYPE_STRUCTS_H
+#include "base.h"
 
-#include "test_testing.h"
-#include "test_resources.h"
-#include "test_opencurry.h"
-#include "test_cli.h"
-#include "test_util.h"
-#include "test_mempool.h"
-#include "test_type_base.h"
-#include "test_type_structs.h"
-#include "test_bnf.h"
-#include "test_lex.h"
-#include "test_unicode.h"
-#include "test_utf8.h"
-#include "test_integer.h"
-#include "test_ansi_c_ast.h"
-#include "test_ansi_c_ast_base.h"
-#include "test_ansi_c_ast_gen.h"
-#include "test_ansi_c_ast_render.h"
+#include "type_base.h"
 
-int test_all(int argc, char **argv)
-{
-  return run_test_suite(test_all_test);
-}
-
-/* ---------------------------------------------------------------- */
-
-/* Root unit test. */
-unit_test_t test_all_test =
-  {  test_all_run
-  , "test_all"
-  , "All tests."
-  };
-
-/* Array of all test groups. */
-unit_test_t *all_tests[] =
-  { &testing_test
-  , &resources_test
-  , &opencurry_test
-  , &cli_test
-  , &util_test
-  , &mempool_test
-  , &type_base_test
-  , &type_structs_test
-  , &bnf_test
-  , &lex_test
-  , &unicode_test
-  , &utf8_test
-  , &integer_test
-  , &ansi_c_ast_test
-  , &ansi_c_ast_base_test
-  , &ansi_c_ast_gen_test
-  , &ansi_c_ast_render_test
-  , NULL
-  };
-
-unit_test_result_t test_all_run(unit_test_context_t *context)
-{
-  return run_tests(context, all_tests);
-}
+#endif /* ifndef TYPE_STRUCTS_H */
