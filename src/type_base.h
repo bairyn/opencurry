@@ -59,6 +59,7 @@ typedef struct type_s type_t;
 
 /* TODO: update documentation to reflect change from "type_t *" to "typed" for
  * procedurally generated types! */
+const type_t *typed_type(void);
 typedef const type_t *(*typed_t)(void);
 
 /*
@@ -167,7 +168,8 @@ typedef void tval;
 /* Memory managers.                                                 */
 /* ---------------------------------------------------------------- */
 
-extern const typed_t memory_manager_type;
+const type_t *memory_manager_type(void);
+extern const type_t memory_manager_type_def;
 typedef struct memory_manager_s memory_manager_t;
 struct memory_manager_s
 {
@@ -200,7 +202,8 @@ void *memory_manager_calloc (const memory_manager_t *memory_manager, size_t  nme
 void *memory_manager_realloc(const memory_manager_t *memory_manager, void   *ptr,   size_t size);
 
 
-extern const typed_t memory_tracker_type;
+const type_t *memory_tracker_type(void);
+extern const type_t memory_tracker_type_def;
 typedef struct memory_tracker_s memory_tracker_t;
 struct memory_tracker_s
 {
@@ -235,15 +238,16 @@ extern const memory_tracker_t memory_tracker_default;
 
 /* TODO */
 
-extern const typed_t field_info_type;
+const type_t *field_info_type(void);
+extern const type_t field_info_type_def;
 typedef struct field_info_s field_info_t;
 struct field_info_s
 {
   typed_t type;
 
-  ptrdiff_t  field_pos;
-  size_t     field_size;
-  type_t    *field_type;
+  size_t        field_pos;
+  size_t        field_size;
+  const type_t *field_type;
 
   /* Optional information. */
 
@@ -261,18 +265,20 @@ struct field_info_s
 /* TODO */
 
 #define STRUCT_INFO_NUM_FIELDS 1024
-extern const typed_t struct_info_type;
+const type_t *struct_info_type(void);
+extern const type_t struct_info_type_def;
 typedef struct struct_info_s struct_info_t;
 struct struct_info_s
 {
   typed_t type;
 
-  ptrdiff_t fields_pos[STRUCT_INFO_NUM_FIELDS];
+  field_info_t fields[STRUCT_INFO_NUM_FIELDS];
+  size_t       fields_len;
 
   struct_info_t *tail;
 
 
-  /* Optional information. */
+  /* Optional information, for this chunk (excludes tail). */
 
   int       has_memory_tracker;
 
@@ -308,7 +314,8 @@ void struct_dup(const struct_info_t *struct_info, tval *dest, const tval *src);
  * memory for values of this type, and optionally, if the type is a struct,
  * information about the struct's fields.
  */
-extern const typed_t type_type;
+const type_t *type_type(void);
+extern const type_t type_type_def;
 /* Forward declaration: typedef struct type_s type_t; */
 struct type_s
 {
@@ -333,7 +340,7 @@ struct type_s
   /*   Sometimes, however, e.g. in the case of "type_t" for C's       */
   /*   primitive data types, value pointers lack polymorphism with    */
   /*   "type_t *".  In this case, "id" should return NULL.            */
-  type_t              *(*typed)    (const type_t *self);
+  const type_t        *(*typed)    (const type_t *self);
 
   /* Name of the type.  (Not necessarily unique.)                     */
   const char          *(*name)     (const type_t *self);
@@ -646,14 +653,15 @@ struct type_s
   const char *parity;
 };
 
-type_t *type_typed(const type_t *self);
-type_t *type_untyped(const type_t *self);
+const type_t *type_typed(const type_t *self);
+const type_t *type_untyped(const type_t *self);
 
 /* ---------------------------------------------------------------- */
 /* Template constructors, available for types to use.               */
 /* ---------------------------------------------------------------- */
 
-extern const typed_t template_cons_type;
+const type_t *template_cons_type(void);
+extern const type_t template_cons_type_def;
 typedef struct template_cons_s template_cons_t;
 struct template_cons_s
 {
@@ -716,6 +724,63 @@ tval *template_cons_dup_struct(const template_cons_t *cons, const tval *default_
  * "template_cons_" can be used to implement "free".
  */
 void  template_cons_free_struct(tval *val, const struct_info_t *struct_info);
+
+/* ---------------------------------------------------------------- */
+/* Primitive C data types.                                          */
+/* ---------------------------------------------------------------- */
+
+/* http://en.cppreference.com/w/c/header */
+
+/* General type. */
+const type_t *void_type(void);
+
+/* General pointers. */
+const type_t *funp_type(void);
+const type_t *objp_type(void);
+
+/* Scalar types. */
+const type_t *char_type(void);
+const type_t *schar_type(void);
+const type_t *uchar_type(void);
+
+const type_t *short_type(void);
+const type_t *ushort_type(void);
+
+const type_t *int_type(void);
+const type_t *uint_type(void);
+
+const type_t *long_type(void);
+const type_t *ulong_type(void);
+
+const type_t *float_type(void);
+const type_t *double_type(void);
+const type_t *ldouble_type(void);
+
+/* <math.h> */
+const type_t *div_type(void);
+const type_t *ldiv_type(void);
+
+/* <setjmp.h> */
+const type_t *jmpbuf_type(void);
+
+/* <stdarg.h> */
+const type_t *va_list_type(void);
+
+/* <stddef.h> */
+const type_t *size_type(void);
+const type_t *ptrdiff_type(void);
+
+/* <stdlib.h> */
+const type_t *sig_atomic_type(void);
+
+/* <stdio.h> */
+const type_t *file_type(void);
+const type_t *fpos_type(void);
+
+/* <time.h> */
+const type_t *tm_type(void);
+const type_t *time_type(void);
+const type_t *clock_type(void);
 
 /* ---------------------------------------------------------------- */
 
