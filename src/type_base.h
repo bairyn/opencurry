@@ -277,6 +277,7 @@ struct struct_info_s
 {
   typed_t type;
 
+  /* Must be terminated by "terminating_struct_info". */
   field_info_t fields[STRUCT_INFO_NUM_FIELDS];
   size_t       fields_len;
 
@@ -287,11 +288,14 @@ struct struct_info_s
 
   int       has_memory_tracker;
 
-  /* Index into fields_pos. */
+  /* Index into "fields". */
   size_t    memory_tracker_field;
 };
 
 extern const struct_info_t default_struct_info;
+
+/* For redundantly verifying "fields_len" is correct. */
+extern const field_info_t terminating_field_info;
 
 /*
  * struct_dup:
@@ -663,8 +667,12 @@ struct type_s
 
   /* ---------------------------------------------------------------- */
 
+  void *user;
+
   const char *parity;
 };
+
+extern const type_t default_type;
 
 const struct_info_t *type_is_not_struct(const type_t *self);
 
