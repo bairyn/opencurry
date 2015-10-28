@@ -416,7 +416,7 @@ extern const field_info_t terminating_field_info;
  *
  * With no value, return NULL.
  */
-memory_tracker_t *struct_value_has_memory_tracker(const struct_info *struct_info, const void *src_mem);
+memory_tracker_t *struct_value_has_memory_tracker(const struct_info *struct_info, void *src_mem);
 
 /*
  * struct_dup:
@@ -789,8 +789,19 @@ struct type_s
 
   /* How to track memory allocation for values of this type.          */
   /*                                                                  */
-  /* "val" might not be initialized.  "mem" should ensure the         */
-  /* memory tracker is initialized before returning.                  */
+  /* "mem" should return a reference to the memory tracker associated */
+  /* with "val_raw" if it exists, otherwise NULL.                     */
+  /*                                                                  */
+  /* "val" might not be initialized, in which case the memory tracker */
+  /* returned probably isn't either.                                  */
+  /*                                                                  */
+  /* "mem" should properly handle uninitialized "val_raw" values, but */
+  /* it isn't required to return one for a "val" that isn't           */
+  /* initialized (perhaps, for instance, a type keeps track of        */
+  /* which values of the type are initialized externally from any     */
+  /* individual value, which allows the type to check whether         */
+  /* a reference to any given value is one present in some container  */
+  /* of initialized values of this type.                              */
   /*                                                                  */
   /* In the simplest case, the type has a "memory_tracker_t"          */
   /* reference that this method initializes and returns.              */
@@ -803,8 +814,8 @@ struct type_s
   /*                                                                  */
   /* A type itself can be associated with its own unique memory       */
   /* tracker, which it returns it when "val" is NULL; but usually     */
-  /* this is not done (and just NULL is returned in this cas          */
-  memory_tracker_t    *(*mem)        (const type_t *self, tval *val);
+  /* this is not done (and just NULL is returned in this case.)       */
+  memory_tracker_t    *(*mem)        (const type_t *self, tval *val_raw);
 
   /* ---------------------------------------------------------------- */
   /* Copying.                                                         */
@@ -1011,6 +1022,8 @@ extern const template_cons_t * const default_template_cons;
  *
  * Types that do no more elaborate initialization than copying values can
  * simply use this as their initializer.
+ *
+ * TODO
  */
 tval *template_cons_initializer(const type_t *type, template_cons_t *cons);
 
@@ -1019,6 +1032,15 @@ tval *template_cons_initializer(const type_t *type, template_cons_t *cons);
 /* This does not necessarily perform full initialization for a given type. */
 /* The type's "free" procedure can be used for this. */
 /* TODO: mem overrides struct_info's memory_tracker info */
+/* TODO: memory tracker is unconditionally initialized with
+ * "memory_tracker_initialize_no_buffers".  If "mem" returns an already
+ * initialized memory tracker, it will be overridden; this is not checked,
+ * since the memory tracker is expected to be uninitialized!
+ *
+ * "mem"'s returned memory tracker value is expected to already be allocated.
+ * If it is dynamically allocated, "template_cons_dup_struct" does not track
+ * this!
+ * */
 tval *template_cons_dup_struct
   ( const template_cons_t   *cons
   , size_t                   size
@@ -1103,7 +1125,9 @@ const type_t *clock_type(void);
 /* Utility functions.                                               */
 /* ---------------------------------------------------------------- */
 
-ptrdiff_t field_pos(const void *base, const void *field);
+ptrdiff_t   field_pos (const void *base, const void *field);
+void       *field_ref (ptrdiff_t   pos,  void       *base);
+const void *field_cref(ptrdiff_t   pos,  const void *base);
 
 /* ---------------------------------------------------------------- */
 

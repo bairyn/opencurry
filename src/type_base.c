@@ -1732,6 +1732,31 @@ const field_info_t terminating_field_info =
   };
 
 /* ---------------------------------------------------------------- */
+
+memory_tracker_t *struct_value_has_memory_tracker(const struct_info *struct_info, void *src_mem)
+{
+  if (!struct_info || !src_mem)
+    return NULL;
+
+  if (struct_info->has_memory_tracker)
+  {
+    const field_info_t *memory_tracker_field = struct_info->fields[struct_info->memory_tracker_field];
+
+    memory_tracker_t *memory_tracker;
+
+    memory_tracker = (memory_tracker_t *) field_cref(memory_tracker_field->field_pos, src_mem);
+
+    return memory_tracker;
+  }
+  else
+  {
+    return NULL;
+  }
+}
+
+/* const char *struct_dup(const struct_info_t *struct_info, void *dest, const void *src, int force_no_defaults, int rec_copy, int dup_metadata, dup_traversal_t *dup_traversal); */
+
+/* ---------------------------------------------------------------- */
 /* type_t                                                           */
 /* ---------------------------------------------------------------- */
 
@@ -1970,7 +1995,7 @@ static const struct_info_t *type_type_is_struct(const type_t *self)
           field->default_value         = default_value;
           field->template_unused_value = template_unused_value;
 
-          /* memory_tracker_t    *(*mem)        (const type_t *self, tval *val); */
+          /* memory_tracker_t    *(*mem)        (const type_t *self, tval *val_raw); */
           field = &struct_info_def.fields[fields_len++];
 
           field->type                  = field_info_type;
@@ -2241,15 +2266,17 @@ tval *template_cons_dup_struct
   , size_t                   size
   , const tval              *default_initials
   , const struct_info_t     *struct_info
-  , memory_tracker_t      *(*mem)(tval *val)
+  , memory_tracker_t      *(*mem)(tval *val_raw)
   )
 {
-  tval       *dest;
+  tval             *dest;
 
-  int         is_allocate;
-  int         is_allocate_only;
+  int               is_allocate;
+  int               is_allocate_only;
 
-  const char *struct_dup_err;
+  const char       *is_err;
+
+  memory_manager_t *memory_manager;
 
   if (!cons)
   {
@@ -2257,6 +2284,10 @@ tval *template_cons_dup_struct
     if (!cons)
       cons = &template_cons_defaults;
   }
+
+  memory_manager = cons->memory_manager;
+  if (!memory_manager)
+    memory_manager = default_memory_manager;
 
   is_allocate_only = cons->allocate_only_with_num >= 1;
 
@@ -2267,8 +2298,6 @@ tval *template_cons_dup_struct
   {
     int    is_array;
     size_t number_to_allocate;
-
-    memory_manager_t *memory_manager;
 
     if (cons->preserve_metadata)
     {
@@ -2306,10 +2335,6 @@ tval *template_cons_dup_struct
 
       return NULL;
     }
-
-    memory_manager = cons->memory_manager;
-    if (!memory_manager)
-      memory_manager = default_memory_manager;
 
     number_to_allocate = cons->allocate_only_with_num;
     if (number_to_allocate <= 0)
@@ -2420,13 +2445,48 @@ tval *template_cons_dup_struct
     /* Initialize memory tracker. */
     if (memory_tracker)
     {
-      /* TODO what if mem already does some prior initialization?? */
-      memory_tracker_initialize_no_buffers();
+      if (is_allocate)
+        is_err = memory_tracker_initialize_no_buffers(memory_tracker, memory_manager, dest);
+      else
+        is_err = memory_tracker_initialize_no_buffers(memory_tracker, memory_manager, NULL);
+
+      if (is_err)
+      {
+        size_t error_msg_len;
+        int    error_msg_has_trailing_newline;
+
+        size_t init_error_msg_size_terminator;
+
+        init_error_msg_size_terminator = cons->init_error_msg_size - 1;
+        if (init_error_msg_size_terminator < 0)
+          init_error_msg_size_terminator = 0;
+
+        error_msg_len = strlen(is_err);
+        if (error_msg_len <= 0)
+          error_msg_has_trailing_newline = 0;
+        else
+          error_msg_has_trailing_newline = is_err[error_msg_len - 1] == '\n';
+
+        if (cons->out_init_error_msg)
+          snprintf
+            ( (char *) cons->out_init_error_msg, (size_t) init_error_msg_size_terminator
+            , "Error: template_cons_dup_struct: initializing the memory tracker with \"memory_tracker_initialize_no_buffers\" failed!\n"
+              "  Failed to initialize a value without successful initialization of its associated memory tracker.\n"
+              "Error message returned from \"memory_tracker_initialize_no_buffers\": %s%s"
+            , (const char *) is_err
+            , error_msg_has_trailing_newline ? "" : "\n"
+            );
+
+        if (is_allocate)
+          memory_manager_free(memory_manager, dest);
+
+        return NULL;
+      }
     }
   }
 
   /* Initialize fields. */
-  struct_dup_err =
+  is_err =
     struct_dup
       ( struct_info
       , dest
@@ -2437,7 +2497,7 @@ tval *template_cons_dup_struct
       , cons->dup_traversal
       );
 
-  if (struct_dup_err)
+  if (is_err)
   {
     size_t error_msg_len;
     int    error_msg_has_trailing_newline;
@@ -2448,11 +2508,11 @@ tval *template_cons_dup_struct
     if (init_error_msg_size_terminator < 0)
       init_error_msg_size_terminator = 0;
 
-    error_msg_len = strlen(struct_dup_err);
+    error_msg_len = strlen(is_err);
     if (error_msg_len <= 0)
       error_msg_has_trailing_newline = 0;
     else
-      error_msg_has_trailing_newline = struct_dup_err[error_msg_len - 1] == '\n';
+      error_msg_has_trailing_newline = is_err[error_msg_len - 1] == '\n';
 
     if (cons->out_init_error_msg)
       snprintf
@@ -2460,7 +2520,7 @@ tval *template_cons_dup_struct
         , "Error: template_cons_dup_struct: assigning the struct fields with \"struct_dup\" failed!\n"
           "  Failed to initialize a value without successful assignment of struct fields.\n"
           "Error message returned from \"struct_dup\": %s%s"
-        , (const char *) struct_dup_err
+        , (const char *) is_err
         , error_msg_has_trailing_newline ? "" : "\n"
         );
 
@@ -2486,7 +2546,17 @@ memory_tracker_t *(*)(tval *val) template_cons_get_type_mem(const type_t *type)
 /* Utility functions.                                               */
 /* ---------------------------------------------------------------- */
 
-ptrdiff_t field_pos(const void *base, const void *field)
+ptrdiff_t   field_pos (const void *base, const void *field)
 {
   return ((const unsigned char *) field) - ((const unsigned char *) base);
+}
+
+void       *field_ref (ptrdiff_t   pos,  void       *base)
+{
+  return (void *) (((unsigned char *) base) + pos);
+}
+
+const void *field_cref(ptrdiff_t   pos,  const void *base)
+{
+  return (const void *) (((const unsigned char *) base) + pos);
 }
