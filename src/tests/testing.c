@@ -41,7 +41,6 @@
  * stdio.h:
  *  - FILE
  *  - fprintf
- *  - snprintf
  *  - stdout
  *  - stderr
  */

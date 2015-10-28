@@ -45,6 +45,9 @@
 
 #include "base.h"
 
+/* TODO */
+typedef void *dup_traversal_t;
+
 /* ---------------------------------------------------------------- */
 /* Out-of-order forward declarations.                               */
 /* ---------------------------------------------------------------- */
@@ -180,14 +183,26 @@ struct memory_manager_s
   void *(*calloc) (const memory_manager_t *self, size_t  nmemb, size_t size);
   void *(*realloc)(const memory_manager_t *self, void   *ptr,   size_t size);
 
+  void  (*on_oom) (const memory_manager_t *self, size_t      size);
+  void  (*on_err) (const memory_manager_t *self, const char *msg);
+
   void   *state;
   size_t  state_size;
 };
 
 /* A "memory_manager_t" with NULLS. */
-extern const memory_manager_t default_manager;
+extern const memory_manager_t memory_manager_defaults;
 
+extern const memory_manager_t * const default_memory_manager;
 extern const memory_manager_t malloc_manager;
+
+/* Print a message to stderr and return. */
+void memory_manager_default_on_oom(const memory_manager_t *self, size_t      size);
+void memory_manager_default_on_err(const memory_manager_t *self, const char *msg);
+
+/* Do nothing and return. */
+void on_memory_manager_oom_do_nothing(const memory_manager_t *self, size_t      size);
+void on_memory_manager_err_do_nothing(const memory_manager_t *self, const char *msg);
 
 /* Both the reference and individual function pointers may be NULL. */
 /*                                                                  */
@@ -196,10 +211,13 @@ extern const memory_manager_t malloc_manager;
 /*                                                                  */
 /* If only one of "malloc" and "free" is NULL, behaviour is         */
 /* undefined.                                                       */
-void *memory_manager_malloc (const memory_manager_t *memory_manager, size_t  size);
+void *memory_manager_malloc (const memory_manager_t *memory_manager, size_t size);
 void  memory_manager_free   (const memory_manager_t *memory_manager, void   *ptr);
-void *memory_manager_calloc (const memory_manager_t *memory_manager, size_t  nmemb, size_t size);
+void *memory_manager_calloc (const memory_manager_t *memory_manager, size_t nmemb, size_t size);
 void *memory_manager_realloc(const memory_manager_t *memory_manager, void   *ptr,   size_t size);
+
+void  memory_manager_on_oom (const memory_manager_t *memory_manager, size_t      size);
+void  memory_manager_on_err (const memory_manager_t *memory_manager, const char *msg);
 
 
 const type_t *memory_tracker_type(void);
@@ -212,25 +230,62 @@ struct memory_tracker_s
   memory_manager_t memory_manager;
 
 
-  /* Was the associated object allocated on the heap? */
-  int      is_heap_allocated;
+  /* If this memory tracker exists in dynamically        */
+  /* allocated memory, this refers to it; otherwise this */
+  /* is NULL.                                            */
+  /*                                                     */
+  /* Most commonly, this could be a reference to a       */
+  /* dynamically allocated value of an associated struct */
+  /* containing a memory_tracker_t, or it could be a     */
+  /* reference to this memory tracker itself if it is    */
+  /* dynamically allocated.                              */
+  /*                                                     */
+  /* This must be freed last.                            */
+  void *dynamically_allocated_container;
 
   /* Array of "void *".  NULL elements are unused slots. */
   /*                                                     */
   /* This itself may be NULL.                            */
   /*                                                     */
-  /* The first element must be freed last:               */
-  /*   This allows the first element to refer to this    */
-  /*   buffer itself.                                    */
+  /* Usually, the first element refers to                */
+  /* "dynamically_allocated_buffers" itself, so it       */
+  /* must be freed after all other references in used    */
+  /* slots are.                                          */
+  /*                                                     */
+  /* More generally, this rule applies to every other    */
+  /* slot.  An even-indexed slot cannot be freed until   */
+  /* all even-indexed slots that occur later in the      */
+  /* array are freed.                                    */
+  /*                                                     */
+  /* The last even-indexed slot is reserved for an       */
+  /* internally managed reference to a "tail"            */
+  /* memory_tracker_t as one way to dynamically allocate */
+  /* additional buffer references.                       */
   void   **dynamically_allocated_buffers;
   size_t   dynamically_allocated_buffers_num;
   size_t   dynamically_allocated_buffers_size;
+
+  /* Index of the last used slots, or 0 if none.         */
+  size_t   dynamically_allocated_buffers_last_even;
+  size_t   dynamically_allocated_buffers_last_odd;
 };
 
 /* A default memory tracker appropriate for top-level declarations. */
 /* Uses "default_manager" with a NULL buffer-array pointer.         */
 /* 0 dynamically allocated buffer slots.                            */
-extern const memory_tracker_t memory_tracker_default;
+extern const memory_tracker_t memory_tracker_defaults;
+
+/*
+ * Initialize a "memory_tracker" with no allocated buffers.
+ *
+ * If the container is dynamically allocated, e.g. if an associated value, pass
+ * it as an argument; otherwise set "dynamically_allocated_container" to NULL.
+ *
+ * If "memory_manager" is NULL, a reasonable default will be chosen.
+ *
+ * Returns NULL on success, and a pointer to an error message on failure.
+ */
+const char *memory_tracker_initialize_no_buffers(memory_tracker_t *memory_tracker, const memory_manager_t *memory_manager, void *dynamically_allocated_container);
 
 /* ---------------------------------------------------------------- */
 /* struct_info_t and field_info_t                                   */
@@ -251,21 +306,79 @@ struct field_info_s
 
   /* Optional information. */
 
+  /* Whether this field is specific to each value.       */
+  /*                                                     */
+  /* This determines whether to avoid duplicating this   */
+  /* field when copying                                  */
+  /* unless otherwise requested.                         */
+  /*                                                     */
+  /* This is appropriate for fields that should be       */
+  /* unique to each value, like a value's memory         */
+  /* tracker.                                            */
+  int           is_metadata;
+
   /* Should "dup" recursively copy this field? */
   int           is_recurse;
 
-  /* Type initializers can use this when initializing  */
-  /* a struct from a template.                         */
-  /*                                                   */
-  /* Can be NULL.                                      */
-  /*                                                   */
-  /* In the most common case, this function will check */
-  /* check whether the field in the source is 0 or     */
-  /* NULL, and if so, write a default value.           */
-  int (*initializer_check_default)(field_info_t *self, void *dest_mem, const void *src_mem);
+  /* Write the default value for this field.             */
+  /*                                                     */
+  /* NULL values default to writing 0's in               */
+  /* memory.                                             */
+  size_t      (*default_value)        (const field_info_t *self, void *dest_mem);
+
+  /* Write the value, usually 0 or NULL, that indicates  */
+  /* that "template_cons_t"-based initializers should    */
+  /* compare against to determine whether to assign the  */
+  /* value from the source value or the default value.   */
+  /*                                                     */
+  /* This should return 0 when the field is relevant for */
+  /* all values.                                         */
+  /*                                                     */
+  /* A NULL reference defaults to comparing the memory   */
+  /* against 0's.                                        */
+  size_t      (*template_unused_value)(const field_info_t *self, void *dest_mem);
 };
 
-extern const field_info_t default_field_info;
+extern const field_info_t field_info_defaults;
+
+size_t default_value_zero(const field_info_t *self, void *dest_mem);
+size_t template_unused_value_zero(const field_info_t *self, void *dest_mem);
+
+size_t template_no_unused_value(const field_info_t *self, void *dest_mem);
+
+#define FIELD_MEMCMP_ERR_NULL_S1 ((int) -0x37ED)
+#define FIELD_MEMCMP_ERR_NULL_S2 ((int) -0x37EE)
+/*
+ * Directly compare the memory represents two values in a field.
+ *
+ * Returns:
+ *   = 0: Values are equal.
+ *   > 0: First byte in "s1" is greater than first byte in "s2".
+ *   < 0: First byte in "s1" is less    than first byte in "s2".
+ */
+int field_memcmp(const field_info_t *field_info, const void *s1, const void *s2);
+
+/*
+ * Determine whether the source field value is equal to the field's "special
+ * unused value" if it has one.
+ *
+ * If source is equal to the special unused value, then write the field's
+ * default value to "out_default_mem" if "out_default_mem" is provided.
+ *
+ * Returns:
+ *       0: Source is not equal to the field's special unused value,
+ *          or the field lacks a special unused value.
+ *   >=  1: Source is equal to the field's special unused value.
+ *   <= -1: An error occurred:
+ *          -1: Failed to allocate memory.  The "malloc" of the memory manager,
+ *              or the default one if NULL, returned NULL.
+ *
+ *              If "working_mem" is provided, no memory allocation is
+ *              performed.
+ *          -2: "src_mem" is NULL.
+ *          ...
+ */
+int is_field_template_unused(const field_info_t *field_info, const void *src_mem, void *working_mem, const memory_manager_t *memory_manager, void *out_default_mem);
 
 /* TODO */
 
@@ -292,10 +405,18 @@ struct struct_info_s
   size_t    memory_tracker_field;
 };
 
-extern const struct_info_t default_struct_info;
+extern const struct_info_t struct_info_defaults;
 
 /* For redundantly verifying "fields_len" is correct. */
 extern const field_info_t terminating_field_info;
+
+/*
+ * If the "struct_info" associates a memory tracker field, then given a value
+ * of that struct, return it.  Otherwise, return NULL.
+ *
+ * With no value, return NULL.
+ */
+memory_tracker_t *struct_value_has_memory_tracker(const struct_info *struct_info, const void *src_mem);
 
 /*
  * struct_dup:
@@ -311,13 +432,21 @@ extern const field_info_t terminating_field_info;
  *   Normally "struct_info" does this by supplying a default value for "src"
  *   field values equal to "0" or NULL.
  *
- * rec:
+ * rec_copy:
  *   Whether to recursively duplicate subfields marked in "struct_info" for
  *   recursive traversal.
  *
  *   Set to a negative number to limit traversal depth.
+ *
+ * dup_metadata:
+ *   Whether to not skip assignment of fields specially marked as "metadata",
+ *   which should be unique to each value.
+ *
+ *   This is used for fields such as memory trackers.
+ *
+ * Returns NULL on success, and an error message on failure.
  */
-void struct_dup(const struct_info_t *struct_info, tval *dest, const tval *src, int rec);
+const char *struct_dup(const struct_info_t *struct_info, void *dest, const void *src, int force_no_defaults, int rec_copy, int dup_metadata, dup_traversal_t *dup_traversal);
 
 /* ---------------------------------------------------------------- */
 /* type_t                                                           */
@@ -357,15 +486,15 @@ struct type_s
   /*   Sometimes, however, e.g. in the case of "type_t" for C's       */
   /*   primitive data types, value pointers lack polymorphism with    */
   /*   "type_t *".  In this case, "id" should return NULL.            */
-  const type_t        *(*typed)    (const type_t *self);
+  const type_t        *(*typed)      (const type_t *self);
 
   /* Name of the type.  (Not necessarily unique.)                     */
-  const char          *(*name)     (const type_t *self);
+  const char          *(*name)       (const type_t *self);
 
   /* General information about the type.                              */
   /*                                                                  */
   /* Both the result of "info" and "info" itself may be NULL.         */
-  const char          *(*info)     (const type_t *self);
+  const char          *(*info)       (const type_t *self);
 
   /* Size of a value of this type.                                    */
   /*                                                                  */
@@ -375,11 +504,11 @@ struct type_s
   /*                                                                  */
   /*   Constant-width types should return the size of any value when  */
   /*   "val" is NULL.                                                 */
-  size_t               (*size)     (const type_t *self, const tval *val);
+  size_t               (*size)       (const type_t *self, const tval *val);
 
   /* If this type describes a struct, return information about its    */
   /* fields; otherwise return NULL.                                   */
-  const struct_info_t *(*is_struct)(const type_t *self);
+  const struct_info_t *(*is_struct)  (const type_t *self);
 
 
   /* ---------------------------------------------------------------- */
@@ -608,7 +737,7 @@ struct type_s
   /* The type of the "cons" constructor parameter for "init".         */
   /*                                                                  */
   /* "init" must be called with a "cons" value of this type.          */
-  typed_t              (*cons_type)(const type_t *self);
+  typed_t              (*cons_type)  (const type_t *self);
 
   /* Initialize a value of this type.                                 */
   /*                                                                  */
@@ -644,13 +773,38 @@ struct type_s
   /* ---------------------------------------------------------------- */
   /*                                                                  */
   /* Returns NULL on failure to initialize.                           */
-  tval                *(*init)     (const type_t *self, tval *cons);
+  tval                *(*init)       (const type_t *self, tval *cons);
 
   /* Deinitialization a value, freeing resources allocated by "init". */
   /*                                                                  */
   /* Support for idempotence (multiple calls to "free") is            */
   /* recommended but not required.                                    */
-  void                 (*free)     (const type_t *self, tval *val);
+  void                 (*free)       (const type_t *self, tval *val);
+
+  /* A type can be associated with a designated default value,        */
+  /* returned by this method.                                         */
+  /*                                                                  */
+  /* A type that doesn't should return NULL.                          */
+  const tval          *(*has_default)(const type_t *self);
+
+  /* How to track memory allocation for values of this type.          */
+  /*                                                                  */
+  /* "val" might not be initialized.  "mem" should ensure the         */
+  /* memory tracker is initialized before returning.                  */
+  /*                                                                  */
+  /* In the simplest case, the type has a "memory_tracker_t"          */
+  /* reference that this method initializes and returns.              */
+  /*                                                                  */
+  /* Alternatively, some types might want to reference a memory       */
+  /* tracker outside values.                                          */
+  /*                                                                  */
+  /* This can be NULL, or can always return NULL, if this type        */
+  /* isn't associated with a memory tracker.                          */
+  /*                                                                  */
+  /* A type itself can be associated with its own unique memory       */
+  /* tracker, which it returns it when "val" is NULL; but usually     */
+  /* this is not done (and just NULL is returned in this cas          */
+  memory_tracker_t    *(*mem)        (const type_t *self, tval *val);
 
   /* ---------------------------------------------------------------- */
   /* Copying.                                                         */
@@ -663,19 +817,77 @@ struct type_s
   /* associated with "src" in case of differences.                    */
   /*                                                                  */
   /* Returns NULL on failure.                                         */
-  tval                *(*dup)      (const type_t *self, tval *dest, const tval *src, int rec);
+
+  /* Copy one value into another.                                     */
+  /*                                                                  */
+  /* Some implementations support NULL "dest" pointers, indicating    */
+  /* a new one should be dynamically allocated, using management      */
+  /* associated with "src" in case of differences.                    */
+  /*                                                                  */
+  /* rec_copy:                                                        */
+  /*   0 to skip recursively calling "dup" on subcomponents that are  */
+  /*   references designated as copyable.                             */
+  /*                                                                  */
+  /*   For subcomponents that are references and designated as        */
+  /*   copyable, "rec_copy" determines whether to recursively copy    */
+  /*   these.                                                         */
+  /*                                                                  */
+  /*   If this type is a struct, then the type's struct_info returned */
+  /*   by "is_struct" associates each field in the struct with a flag */
+  /*   that indicates whether it is a copyable reference.             */
+  /*                                                                  */
+  /*   Each field is also associated with a "type_t *" reference,     */
+  /*   whose "dup" procedure is used to recursively copy the field.   */
+  /*   (If the type lacks a "dup" procedure, behaviour will be as if  */
+  /*   "rec_copy" were 0.                                             */
+  /*                                                                  */
+  /*   Set this to a negative value to limit traversal depth equal    */
+  /*   to the inverse of the limit.                                   */
+  /*                                                                  */
+  /* dup_metadata:                                                    */
+  /*   Whether to assign all subcomponents, and not skip those        */
+  /*   designated as "metadata", data which is specific to each       */
+  /*   value, such as fields like memory trackers that are usually    */
+  /*   unique to each value.                                          */
+  /*                                                                  */
+  /*   It is usually an error to set this flag without a "dest"       */
+  /*   argument, because of a lack of a direct appropriate memory     */
+  /*   tracker.                                                       */
+  /*                                                                  */
+  /* dup_traversal:                                                   */
+  /*   History of values duplicated, used to avoid loops during       */
+  /*   recursive copying.                                             */
+  /*                                                                  */
+  /*   When "dup" is called at the root level, this can be NULL.      */
+  /*                                                                  */
+  /*   Users can also preinitialize a dup_traversal_t before calling. */
+  /*   One possible useful purpose for this is to set a callback      */
+  /*   for when a loop is detected.                                   */
+  /*                                                                  */
+  /*   (At non-root-level recursive calls, passing a "dup_traversal"  */
+  /*   is optional but highly recommended.)                           */
+  /*                                                                  */
+  /* Returns NULL on failure.                                         */
+  tval                *(*dup)        ( const type_t *self
+                                     , tval *dest
+                                     , const tval *src
+                                     , int rec_copy
+                                     , int dup_metadata
+                                     , dup_traversal_t *dup_traversal);
 
   /* ---------------------------------------------------------------- */
 
   const char *parity;
 };
 
-extern const type_t default_type;
+extern const type_t type_defaults;
 
 const struct_info_t *type_is_not_struct(const type_t *self);
 
 const type_t *type_typed(const type_t *self);
 const type_t *type_untyped(const type_t *self);
+
+const tval   *type_has_no_default(const type_t *self);
 
 /* ---------------------------------------------------------------- */
 /* Template constructors, available for types to use.               */
@@ -686,7 +898,7 @@ extern const type_t template_cons_type_def;
 typedef struct template_cons_s template_cons_t;
 struct template_cons_s
 {
-  type_t *type;
+  typed_t type;
 
   /*
    * The value to initialize.
@@ -713,12 +925,68 @@ struct template_cons_s
   const memory_manager_t *memory_manager;
 
   /*
-   * The initial values will be chosen from this value, which must be of the
-   * type as the value being constructed.
+   * The initial subcomponent values will be chosen from this value, which must
+   * be of the type as the value being constructed.
+   *
+   * If the associated type is a struct, then the subcomponent values
+   * correspond to the struct's fields.
    *
    * Set to "NULL" to force all default values.
    */
   const tval *initials;
+
+  /*
+   * Never interpreted a value in "initials" as the "special unused value",
+   * and selecting a default value for that field, instead always assigning
+   * each field to the value of the field in "initials".
+   *
+   * If this is true, and "initials is NULL", then the value must be
+   * "zeroed-out", with the result the value represented by memory filled with
+   * "0" bytes.
+   */
+  int force_no_defaults;
+
+  /*
+   * Whether to recursively copy certain fields in "initials", rather than
+   * simply copying each reference as such.
+   *
+   * Set to a negative value to limit traversal depth.
+   *
+   * Defaults to disabled (0).
+   */
+  int initials_recursively_copy;
+
+  /*
+   * Often omitted, but when present specifies an initial
+   * "initials_copy_traversal" for assignment.
+   *
+   * Allows callbacks in case of recursive copy loops.
+   */
+  dup_traversal_t *initials_copy_traversal;
+
+  /*
+   * When assigning struct fields, don't skip assignment of specially
+   * designated metadata fields by calling "struct_dup" with a "copy" value of
+   * 0, and skip memory tracker initialization.
+   *
+   * It is an error to set this flag in constructors that dynamically allocate
+   * values, because of the lack of an associated memory tracker.
+   */
+  int preserve_metadata;
+
+  /*
+   * Additional type-dependent information for value initialization.
+   */
+  void *user;
+
+  /*
+   * Don't initialize the value, and only allocate memory.
+   *
+   * Set to a number greater than 1 to allocate an array of values.
+   *
+   * If non-zero, all above fields are ignored.
+   */
+  size_t allocate_only_with_num;
 
   /*
    * Optional: can be NULL.
@@ -730,11 +998,36 @@ struct template_cons_s
   size_t  init_error_msg_size;
 };
 
+extern const template_cons_t template_cons_defaults;
+
+extern const template_cons_t * const default_template_cons;
+
+/*
+ * Invoke "template_cons_dup_struct" from the type's data.
+ *
+ * This is not an alternative to a type's initializer, because a "type" might
+ * either initialize values differently, or perform additional computations and
+ * assignments in addition to "template_cons_initializer".
+ *
+ * Types that do no more elaborate initialization than copying values can
+ * simply use this as their initializer.
+ */
+tval *template_cons_initializer(const type_t *type, template_cons_t *cons);
+
 /* TODO. */
 /* This can be used by initializers. */
 /* This does not necessarily perform full initialization for a given type. */
 /* The type's "free" procedure can be used for this. */
-tval *template_cons_dup_struct(const template_cons_t *cons, const tval *default_initials, const struct_info_t *struct_info);
+/* TODO: mem overrides struct_info's memory_tracker info */
+tval *template_cons_dup_struct
+  ( const template_cons_t   *cons
+  , size_t                   size
+  , const tval              *default_initials
+  , const struct_info_t     *struct_info
+  , memory_tracker_t      *(*mem)(const type_t *self, tval *val)
+  );
+
+memory_tracker_t *(*)(tval *val) template_cons_get_type_mem(const type_t *type)
 
 /* Free memory allocated by "template_cons_dup_struct" and memory referred to
  * by "memory_tracker".
@@ -777,6 +1070,9 @@ const type_t *float_type(void);
 const type_t *double_type(void);
 const type_t *ldouble_type(void);
 
+/* Derived types. */
+const type_t *array_type(void);
+
 /* <math.h> */
 const type_t *div_type(void);
 const type_t *ldiv_type(void);
@@ -802,6 +1098,12 @@ const type_t *fpos_type(void);
 const type_t *tm_type(void);
 const type_t *time_type(void);
 const type_t *clock_type(void);
+
+/* ---------------------------------------------------------------- */
+/* Utility functions.                                               */
+/* ---------------------------------------------------------------- */
+
+ptrdiff_t field_pos(const void *base, const void *field);
 
 /* ---------------------------------------------------------------- */
 
