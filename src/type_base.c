@@ -2227,6 +2227,8 @@ const template_cons_t template_cons_defaults =
   , /* memory_manager         */ NULL
   , /* initials               */ NULL
   , /* force_no_defaults      */ 0
+  , /* initials_copy_rec      */ 0
+  , /* dup_traversal          */ NULL
   , /* preserve_nocopy        */ 0
   , /* user                   */ NULL
   , /* allocate_only_with_num */ (size_t) 0
@@ -2430,9 +2432,10 @@ tval *template_cons_dup_struct
       , dest
       , cons->initials
       , cons->force_no_defaults
-      , cons->initials_recursively_copy
+      , cons->initials_copy_rec
       , cons->preserve_metadata
-      , NULL);
+      , cons->dup_traversal
+      );
 
   if (struct_dup_err)
   {
@@ -2467,7 +2470,8 @@ tval *template_cons_dup_struct
     return NULL;
   }
 
-  /* Initialize memory tracker if available or necessary. */
+  /* Done! */
+  return dest;
 }
 
 memory_tracker_t *(*)(tval *val) template_cons_get_type_mem(const type_t *type)

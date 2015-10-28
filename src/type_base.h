@@ -954,7 +954,7 @@ struct template_cons_s
    *
    * Defaults to disabled (0).
    */
-  int initials_recursively_copy;
+  int initials_copy_rec;
 
   /*
    * Often omitted, but when present specifies an initial
@@ -962,7 +962,7 @@ struct template_cons_s
    *
    * Allows callbacks in case of recursive copy loops.
    */
-  dup_traversal_t *initials_copy_traversal;
+  dup_traversal_t *dup_traversal;
 
   /*
    * When assigning struct fields, don't skip assignment of specially
