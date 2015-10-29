@@ -818,14 +818,11 @@ void ensure_buf_limits(unit_test_context_t *context, char *buf)
 size_t test_add_internal_error_msg(unit_test_context_t *context, const char *msg)
 {
   int    l;
-  size_t size_terminator;
-
-  size_terminator = context->int_err_buf_size - 1;  /* Make room for terminating NULL byte. */
 
   ensure_buf_limits(context, context->int_err_buf);
 
   l = snprintf
-    ( (char *) (context->int_err_buf + context->int_err_buf_len), (size_t) (size_terminator - context->int_err_buf_len)
+    ( (char *) (context->int_err_buf + context->int_err_buf_len), (size_t) terminator_size(size_minus(context->int_err_buf_size, context->int_err_buf_len))
     , "%s"
     , msg
     );
@@ -936,9 +933,6 @@ void reset_err_msg_details(unit_test_context_t *context)
 size_t test_add_details_msg(unit_test_context_t *context, const char *msg)
 {
   int    l;
-  size_t size_terminator;
-
-  size_terminator = context->details_buf_size - 1;  /* Make room for terminating NULL byte. */
 
   if (context->details_buf_len >= context->details_buf_size)
   {
@@ -946,7 +940,7 @@ size_t test_add_details_msg(unit_test_context_t *context, const char *msg)
   }
 
   l = snprintf
-    ( (char *) (context->details_buf + context->details_buf_len), (size_t) (size_terminator - context->details_buf_len)
+    ( (char *) (context->details_buf + context->details_buf_len), (size_t) terminator_size(size_minus(context->details_buf_size, context->details_buf_len))
     , "%s"
     , msg
     );
@@ -1059,9 +1053,6 @@ size_t assert_msg_check_snprintf(unit_test_context_t *context, int snprintf_resu
 size_t assert_msg_append_details(unit_test_context_t *context, size_t len, char *msg_out, size_t msg_out_size, const char *tag)
 {
   int    l;
-  size_t size_terminator;
-
-  size_terminator = msg_out_size - 1;  /* Make room for terminating NULL byte. */
 
   if (!context->details_buf_len)
   {
@@ -1080,7 +1071,7 @@ size_t assert_msg_append_details(unit_test_context_t *context, size_t len, char 
   context->details_buf[context->details_buf_len] = 0;
 
   l = snprintf
-    ( (char *) (msg_out + len), (size_t) (size_terminator - len)
+    ( (char *) (msg_out + len), (size_t) (terminator_size(size_minus(msg_out_size, len)))
     , "\n\n%s"
     , context->err_buf_len >= 1 && context->err_buf[context->err_buf_len - 1] == '\n' ? "" : "\n"
     , (const char *) context->details_buf
@@ -1094,12 +1085,9 @@ size_t assert_msg_append_details(unit_test_context_t *context, size_t len, char 
 size_t assert_failure_msg(unit_test_context_t *context, char *msg_out, size_t msg_out_size, const char *tag)
 {
   int    l;
-  size_t size_terminator;
-
-  size_terminator = msg_out_size - 1;  /* Make room for terminating NULL byte. */
 
   l = snprintf
-    ( (char *) msg_out, (size_t) size_terminator
+    ( (char *) msg_out, (size_t) terminator_size(msg_out_size)
     , "Assertion '%s' failed - no details provided.\n"
     , (const char *) tag
     );
@@ -1111,12 +1099,9 @@ size_t assert_failure_msg(unit_test_context_t *context, char *msg_out, size_t ms
 size_t assert_true_msg(unit_test_context_t *context, char *msg_out, size_t msg_out_size, const char *tag, int condition)
 {
   int    l;
-  size_t size_terminator;
-
-  size_terminator = msg_out_size - 1;  /* Make room for terminating NULL byte. */
 
   l = snprintf
-    ( (char *) msg_out, (size_t) size_terminator
+    ( (char *) msg_out, (size_t) terminator_size(msg_out_size)
     , "Boolean assertion '%s' failed - the condition be true, but it is false: %d (bool: %d)\n"
     , (const char *) tag
     , (int) condition
@@ -1130,12 +1115,9 @@ size_t assert_true_msg(unit_test_context_t *context, char *msg_out, size_t msg_o
 size_t assert_inteq_msg(unit_test_context_t *context, char *msg_out, size_t msg_out_size, const char *tag, int check, int model)
 {
   int    l;
-  size_t size_terminator;
-
-  size_terminator = msg_out_size - 1;  /* Make room for terminating NULL byte. */
 
   l = snprintf
-    ( (char *) msg_out, (size_t) size_terminator
+    ( (char *) msg_out, (size_t) terminator_size(msg_out_size)
     , "Assertion '%s' failed - integers must be equal, but differ:\n  should be:   % d\n  actually is: % d\n"
     , (const char *) tag
     , (int) model
@@ -1149,12 +1131,9 @@ size_t assert_inteq_msg(unit_test_context_t *context, char *msg_out, size_t msg_
 size_t assert_streqz_msg(unit_test_context_t *context, char *msg_out, size_t msg_out_size, const char *tag, const char *check, const char *model)
 {
   int    l;
-  size_t size_terminator;
-
-  size_terminator = msg_out_size - 1;  /* Make room for terminating NULL byte. */
 
   l = snprintf
-    ( (char *) msg_out, (size_t) size_terminator
+    ( (char *) msg_out, (size_t) terminator_size(msg_out_size)
     , "Assertion '%s' failed - strings must be equal, but differ:\n  should be:   %s\n  actually is: %s\n"
     , (const char *) tag
     , (const char*) model
@@ -1168,11 +1147,8 @@ size_t assert_streqz_msg(unit_test_context_t *context, char *msg_out, size_t msg
 size_t assert_streqn_msg(unit_test_context_t *context, char *msg_out, size_t msg_out_size, const char *tag, const char *check, const char *model, size_t max_len)
 {
   int     l;
-  size_t  size_terminator;
 
   char   *checkz, *modelz;
-
-  size_terminator = msg_out_size - 1;  /* Make room for terminating NULL byte. */
 
   checkz = malloc(2 * (max_len+1));
   {
@@ -1184,7 +1160,7 @@ size_t assert_streqn_msg(unit_test_context_t *context, char *msg_out, size_t msg
     modelz[max_len] = 0;
 
     l = snprintf
-      ( (char *) msg_out, (size_t) size_terminator
+      ( (char *) msg_out, (size_t) terminator_size(msg_out_size)
       , "Assertion '%s' failed - strings must be equal, but differ:\n  should be:   %s\n  actually is: %s\n"
       , (const char *) tag
       , (const char *) modelz
@@ -1199,7 +1175,6 @@ size_t assert_streqn_msg(unit_test_context_t *context, char *msg_out, size_t msg
 size_t assert_memeq_msg(unit_test_context_t *context, char *msg_out, size_t msg_out_size, const char *tag, void *check, void *model, size_t n)
 {
   int              l;
-  size_t           size_terminator;
 
   int              i, j;
   size_t           written = 0;
@@ -1211,12 +1186,10 @@ size_t assert_memeq_msg(unit_test_context_t *context, char *msg_out, size_t msg_
   static const int byte_print_width    = sizeof(" 0x00") - 1;
   static const int width               = ASSERT_MSG_WIDTH;
 
-  size_terminator = msg_out_size - 1;  /* Make room for terminating NULL byte. */
-
   /* ---------------------------------------------------------------- */
   /* Start writing error message. */
   l = snprintf
-    ( (char *) (msg_out + written), (size_t) (size_terminator - written)
+    ( (char *) (msg_out + written), (size_t) terminator_size(size_minus(msg_out_size, written))
     , "Assertion '%s' failed - '%d' bytes of memory must be equal, but differ:"
     , (const char *) tag
     , (int) n
@@ -1228,14 +1201,14 @@ size_t assert_memeq_msg(unit_test_context_t *context, char *msg_out, size_t msg_
   /* Hex dump of model: write what the memory should be equal to. */
 
   l = snprintf
-    ( (char *) (msg_out + written), (size_t) (size_terminator - written)
+    ( (char *) (msg_out + written), (size_t) terminator_size(size_minus(msg_out_size, written))
     , "\n"
     );
   if (l < 0) return assert_msg_check_snprintf(context, l, msg_out, msg_out_size, tag, &context->is_snprintf_err);
   written += l;
 
   l = hexdump_indent_spaces = snprintf
-    ( (char *) (msg_out + written), (size_t) (size_terminator - written)
+    ( (char *) (msg_out + written), (size_t) terminator_size(size_minus(msg_out_size, written))
     , "  should be:"  /* A: Print two extra spaces below only without a newline. */
     );
   if (l < 0) return assert_msg_check_snprintf(context, l, msg_out, msg_out_size, tag, &context->is_snprintf_err);
@@ -1253,14 +1226,14 @@ size_t assert_memeq_msg(unit_test_context_t *context, char *msg_out, size_t msg_
     need_multiple_lines = 1;
 
     l = snprintf
-      ( (char *) (msg_out + written), (size_t) (size_terminator - written)
+      ( (char *) (msg_out + written), (size_t) terminator_size(size_minus(msg_out_size, written))
       , "\n"
       );
     if (l < 0) return assert_msg_check_snprintf(context, l, msg_out, msg_out_size, tag, &context->is_snprintf_err);
     written += l;
 
     l = hexdump_indent_spaces = snprintf
-      ( (char *) (msg_out + written), (size_t) (size_terminator - written)
+      ( (char *) (msg_out + written), (size_t) terminator_size(size_minus(msg_out_size, written))
       , "    "
       );
     if (l < 0) return assert_msg_check_snprintf(context, l, msg_out, msg_out_size, tag, &context->is_snprintf_err);
@@ -1269,7 +1242,7 @@ size_t assert_memeq_msg(unit_test_context_t *context, char *msg_out, size_t msg_
   else
   {
     l = snprintf
-      ( (char *) (msg_out + written), (size_t) (size_terminator - written)
+      ( (char *) (msg_out + written), (size_t) terminator_size(size_minus(msg_out_size, written))
       , "  "  /* A: No newline, so print two extra spaces for alignment. */
       );
     if (l < 0) return assert_msg_check_snprintf(context, l, msg_out, msg_out_size, tag, &context->is_snprintf_err);
@@ -1288,7 +1261,7 @@ size_t assert_memeq_msg(unit_test_context_t *context, char *msg_out, size_t msg_
       cols_printed = hexdump_indent_spaces + byte_print_width;
 
       l = snprintf
-        ( (char *) (msg_out + written), (size_t) (size_terminator - written)
+        ( (char *) (msg_out + written), (size_t) terminator_size(size_minus(msg_out_size, written))
         , "\n"
         );
       if (l < 0) return assert_msg_check_snprintf(context, l, msg_out, msg_out_size, tag, &context->is_snprintf_err);
@@ -1297,7 +1270,7 @@ size_t assert_memeq_msg(unit_test_context_t *context, char *msg_out, size_t msg_
       for (j = 0; j < hexdump_indent_spaces; ++j)
       {
         l = snprintf
-          ( (char *) (msg_out + written), (size_t) (size_terminator - written)
+          ( (char *) (msg_out + written), (size_t) terminator_size(size_minus(msg_out_size, written))
           , " "
           );
         if (l < 0) return assert_msg_check_snprintf(context, l, msg_out, msg_out_size, tag, &context->is_snprintf_err);
@@ -1307,7 +1280,7 @@ size_t assert_memeq_msg(unit_test_context_t *context, char *msg_out, size_t msg_
 
     /* Print the byte. */
     l = snprintf
-      ( (char *) (msg_out + written), (size_t) (size_terminator - written)
+      ( (char *) (msg_out + written), (size_t) terminator_size(size_minus(msg_out_size, written))
       , " 0x%.2X"
       , (unsigned int) (((unsigned char *) model)[i])
       );
@@ -1319,14 +1292,14 @@ size_t assert_memeq_msg(unit_test_context_t *context, char *msg_out, size_t msg_
   /* Hex dump of check: write what the memory should be equal to. */
 
   l = snprintf
-    ( (char *) (msg_out + written), (size_t) (size_terminator - written)
+    ( (char *) (msg_out + written), (size_t) terminator_size(size_minus(msg_out_size, written))
     , "\n"
     );
   if (l < 0) return assert_msg_check_snprintf(context, l, msg_out, msg_out_size, tag, &context->is_snprintf_err);
   written += l;
 
   l = snprintf
-    ( (char *) (msg_out + written), (size_t) (size_terminator - written)
+    ( (char *) (msg_out + written), (size_t) terminator_size(size_minus(msg_out_size, written))
     , "  actually is:"
     );
   if (l < 0) return assert_msg_check_snprintf(context, l, msg_out, msg_out_size, tag, &context->is_snprintf_err);
@@ -1336,14 +1309,14 @@ size_t assert_memeq_msg(unit_test_context_t *context, char *msg_out, size_t msg_
   if (need_multiple_lines)
   {
     l = snprintf
-      ( (char *) (msg_out + written), (size_t) (size_terminator - written)
+      ( (char *) (msg_out + written), (size_t) terminator_size(size_minus(msg_out_size, written))
       , "\n"
       );
     if (l < 0) return assert_msg_check_snprintf(context, l, msg_out, msg_out_size, tag, &context->is_snprintf_err);
     written += l;
 
     l = snprintf
-      ( (char *) (msg_out + written), (size_t) (size_terminator - written)
+      ( (char *) (msg_out + written), (size_t) terminator_size(size_minus(msg_out_size, written))
       , "    "
       );
     if (l < 0) return assert_msg_check_snprintf(context, l, msg_out, msg_out_size, tag, &context->is_snprintf_err);
@@ -1361,7 +1334,7 @@ size_t assert_memeq_msg(unit_test_context_t *context, char *msg_out, size_t msg_
       cols_printed = hexdump_indent_spaces + byte_print_width;
 
       l = snprintf
-        ( (char *) (msg_out + written), (size_t) (size_terminator - written)
+        ( (char *) (msg_out + written), (size_t) terminator_size(size_minus(msg_out_size, written))
         , "\n"
         );
       if (l < 0) return assert_msg_check_snprintf(context, l, msg_out, msg_out_size, tag, &context->is_snprintf_err);
@@ -1370,7 +1343,7 @@ size_t assert_memeq_msg(unit_test_context_t *context, char *msg_out, size_t msg_
       for (j = 0; j < hexdump_indent_spaces; ++j)
       {
         l = snprintf
-          ( (char *) (msg_out + written), (size_t) (size_terminator - written)
+          ( (char *) (msg_out + written), (size_t) terminator_size(size_minus(msg_out_size, written))
           , " "
           );
         if (l < 0) return assert_msg_check_snprintf(context, l, msg_out, msg_out_size, tag, &context->is_snprintf_err);
@@ -1380,7 +1353,7 @@ size_t assert_memeq_msg(unit_test_context_t *context, char *msg_out, size_t msg_
 
     /* Print the byte. */
     l = snprintf
-      ( (char *) (msg_out + written), (size_t) (size_terminator - written)
+      ( (char *) (msg_out + written), (size_t) terminator_size(size_minus(msg_out_size, written))
       , " 0x%.2X"
       , (unsigned int) (((unsigned char *) check)[i])
       );
@@ -1389,7 +1362,7 @@ size_t assert_memeq_msg(unit_test_context_t *context, char *msg_out, size_t msg_
   }
 
   l = snprintf
-    ( (char *) (msg_out + written), (size_t) (size_terminator - written)
+    ( (char *) (msg_out + written), (size_t) terminator_size(size_minus(msg_out_size, written))
     , "\n"
     );
   if (l < 0) return assert_msg_check_snprintf(context, l, msg_out, msg_out_size, tag, &context->is_snprintf_err);
@@ -1402,12 +1375,9 @@ size_t assert_memeq_msg(unit_test_context_t *context, char *msg_out, size_t msg_
 size_t assert_false_msg(unit_test_context_t *context, char *msg_out, size_t msg_out_size, const char *tag, int condition)
 {
   int    l;
-  size_t size_terminator;
-
-  size_terminator = msg_out_size - 1;  /* Make room for terminating NULL byte. */
 
   l = snprintf
-    ( (char *) msg_out, (size_t) size_terminator
+    ( (char *) msg_out, (size_t) terminator_size(msg_out_size)
     , "Inverse boolean assertion '%s' failed - the condition be false, but it is true: %d (bool: %d)\n"
     , (const char *) tag
     , (int) condition
@@ -1421,12 +1391,9 @@ size_t assert_false_msg(unit_test_context_t *context, char *msg_out, size_t msg_
 size_t assert_not_inteq_msg(unit_test_context_t *context, char *msg_out, size_t msg_out_size, const char *tag, int check, int model)
 {
   int    l;
-  size_t size_terminator;
-
-  size_terminator = msg_out_size - 1;  /* Make room for terminating NULL byte. */
 
   l = snprintf
-    ( (char *) msg_out, (size_t) size_terminator
+    ( (char *) msg_out, (size_t) terminator_size(msg_out_size)
     , "Inverse assertion '%s' failed - integers must differ, but they are the same:\n  should differ from:  %d\n  but still is:        %d\n"
     , (const char *) tag
     , (int) model
@@ -1440,12 +1407,9 @@ size_t assert_not_inteq_msg(unit_test_context_t *context, char *msg_out, size_t 
 size_t assert_not_streqz_msg(unit_test_context_t *context, char *msg_out, size_t msg_out_size, const char *tag, const char *check, const char *model)
 {
   int    l;
-  size_t size_terminator;
-
-  size_terminator = msg_out_size - 1;  /* Make room for terminating NULL byte. */
 
   l = snprintf
-    ( (char *) msg_out, (size_t) size_terminator
+    ( (char *) msg_out, (size_t) terminator_size(msg_out_size)
     , "Inverse assertion '%s' failed - strings must duffer, but they are the same:\n  should differ from:  %s\n  but still is:        %s\n"
     , (const char *) tag
     , (const char*) model
@@ -1459,11 +1423,8 @@ size_t assert_not_streqz_msg(unit_test_context_t *context, char *msg_out, size_t
 size_t assert_not_streqn_msg(unit_test_context_t *context, char *msg_out, size_t msg_out_size, const char *tag, const char *check, const char *model, size_t max_len)
 {
   int     l;
-  size_t  size_terminator;
 
   char   *checkz, *modelz;
-
-  size_terminator = msg_out_size - 1;  /* Make room for terminating NULL byte. */
 
   checkz = malloc(2 * (max_len+1));
   {
@@ -1475,7 +1436,7 @@ size_t assert_not_streqn_msg(unit_test_context_t *context, char *msg_out, size_t
     modelz[max_len] = 0;
 
     l = snprintf
-      ( (char *) msg_out, (size_t) size_terminator
+      ( (char *) msg_out, (size_t) terminator_size(msg_out_size)
       , "Inverse assertion '%s' failed - strings must duffer, but they are the same:\n  should differ from:  %s\n  but still is:        %s\n"
       , (const char *) tag
       , (const char *) modelz
@@ -1507,7 +1468,7 @@ size_t assert_not_memeq_msg(unit_test_context_t *context, char *msg_out, size_t 
   /* ---------------------------------------------------------------- */
   /* Start writing error message. */
   l = snprintf
-    ( (char *) (msg_out + written), (size_t) (size_terminator - written)
+    ( (char *) (msg_out + written), (size_t) terminator_size(size_minus(msg_out_size, written))
     , "Inverse assertion '%s' failed - '%d' bytes of memory must differ, but they are the same:"
     , (const char *) tag
     , (int) n
@@ -1519,14 +1480,14 @@ size_t assert_not_memeq_msg(unit_test_context_t *context, char *msg_out, size_t 
   /* Hex dump of model: write what the memory should be equal to. */
 
   l = snprintf
-    ( (char *) (msg_out + written), (size_t) (size_terminator - written)
+    ( (char *) (msg_out + written), (size_t) terminator_size(size_minus(msg_out_size, written))
     , "\n"
     );
   if (l < 0) return assert_msg_check_snprintf(context, l, msg_out, msg_out_size, tag, &context->is_snprintf_err);
   written += l;
 
   l = hexdump_indent_spaces = snprintf
-    ( (char *) (msg_out + written), (size_t) (size_terminator - written)
+    ( (char *) (msg_out + written), (size_t) terminator_size(size_minus(msg_out_size, written))
     , "  should differ from:"
     );
   if (l < 0) return assert_msg_check_snprintf(context, l, msg_out, msg_out_size, tag, &context->is_snprintf_err);
@@ -1542,14 +1503,14 @@ size_t assert_not_memeq_msg(unit_test_context_t *context, char *msg_out, size_t 
     need_multiple_lines = 1;
 
     l = snprintf
-      ( (char *) (msg_out + written), (size_t) (size_terminator - written)
+      ( (char *) (msg_out + written), (size_t) terminator_size(size_minus(msg_out_size, written))
       , "\n"
       );
     if (l < 0) return assert_msg_check_snprintf(context, l, msg_out, msg_out_size, tag, &context->is_snprintf_err);
     written += l;
 
     l = hexdump_indent_spaces = snprintf
-      ( (char *) (msg_out + written), (size_t) (size_terminator - written)
+      ( (char *) (msg_out + written), (size_t) terminator_size(size_minus(msg_out_size, written))
       , "    "
       );
     if (l < 0) return assert_msg_check_snprintf(context, l, msg_out, msg_out_size, tag, &context->is_snprintf_err);
@@ -1568,7 +1529,7 @@ size_t assert_not_memeq_msg(unit_test_context_t *context, char *msg_out, size_t 
       cols_printed = hexdump_indent_spaces + byte_print_width;
 
       l = snprintf
-        ( (char *) (msg_out + written), (size_t) (size_terminator - written)
+        ( (char *) (msg_out + written), (size_t) terminator_size(size_minus(msg_out_size, written))
         , "\n"
         );
       if (l < 0) return assert_msg_check_snprintf(context, l, msg_out, msg_out_size, tag, &context->is_snprintf_err);
@@ -1577,7 +1538,7 @@ size_t assert_not_memeq_msg(unit_test_context_t *context, char *msg_out, size_t 
       for (j = 0; j < hexdump_indent_spaces; ++j)
       {
         l = snprintf
-          ( (char *) (msg_out + written), (size_t) (size_terminator - written)
+          ( (char *) (msg_out + written), (size_t) terminator_size(size_minus(msg_out_size, written))
           , " "
           );
         if (l < 0) return assert_msg_check_snprintf(context, l, msg_out, msg_out_size, tag, &context->is_snprintf_err);
@@ -1587,7 +1548,7 @@ size_t assert_not_memeq_msg(unit_test_context_t *context, char *msg_out, size_t 
 
     /* Print the byte. */
     l = snprintf
-      ( (char *) (msg_out + written), (size_t) (size_terminator - written)
+      ( (char *) (msg_out + written), (size_t) terminator_size(size_minus(msg_out_size, written))
       , " 0x%.2X"
       , (unsigned int) (((unsigned char *) model)[i])
       );
@@ -1599,14 +1560,14 @@ size_t assert_not_memeq_msg(unit_test_context_t *context, char *msg_out, size_t 
   /* Hex dump of check: write what the memory should be equal to. */
 
   l = snprintf
-    ( (char *) (msg_out + written), (size_t) (size_terminator - written)
+    ( (char *) (msg_out + written), (size_t) terminator_size(size_minus(msg_out_size, written))
     , "\n"
     );
   if (l < 0) return assert_msg_check_snprintf(context, l, msg_out, msg_out_size, tag, &context->is_snprintf_err);
   written += l;
 
   l = snprintf
-    ( (char *) (msg_out + written), (size_t) (size_terminator - written)
+    ( (char *) (msg_out + written), (size_t) terminator_size(size_minus(msg_out_size, written))
     , "  but still is:"  /* A: Print six extra spaces below only without a newline. */
     );
   if (l < 0) return assert_msg_check_snprintf(context, l, msg_out, msg_out_size, tag, &context->is_snprintf_err);
@@ -1616,14 +1577,14 @@ size_t assert_not_memeq_msg(unit_test_context_t *context, char *msg_out, size_t 
   if (need_multiple_lines)
   {
     l = snprintf
-      ( (char *) (msg_out + written), (size_t) (size_terminator - written)
+      ( (char *) (msg_out + written), (size_t) terminator_size(size_minus(msg_out_size, written))
       , "\n"
       );
     if (l < 0) return assert_msg_check_snprintf(context, l, msg_out, msg_out_size, tag, &context->is_snprintf_err);
     written += l;
 
     l = snprintf
-      ( (char *) (msg_out + written), (size_t) (size_terminator - written)
+      ( (char *) (msg_out + written), (size_t) terminator_size(size_minus(msg_out_size, written))
       , "    "
       );
     if (l < 0) return assert_msg_check_snprintf(context, l, msg_out, msg_out_size, tag, &context->is_snprintf_err);
@@ -1632,7 +1593,7 @@ size_t assert_not_memeq_msg(unit_test_context_t *context, char *msg_out, size_t 
   else
   {
     l = snprintf
-      ( (char *) (msg_out + written), (size_t) (size_terminator - written)
+      ( (char *) (msg_out + written), (size_t) terminator_size(size_minus(msg_out_size, written))
       , "      "  /* A: No newline, so print six extra spaces for alignment. */
       );
     if (l < 0) return assert_msg_check_snprintf(context, l, msg_out, msg_out_size, tag, &context->is_snprintf_err);
@@ -1650,7 +1611,7 @@ size_t assert_not_memeq_msg(unit_test_context_t *context, char *msg_out, size_t 
       cols_printed = hexdump_indent_spaces + byte_print_width;
 
       l = snprintf
-        ( (char *) (msg_out + written), (size_t) (size_terminator - written)
+        ( (char *) (msg_out + written), (size_t) terminator_size(size_minus(msg_out_size, written))
         , "\n"
         );
       if (l < 0) return assert_msg_check_snprintf(context, l, msg_out, msg_out_size, tag, &context->is_snprintf_err);
@@ -1659,7 +1620,7 @@ size_t assert_not_memeq_msg(unit_test_context_t *context, char *msg_out, size_t 
       for (j = 0; j < hexdump_indent_spaces; ++j)
       {
         l = snprintf
-          ( (char *) (msg_out + written), (size_t) (size_terminator - written)
+          ( (char *) (msg_out + written), (size_t) terminator_size(size_minus(msg_out_size, written))
           , " "
           );
         if (l < 0) return assert_msg_check_snprintf(context, l, msg_out, msg_out_size, tag, &context->is_snprintf_err);
@@ -1669,7 +1630,7 @@ size_t assert_not_memeq_msg(unit_test_context_t *context, char *msg_out, size_t 
 
     /* Print the byte. */
     l = snprintf
-      ( (char *) (msg_out + written), (size_t) (size_terminator - written)
+      ( (char *) (msg_out + written), (size_t) terminator_size(size_minus(msg_out_size, written))
       , " 0x%.2X"
       , (unsigned int) (((unsigned char *) check)[i])
       );
@@ -1678,7 +1639,7 @@ size_t assert_not_memeq_msg(unit_test_context_t *context, char *msg_out, size_t 
   }
 
   l = snprintf
-    ( (char *) (msg_out + written), (size_t) (size_terminator - written)
+    ( (char *) (msg_out + written), (size_t) terminator_size(size_minus(msg_out_size, written))
     , "\n"
     );
   if (l < 0) return assert_msg_check_snprintf(context, l, msg_out, msg_out_size, tag, &context->is_snprintf_err);
