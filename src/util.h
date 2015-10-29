@@ -45,12 +45,30 @@
  */
 #include <stddef.h>
 
-int snprintf(char *str, size_t size, const char *format, ...);
+#define MIN(a, b) (((a) <= (b)) ? (a) : (b))
+#define MAX(a, b) (((a) >  (b)) ? (a) : (b))
 
-int max_int(int a, int b);
 int min_int(int a, int b);
+int max_int(int a, int b);
+
+size_t min_size(size_t a, size_t b);
+size_t max_size(size_t a, size_t b);
+
+/* ---------------------------------------------------------------- */
+
+int snprintf(char *str, size_t size, const char *format, ...);
 
 /* Should be called only from locations that shouldn't be reached. */
 void report_bug(const char *msg);
+
+size_t size_minus(size_t from, size_t subtract_by);
+
+size_t terminator_size(size_t total_size);
+
+void ensure_ascii_null_terminated(char *buf, size_t buf_size);
+
+#define ASCII_ENDS_IN_CHAR_DEFAULT_ENDING ('\n')
+int ascii_ends_in_char(const char *null_terminated_str, char ending);
+int ensure_ascii_ends_in_char(char *buf, size_t buf_size, char ending);
 
 #endif /* ifndef UTIL_H */
