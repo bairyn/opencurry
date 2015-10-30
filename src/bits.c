@@ -33,4 +33,7 @@
 #include "base.h"
 #include "bits.h"
 
-void bits_placeholder(void) { }
+unsigned int one_bit_repeat_uint(unsigned int num)
+{
+  return ONE_BIT_REPEAT(num);
+}

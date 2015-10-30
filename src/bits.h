@@ -39,4 +39,25 @@
 #define BITS_H
 #include "base.h"
 
+/*
+ * ONE_BIT_REPEAT(num): generate a value whose last "num" bits are 1.
+ *
+ * Example:
+ *   ONE_BIT_REPEAT(0): 0000 0000
+ *   ONE_BIT_REPEAT(2): 0000 0011
+ *   ONE_BIT_REPEAT(7): 0111 1111
+ *   ONE_BIT_REPEAT(8): 1111 1111
+ *
+ * FIXME: 1st note
+ *
+ * Implementation note:
+ *   "(1 << num) - 1" works except when generating fixed-width values with all
+ *   1 bits, because what "(1 << num)" should be in this case is too large.
+ *
+ *   "(1 << num) - 1 | (1 << (num-1))" works except when num is 0, due to
+ *   negative shift width.
+ */
+#define ONE_BIT_REPEAT(num) ((1 << (num)) - 1)
+unsigned int one_bit_repeat_uint(unsigned int num);
+
 #endif /* ifndef BITS_H */
