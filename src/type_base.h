@@ -1280,14 +1280,46 @@ struct type_s
   const char *parity;
 };
 
-extern const type_t type_defaults;
+/* ---------------------------------------------------------------- */
 
-const struct_info_t *type_is_not_struct(const type_t *self);
+/*
+ * Common "type_t" abstractions.
+ */
 
+/* "typed" */
 const type_t *type_is_typed(const type_t *self);
 const type_t *type_is_untyped(const type_t *self);
 
+/* name */
+
+/* info */
+
+/* size */
+
+/* is_struct */
+const struct_info_t *type_is_not_struct(const type_t *self);
+
+/* cons_type" */
+typed_t type_has_template_cons_type(const type_t *self);
+
+/* init */
+TODO
+
+/* ---------------------------------------------------------------- */
+
+/*
+ * "type_t" defaults.
+ */
+
+extern const type_t type_defaults;
+
 const tval   *type_has_no_default(const type_t *self);
+
+/* ---------------------------------------------------------------- */
+
+/*
+ * Fundamental "type_t" accessors.
+ */
 
 const type_t        *type_typed      (const type_t *type);
 const char          *type_name       (const type_t *type);
