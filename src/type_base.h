@@ -45,8 +45,7 @@
 
 #include "base.h"
 
-/* TODO */
-typedef void *dup_traversal_t;
+#include "bits.h"
 
 /* ---------------------------------------------------------------- */
 /* Out-of-order forward declarations.                               */
@@ -288,11 +287,40 @@ extern const memory_tracker_t memory_tracker_defaults;
 const char *memory_tracker_initialize_no_buffers(memory_tracker_t *memory_tracker, const memory_manager_t *memory_manager, void *dynamically_allocated_container);
 
 /* ---------------------------------------------------------------- */
-/* struct_info_t and field_info_t                                   */
+/* struct_info_t, field_info_t, and ref_traversal_t                 */
+/* ---------------------------------------------------------------- */
+
+/* TODO */
+const type_t *ref_traversal_type(void);
+extern const type_t ref_traversal_type_def;
+typedef struct ref_traversal_s ref_traversal_t;
+struct ref_traversal_s
+{
+  typed_t type;
+
+  memory_tracker_t memory;
+
+  /* TODO void TODO_on_loop; */
+
+  void   **history;
+  size_t   history_num;
+  size_t   history_size;
+  size_t   history_len;
+};
+
+/* TODO */
+
 /* ---------------------------------------------------------------- */
 
 /* TODO */
 
+/* TODO: it's unclear which arguments refer to base structures from which the
+ * field is derived and which refer to the fields themselves!
+ *
+ * TODO: if possible, parameters should consistently be base structures?
+ */
+
+/* TODO: update field_info_type's struct_info */
 const type_t *field_info_type(void);
 extern const type_t field_info_type_def;
 typedef struct field_info_s field_info_t;
@@ -308,23 +336,24 @@ struct field_info_s
 
   /* Whether this field is specific to each value.       */
   /*                                                     */
-  /* This determines whether to avoid duplicating this   */
-  /* field when copying                                  */
-  /* unless otherwise requested.                         */
+  /* Should "dup" skip this value when duplicating or    */
+  /* copying this field unless otherwise requested?      */
   /*                                                     */
   /* This is appropriate for fields that should be       */
   /* unique to each value, like a value's memory         */
   /* tracker.                                            */
   int           is_metadata;
 
-  /* Should "dup" recursively copy this field? */
-  int           is_recurse;
+  /* Is this field a reference that "dup" should         */
+  /* recursively copy with the field's type's "dup"      */
+  /* function when copying is requested?                 */
+  int           is_copyable_ref;
 
   /* Write the default value for this field.             */
   /*                                                     */
   /* NULL values default to writing 0's in               */
   /* memory.                                             */
-  size_t      (*default_value)        (const field_info_t *self, void *dest_mem);
+  size_t      (*default_value)        (const field_info_t *self, void *dest_field_mem);
 
   /* Write the value, usually 0 or NULL, that indicates  */
   /* that "template_cons_t"-based initializers should    */
@@ -336,15 +365,290 @@ struct field_info_s
   /*                                                     */
   /* A NULL reference defaults to comparing the memory   */
   /* against 0's.                                        */
-  size_t      (*template_unused_value)(const field_info_t *self, void *dest_mem);
+  size_t      (*template_unused_value)(const field_info_t *self, void *dest_field_mem);
 };
 
 extern const field_info_t field_info_defaults;
 
+/*
+ * Common "default_value" abstractions.
+ */
+
+/* TODO: Wait, why can't we use the field_infos themselves for sub-types? */
+/*
+ * Standard use case for default field values:
+ *
+ * Use the "type" to determine whether it has a default_value ("has_default"),
+ * and, if so, reference this to assign a default value for each field, equal
+ * to the value of the type's default value.
+ *
+ * Otherwise, it has no default value, so first use "type" to determine whether the
+ * struct's first field is a "typed_t" ("type_typed"), and if so, assign the
+ * first field a default of "type", and then second recursively apply the same
+ * algorithm for each field, obtaining a field's default value from its type.
+ *
+ * In the latter case, for rare mutually recursive types, leading to a virtual loop
+ * in a recursion representation, a default value of 0/NULL is chosen nearest
+ * the beginning of such a loop.  (These cases are handled correctly; infinite
+ * loops are avoided by tracking visited defaults through "ref", which is
+ * usually NULL when called at the root level.)
+ *
+ * TODO: update:
+ * Thus:
+ *   type_has_default(type):
+ *     yes:  default_value_from_struct (self, dest_mem, type_has_default(type))
+ *     NULL: default_value_type_or_zero(self, dest_mem, type)
+ *
+ * Example:
+ *
+ * > const tval *mystruct_type(void);
+ * > typedef struct mystruct_s mystruct_t;
+ * > struct mystruct_s
+ * > {
+ * >   typed_t type;
+ * >
+ * >   double size;
+ * >   int a;
+ * >   int b;
+ * > };
+ * >
+ * > const mystruct_t mystruct_defaults =
+ * > { mystruct_type
+ * >
+ * > , 1.0
+ * > , 0.0
+ * > , 0.0
+ * > }
+ * >
+ * > /-* ... *-/
+ * >
+ * > static size_t mystruct_type_is_struct_default_value(const field_info_t *self, void *dest_field_mem)
+ * > {
+ * >   return default_value_from_struct(self, dest_field_mem, mystruct_type, NULL);
+ * > }
+ */
+size_t default_value_from_type(const field_info_t *self, void *dest_mem, typed_t type, ref_traversal_t *ref);
+
+/*
+ * Each field has a default value of 0 / NULL.
+ *
+ * This is the default for field_info's that lack a provided "default_value"
+ * value (i.e. it is NULL).  (However, most default procedures that *generate*
+ * field_info's or struct_info's choose a more reasonable default for
+ * field_info, where there is usually more context available, e.g. a "type_t".)
+ *
+ * (Not recommended for general use, because "typed_t" is recommended to
+ * default to the type of the struct.)
+ *
+ * (An alternative function that handles the "typed" field is
+ * "default_value_type_or_zero".)
+ *
+ * (However, a struct's "default_value" function might use this for all fields
+ * except for the "typed_t type" field.)
+ *
+ * (For example:)
+ *
+ * > const tval *mystruct_type(void);
+ * > typedef struct mystruct_s mystruct_t;
+ * > struct mystruct_s
+ * > {
+ * >   typed_t type;
+ * >
+ * >   double size;
+ * >   int a;
+ * >   int b;
+ * > };
+ * >
+ * > /-* ... *-/
+ * >
+ * > static size_t mystruct_type_is_struct_default_value(const field_info_t *self, void *dest_field_mem)
+ * > {
+ * >   static const mystruct_t empty;
+ * > 
+ * >   /-* typed_t type                                                *-/
+ * >   if      (field_info_cref(self, &empty) == &empty.type)
+ * >   {
+ * >     typedef typed_t field_type;
+ * > 
+ * >     field_type *dest_field = (field_type *) dest_field_mem;
+ * > 
+ * >     if (dest_field) *dest_field =
+ * >       memory_manager_type;
+ * > 
+ * >     return sizeof(field_type);
+ * >   }
+ * > 
+ * >   /-* General case for all other fields, and unrecognized fields. *-/
+ * >   else
+ * >   {
+ * >     return default_value_zero(self, dest_field_mem);
+ * >   }
+ * > }
+ *
+ * The above example is abstracted with "default_value_type_or_zero".
+ */
 size_t default_value_zero(const field_info_t *self, void *dest_mem);
+
+/*
+ * Each field has a default value equal to the field values in "defaults".
+ *
+ * Example:
+ *
+ * > const tval *mystruct_type(void);
+ * > typedef struct mystruct_s mystruct_t;
+ * > struct mystruct_s
+ * > {
+ * >   typed_t type;
+ * >
+ * >   double size;
+ * >   int a;
+ * >   int b;
+ * > };
+ * >
+ * > const mystruct_t mystruct_defaults =
+ * > { mystruct_type
+ * >
+ * > , 1.0
+ * > , 0.0
+ * > , 0.0
+ * > }
+ * >
+ * > /-* ... *-/
+ * >
+ * > static size_t mystruct_type_is_struct_default_value(const field_info_t *self, void *dest_field_mem)
+ * > {
+ * >   return default_value_from_struct(self, dest_field_mem, &mystruct_defaults);
+ * > }
+ *
+ * If an associated "type_t" is available, it may be more idiomatic to use
+ * "default_value_from_type_defaults".
+ *
+ * If "defaults" is NULL, then this behaves like "default_value_zero".
+ */
+size_t default_value_from_struct(const field_info_t *self, void *dest_field_mem, const void *defaults);
+/*
+ * TODO: also implement this?
+ * Return a function pointer suitable for "default_value" that returns the
+ * field from the struct.
+ *
+ * All fields have default values equal to the input struct's field values.
+ *
+ * If the struct has a value containing default values at each field, then
+ * "default_value" can be assigned to this.
+ *
+ * TODO document
+ */
+/*
+size_t (*
+  default_value_from_struct(const void *defaults)
+  )(const field_info_t *self, void *dest_field_mem);
+*/
+
+/*
+ * Each field has a default value of the field's type's default value if it has
+ * one, otherwise 0 / NULL.
+ *
+ * (Not recommended for general use, because "typed_t" is recommended to
+ * default to the type of the struct, not to the default type of "type_type"!
+ * ("type_type" is the type of "type_t", the type of type representation
+ * structs.)
+ *
+ * (An alternative function that handles the "typed" field is
+ * "default_value_type_or_fieldwise_defaults".)
+ *
+ * Like "default_value_type_or_zero", except for all fields, other than the
+ * first if the struct is "typed" (i.e. the first field is "typed_t"), first
+ * use the field's "type" to check whether it has a default value, and if so,
+ * use it, otherwise assign 0/NULL for this field.
+ *
+ * Thus, for all fields excepting the "typed" field if it exists:
+ *   type_has_default(type):
+ *     yes:  default_value_from_struct (self, dest_mem, type_has_default(type))
+ *     NULL: default_value_type_or_zero(self, dest_mem, type)
+ */
+size_t default_value_fieldwise_defaults(const field_info_t *self, void *dest_mem, typed_t typed_field_default);
+
+/*
+ * Like "default_value_zero", each field has a default value of 0, except
+ * assign a default type for the type field if "typed_field_default" reports
+ * that values are "tval *"s, i.e., in the case of a struct, the struct's first
+ * field is "typed_t"; otherwise behave like "default_value_zero".
+ *
+ * Example:
+ *
+ * > const tval *mystruct_type(void);
+ * > typedef struct mystruct_s mystruct_t;
+ * > struct mystruct_s
+ * > {
+ * >   typed_t type;
+ * >
+ * >   double size;
+ * >   int a;
+ * >   int b;
+ * > };
+ * >
+ * > /-* ... *-/
+ * >
+ * > static size_t mystruct_type_is_struct_default_value(const field_info_t *self, void *dest_field_mem)
+ * > {
+ * >   return default_value_type_or_zero(self, dest_field_mem, mystruct_type);
+ * > }
+ *
+ * The field is effectively checked whether it is equal to
+ * "&type_is_struct(mystruct_type)->fields[0]" if "type_field_default" is
+ * typed.
+ */
+size_t default_value_type_or_zero(const field_info_t *self, void *dest_mem, typed_t typed_field_default);
+
+/*
+ * Use the "type" to determine whether it has a default_value ("has_default"),
+ * and, if so, use this to assign a default value for each field.
+ *
+ * Otherwise, it has no default value, so first use "type" to determine whether the
+ * struct's first field is a "typed_t" ("type_typed"), and if so, assign the
+ * first field a default of "type", and then second assign a default "zero"
+ * value for all other fields.
+ *
+ * TODO: update:
+ * Thus:
+ *   type_has_default(type):
+ *     yes:  default_value_from_struct (self, dest_mem, type_has_default(type))
+ *     NULL: default_value_type_or_zero(self, dest_mem, type)
+ *
+ * If "type" is NULL, this behaves like "default_value_zero".
+ */
+size_t default_value_from_type_defaults(const field_info_t *self, void *dest_mem, typed_t type);
+
+/*
+ * Like "default_value_type_or_zero", except for all fields, other than the
+ * first if the struct is "typed" (i.e. the first field is "typed_t"), first
+ * use the field's "type" to check whether it has a default value, and if so,
+ * use it, otherwise assign 0/NULL for this field.
+ *
+ * TODO: update:
+ * Thus, for all fields excepting the "typed" field if it exists:
+ *   type_has_default(type):
+ *     yes:  default_value_from_struct (self, dest_mem, type_has_default(type))
+ *     NULL: default_value_type_or_zero(self, dest_mem, type)
+ */
+size_t default_value_type_or_fieldwise_defaults(const field_info_t *self, void *dest_mem, typed_t typed_field_default);
+
+
+
+
+
+
+
+
+
 size_t template_unused_value_zero(const field_info_t *self, void *dest_mem);
 
 size_t template_no_unused_value(const field_info_t *self, void *dest_mem);
+
+int is_field_terminator(const field_info_t *field_info);
+
+void       *field_info_ref (const field_info_t *field_info,  void       *val);
+const void *field_info_cref(const field_info_t *field_info,  const void *val);
 
 #define FIELD_MEMCMP_ERR_NULL_S1 ((int) -0x37ED)
 #define FIELD_MEMCMP_ERR_NULL_S2 ((int) -0x37EE)
@@ -357,6 +661,9 @@ size_t template_no_unused_value(const field_info_t *self, void *dest_mem);
  *   < 0: First byte in "s1" is less    than first byte in "s2".
  */
 int field_memcmp(const field_info_t *field_info, const void *s1, const void *s2);
+
+void *field_memcpy(const field_info_t *field_info, void *dest, const void *src);
+void *field_memmove(const field_info_t *field_info, void *dest, const void *src);
 
 /*
  * Determine whether the source field value is equal to the field's "special
@@ -377,8 +684,42 @@ int field_memcmp(const field_info_t *field_info, const void *s1, const void *s2)
  *              performed.
  *          -2: "src_mem" is NULL.
  *          ...
+ *
+ * "working_mem" can overlap with "dest" if its original contents aren't
+ * needed.  If they overlap, then writing a default value to "dest" will still
+ * succeed (returns >= 1).  But if no default value is written (returns 0) then
+ * "dest" could end up with unspecified data.
  */
-int is_field_template_unused(const field_info_t *field_info, const void *src_mem, void *working_mem, const memory_manager_t *memory_manager, void *out_default_mem);
+int is_field_template_unused(const field_info_t *field_info, const void *src_field_mem, void *field_working_mem, const memory_manager_t *memory_manager, void *out_field_default_mem);
+
+enum verify_field_info_status_e
+{
+  /* The checks that were requested to run passed.                */
+  verify_field_info_success          = 0,
+
+  /* "verify_field" was called with a NULL "field_info" argument. */
+  verify_field_info_null_struct_info = 1,
+
+  /* The "field_info"'s "type" field value is NULL.               */
+  verify_field_info_no_type          = 2,
+
+  verify_field_info_size_mismatch    = 3,
+
+  verify_field_info_end,
+
+  /* 1: 0-1 */
+  /* 2: 0-3 */
+  /* 3: 0-7 */
+  verify_field_info_bits     = 2,
+  verify_field_info_end_mask = ONE_BIT_REPEAT(verify_field_info_bits)
+};
+typedef enum verify_field_info_status_e verify_field_info_status_t;
+
+verify_field_info_status_t verify_field_info(const field_info_t *field_info, char *out_err, size_t err_size);
+
+const char *field_dup(const field_info_t *field_info, void *dest, const void *src, int force_no_defaults, int rec_copy, int dup_metadata, ref_traversal_t *ref_traversal);
+
+/* ---------------------------------------------------------------- */
 
 /* TODO */
 
@@ -390,7 +731,7 @@ struct struct_info_s
 {
   typed_t type;
 
-  /* Must be terminated by "terminating_struct_info". */
+  /* Must be terminated by "field_terminator". */
   field_info_t fields[STRUCT_INFO_NUM_FIELDS];
   size_t       fields_len;
 
@@ -408,6 +749,8 @@ struct struct_info_s
 extern const struct_info_t struct_info_defaults;
 
 /* For redundantly verifying "fields_len" is correct. */
+extern const field_info_t * const field_terminator;
+
 extern const field_info_t terminating_field_info;
 
 /*
@@ -416,7 +759,49 @@ extern const field_info_t terminating_field_info;
  *
  * With no value, return NULL.
  */
-memory_tracker_t *struct_value_has_memory_tracker(const struct_info *struct_info, void *src_mem);
+memory_tracker_t *struct_value_has_memory_tracker(const struct_info_t *struct_info, void *src_mem);
+
+enum verify_struct_info_status_e
+{
+  /* The checks that were requested to run passed.                      */
+  verify_struct_info_success          = 0,
+
+  /* "verify_struct" was called with a NULL "struct_info" argument.     */
+  verify_struct_info_null_struct_info = 1,
+
+  /* fields_len is too big; excess fields need to be moved to the tail. */
+  verify_struct_info_need_tail_excess = 2,
+
+  /* fields_len is at max capacity with no field terminator.            */
+  /* At least one field needs to be moved to the tail.                  */
+  verify_struct_info_need_tail_max    = 3,
+
+  /* A call to "is_field_terminator" failed with a general error code.  */
+  verify_struct_info_is_field_terminator_error
+                                      = 4,
+  /* Invalid field: a call to "verify_field_info" failed.               */
+  /*                                                                    */
+  /* The struct_info_field_error's bits are OR'd onto this beyond       */
+  /* verify_struct_info_bits.                                           */
+  verify_struct_info_verify_field_info_error       
+                                      = 5,
+
+  verify_struct_info_end,
+
+  /* 1: 0- 1 */
+  /* 2: 0- 3 */
+  /* 3: 0- 7 */
+  /* 4: 0-15 */
+  verify_struct_info_bits     = 3,
+  verify_struct_info_end_mask = ONE_BIT_REPEAT(verify_struct_info_bits)
+};
+typedef enum verify_struct_info_status_e verify_struct_info_status_t;
+
+#define DEFAULT_BUF_SIZE_VERIFY_STRUCT_INFO 4096
+/*
+ * Returns 0 on success.
+ */
+int verify_struct_info(const struct_info_t *struct_info, char *out_err, size_t err_size);
 
 /*
  * struct_dup:
@@ -446,7 +831,7 @@ memory_tracker_t *struct_value_has_memory_tracker(const struct_info *struct_info
  *
  * Returns NULL on success, and an error message on failure.
  */
-const char *struct_dup(const struct_info_t *struct_info, void *dest, const void *src, int force_no_defaults, int rec_copy, int dup_metadata, dup_traversal_t *dup_traversal);
+const char *struct_dup(const struct_info_t *struct_info, void *dest, const void *src, int force_no_defaults, int rec_copy, int dup_metadata, ref_traversal_t *ref_traversal);
 
 /* ---------------------------------------------------------------- */
 /* type_t                                                           */
@@ -835,6 +1220,9 @@ struct type_s
   /* a new one should be dynamically allocated, using management      */
   /* associated with "src" in case of differences.                    */
   /*                                                                  */
+  /* force_no_defaults:                                               */
+  /*   TODO                                                           */
+  /*                                                                  */
   /* rec_copy:                                                        */
   /*   0 to skip recursively calling "dup" on subcomponents that are  */
   /*   references designated as copyable.                             */
@@ -865,17 +1253,17 @@ struct type_s
   /*   argument, because of a lack of a direct appropriate memory     */
   /*   tracker.                                                       */
   /*                                                                  */
-  /* dup_traversal:                                                   */
+  /* ref_traversal:                                                   */
   /*   History of values duplicated, used to avoid loops during       */
   /*   recursive copying.                                             */
   /*                                                                  */
   /*   When "dup" is called at the root level, this can be NULL.      */
   /*                                                                  */
-  /*   Users can also preinitialize a dup_traversal_t before calling. */
+  /*   Users can also preinitialize a ref_traversal_t before calling. */
   /*   One possible useful purpose for this is to set a callback      */
   /*   for when a loop is detected.                                   */
   /*                                                                  */
-  /*   (At non-root-level recursive calls, passing a "dup_traversal"  */
+  /*   (At non-root-level recursive calls, passing a "ref_traversal"  */
   /*   is optional but highly recommended.)                           */
   /*                                                                  */
   /* Returns NULL on failure.                                         */
@@ -884,7 +1272,8 @@ struct type_s
                                      , const tval *src
                                      , int rec_copy
                                      , int dup_metadata
-                                     , dup_traversal_t *dup_traversal);
+                                     , ref_traversal_t *ref_traversal
+                                     );
 
   /* ---------------------------------------------------------------- */
 
@@ -895,10 +1284,28 @@ extern const type_t type_defaults;
 
 const struct_info_t *type_is_not_struct(const type_t *self);
 
-const type_t *type_typed(const type_t *self);
-const type_t *type_untyped(const type_t *self);
+const type_t *type_is_typed(const type_t *self);
+const type_t *type_is_untyped(const type_t *self);
 
 const tval   *type_has_no_default(const type_t *self);
+
+const type_t        *type_typed      (const type_t *type);
+const char          *type_name       (const type_t *type);
+const char          *type_info       (const type_t *type);
+size_t               type_size       (const type_t *type, const tval *val);
+const struct_info_t *type_is_struct  (const type_t *type);
+typed_t              type_cons_type  (const type_t *type);
+tval                *type_init       (const type_t *type, tval *cons);
+void                 type_free       (const type_t *type, tval *val);
+const tval          *type_has_default(const type_t *type);
+memory_tracker_t    *type_mem        (const type_t *type, tval *val_raw);
+tval                *type_dup        ( const type_t *type
+                                     , tval *dest
+                                     , const tval *src
+                                     , int rec_copy
+                                     , int dup_metadata
+                                     , ref_traversal_t *ref_traversal
+                                     );
 
 /* ---------------------------------------------------------------- */
 /* Template constructors, available for types to use.               */
@@ -973,7 +1380,7 @@ struct template_cons_s
    *
    * Allows callbacks in case of recursive copy loops.
    */
-  dup_traversal_t *dup_traversal;
+  ref_traversal_t *ref_traversal;
 
   /*
    * When assigning struct fields, don't skip assignment of specially
@@ -1014,6 +1421,11 @@ extern const template_cons_t template_cons_defaults;
 extern const template_cons_t * const default_template_cons;
 
 /*
+ * TODO
+ */
+const typed_t type_uses_template_cons(const type_t *type);
+
+/*
  * Invoke "template_cons_dup_struct" from the type's data.
  *
  * This is not an alternative to a type's initializer, because a "type" might
@@ -1025,7 +1437,9 @@ extern const template_cons_t * const default_template_cons;
  *
  * TODO
  */
-tval *template_cons_initializer(const type_t *type, template_cons_t *cons);
+tval *template_cons_basic_initializer(const type_t *type, template_cons_t *cons);
+
+tval *template_cons_basic_freer(const type_t *type, template_cons_t *cons);
 
 /* TODO. */
 /* This can be used by initializers. */
@@ -1049,7 +1463,15 @@ tval *template_cons_dup_struct
   , memory_tracker_t      *(*mem)(const type_t *self, tval *val)
   );
 
-memory_tracker_t *(*)(tval *val) template_cons_get_type_mem(const type_t *type)
+/* TODO: should we keep this after defining type_* accessors for type_t's? */
+/*
+ * template_cons_get_type_mem:
+ *
+ * Return the type's "mem"
+ */
+memory_tracker_t *(*
+    template_cons_get_type_mem(const type_t *type)
+  )(const type_t *self, tval *val_raw);
 
 /* Free memory allocated by "template_cons_dup_struct" and memory referred to
  * by "memory_tracker".
