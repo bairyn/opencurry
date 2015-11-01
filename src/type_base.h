@@ -166,6 +166,8 @@ typedef const type_t *(*typed_t)(void);
  */
 typedef void tval;
 
+const type_t *tval_type(const tval *val);
+
 /* ---------------------------------------------------------------- */
 /* Memory managers.                                                 */
 /* ---------------------------------------------------------------- */
@@ -219,6 +221,7 @@ void  memory_manager_on_oom (const memory_manager_t *memory_manager, size_t     
 void  memory_manager_on_err (const memory_manager_t *memory_manager, const char *msg);
 
 
+/* TODO: Remove "buffers"; just use "allocations". */
 const type_t *memory_tracker_type(void);
 extern const type_t memory_tracker_type_def;
 typedef struct memory_tracker_s memory_tracker_t;
@@ -274,6 +277,12 @@ struct memory_tracker_s
 /* 0 dynamically allocated buffer slots.                            */
 extern const memory_tracker_t memory_tracker_defaults;
 
+/* A global memory tracker for general use. */
+extern const memory_tracker_t global_memory_tracker;
+
+/* A global memory tracker for dynamic typed-value allocations, for types to use as a default. */
+extern const memory_tracker_t global_typed_dyn_memory_tracker;
+
 /*
  * Initialize a "memory_tracker" with no allocated buffers.
  *
@@ -284,7 +293,39 @@ extern const memory_tracker_t memory_tracker_defaults;
  *
  * Returns NULL on success, and a pointer to an error message on failure.
  */
-const char *memory_tracker_initialize_no_buffers(memory_tracker_t *memory_tracker, const memory_manager_t *memory_manager, void *dynamically_allocated_container);
+const char *memory_tracker_initialize_empty_with_container(memory_tracker_t *memory_tracker, const memory_manager_t *memory_manager, void *dynamically_allocated_container);
+
+
+/* Is this allocation being tracked? */
+int               memory_tracker_is_allocation_tracked  (memory_tracker_t *memory_tracker, const void *buffer_allocation), char *out_err_buf, size_t err_buf_size;
+
+/* Adds an already-malloc'd buffer to the memory tracker, returning NULL on failure, otherwise returning "memory_tracker". */
+memory_tracker_t *memory_tracker_track_allocation       (memory_tracker_t *memory_tracker, void *buffer_allocation, char *out_err_buf, size_t err_buf_size);
+
+/* Returns a pointer to the new allocation. */
+void             *memory_tracker_malloc_allocation      (memory_tracker_t *memory_tracker, size_t size, char *out_err_buf, size_t err_buf_size);
+void             *memory_tracker_calloc_allocation      (memory_tracker_t *memory_tracker, size_t nmemb, size_t size, char *out_err_buf, size_t err_buf_size);
+void             *memory_tracker_realloc_allocation     (memory_tracker_t *memory_tracker, void *buffer_allocation, size_t size, char *out_err_buf, size_t err_buf_size);
+
+/* Returns <= -1 on error, >= 0 on success: 0 if allow_untracked and */
+/* untracked, >=1 otherwise.                                         */
+int               memory_tracker_untrack_allocation     (memory_tracker_t *memory_tracker, void *buffer_allocation, int allow_untracked, char *out_err_buf, size_t err_buf_size);
+int               memory_tracker_untrack_all_allocations(memory_tracker_t *memory_tracker, char *out_err_buf, size_t err_buf_size);
+
+/* Returns <= -1 on error, >= 0 on success: 0 if allow_untracked and */
+/* untracked, >=1 otherwise.                                         */
+int               memory_tracker_free_allocation        (memory_tracker_t *memory_tracker, void *buffer_allocation, int allow_untracked, char *out_err_buf, size_t err_buf_size);
+int               memory_tracker_free_all_allocations   (memory_tracker_t *memory_tracker, char *out_err_buf, size_t err_buf_size);
+
+/* Returns <= -1 on error, >= 0 on success: 0 when the tracker itself is not */
+/* dynamically allocated, i.e. its container field value is NULL (all of its */
+/* allocations are still freed), and >= 1 otherwise.                         */
+int               memory_tracker_free_container         (memory_tracker_t *memory_tracker, char *out_err_buf, size_t err_buf_size);
+
+/* Returns <= -1 on error, >= 0 on success:      */
+/* 0 when no tag is set, >= 1 when a tag is set. */
+int               memory_tracker_get_tag                (memory_tracker_t *memory_tracker, void *buffer_allocation, size_t *out_tag, char *out_err_buf, size_t err_buf_size);
+int               memory_tracker_set_tag                (memory_tracker_t *memory_tracker, void *buffer_allocation, size_t tag,      char *out_err_buf, size_t err_buf_size);
 
 /* ---------------------------------------------------------------- */
 /* struct_info_t, field_info_t, and ref_traversal_t                 */
@@ -717,7 +758,7 @@ typedef enum verify_field_info_status_e verify_field_info_status_t;
 
 verify_field_info_status_t verify_field_info(const field_info_t *field_info, char *out_err, size_t err_size);
 
-const char *field_dup(const field_info_t *field_info, void *dest, const void *src, int force_no_defaults, int rec_copy, int dup_metadata, ref_traversal_t *ref_traversal);
+const char *field_dup(const field_info_t *field_info, void *dest, const void *src, int force_no_default, int rec_copy, int dup_metadata, ref_traversal_t *ref_traversal);
 
 /* ---------------------------------------------------------------- */
 
@@ -831,7 +872,7 @@ int verify_struct_info(const struct_info_t *struct_info, char *out_err, size_t e
  *
  * Returns NULL on success, and an error message on failure.
  */
-const char *struct_dup(const struct_info_t *struct_info, void *dest, const void *src, int force_no_defaults, int rec_copy, int dup_metadata, ref_traversal_t *ref_traversal);
+const char *struct_dup(const struct_info_t *struct_info, void *dest, const void *src, int force_no_default, int rec_copy, int dup_metadata, ref_traversal_t *ref_traversal);
 
 /* ---------------------------------------------------------------- */
 /* type_t                                                           */
@@ -1172,6 +1213,10 @@ struct type_s
   /* A type that doesn't should return NULL.                          */
   const tval          *(*has_default)(const type_t *self);
 
+  /* ---------------------------------------------------------------- */
+  /* Dynamic memory allocation.                                       */
+  /* ---------------------------------------------------------------- */
+
   /* How to track memory allocation for values of this type.          */
   /*                                                                  */
   /* "mem" should return a reference to the memory tracker associated */
@@ -1200,7 +1245,106 @@ struct type_s
   /* A type itself can be associated with its own unique memory       */
   /* tracker, which it returns it when "val" is NULL; but usually     */
   /* this is not done (and just NULL is returned in this case.)       */
+  /*                                                                  */
+  /* ---------------------------------------------------------------- */
+  /*                                                                  */
+  /* One of the primary uses of this is to relocate information about */
+  /* whether value of a given type was dynamically allocated.         */
+  /*                                                                  */
+  /* "free" determines whether it should free a dynamically allocated */
+  /* value.  In a simple case, the value itself contains a field      */
+  /* indicating whether the value was dynamically allocated, e.g.     */
+  /* with "malloc".                                                   */
+  /*                                                                  */
+  /* But "mem" allows such tracking to have data that resides outside */
+  /* values.  In this case, "mem" returns the appropriate memory      */
+  /* tracker.                                                         */
+  /*                                                                  */
+  /* A simple way to do this is to set "mem" to return a top-level    */
+  /* memory-tracker associated to the type itself.                    */
+  /*                                                                  */
+  /* ---------------------------------------------------------------- */
+  /*                                                                  */
+  /* If this returns a memory tracker with a NULL "val_raw", then     */
+  /* conventional initializers, including                             */
+  /* "template_cons_basic_initializer", will not initialize a new     */
+  /* memory tracker.                                                  */
   memory_tracker_t    *(*mem)        (const type_t *self, tval *val_raw);
+
+  /* TODO: update field_info! */
+  /* TODO: also does_type_support_dyn_alloc_all_values? */
+  /* How the memory trackers associated with new values should be     */
+  /* initialized during the initialization of values.                 */
+  /*                                                                  */
+  /* This should return NULL when dynamicaly memory allocation        */
+  /* is not supported, for all values in general when "val_raw" is    */
+  /* NULL, and for particular values otherwise.                       */
+  /*                                                                  */
+  /* Otherwise its return value is type-specific.  In simple cases,   */
+  /* this return value can simply be the associated memory tracker,   */
+  /* but it can also be any other non-NULL reference.                 */
+  /*                                                                  */
+  /* ---------------------------------------------------------------- */
+  /*                                                                  */
+  /* Thus mainly this is used by standard initializers for 2          */
+  /* purposes:                                                        */
+  /*   1) To track newly dynamically allocated values.                */
+  /*   2) To determine whether such dynamic allocation is supported   */
+  /*      for all values of this type in general,                     */
+  /*      where "val_raw" is NULL.                                    */
+  /*                                                                  */
+  /* ---------------------------------------------------------------- */
+  /*                                                                  */
+  /* This can be NULL                                                 */
+  void                *(*mem_init)   ( const type_t *self
+                                     , tval         *val_raw
+                                     , int           is_dynamically_allocated
+                                     );
+
+  /* TODO: update field_info! */
+  /* Check whether a value is dynamically allocated.                  */
+  /*                                                                  */
+  /* Returns 1 if so, 0 otherwise, and <= -1 on error.                */
+  int                  (*mem_is_dyn) ( const type_t *self
+                                     , tval         *val
+                                     );
+
+  /* TODO: update field_info! */
+  /* Check whether a value is dynamically allocated and, if so, free  */
+  /* it, otherwise do nothing.                                        */
+  /*                                                                  */
+  /* Returns 1 if freed, 0 if not dynamically allocated,              */
+  /* and <= -1 on error.                                              */
+  int                  (*mem_free)   ( const type_t *self
+                                     , tval         *val
+                                     );
+
+  /* TODO: update field_info! */
+  /* Default memory manager for this type.                            */
+  /*                                                                  */
+  /* 1) Which memory manager default should be chosen for new values  */
+  /*    when no memory manager is explicitly requested; "val_raw" is  */
+  /*    null in this case                                             */
+  /*                                                                  */
+  /* 2) For a given initialized value, which memory manager should be */
+  /*    used to access it by default, e.g. when "mem" doesn't         */
+  /*    associate the value with a memory_tracker, in which case it   */
+  /*    is used instead, by obtaining this memory tracker's memory    */
+  /*    manager.                                                      */
+  /*                                                                  */
+  /* ---------------------------------------------------------------- */
+  /*                                                                  */
+  /* "val_raw" might be NULL, and it might be uninitialized.          */
+  /*                                                                  */
+  /* If NULL, "mem_manager" can return a default memory manager,      */
+  /* or alternatively a memory manager used for all values of this    */
+  /* type if this type forces all values to use a specific            */
+  /* memory manager.                                                  */
+  const memory_manager_t
+                      *(*default_memory_manager)
+                                     ( const type_t *self
+                                     , tval *val
+                                     );
 
   /* ---------------------------------------------------------------- */
   /* Copying.                                                         */
@@ -1220,8 +1364,23 @@ struct type_s
   /* a new one should be dynamically allocated, using management      */
   /* associated with "src" in case of differences.                    */
   /*                                                                  */
-  /* force_no_defaults:                                               */
-  /*   TODO                                                           */
+  /* defaults_src_unused:                                             */
+  /*   Choose a default value in "dest" for each field in "src" that  */
+  /*   is 0 or NULL, unless the type specifies a value other than 0   */
+  /*   or NULL as its "special unused value" in which case check      */
+  /*   against that, or none at all, in which case don't supply a     */
+  /*   default value.                                                 */
+  /*                                                                  */
+  /*   For each field in "src", if the type's field has a             */
+  /*   special "unused value", check whether it is equal to the field */
+  /*   value in "src", and, if so, choose a default one instead.      */
+  /*                                                                  */
+  /*   Usually, the special "unused value" is zero / NULL, so this    */
+  /*   flag determines whether to choose a default value when a field */
+  /*   is 0 or NULL.                                                  */
+  /*                                                                  */
+  /*   When this flag is disabled, just copy from "source", without   */
+  /*   choosing default values.                                       */
   /*                                                                  */
   /* rec_copy:                                                        */
   /*   0 to skip recursively calling "dup" on subcomponents that are  */
@@ -1270,6 +1429,7 @@ struct type_s
   tval                *(*dup)        ( const type_t *self
                                      , tval *dest
                                      , const tval *src
+                                     , int defaults_src_unused
                                      , int rec_copy
                                      , int dup_metadata
                                      , ref_traversal_t *ref_traversal
@@ -1283,7 +1443,7 @@ struct type_s
 /* ---------------------------------------------------------------- */
 
 /*
- * Common "type_t" abstractions.
+ * Common "type_t" methods and method helpers.
  */
 
 /* "typed" */
@@ -1293,17 +1453,127 @@ const type_t *type_is_untyped(const type_t *self);
 /* name */
 
 /* info */
+const char *type_has_standard_info(const type_t *self);
 
 /* size */
 
 /* is_struct */
-const struct_info_t *type_is_not_struct(const type_t *self);
+typed_t type_is_not_struct(const type_t *self);
 
 /* cons_type" */
 typed_t type_has_template_cons_type(const type_t *self);
 
 /* init */
-TODO
+tval *type_has_template_cons_basic_initializer(const type_t *type, tval *cons)
+tval *type_has_template_cons_basic_initializer_force_memory_manager(const type_t *type, tval *cons);
+
+tval *template_cons_basic_initializer(const type_t *type, template_cons_t *cons, int allow_alternate_memory_manager);
+
+/* free */
+int type_has_template_cons_basic_freer(const type_t *type, tval *val);
+
+int template_cons_basic_freer(const type_t *type, tval *cons);
+
+/* has_default */
+const tval   *type_has_no_default(const type_t *self);
+
+/* mem */
+memory_tracker_t *type_mem_struct_or_global_dyn(const type_t *self, tval *val_raw);
+memory_tracker_t *type_mem_valueless(const type_t *self, tval *val_raw, memory_tracker_t *valueless_memory_tracker);
+
+/* mem_init */
+
+/* Standard optional-struct_info-based "mem_init" methods. */
+void *type_supports_dynamic_allocation
+  ( const type_t *self
+  , tval         *val_raw
+  , int           is_dynamically_allocated
+  );
+void *type_supports_dynamic_allocation_only_some_vals
+  ( const type_t *self
+  , tval         *val_raw
+  , int           is_dynamically_allocated
+  );
+
+void *type_mem_init_valueless_or_inside_value
+  ( const type_t *self
+  , tval         *val_raw
+  , int           is_dynamically_allocated
+  );
+
+/* Procedure for standard "mem_init" initialization. */
+/* TODO: rename */
+void *mem_init_type_valueless_or_inside_value
+  ( const type_t           *type
+  , tval                   *val_raw
+  , int                     is_dynamically_allocated
+  , int                     are_all_vals_supported
+  , const memory_manager_t *val_memory_manager
+
+  , char   *out_err_buf
+  , size_t  err_buf_size
+  );
+
+/* mem_is_dyn */
+int type_is_dyn_valueless_or_inside_value
+  ( const type_t *self
+  , tval         *val
+  );
+
+/* Standard optional-struct_info-based "mem_is_dyn" methods. */
+int mem_is_dyn_valueless_or_inside_value
+  ( const type_t *type
+  , tval         *val
+  );
+
+/* mem_free */
+
+/* Standard optional-struct_info-based "mem_free" methods. */
+int mem_free_valueless_or_inside_value_allocation
+  ( const type_t *self
+  , tval         *val
+  );
+
+/* Procedure for standard "mem_free" freeing. */
+int mem_free_value_buffer_allocation
+  ( const type_t *type
+  , tval          *val
+
+  , char   *out_err_buf
+  , size_t  err_buf_size
+  );
+
+/* default_memory_manager */
+
+const memory_manager_t *type_has_no_default_memory_manager(const type_t *self, tval *val);
+
+const memory_manager_t *type_prefers_given_memory_manager(const type_t *self, tval *val, const memory_manager_t *memory_manager);
+const memory_manager_t *type_prefers_default_memory_manager(const type_t *self, tval *val);
+const memory_manager_t *type_prefers_malloc_memory_manager(const type_t *self, tval *val);
+
+/* If the type has no global memory tracker, just prefer default_memory_manager, after
+ * usual "struct_info" checking, making it equivalent to
+ * "type_prefers_default_memory_manager" in this case.
+ */
+const memory_manager_t *type_prefers_global_memory_manager(const type_t *type, tval *val_raw);
+
+/* dup */
+tval *type_has_struct_dup_allow_malloc( const type_t *self
+                                      , tval *dest
+                                      , const tval *src
+                                      , int defaults_src_unused
+                                      , int rec_copy
+                                      , int dup_metadata
+                                      , ref_traversal_t *ref_traversal
+                                      );
+tval *type_has_struct_dup_never_malloc( const type_t *self
+                                      , tval *dest
+                                      , const tval *src
+                                      , int defaults_src_unused
+                                      , int rec_copy
+                                      , int dup_metadata
+                                      , ref_traversal_t *ref_traversal
+                                      );
 
 /* ---------------------------------------------------------------- */
 
@@ -1312,8 +1582,6 @@ TODO
  */
 
 extern const type_t type_defaults;
-
-const tval   *type_has_no_default(const type_t *self);
 
 /* ---------------------------------------------------------------- */
 
@@ -1331,9 +1599,25 @@ tval                *type_init       (const type_t *type, tval *cons);
 void                 type_free       (const type_t *type, tval *val);
 const tval          *type_has_default(const type_t *type);
 memory_tracker_t    *type_mem        (const type_t *type, tval *val_raw);
+void                *type_mem_init   ( const type_t *type
+                                     , tval *val_raw
+                                     , int is_dynamically_allocated
+                                     );
+int                  type_mem_is_dyn ( const type_t *type
+                                     , tval         *val
+                                     );
+int                  type_mem_free   ( const type_t *type
+                                     , tval         *val
+                                     );
+const memory_manager_t
+                    *type_default_memory_manager
+                                     ( const type_t *type
+                                     , tval *val
+                                     );
 tval                *type_dup        ( const type_t *type
                                      , tval *dest
                                      , const tval *src
+                                     , int defaults_src_unused
                                      , int rec_copy
                                      , int dup_metadata
                                      , ref_traversal_t *ref_traversal
@@ -1452,68 +1736,36 @@ extern const template_cons_t template_cons_defaults;
 
 extern const template_cons_t * const default_template_cons;
 
-/*
- * TODO
- */
-const typed_t type_uses_template_cons(const type_t *type);
-
-/*
- * Invoke "template_cons_dup_struct" from the type's data.
- *
- * This is not an alternative to a type's initializer, because a "type" might
- * either initialize values differently, or perform additional computations and
- * assignments in addition to "template_cons_initializer".
- *
- * Types that do no more elaborate initialization than copying values can
- * simply use this as their initializer.
- *
- * TODO
- */
-tval *template_cons_basic_initializer(const type_t *type, template_cons_t *cons);
-
-tval *template_cons_basic_freer(const type_t *type, template_cons_t *cons);
-
-/* TODO. */
-/* This can be used by initializers. */
-/* This does not necessarily perform full initialization for a given type. */
-/* The type's "free" procedure can be used for this. */
-/* TODO: mem overrides struct_info's memory_tracker info */
-/* TODO: memory tracker is unconditionally initialized with
- * "memory_tracker_initialize_no_buffers".  If "mem" returns an already
- * initialized memory tracker, it will be overridden; this is not checked,
- * since the memory tracker is expected to be uninitialized!
- *
- * "mem"'s returned memory tracker value is expected to already be allocated.
- * If it is dynamically allocated, "template_cons_dup_struct" does not track
- * this!
- * */
 tval *template_cons_dup_struct
-  ( const template_cons_t   *cons
-  , size_t                   size
-  , const tval              *default_initials
-  , const struct_info_t     *struct_info
-  , memory_tracker_t      *(*mem)(const type_t *self, tval *val)
+  ( const template_cons_t     *cons
+  , size_t                     size
+  , const tval                *default_initials
+  , const struct_info_t       *struct_info
+  , void                    *(*mem_init)( const tval *self
+                                        , tval       *val_raw
+                                        , int         is_dynamically_allocated
+                                        )
+  , const tval                *mem_init_object
+  , const memory_manager_t    *def_memory_manager
+  , int                        allow_alternate_memory_manager
+  );
+void *template_cons_dup_struct_meminit_type
+  ( const tval *self
+  , tval       *val_raw
+  , int         is_dynamically_allocated
   );
 
-/* TODO: should we keep this after defining type_* accessors for type_t's? */
-/*
- * template_cons_get_type_mem:
- *
- * Return the type's "mem"
- */
-memory_tracker_t *(*
-    template_cons_get_type_mem(const type_t *type)
-  )(const type_t *self, tval *val_raw);
-
-/* Free memory allocated by "template_cons_dup_struct" and memory referred to
- * by "memory_tracker".
- *
- * This does not necessarily perform full cleanup for a given type.
- * The type's "free" procedure can be used for this.
- *
- * "template_cons_" can be used to implement "free".
- */
-void  template_cons_free_struct(tval *val, const struct_info_t *struct_info);
+void  template_cons_free_struct
+  ( tval *val,
+  , int                      (*mem_free)( const tval *self
+                                        , tval       *val
+                                        )
+  , const tval                *mem_free_object
+  );
+void *template_cons_free_struct_memfree_type
+  ( const tval *self
+  , tval       *val
+  );
 
 /* ---------------------------------------------------------------- */
 /* Primitive C data types.                                          */
