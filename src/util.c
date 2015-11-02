@@ -37,6 +37,13 @@
  */
 #include <stdio.h>
 
+/*
+ * stdlib.h:
+ *  - malloc
+ *  - free
+ */
+#include <stdlib.h>
+
 /* string.h:
  *   - strlen
  */
@@ -73,6 +80,21 @@ int snprintf_TODO(char *str, size_t size, const char *format, ...)
   /* TODO! */
   return 0;
 }
+
+/* TODO */
+/*
+int snprintf_prepend(char *str, size_t size, const char *format, ...)
+{
+}
+
+int snprintf_append(char *str, size_t size, const char *format, ...)
+{
+}
+
+int snprintf_insert(char *str, size_t size, const char *format, ...)
+{
+}
+*/
 
 /* Should be called only from locations that shouldn't be reached. */
 void report_bug(const char *msg)

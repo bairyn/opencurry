@@ -72,6 +72,14 @@
 const type_t *typed_type(void);
 */
 
+/*
+ * Obtain the type of a "tval *".
+ */
+const type_t *tval_type(const tval *val)
+{
+  return (const type_t *) val;
+}
+
 /* ---------------------------------------------------------------- */
 /* Memory managers.                                                 */
 /* ---------------------------------------------------------------- */
@@ -2854,6 +2862,62 @@ static tval                *type_type_dup        (const type_t *self, tval *dest
   }
 
 /* ---------------------------------------------------------------- */
+
+/*
+ * Procedures on or for "type_t"'s.
+ */
+
+/*
+ * Get a value's contained memory tracker if it exists.
+ *
+ * If the type associates a memory tracker to a value that is different from
+ * its valueless type tracker, return it.  (If the memory tracker's container
+ * field is non-NULL but it is different from the value, something went wrong,
+ * so return NULL in the case of this error.
+ */
+/* TODO TODO TODO TODO FIXME FIXME FIXME FIXME: if "container" is not equal to
+ * the value, e.g. if "container" points to the memory tracker itself, then
+ * what?
+ * Oh, oh, add a new field to memory_tracker_t!
+ *
+ * AFFECTS: at *least* mem_free and is_dyn methods!!
+ */
+memory_tracker_t *type_val_has_individual_mem(const type_t *type, tval *val)
+{
+  memory_tracker_t *valueless_memory_tracker;
+  memory_tracker_t *memory_tracker;
+
+  if (!type || !val)
+    return NULL;
+
+
+  memory_tracker = type_mem(type, val);
+
+  if (!memory_tracker)
+    return NULL;
+
+
+  valueless_memory_tracker = type_mem(type, NULL);
+
+  if (memory_tracker == valueless_memory_tracker)
+    return NULL;
+
+  if (  memory_tracker->dynamically_allocated_container
+     && memory_tracker->dynamically_allocated_container != val
+     )
+  {
+    /* Error: the value should have its own memory tracker, but its
+     * "dynamically_allocated_container" value is non-NULL and somehow ended up
+     * referencing something different from the value and from the memory
+     * tracker itself.
+     */
+    return NULL;
+  }
+
+  return memory_tracker;
+}
+
+/* ---------------------------------------------------------------- */
 /* type_t: Common methods and method helpers.                       */
 /* ---------------------------------------------------------------- */
 
@@ -3911,6 +3975,13 @@ int type_mem_free_valueless_or_inside_value
   return mem_free_valueless_or_inside_value_allocation(type, val, NULL, 0);
 }
 
+/* TODO TODO TODO TODO FIXME FIXME FIXME FIXME: if "container" is not equal to
+ * the value, e.g. if "container" points to the memory tracker itself, then
+ * what?
+ * Oh, oh, add a new field to memory_tracker_t!
+ *
+ * AFFECTS: at *least* mem_free and is_dyn methods!!
+ */
 /*
  * mem_free_valueless_or_inside_value_allocation:
  *
@@ -4327,6 +4398,47 @@ tval *type_has_struct_dup_never_malloc( const type_t *self
 
   return dest;
 }
+
+/* ---------------------------------------------------------------- */
+
+/* TODO */
+/*
+ * Fundamental "type_t" accessors.
+ */
+
+const type_t        *type_typed      (const type_t *type)
+const char          *type_name       (const type_t *type)
+const char          *type_info       (const type_t *type)
+size_t               type_size       (const type_t *type, const tval *val)
+const struct_info_t *type_is_struct  (const type_t *type)
+typed_t              type_cons_type  (const type_t *type)
+tval                *type_init       (const type_t *type, tval *cons)
+void                 type_free       (const type_t *type, tval *val)
+const tval          *type_has_default(const type_t *type)
+memory_tracker_t    *type_mem        (const type_t *type, tval *val_raw)
+void                *type_mem_init   ( const type_t *type
+                                     , tval *val_raw
+                                     , int is_dynamically_allocated
+                                     )
+int                  type_mem_is_dyn ( const type_t *type
+                                     , tval         *val
+                                     )
+int                  type_mem_free   ( const type_t *type
+                                     , tval         *val
+                                     )
+const memory_manager_t
+                    *type_default_memory_manager
+                                     ( const type_t *type
+                                     , tval *val
+                                     )
+tval                *type_dup        ( const type_t *type
+                                     , tval *dest
+                                     , const tval *src
+                                     , int defaults_src_unused
+                                     , int rec_copy
+                                     , int dup_metadata
+                                     , ref_traversal_t *ref_traversal
+                                     )
 
 /* ---------------------------------------------------------------- */
 /* type_t: Defaults.                                                */

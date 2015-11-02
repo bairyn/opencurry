@@ -168,6 +168,10 @@ typedef void tval;
 
 const type_t *tval_type(const tval *val);
 
+/* TODO: add new type like "tval" but will also work for "untyped" values, and
+ * then use this inside "type_t"'s methods.
+ */
+
 /* ---------------------------------------------------------------- */
 /* Memory managers.                                                 */
 /* ---------------------------------------------------------------- */
@@ -1622,6 +1626,14 @@ tval                *type_dup        ( const type_t *type
                                      , int dup_metadata
                                      , ref_traversal_t *ref_traversal
                                      );
+
+/* ---------------------------------------------------------------- */
+
+/*
+ * Procedures on or for "type_t"'s.
+ */
+
+memory_tracker_t *type_val_has_individual_mem(const type_t *type, tval *val);
 
 /* ---------------------------------------------------------------- */
 /* Template constructors, available for types to use.               */

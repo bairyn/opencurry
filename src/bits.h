@@ -40,6 +40,167 @@
 #include "base.h"
 
 /*
+ * We use an extra pair of parentheses around arguments and around macro
+ * invocations to handle more argument expressions.
+ *
+ * Note on TODO:
+ *
+ * > #define MUL_TWO(val)     (2 * (val))
+ * > #define MUL_TWO_ALT(val) ((val) + (val))
+ * > /-* Bad practice: macro invocation with an argument   *-/
+ * > /-* that is an expression whose evaluation has        *-/
+ * > /-* non-idempotent side effects!                      *-/
+ * > unsigned int a_lovely_variable = MUL_TWO_ALT(oops_i_want_to_be_used_correctly++);
+ *
+ * However, since invocations of macros that repeat an argument can result in
+ * an argument that is an expression whose evaluation has side non-idempotent
+ * effects being evaluated multiple times, possible with undefined behaviour,
+ * generally when the order isn't clear, macros shouldn't be called with such
+ * expressions, so these conventions may seem a bit pedantic.
+ *
+ * However, expressions involving binary operators with an associated fixity
+ * can result in incorrect grouping.
+ *
+ * Example of an argument that the former convention introduces to some macros
+ * support for:
+ *
+ * > #define ADD_TWO(val)                  (2 + (val))
+ * > #define MUL_TWO(val)                  (2 * (val))
+ * > #define MUL_TWO_ALT(oops_keep_trying) (2 * oops_keep_trying)
+ * > unsigned int a_lovely_variable       = ADD_TWO(thank_you + 1);
+ * > unsigned int another_lovely_variable = MULL_TWO(a_lovely_variable + 1);
+ * > unsigned int a_lovely_variable_again = ADD_TWO_ALT(a_lovely_variable + 1);
+ *
+ * Here "another_lovely_variable" and "a_lovely_variable_again" are assigned
+ * different values.
+ *
+ * TODO: also arguments to other macro invocations just-in-case TODO.
+ */
+
+/*
+ * General operations of bits on unsigned integers, of unspecified width,
+ * fixed-width, or unbounded, using only AND, OR, XOR, left shift, right shift,
+ * plus, and minus:
+ *
+ * - &
+ * - |
+ * - ^
+ * - <<, for zero or positive shift widths.
+ * - >>, for zero or positive shift widths.
+ * - +
+ * - -, when the first operand is greater than or equal to the second.
+ */
+
+#define ON()  (1)
+#define OFF() (0)
+unsigned int on_uint(void);
+unsigned int off_uint(void);
+
+#define TRUE()  (1)
+#define FALSE() (0)
+unsigned int true_uint(void);
+unsigned int false_uint(void);
+
+#define YES() (1)
+#define NO()  (0)
+unsigned int yes_uint(void);
+unsigned int no_uint(void);
+
+#define ENABLED()  (1)
+#define DISABLED() (0)
+unsigned int enabled_uint(void);
+unsigned int disabled_uint(void);
+
+/*
+ * Return the bit at the given position.
+ *
+ * Example:
+ *   GET_BIT(0, 0b1100): 0
+ *   GET_BIT(1, 0b1100): 0
+ *   GET_BIT(2, 0b1100): 1
+ *   GET_BIT(3, 0b1100): 1
+ */
+#define GET_BIT(pos, val) (((val) >> (pos)) & 1)
+unsigned int get_bit_uint(unsigned int pos, unsigned int val);
+
+/*
+ * Set the bit at the given position, by returning a new value that is equal to
+ * "rec" at all other bits.
+ *
+ * "bit" must be 0 or 1; it is undefined behaviour for it to contain any 1 bits
+ * in any other position.
+ */
+#define SET_BIT(pos, rec, bit) ((rec) ^ (((GET_BIT(((pos)), ((rec)))) ^ ((bit) & 1)) << (pos)))
+unsigned int set_bit_uint(unsigned int pos, unsigned int rec, unsigned int bit);
+
+/*
+ * Invert the bit at the given position, by returning a new value that is
+ * equal to "rec" at all other bits.
+ */
+#define FLIP_BIT(pos, val) ((val) ^ (1 << (pos)))
+unsigned int flip_bit_uint(unsigned int pos, unsigned int val);
+
+/* IS_* conditionals return only 0 or 1. */
+
+/*
+ * For each sequence of consecutive 1 bits, leave only the first/last bit of each
+ * group set.
+ */
+#define BIT_GROUP_STARTS(val) ((val) & ((val) ^ ((val) >> 1)))
+#define BIT_GROUP_ENDS(val)   ((val) & ((val) ^ ((val) << 1)))
+unsigned int bit_group_starts_uint(unsigned int val);
+unsigned int bit_group_ends_uint(unsigned int val);
+
+/*
+ * For each sequence of consecutive 1 bits, unset the first/last bit of each group.
+ */
+#define BIT_GROUP_NO_STARTS(val) ((val) ^ (BIT_GROUP_STARTS(((val)))))
+#define BIT_GROUP_NO_ENDS(val)   ((val) ^ (BIT_GROUP_ENDS(((val)))))
+unsigned int bit_group_no_starts_uint(unsigned int val);
+unsigned int bit_group_no_ends_uint(unsigned int val);
+
+/* Set bits adjacent to 1 bits to 1. */
+#define BIT_ONE_CONTAGIOUS(val) (((val) << 1) | (val) | ((val) >> 1))
+unsigned int bit_one_contagious_uint(unsigned int val);
+
+#define IS_ODD(val) ((val) & 1)
+unsigned int is_odd_uint(unsigned int val);
+
+#define IS_EVEN(val) (((val) & 1) ^ 1)
+unsigned int is_even_uint(unsigned int val);
+
+/* TODO: apply bitwise constraints */
+#define IS_NONZERO(val) (!val)
+unsigned int is_nonzero_uint(unsigned int val);
+
+/* TODO: apply bitwise constraints */
+/* ((val) | (((val) >> 1))) + 1 */
+#define IS_ZERO(val) (!!val)
+/* equivalent: (val - 1) + 1 == val */
+/* (val) (((val) >> 1) + (((val ^ 1)) & 1)) */
+/* #define IS_ZERO(val) BIT_NAT_PRED(val) + 1 - val */
+unsigned int is_zero_uint(unsigned int val);
+
+/*
+ * If "val" is 0, return 0, else return "val - 1".
+ *
+ * 0000 1100
+ * 0000  011
+ *
+ * 0000 1101
+ *
+ * A: 0000 1000
+ * $: 0000 0111
+ */
+/* TODO: apply bitwise constraints */
+/*
+(((val) >> 1) + (((val ^ 1)) & 1))
+val >> ((val ^ 1) & 1) ^
+*/
+#define BIT_NAT_PRED(val) (IS_ZERO(val) ? 0 : (val-1))
+unsigned int bit_nat_pred_uint(unsigned int num);
+
+/*
  * ONE_BIT_REPEAT(num): generate a value whose last "num" bits are 1.
  *
  * Example:
@@ -51,13 +212,31 @@
  * FIXME: 1st note
  *
  * Implementation note:
- *   "(1 << num) - 1" works except when generating fixed-width values with all
+ *   1)
+ *   "(1 <<  num   ) - 1" works except when generating fixed-width values with all
  *   1 bits, because what "(1 << num)" should be in this case is too large.
  *
- *   "(1 << num) - 1 | (1 << (num-1))" works except when num is 0, due to
- *   negative shift width.
+ *   2)
+ *   "(1 << (num-1)) - 1 | (1 << (num-1))" works except when num is 0, due to
+ *   two instances of both negative shift width and unsigned subtraction
+ *   overflow.
+ *
+ *   The latter problem we can solve with "BIT_NAT_PRED".
+ *
+ *   The first problem we can also partially solve with "BIT_NAD_PRED", but it
+ *   is partial because it introduces a new problem in the case of "0":
+ *
+ *   "BIT_ANT_PRED(1 << BIT_NAT_PRED(num)) | (1 << BIT_NAT_PRED(num))":
+ *
+ *   Because the right-hand side results in "1" when "num" is "0".
+ *
+ * TODO: might be nice in the case of fixed-width bitfields and "num" greater
+ * than the bitfields' width to result in all 1's, not 0's due to overflow?
+ *
+ * should we support num / pos greater than the width of fixed-width bitfields
+ * for fixed-width bitfields?
  */
-#define ONE_BIT_REPEAT(num) ((1 << (num)) - 1)
+#define ONE_BIT_REPEAT(num) ((BIT_NAT_PRED((1 << (BIT_NAT_PRED((num)))))) | ((1 << (BIT_NAT_PRED((num))))) >> (((num) - (BIT_NAT_PRED((num)))) ^ 1))
 unsigned int one_bit_repeat_uint(unsigned int num);
 
 #endif /* ifndef BITS_H */

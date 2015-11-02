@@ -33,6 +33,113 @@
 #include "base.h"
 #include "bits.h"
 
+/* uint: unsigned int */
+
+unsigned int on_uint(void)
+{
+  return ON()
+}
+
+unsigned int off_uint(void)
+{
+  return OFF()
+}
+
+unsigned int true_uint(void)
+{
+  return TRUE()
+}
+
+unsigned int false_uint(void)
+{
+  return FALSE()
+}
+
+unsigned int yes_uint(void)
+{
+  return YES()
+}
+
+unsigned int no_uint(void)
+{
+  return NO()
+}
+
+unsigned int enabled_uint(void)
+{
+  return ENABLED()
+}
+
+unsigned int disabled_uint(void)
+{
+  return DISABLED()
+}
+
+unsigned int get_bit_uint(unsigned int pos, unsigned int val)
+{
+  return GET_BIT(pos, val);
+}
+
+unsigned int set_bit_uint(unsigned int pos, unsigned int rec, unsigned int bit)
+{
+  return SET_BIT(pos, rec, bit);
+}
+
+unsigned int flip_bit_uint(unsigned int pos, unsigned int val)
+{
+  return FLIP_BIT(pos, val);
+}
+
+unsigned int bit_group_starts_uint(unsigned int val)
+{
+  return BIT_GROUP_STARTS(val);
+}
+
+unsigned int bit_group_ends_uint(unsigned int val)
+{
+  return BIT_GROUP_ENDS(val);
+}
+
+unsigned int bit_group_no_starts_uint(unsigned int val)
+{
+  return BIT_GROUP_STARTS(val);
+}
+
+unsigned int bit_group_no_ends_uint(unsigned int val)
+{
+  return BIT_GROUP_ENDS(val);
+}
+
+unsigned int bit_one_contagious_uint(unsigned int val)
+{
+  return BIT_ONE_CONTAGIOUS(val);
+}
+
+unsigned int is_odd_uint(unsigned int val)
+{
+  return IS_ODD(val);
+}
+
+unsigned int is_even_uint(unsigned int val)
+{
+  return IS_EVEN(val);
+}
+
+unsigned int is_nonzero_uint(unsigned int val)
+{
+  return IS_NONZERO(val);
+}
+
+unsigned int is_zero_uint(unsigned int val)
+{
+  return IS_ZERO(val);
+}
+
+unsigned int bit_nat_pred_uint(unsigned int num)
+{
+  return BIT_NAT_PRED_UINT(num);
+}
+
 unsigned int one_bit_repeat_uint(unsigned int num)
 {
   return ONE_BIT_REPEAT(num);

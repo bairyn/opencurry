@@ -45,6 +45,10 @@
  */
 #include <stddef.h>
 
+#define DEFAULT_ERR_BUF_SIZE 8096
+
+/* ---------------------------------------------------------------- */
+
 #define MIN(a, b) (((a) <= (b)) ? (a) : (b))
 #define MAX(a, b) (((a) >  (b)) ? (a) : (b))
 
@@ -57,6 +61,12 @@ size_t max_size(size_t a, size_t b);
 /* ---------------------------------------------------------------- */
 
 int snprintf(char *str, size_t size, const char *format, ...);
+/* TODO */
+/*
+int snprintf_prepend(char *str, size_t size, const char *format, ...);
+int snprintf_append(char *str, size_t size, const char *format, ...);
+int snprintf_insert(char *str, size_t size, size_t offset, const char *format, ...);
+*/
 
 /* Should be called only from locations that shouldn't be reached. */
 void report_bug(const char *msg);
