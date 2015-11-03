@@ -115,14 +115,14 @@ unsigned int bit_one_contagious_uint(unsigned int val)
   return BIT_ONE_CONTAGIOUS(val);
 }
 
-unsigned int is_odd_uint(unsigned int val)
+unsigned int bits_is_odd_uint(unsigned int val)
 {
-  return IS_ODD(val);
+  return BITS_IS_ODD(val);
 }
 
-unsigned int is_even_uint(unsigned int val)
+unsigned int bits_is_even_uint(unsigned int val)
 {
-  return IS_EVEN(val);
+  return BITS_IS_EVEN(val);
 }
 
 unsigned int is_nonzero_uint(unsigned int val)

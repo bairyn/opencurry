@@ -163,11 +163,11 @@ unsigned int bit_group_no_ends_uint(unsigned int val);
 #define BIT_ONE_CONTAGIOUS(val) (((val) << 1) | (val) | ((val) >> 1))
 unsigned int bit_one_contagious_uint(unsigned int val);
 
-#define IS_ODD(val) ((val) & 1)
-unsigned int is_odd_uint(unsigned int val);
+#define BITS_IS_ODD(val) ((val) & 1)
+unsigned int bits_is_odd_uint(unsigned int val);
 
-#define IS_EVEN(val) (((val) & 1) ^ 1)
-unsigned int is_even_uint(unsigned int val);
+#define BITS_IS_EVEN(val) (((val) & 1) ^ 1)
+unsigned int bits_is_even_uint(unsigned int val);
 
 /* TODO: apply bitwise constraints */
 #define IS_NONZERO(val) (!val)
