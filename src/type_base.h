@@ -47,6 +47,9 @@
 
 #include "bits.h"
 
+/* TODO: type_t: is_const! */
+/* TODO: type_t: has_const_type, and has_unconst_type */
+
 /* ---------------------------------------------------------------- */
 /* Out-of-order forward declarations.                               */
 /* ---------------------------------------------------------------- */
@@ -171,6 +174,122 @@ const type_t *tval_type(const tval *val);
 /* TODO: add new type like "tval" but will also work for "untyped" values, and
  * then use this inside "type_t"'s methods.
  */
+
+/* ---------------------------------------------------------------- */
+/* Function pointer wrappers.                                       */
+/* ---------------------------------------------------------------- */
+
+/*
+ * Function pointer wrappers:
+ *
+ * These are trivial struct wrappers around function pointers.
+ * These allow object pointers ("void *"-type) to be treated as function
+ * pointers ("void (*)(void)"-type).
+ */
+
+/*
+ * Type "primfun":
+ *
+ * Values of this type are untyped!
+ *
+ * Used to convert object pointers to function pointers and visa versa.
+ */
+const type_t *primfun_type(void);
+extern const type_t primfun_type_def;
+typedef struct primfun_s primfun_t;
+struct primfun_s
+{
+  void *(*fun)(void *, ...);
+}
+
+/* Cast an object pointer to a function pointer. */
+void *(*
+  cast_objp_to_funp(void *objp)
+  )(void *, ...);
+
+/* Cast a function pointer to an object pointer. */
+void *cast_funp_to_objp
+  ( void *(*funp)(void *, ...)
+  );
+
+/* ---------------------------------------------------------------- */
+
+const type_t *paramlist_type(void);
+extern const type_t paramlist_type_def;
+typedef struct paramlist_s paramlist_t;
+struct paramlist_s
+{
+  typed_t type;
+
+  memory_tracker memory;
+
+  /* If this paramlist supports variable-length arguments, these determine the
+   * first several arguments and their types.  This pair is called the "prefix"
+   * in this case.
+   */
+  size_t         num_params;
+  const type_t **param_types;
+
+  /* Whether this list of parameters supports variable-length parameters.
+   *
+   * Fixed-width paramlist_t's can set this to NULL.
+   *
+   * "is_vararg" when called with arguments according to this paramlist's
+   * prefix (num_params and param_types) (and no further arguments) should
+   * return the argument-dependent "paramlist_t" describing the parameters
+   * after the prefix, called the "tail".
+   *
+   * The "tail" may also be variable-width.
+   */
+  const paramlist_t *(*is_vararg)(const paramlist_t *self, ...);
+};
+
+/* ---------------------------------------------------------------- */
+
+/*
+ * Type "fun":
+ *
+ * A struct containing a function pointer, that might be partially applied.
+ */
+const type_t *fun_type(void);
+extern const type_t fun_type_def;
+typedef struct fun_s fun_t;
+struct fun_s
+{
+  typed_t type;
+
+  memory_tracker memory;
+
+  /* ---------------------------------------------------------------- */
+
+  void *(*fun)(void *, ...);
+
+  /* NULL for "void" return type. */
+  const type_t      *return_type;
+  /* NULL is equivalent to an empty parameter list, e.g. "void foo(void)". */
+  const paramlist_t *paramlist;
+
+  /* ---------------------------------------------------------------- */
+
+  /* "partially_applied_args" should contain space for at least
+   * "num_partially_applied".
+   */
+  size_t       num_partially_applied;
+  void       **partially_applied_args;
+}
+
+/* The arguments must exclude parameters already partially applied! */
+void *call_fun(const fun_t *fun, ...);
+
+/* "dest" and "fun" can overlap.
+ *
+ * If "dest" is NULL, allocate a new one.  Otherwise, "dest" should be
+ * initialized.
+ *
+ * Returns a pointer to partially applied function on success, which is "dest"
+ * when non-NULL.
+ */
+void partially_apply_fun(fun_t *dest_initialized, const fun_t *fun, ...);
 
 /* ---------------------------------------------------------------- */
 /* Memory managers.                                                 */
@@ -347,11 +466,32 @@ struct ref_traversal_s
 
   /* TODO void TODO_on_loop; */
 
-  void   **history;
-  size_t   history_num;
-  size_t   history_size;
-  size_t   history_len;
+  const void **history;
+  size_t       history_num;
+  size_t       history_size;
+  size_t       history_len;
 };
+
+ref_traversal_t *ref_traversal_init_empty(ref_traversal_t *dest);
+ref_traversal_t *ref_traversal_init_with_one(ref_traversal_t *dest, const void *reference);
+
+/* Add the reference to "ref_traversal".  If it already exists, return NULL;
+ * else return the reference.
+ */
+const void *ref_traversal_add   (      ref_traversal_t *ref_traversal, const void *reference);
+
+/* Remove the reference from "ref_traversal".  If it exists and is removed,
+ * return NULL; else return the reference.
+ */
+const void *ref_traversal_remove(      ref_traversal_t *ref_traversal, const void *reference);
+
+/* Remove the reference from "ref_traversal".  If it exists and is removed,
+ * return the reference; else return NULL.
+ */
+const void *ref_traversal_take  (      ref_traversal_t *ref_traversal, const void *reference);
+
+/* A NULL "ref_traversal" is treated as an empty "ref_traversal_t". */
+const void *ref_traversal_exists(const ref_traversal_t *ref_traversal, const void *reference);
 
 /* TODO */
 
@@ -778,6 +918,7 @@ struct struct_info_s
 
   /* Must be terminated by "field_terminator". */
   field_info_t fields[STRUCT_INFO_NUM_FIELDS];
+  /* "fields_len" doesn't include the tail. */
   size_t       fields_len;
 
   struct_info_t *tail;
@@ -798,13 +939,32 @@ extern const field_info_t * const field_terminator;
 
 extern const field_info_t terminating_field_info;
 
+/* ---------------------------------------------------------------- */
+
+void *struct_info_iterate_fields
+  ( const struct_info_t *struct_info
+  , 
+  );
+
+/* Returns NULL when "index" is greater than        */
+/* the number of fields the "struct_info" contains. */
+const size_t        struct_info_num_fields (const struct_info_t *struct_info);
+const size_t        struct_info_num_tails  (const struct_info_t *struct_info);
+const field_info_t *struct_info_index_field(const struct_info_t *struct_info, size_t index);
+
+#define STRUCT_INFO_TYPED_FIELD      (0)
+#define STRUCT_INFO_TYPED_FIELD_TYPE (typed_type())
+const field_info_t *struct_info_has_typed_field   (const struct_info_t *struct_info);
+const field_info_t *struct_info_has_memory_tracker(const struct_info_t *struct_info);
+
 /*
  * If the "struct_info" associates a memory tracker field, then given a value
  * of that struct, return it.  Otherwise, return NULL.
  *
  * With no value, return NULL.
  */
-memory_tracker_t *struct_value_has_memory_tracker(const struct_info_t *struct_info, void *src_mem);
+typed             struct_value_has_typed_field   (const struct_info_t *struct_info, const void *val);
+memory_tracker_t *struct_value_has_memory_tracker(const struct_info_t *struct_info, void       *val);
 
 enum verify_struct_info_status_e
 {
@@ -921,10 +1081,17 @@ struct type_s
   /* Name of the type.  (Not necessarily unique.)                     */
   const char          *(*name)       (const type_t *self);
 
+  /* TODO: update field! */
   /* General information about the type.                              */
   /*                                                                  */
   /* Both the result of "info" and "info" itself may be NULL.         */
-  const char          *(*info)       (const type_t *self);
+  /*                                                                  */
+  /* This procedure can depend upon "out_info", returning NULL when   */
+  /* it isn't provided.                                               */
+  const char          *(*info)       ( const type_t *self
+                                     , char         *out_info_buf
+                                     , size_t        info_buf_size
+                                     );
 
   /* Size of a value of this type.                                    */
   /*                                                                  */
@@ -1451,13 +1618,15 @@ struct type_s
  */
 
 /* "typed" */
+const type_t *type_is_typed_from_struct(const type_t *self);
+
 const type_t *type_is_typed(const type_t *self);
 const type_t *type_is_untyped(const type_t *self);
 
 /* name */
 
 /* info */
-const char *type_has_standard_info(const type_t *self);
+const char *type_has_no_info(const type_t *self, char *out_info_buf, size_t info_buf_size);
 
 /* size */
 
@@ -1595,7 +1764,10 @@ extern const type_t type_defaults;
 
 const type_t        *type_typed      (const type_t *type);
 const char          *type_name       (const type_t *type);
-const char          *type_info       (const type_t *type);
+const char          *type_info       ( const type_t *type
+                                     , char         *out_info_buf
+                                     , size_t        info_buf_size
+                                     );
 size_t               type_size       (const type_t *type, const tval *val);
 const struct_info_t *type_is_struct  (const type_t *type);
 typed_t              type_cons_type  (const type_t *type);
@@ -1632,6 +1804,8 @@ tval                *type_dup        ( const type_t *type
 /*
  * Procedures on or for "type_t"'s.
  */
+
+void              tval_free(tval *val);
 
 memory_tracker_t *type_val_has_individual_mem(const type_t *type, tval *val);
 
@@ -1747,6 +1921,28 @@ struct template_cons_s
 extern const template_cons_t template_cons_defaults;
 
 extern const template_cons_t * const default_template_cons;
+
+/* ---------------------------------------------------------------- */
+
+/*
+ * Standard constructor generators.
+ */
+template_cons_t  template_cons_defaults(tval *dest);
+template_cons_t  template_cons_initials(tval *dest, const tval *initials);
+/* force_no_defaults, rec_copy. */
+template_cons_t  template_cons_copy    (tval *dest, const tval *src);
+
+template_cons_t  template_cons_set_error_output  (template_cons_t cons, char *out_init_error_msg, size_t init_error_msg_size);
+template_cons_t  template_cons_set_memory_manager(template_cons_t cons, const memory_manager_t *memory_manager);
+
+/* Here, "tval *"'s must not be NULL, because the type is obtained from the
+ * tval.
+ */
+tval            *template_cons_init_tval_defaults(tval *dest,                       const memory_manager_t *memory_manager, char *out_init_error_msg, size_t init_error_msg_size);
+tval            *template_cons_init_tval_initials(tval *dest, const tval *initials, const memory_manager_t *memory_manager, char *out_init_error_msg, size_t init_error_msg_size);
+tval            *template_cons_init_tval_copy    (tval *dest, const tval *src,      const memory_manager_t *memory_manager, char *out_init_error_msg, size_t init_error_msg_size);
+
+/* ---------------------------------------------------------------- */
 
 tval *template_cons_dup_struct
   ( const template_cons_t     *cons

@@ -2237,25 +2237,177 @@ const field_info_t terminating_field_info =
 
 /* ---------------------------------------------------------------- */
 
-memory_tracker_t *struct_value_has_memory_tracker(const struct_info_t *struct_info, void *src_mem)
+void *struct_info_iterate_fields
+  ( const struct_info_t *struct_info
+  ,
+  )
 {
-  if (!struct_info || !src_mem)
+}
+
+/* Get a "struct_info"'s total number of fields, traversing its tails. */
+const size_t        struct_info_num_fields(const struct_info_t *struct_info)
+{
+  size_t           num_defined_fields;
+  ref_traversal_t *struct_info_skips, skips;
+
+  num_defined_fields = 0;
+  for
+    ( struct_info_skips = ref_traversal_init_with_one(&skips, struct_info)
+    ; struct_info
+    ; struct_info       = ref_traversal_add(struct_info_skips, struct_info->tail)
+    )
+  {
+    if (struct_info->fields_len >= STRUCT_INFO_NUM_FIELDS)
+    {
+      /* Error: struct_info's fields_len is too big for this chunk. */
+      return 0;
+    }
+
+    num_defined_fields += struct_info->fields_len;
+  }
+
+  tval_free(struct_info_skips);
+
+  return num_defined_fields;
+}
+
+/* Get a "struct_info"'s total number tails. */
+const field_info_t *struct_info_num_tails(const struct_info_t *struct_info)
+{
+  const field_info_t *field_info;
+  ref_traversal_t    *struct_info_skips, skips;
+
+  field_info = NULL;
+  for
+    ( struct_info_skips = ref_traversal_init_with_one(&skips, struct_info)
+    ; struct_info
+    ; struct_info       = ref_traversal_add(struct_info_skips, struct_info->tail)
+    )
+  {
+    if (struct_info->fields_len >= STRUCT_INFO_NUM_FIELDS)
+    {
+      /* Error: struct_info's fields_len is too big for this chunk. */
+      field_info = NULL;
+      break;
+    }
+
+    /* Is "index" refer to a field in this chunk? */
+    if (!(index < struct_info->fields_len))
+    {
+      index = size_minus(index, struct_info->fields_len);
+    }
+    else
+    {
+      /* Found the field. */
+      field_info = &struct_info->fields[index];
+
+      break;
+    }
+  }
+
+  tval_free(struct_info_skips);
+
+  return num_defined_fields;
+}
+
+/* Get a "struct_info"'s field, returning NULL if "index" is out of bounds for
+ * this "struct_info".
+ */
+const field_info_t *struct_info_index_field(const struct_info_t *struct_info, size_t index)
+{
+  const field_info_t *field_info;
+  ref_traversal_t    *struct_info_skips, skips;
+
+  field_info = NULL;
+  for
+    ( struct_info_skips = ref_traversal_init_with_one(&skips, struct_info)
+    ; struct_info
+    ; struct_info       = ref_traversal_add(struct_info_skips, struct_info->tail)
+    )
+  {
+    if (struct_info->fields_len >= STRUCT_INFO_NUM_FIELDS)
+    {
+      /* Error: struct_info's fields_len is too big for this chunk. */
+      field_info = NULL;
+      break;
+    }
+
+    /* Is "index" refer to a field in this chunk? */
+    if (!(index < struct_info->fields_len))
+    {
+      index = size_minus(index, struct_info->fields_len);
+    }
+    else
+    {
+      /* Found the field. */
+      field_info = &struct_info->fields[index];
+
+      break;
+    }
+  }
+
+  tval_free(struct_info_skips);
+
+  return num_defined_fields;
+}
+
+const field_info_t *struct_info_has_typed_field(const struct_info_t *struct_info)
+{
+  const field_info_t *field_info;
+
+  if (!struct_info
+      return NULL;
+
+  field_info = struct_info_field_index(struct_info, STRUCT_INFO_TYPED_FIELD, NULL);
+
+  if (!field_info)
     return NULL;
 
-  if (struct_info->has_memory_tracker)
-  {
-    const field_info_t *memory_tracker_field = struct_info->fields[struct_info->memory_tracker_field];
+  if (field_info->field_type != STRUCT_INFO_TYPED_FIELD_TYPE)
+    return  NULL;
 
-    memory_tracker_t *memory_tracker;
+  return field_info;
+}
 
-    memory_tracker = (memory_tracker_t *) field_cref(memory_tracker_field->field_pos, src_mem);
-
-    return memory_tracker;
-  }
-  else
-  {
+const field_info_t *struct_info_has_memory_tracker(const struct_info_t *struct_info)
+{
+  if (!struct_info)
     return NULL;
-  }
+
+  if (!struct_info->has_memory_tracker)
+    return NULL;
+
+  return struct_info_index_field(struct_info, struct_info->memory_tracker_field);
+}
+
+typed struct_value_has_typed_field(const struct_info_t *struct_info, const void *val)
+{
+  const field_info_t *field_info;
+
+  if (!struct_info || !val)
+    return NULL;
+
+  field_info = struct_info_has_typed_field(struct_info);
+
+  if (!field_info)
+    return NULL;
+
+  return field_info_cref(field_info, val);
+}
+
+memory_tracker_t *struct_value_has_memory_tracker(const struct_info_t *struct_info, void *val)
+{
+  const field_info_t *field_info;
+
+  if (!struct_info || !val)
+    return NULL;
+
+  field_info = struct_info_has_memory_tracker(struct_info);
+
+  if (!field_info)
+    return NULL;
+
+  return field_info_ref(field_info, val);
 }
 
 verify_struct_info_status_t verify_struct_info(const struct_info_t *struct_info, char *out_err, size_t err_size, ref_traversal_t *structs_checked)
@@ -2924,6 +3076,60 @@ memory_tracker_t *type_val_has_individual_mem(const type_t *type, tval *val)
 /* typed */
 
 /*
+ * type_is_typed_from_struct:
+ *
+ * Values of this type are "typed" if and only if the type is a struct -
+ * "is_struct" returns non-NULL - and its first field has type "typed".
+ *
+ * Example:
+ *
+ * > typedef struct mytype_s mytype_t;
+ * > struct mytype_s
+ * > {
+ * >   typed_t type;
+ * >
+ * >   int a;
+ * >   int b;
+ * >   /-* ... *-/
+ * > };
+ * >
+ * > /-* "mytype" in this case is "typed", because it assigns *-/
+ * > /-* "type_is_typed_from_struct" and "mytype" is a struct *-/
+ * > /-* whose first field has type "typed" ("typed_t type"). *-/
+ * > const type_t *mytype(void)
+ * > {
+ * >   static const type_t mytype_def =
+ * >     { type_type
+ * >
+ * >     , /-* ...   *-/ ...
+ * >     , /-* typed *-/ type_is_typed_from_struct
+ * >     , /-* ...   *-/ ...
+ * >     };
+ * >
+ * >   return &mytype_def;
+ * > }
+ */
+const type_t *type_is_typed_from_struct(const type_t *self)
+{
+  const struct_info_t *struct_info;
+
+  struct_info = type_is_struct(self);
+
+  if      (!struct_info)
+  {
+    return type_is_untyped(self);
+  }
+  else if (!struct_info_has_typed_field(struct_info))
+  {
+    return type_is_untyped(self);
+  }
+  else
+  {
+    return type_is_typed(self);
+  }
+}
+
+/*
  * Values of this type are "typed", meaning references can be treated as
  * "tval *", indicating that they can be treated as "type_t *" to obtain the
  * type of the value.
@@ -2970,8 +3176,6 @@ const type_t *type_is_typed(const type_t *self)
  * > typedef struct mytype_s mytype_t;
  * > struct mytype_s
  * > {
- * >   typed_t type;
- * >
  * >   int a;
  * >   int b;
  * >   /-* ... *-/
@@ -2983,7 +3187,7 @@ const type_t *type_is_typed(const type_t *self)
  * >     { type_type
  * >
  * >     , /-* ...   *-/ ...
- * >     , /-* typed *-/ type_is_typed
+ * >     , /-* typed *-/ type_is_untyped
  * >     , /-* ...   *-/ ...
  * >     };
  * >
@@ -4407,6 +4611,19 @@ tval *type_has_struct_dup_never_malloc( const type_t *self
  */
 
 const type_t        *type_typed      (const type_t *type)
+{
+  if (!type)
+    return NULL;
+
+  if (!type->typed && !type_defaults.typed)
+    return NULL;
+
+  if (type->typed)
+    return type->typed(type);
+  else
+    return type_defaults.typed(type);
+}
+
 const char          *type_name       (const type_t *type)
 const char          *type_info       (const type_t *type)
 size_t               type_size       (const type_t *type, const tval *val)
@@ -4448,7 +4665,7 @@ tval                *type_dup        ( const type_t *type
 /*
  * Default fields for types.
  *
- * A minimum of 4 fields is required for each type:
+ * A minimum of 3 fields is required for each type:
  *  - name      (returns const char *):
  *      The name of the type.
  *
@@ -4462,20 +4679,12 @@ tval                *type_dup        ( const type_t *type
  *  - is_struct (returns const struct_info_t *):
  *      The fields of the type's struct, or NULL if the type isn't a struct.
  *
- *  - typed     (returns const type_t *):
- *      Whether value references are also "tval *"s.
- *
- *      Usually this is set to "type_is_typed".
- *
- *      If values aren't necessarily "tval *"s, this should be set to
- *      "type_is_untyped".  If the type is a primitive C data type, or is a
- *      struct that lacks a first "typed_t" field, the type is usually
- *      "untyped".
- *
  * The remaining default values, used when a "type_t" method is NULL for each
  * "type_t" method, specify a type that has the following characteristics:
  *
  *   - has_default:
+ *       "type_has_no_default":
+ *
  *       By default, a type lacks a default value.  A type can specify a
  *       default value by assigning a method that returns it.
  *
@@ -4498,21 +4707,52 @@ tval                *type_dup        ( const type_t *type
  *       If a type is not a struct and lacks a valueless memory tracker, the
  *       global memory tracker "global_typed_dyn_memory_tracker" is used to
  *       track dynamic memory allocations.
+ *
+ *   - whether the type is typed (values are "tval *"s):
+ *       "type_is_typed_from_struct":
+ *
+ *       By default, the type is considered to be "typed" if and only if the
+ *       type is a struct whose first field has type "typed", for example
+ *       "typed_t type".
+ *
+ *   - type info:
+ *       "type_has_no_info":
+ *
+ *       By default, a type has no information string.
  */
 
 static const type_t        *default_type_typed      (const type_t *self);
-/* static const char          *default_type_name       (const type_t *self);                  */
-/* static const char          *default_type_info       (const type_t *self);                  */
+/* static const char          *default_type_name       (const type_t *self); */
+static const char          *default_type_info       ( const type_t *type
+                                                    , char         *out_info_buf
+                                                    , size_t        info_buf_size
+                                                    );
 /* static size_t               default_type_size       (const type_t *self, const tval *val); */
-/* static const struct_info_t *default_type_is_struct  (const type_t *self);                  */
+/* static const struct_info_t *default_type_is_struct  (const type_t *self); */
 static typed_t              default_type_cons_type  (const type_t *self);
 static tval                *default_type_init       (const type_t *self, tval *cons);
 static void                 default_type_free       (const type_t *self, tval *val);
 static const tval          *default_type_has_default(const type_t *self);
 static memory_tracker_t    *default_type_mem        (const type_t *self, tval *val_raw);
+static void                *default_type_mem_init   ( const type_t *self
+                                                    , tval *val_raw
+                                                    , int is_dynamically_allocated
+                                                    );
+static int                  default_type_mem_is_dyn ( const type_t *self
+                                                    , tval         *val
+                                                    );
+static int                  default_type_mem_free   ( const type_t *self
+                                                    , tval         *val
+                                                    );
+static const memory_manager_t
+                    *default_type_default_memory_manager
+                                                    ( const type_t *self
+                                                    , tval *val
+                                                    );
 static tval                *default_type_dup        ( const type_t *self
                                                     , tval *dest
                                                     , const tval *src
+                                                    , int defaults_src_unused
                                                     , int rec_copy
                                                     , int dup_metadata
                                                     , ref_traversal_t *ref_traversal
@@ -4525,23 +4765,27 @@ const type_t type_defaults =
   { type_type
 
     /* memory_tracker_defaults */
-  , /* memory      */ { memory_tracker_type, { memory_manager_type } }
+  , /* memory                 */ { memory_tracker_type, { memory_manager_type } }
 
-  , /* typed       */ default_type_typed
+  , /* typed                  */ default_type_typed
 
-  , /* name        */ NULL
-  , /* info        */ NULL
-  , /* size        */ NULL
-  , /* is_struct   */ NULL
+  , /* name                   */ NULL
+  , /* info                   */ default_type_info
+  , /* size                   */ NULL
+  , /* is_struct              */ NULL
 
-  , /* cons_type   */ default_type_cons_type
-  , /* init        */ NULL
-  , /* free        */ default_type_free
-  , /* has_default */ default_type_has_default
-  , /* mem         */ default_type_mem
-  , /* dup         */ default_type_dup
+  , /* cons_type              */ default_type_cons_type
+  , /* init                   */ default_type_init
+  , /* free                   */ default_type_free
+  , /* has_default            */ default_type_has_default
+  , /* mem                    */ default_type_mem
+  , /* mem_init               */ default_type_mem_init
+  , /* mem_is_dyn             */ default_type_mem_is_dyn
+  , /* mem_free               */ default_type_mem_free
+  , /* default_memory_manager */ default_type_default_memory_manager
+  , /* dup                    */ default_type_dup
 
-  , /* parity      */ ""
+  , /* parity                 */ ""
   };
 
 /* typed default: type_is_typed. */
