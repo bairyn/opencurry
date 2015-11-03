@@ -314,6 +314,21 @@ struct memory_manager_s
   size_t  state_size;
 };
 
+#define MEMORY_MANAGER_DEFAULTS   \
+  { memory_manager_type           \
+                                  \
+  , NULL                          \
+  , NULL                          \
+  , NULL                          \
+  , NULL                          \
+                                  \
+  , memory_manager_default_on_oom \
+  , memory_manager_default_on_err \
+                                  \
+  , NULL                          \
+  , 0                             \
+  }
+
 /* A "memory_manager_t" with NULLS. */
 extern const memory_manager_t memory_manager_defaults;
 
@@ -394,6 +409,20 @@ struct memory_tracker_s
   size_t   dynamically_allocated_buffers_last_even;
   size_t   dynamically_allocated_buffers_last_odd;
 };
+
+#define MEMORY_TRACKER_DEFAULTS                                           \
+  { memory_tracker_type                                                   \
+                                                                          \
+  /* memory_manager_defaults */                                           \
+  , /* memory_manager                          */ MEMORY_MANAGER_DEFAULTS \
+                                                                          \
+  , /* dynamically_allocated_container         */ NULL                    \
+  , /* dynamically_allocated_buffers           */ NULL                    \
+  , /* dynamically_allocated_buffers_num       */ 0                       \
+  , /* dynamically_allocated_buffers_size      */ 0                       \
+  , /* dynamically_allocated_buffers_last_even */ 0                       \
+  , /* dynamically_allocated_buffers_last_odd  */ 0                       \
+  };
 
 /* A default memory tracker appropriate for top-level declarations. */
 /* Uses "default_manager" with a NULL buffer-array pointer.         */
