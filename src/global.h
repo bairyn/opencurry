@@ -1,5 +1,5 @@
 /*
- * opencurry: tests/test_all.c
+ * opencurry: global.h
  *
  * Copyright (c) 2015, Byron James Johnson
  * All rights reserved.
@@ -30,78 +30,15 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-/* stddef.h:
- *   - NULL
+/*
+ * global.h
+ * --------
+ *
+ * Assorted global buffers and data, constant and per-context.
  */
-#include <stddef.h>
 
-#include "../base.h"
-#include "testing.h"
-#include "test_all.h"
+#ifndef GLOBAL_H
+#define GLOBAL_H
+#include "base.h"
 
-#include "test_testing.h"
-#include "test_resources.h"
-#include "test_opencurry.h"
-#include "test_cli.h"
-#include "test_util.h"
-#include "test_mempool.h"
-#include "test_type_base.h"
-#include "test_type_structs.h"
-#include "test_type_adts.h"
-#include "test_type_util.h"
-#include "test_bits.h"
-#include "test_global.h"
-#include "test_bnf.h"
-#include "test_lex.h"
-#include "test_unicode.h"
-#include "test_utf8.h"
-#include "test_integer.h"
-#include "test_ansi_c_ast.h"
-#include "test_ansi_c_ast_base.h"
-#include "test_ansi_c_ast_gen.h"
-#include "test_ansi_c_ast_render.h"
-
-int test_all(int argc, char **argv)
-{
-  return run_test_suite(test_all_test);
-}
-
-/* ---------------------------------------------------------------- */
-
-/* Root unit test. */
-unit_test_t test_all_test =
-  {  test_all_run
-  , "test_all"
-  , "All tests."
-  };
-
-/* Array of all test groups. */
-unit_test_t *all_tests[] =
-  { &testing_test
-  , &resources_test
-  , &opencurry_test
-  , &cli_test
-  , &util_test
-  , &mempool_test
-  , &type_base_test
-  , &type_structs_test
-  , &type_adts_test
-  , &type_util_test
-  , &bits_test
-  , &global_test
-  , &bnf_test
-  , &lex_test
-  , &unicode_test
-  , &utf8_test
-  , &integer_test
-  , &ansi_c_ast_test
-  , &ansi_c_ast_base_test
-  , &ansi_c_ast_gen_test
-  , &ansi_c_ast_render_test
-  , NULL
-  };
-
-unit_test_result_t test_all_run(unit_test_context_t *context)
-{
-  return run_tests(context, all_tests);
-}
+#endif /* ifndef GLOBAL_H */
