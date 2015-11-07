@@ -47,6 +47,8 @@
 
 #include "bits.h"
 
+/* TODO: move CPP-specific bits to new module "cpp"! */
+
 /* ---------------------------------------------------------------- */
 
 #define DEFAULT_ERR_BUF_SIZE 8096
@@ -64,10 +66,84 @@ size_t max_size(size_t a, size_t b);
 
 /* ---------------------------------------------------------------- */
 
+/* Wrap code inside a single statement to avoid potential pitfalls. */
+#define CODE(body) \
+  do               \
+  {                \
+    body           \
+  } while(0)
+
+/* ---------------------------------------------------------------- */
+
+#define EXPAND1(a) a
+
+/* ---------------------------------------------------------------- */
+
+/* Macros to quote an argument to make a string literal and macros to combine
+ * two arguments into one via concatenation.
+ */
+
+/* "LITERAL_STRINGIFY" quotes the argument before expansion.  To allow a macro
+ * to be expanded by the C preprocessor before being quoted, use
+ * "EXPAND_STRINGIFY".
+ */
+#define EXPAND_STRINGIFY(a) LITERAL_STRINGIFY(a)
+#define LITERAL_STRINGIFY(a) #a
+
+#define EXPAND_CAT(a, b) LITERAL_CAT(a, b)
+#define LITERAL_CAT(a, b) a##b
+
+/* Shorter names. */
+
+#define XSTR(a) EXPAND_STRINGIFY(a)
+#define LSTR(a) #a /* LITERAL_STRINGIFY(a) */
+
+#define XCAT(a, b) EXPAND_CAT(a, b)
+#define LCAT(a, b) a##b /* LITERAL_CAT(a, b) */
+
+#define STR(a)    XSTR(a)
+#define CAT(a, b) XCAT(a, b)
+
+#define CAT3(a, b, c) CAT(a, CAT(b, c))
+#define CAT4(a, b, c, d) CAT(a, CAT(b, CAT(c, d)))
+
+
+#define DUPLICATE(a) CAT(a, a)
+
+/* ---------------------------------------------------------------- */
+
 /* ((size >= 1) ? (size - 1) : 0) */
 /* max(1, size) - 1               */
-#define SIZE_LESS_NULL(size) ((BIT_NAT_PRED((size))))
+/* TODO: FIX BIT_NAT_PRED! */
+#define TODO_SIZE_LESS_NULL(size) ((BIT_NAT_PRED((size))))
+#define SIZE_LESS_NULL(size) ((!!(size)) * ((size) - 1))
 size_t size_less_null(size_t size);
+
+#define ARRAY_SIZE(array)    (sizeof((array)))
+#define ARRAY_NUM(array)     ((sizeof((array))) / (sizeof((array)[0])))
+/* ARRAY_LEN_ALL treats the last element as a terminator and all other elements as values used in the array even when they are NULL or zero. */
+/* Thus this is just the number of elements in the array minus 1. */
+#define ARRAY_LEN_ALL(array) ((SIZE_LESS_NULL((ARRAY_NUM(array)))))
+
+/* ---------------------------------------------------------------- */
+
+int proc_true(void);
+int proc_false(void);
+int (*
+    proc_cond(int cond)
+  )(void);
+
+void *proc_context(void *context);
+
+int proc_true_context(void *context);
+int proc_false_context(void *context);
+
+int are_bytes_reversed(void);
+int is_big_endian(void);
+
+void *if_then_else(int condition, void *when_true, void *when_false);
+
+/* ---------------------------------------------------------------- */
 
 int set_null_terminator(char *buf, size_t len_before_terminator, size_t buf_size);
 
@@ -294,11 +370,21 @@ const char *last_bytes(const char *str, size_t num_bytes);
 #define REPLICATE_14(a)  ((REPLICATE_13((a))) (REPLICATE_1((a))))
 #define REPLICATE_15(a)  ((REPLICATE_14((a))) (REPLICATE_1((a))))
 
-#define REPLICATE_16(a)  ((REPLICATE_4(((REPLICATE_4((a))))))
-
 #define REPLICATE_40(a)  ((REPLICATE_10(((REPLICATE_4((a))))))
 #define REPLICATE_80(a)  ((REPLICATE_10(((REPLICATE_8((a))))))
 #define REPLICATE_100(a) ((REPLICATE_10(((REPLICATE_10((a))))))
+
+#define REPLICATE_16(a)    ((REPLICATE_2(((REPLICATE_8((a))))))
+#define REPLICATE_32(a)    ((REPLICATE_2(((REPLICATE_16((a))))))
+#define REPLICATE_64(a)    ((REPLICATE_2(((REPLICATE_32((a))))))
+#define REPLICATE_128(a)   ((REPLICATE_2(((REPLICATE_64((a))))))
+#define REPLICATE_256(a)   ((REPLICATE_2(((REPLICATE_128((a))))))
+#define REPLICATE_512(a)   ((REPLICATE_2(((REPLICATE_256((a))))))
+#define REPLICATE_1024(a)  ((REPLICATE_2(((REPLICATE_512((a))))))
+#define REPLICATE_2048(a)  ((REPLICATE_2(((REPLICATE_1024((a))))))
+#define REPLICATE_4096(a)  ((REPLICATE_2(((REPLICATE_2048((a))))))
+#define REPLICATE_8192(a)  ((REPLICATE_2(((REPLICATE_4096((a))))))
+#define REPLICATE_16384(a) ((REPLICATE_2(((REPLICATE_8192((a))))))
 
 extern const char   indentation_spaces_buf[];
 extern const size_t indentation_spaces_size;

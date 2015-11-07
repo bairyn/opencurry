@@ -81,6 +81,71 @@ size_t size_less_null(size_t size)
   return SIZE_LESS_NULL(size);
 }
 
+/* ---------------------------------------------------------------- */
+
+int proc_true(void)
+{
+  return 1;
+}
+
+int proc_false(void)
+{
+  return 0;
+}
+
+int (*proc_cond(int cond))(void)
+{
+  if (cond)
+    return proc_true;
+  else
+    return proc_false;
+}
+
+void *proc_context(void *context)
+{
+  return context;
+}
+
+int proc_true_context(void *context)
+{
+  return proc_true();
+}
+
+int proc_false_context(void *context)
+{
+  return proc_false();
+}
+
+int are_bytes_reversed(void)
+{
+  typedef unsigned long long multibyte_integral_scalar_type;
+
+  unsigned char                   multibyte_integral_bytes[sizeof(multibyte_integral_scalar_type)];
+  multibyte_integral_scalar_type *multibyte_integral;
+
+  multibyte_integral = &multibyte_integral_bytes[0];
+
+  *multibyte_integral = 0x01;
+  if (multibyte_integral_scalar_type[0] == 0)
+    return 1;
+  else
+    return 0;
+}
+
+static int is_big_endian_lazy_eval(void);
+static int (*is_big_endian_lazy)(void) = is_big_endian_lazy_eval;
+static int is_big_endian_lazy_eval(void)
+{
+  return (is_big_endian_lazy = proc_cond(are_bytes_reserved))();
+}
+
+int is_big_endian(void)
+{
+  return is_big_endian_lazy();
+}
+
+/* ---------------------------------------------------------------- */
+
 /* Returns <= -1 on error, such as when "buf_size" is too small to set a null
  * terminator (this happens when "buf_size" is 0).
  *

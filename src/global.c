@@ -30,7 +30,70 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+/* stddef.h:
+ *   - NULL
+ *   - size_t
+ */
+#include <stddef.h>
+
 #include "base.h"
 #include "global.h"
 
-void global_placeholder(void) { }
+#include "util.h"
+
+/* ---------------------------------------------------------------- */
+/* NULL.                                                            */
+/* ---------------------------------------------------------------- */
+
+void * const null = (void *) NULL;
+
+void * const nullref[] = { NULL, NULL };
+const size_t nullref_size = ARRAY_SIZE(   nullref);
+const size_t nullref_num  = ARRAY_NUM(    nullref);
+const size_t nullref_len  = ARRAY_LEN_ALL(nullref);
+
+void * const loopref[] = { (void *) loopref, NULL };
+const size_t loopref_size = ARRAY_SIZE(   loopref);
+const size_t loopref_num  = ARRAY_NUM(    loopref);
+const size_t loopref_len  = ARRAY_LEN_ALL(loopref);
+
+void * const selfref[] = { (void *) &selfref, NULL };
+const size_t selfref_size = ARRAY_SIZE(   selfref);
+const size_t selfref_num  = ARRAY_NUM(    selfref);
+const size_t selfref_len  = ARRAY_LEN_ALL(selfref);
+
+/* ---------------------------------------------------------------- */
+/* Constant buffers.                                                */
+/* ---------------------------------------------------------------- */
+
+const unsigned char zeroes[ZEROES_BUF_SIZE] = { 0x00 };
+const size_t        zeroes_size = ARRAY_SIZE(   zeroes);
+const size_t        zeroes_num  = ARRAY_NUM(    zeroes);
+const size_t        zeroes_len  = ARRAY_LEN_ALL(zeroes);
+
+const unsigned char * const zeroes_bytes = &zeroes[0];
+const size_t zeroes_bytes_size = sizeof(zeroes);
+const size_t zeroes_bytes_num  = sizeof(zeroes) / sizeof(*zeroes_bytes);
+const size_t zeroes_bytes_len  = SIZE_LESS_NULL(sizeof(zeroes) / sizeof(*zeroes_bytes));
+
+const char * const zeroes_chars = &zeroes[0];
+const size_t zeroes_chars_size = sizeof(zeroes);
+const size_t zeroes_chars_num  = sizeof(zeroes) / sizeof(*zeroes_chars);
+const size_t zeroes_chars_len  = SIZE_LESS_NULL(sizeof(zeroes) / sizeof(*zeroes_chars));
+
+void * const zeroes_mem = &zeroes[0];
+const size_t zeroes_mem_size = sizeof(zeroes);
+const size_t zeroes_mem_num  = sizeof(zeroes) / sizeof(unsigned char);
+const size_t zeroes_mem_len  = SIZE_LESS_NULL(sizeof(zeroes) / sizeof(unsigned char));
+
+/* ---------------------------------------------------------------- */
+
+const unsigned char spaces[SPACES_BUF_LEN + 1] = CAT(REPLICATE_, SPACES_BUF_LEN)(" ");
+const size_t        spaces_size = ARRAY_SIZE(   spaces);
+const size_t        spaces_num  = ARRAY_NUM(    spaces);
+const size_t        spaces_len  = ARRAY_LEN_ALL(spaces);
+
+const unsigned char tabs[TABS_BUF_LEN + 1] = CAT(REPLICATE_, TAB_BUF_LEN)("\t");
+const size_t        tabs_size = ARRAY_SIZE(   spaces);
+const size_t        tabs_num  = ARRAY_NUM(    spaces);
+const size_t        tabs_len  = ARRAY_LEN_ALL(spaces);

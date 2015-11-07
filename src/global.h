@@ -41,4 +41,73 @@
 #define GLOBAL_H
 #include "base.h"
 
+#include "util.h"
+
+/* ---------------------------------------------------------------- */
+
+#define DEFAULT_GLOBAL_BUF_SIZE 8192
+#define DEFAULT_GLOBAL_BUF_LEN  SIZE_LESS_NULL(DEFAULT_GLOBAL_BUF_SIZE)
+
+/* ---------------------------------------------------------------- */
+/* NULL.                                                            */
+/* ---------------------------------------------------------------- */
+
+extern void * const null;
+
+extern void * const nullref[];
+extern const size_t nullref_size;
+extern const size_t nullref_num;
+extern const size_t nullref_len;
+
+extern void * const loopref[];
+extern const size_t loopref_size = ARRAY_SIZE(   loopref);
+extern const size_t loopref_num;
+extern const size_t loopref_len;
+
+extern void * const selfref[];
+extern const size_t selfref_size = ARRAY_SIZE(   selfref);
+extern const size_t selfref_num;
+extern const size_t selfref_len;
+
+/* ---------------------------------------------------------------- */
+/* Constant buffers.                                                */
+/* ---------------------------------------------------------------- */
+
+#define ZEROES_BUF_SIZE DEFAULT_GLOBAL_BUF_SIZE
+extern const unsigned char zeroes[ZEROES_BUF_SIZE];
+extern const size_t        zeroes_size;
+extern const size_t        zeroes_num;
+extern const size_t        zeroes_len;
+
+extern const unsigned char * const zeroes_bytes;
+extern const size_t zeroes_bytes_size;
+extern const size_t zeroes_bytes_num;
+extern const size_t zeroes_bytes_len;
+
+extern const char * const zeroes_chars;
+extern const size_t zeroes_chars_size;
+extern const size_t zeroes_chars_num;
+extern const size_t zeroes_chars_len;
+
+extern void * const zeroes_mem;
+extern const size_t zeroes_mem_size;
+extern const size_t zeroes_mem_num;
+extern const size_t zeroes_mem_len;
+
+/* ---------------------------------------------------------------- */
+
+#define SPACES_BUF_LEN DEFAULT_GLOBAL_BUF_LEN
+extern const unsigned char spaces[SPACES_BUF_LEN + 1];
+extern const size_t        spaces_size;
+extern const size_t        spaces_num;
+extern const size_t        spaces_len;
+
+#define TABS_BUF_LEN DEFAULT_GLOBAL_BUF_LEN
+extern const unsigned char tabs[TABS_BUF_LEN + 1];
+extern const size_t        tabs_size;
+extern const size_t        tabs_num;
+extern const size_t        tabs_len;
+
+/* ---------------------------------------------------------------- */
+
 #endif /* ifndef GLOBAL_H */
