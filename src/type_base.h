@@ -970,9 +970,18 @@ extern const field_info_t terminating_field_info;
 
 /* ---------------------------------------------------------------- */
 
+void *struct_info_iterate_chunks
+  ( const struct_info_t *struct_info
+  , void *(*with_field)(void *context, void *last_accumulator, const struct_info_t *struct_info_chunk, int *break_iteration)
+  , void *context
+  , void *initial_accumulator
+  );
+
 void *struct_info_iterate_fields
   ( const struct_info_t *struct_info
-  , 
+  , void *(*with_field)(void *context, void *last_accumulator, const field_info_t *field_info)
+  , void *context
+  , void *initial_accumulator
   );
 
 /* Returns NULL when "index" is greater than        */
@@ -1660,7 +1669,15 @@ const char *type_has_no_info(const type_t *self, char *out_info_buf, size_t info
 /* size */
 
 /* is_struct */
+typed_t type_is_struct(const type_t *self);
+
 typed_t type_is_not_struct(const type_t *self);
+
+size_t field_default_value_from_type
+  ( const field_info_t *self, void *dest_mem
+  , const type_t *type
+  );
+size_t field_default_value_zero(const field_info_t *self, void *dest_mem, typed_t type, ref_traversal_t *ref);
 
 /* cons_type" */
 typed_t type_has_template_cons_type(const type_t *self);
@@ -1678,6 +1695,7 @@ int template_cons_basic_freer(const type_t *type, tval *cons);
 
 /* has_default */
 const tval   *type_has_no_default(const type_t *self);
+const tval   *type_has_default(const type_t *self, const tval *val);
 
 /* mem */
 memory_tracker_t *type_mem_struct_or_global_dyn(const type_t *self, tval *val_raw);

@@ -153,12 +153,12 @@ const type_t *memory_manager_type(void)
  *
  * (But they can still be accessed through "memory_manager_type"'s fields.)
  */
-static const type_t        *memory_manager_type_typed      (const type_t *self);
+/* static const type_t        *memory_manager_type_typed      (const type_t *self);         */
 static const char          *memory_manager_type_name       (const type_t *self);
 /* static const char          *memory_manager_type_info       ( const type_t *self          */
 /*                                                            , char         *out_info_buf  */
 /*                                                            , size_t        info_buf_size */
-                                                           );
+/*                                                            );                            */
 static size_t               memory_manager_type_size       (const type_t *self, const tval *val);
 static const struct_info_t *memory_manager_type_is_struct  (const type_t *self);
 /* static typed_t              memory_manager_type_cons_type  (const type_t *self);                */
@@ -241,15 +241,17 @@ static size_t memory_manager_type_is_struct_template_unused_value(const field_in
 const type_t memory_manager_type_def =
   { type_type
 
+    /* @: Required.           */
+
     /* memory_tracker_defaults */
   , /* memory                 */ MEMORY_TRACKER_DEFAULTS
 
-  , /* typed                  */ memory_manager_type_typed
+  , /* typed                  */ type_is_typed /* memory_manager_type_typed          */
 
-  , /* name                   */ memory_manager_type_name
+  , /* @name                  */ memory_manager_type_name
   , /* info                   */ NULL /* memory_manager_type_info                    */
-  , /* size                   */ memory_manager_type_size
-  , /* is_struct              */ memory_manager_type_is_struct
+  , /* @size                  */ memory_manager_type_size
+  , /* @is_struct             */ memory_manager_type_is_struct
 
   , /* cons_type              */ NULL /* memory_manager_type_cons_type               */
   , /* init                   */ NULL /* memory_manager_type_init                    */
@@ -2237,11 +2239,35 @@ const field_info_t terminating_field_info =
 
 /* ---------------------------------------------------------------- */
 
-void *struct_info_iterate_fields
+void *struct_info_iterate_chunks
   ( const struct_info_t *struct_info
-  ,
+  , void *(*with_field)(void *context, void *last_accumulator, const struct_info_t *struct_info_chunk, int *break_iteration)
+  , void *context
+  , void *initial_accumulator
   )
 {
+  TODO
+}
+
+/*
+ * For each field, call the "with_field" callback method with the given
+ * context, the accumulator value returned by the last invocation to the
+ * "with_field" callback method, or "initial_accumulator" on the first
+ * invocation, and the current field, and then return the last accumulator
+ * value returned by the last invocation, or "initial_accumulator" if the
+ * struct_info is empty, i.e. there are no fields to iterate.
+ *
+ * Write a non-zero value to "break_iteration" to treat the current field as
+ * the last.
+ */
+void *struct_info_iterate_fields
+  ( const struct_info_t *struct_info
+  , void *(*with_field)(void *context, void *last_accumulator, const field_info_t *field_info, int *break_iteration)
+  , void *context
+  , void *initial_accumulator
+  )
+{
+  int break_iteration = 0;
 }
 
 /* Get a "struct_info"'s total number of fields, traversing its tails. */
@@ -3418,6 +3444,57 @@ int template_cons_basic_freer(const type_t *type, tval *val)
 const tval *type_has_no_default(const type_t *self)
 {
   return NULL;
+}
+
+/*
+ * type_has_default:
+ *
+ * This can be used when the type has a default value.
+ *
+ * Simply returns "val".
+ *
+ * Example:
+ *
+ * > typedef struct mytype_s mytype_t;
+ * > struct mytype_s
+ * > {
+ * >   typed_t type;
+ * >
+ * >   int a;
+ * >   int b;
+ * >   /-* ... *-/
+ * > };
+ * >
+ * > static const tval *mytype_has_default(const type_t *self);
+ * >
+ * > const type_t *mytype(void)
+ * > {
+ * >   static const type_t mytype_def =
+ * >     { type_type
+ * >
+ * >     , /-* ...         *-/ ...
+ * >     , /-* has_default *-/ mytype_has_default
+ * >     , /-* ...         *-/ ...
+ * >     };
+ * >
+ * >   return &mytype_def;
+ * > }
+ * >
+ * > static const tval *mytype_has_default(const type_t *self)
+ * >   { return type_has_default(self, mytype_defaults); }
+ * >
+ * > ...
+ * >
+ * > const mytype_t mytype_defaults =
+ * >   { mytype_type
+ * >
+ * >   , /-* a *-/ 0
+ * >   , /-* b *-/ 0
+ * >   };
+ */
+const tval *type_has_default(const type_t *self, const tval *val)
+{
+  return val;
 }
 
 /* mem */
@@ -4661,6 +4738,143 @@ tval                *type_dup        ( const type_t *type
 /* type_t: Defaults.                                                */
 /* ---------------------------------------------------------------- */
 
+/*
+ * This section in the "type" module contains default definitions for types.
+ *
+ * This section is designed to also serve as a template to cargo cult
+ * type_t definitions that override the defaults.  A template for 3 fields is
+ * provided below, commented out.  A type definition can copy this and make the
+ * appropriate changes, starting by replacing "this" with the name of the type.
+ *
+ * Also, the default definitions can also be copied to override default
+ * behaviour, or more commonly to add to the default behaviour, e.g. by
+ * performing additional initialization on new values.
+ *
+ * ----------------------------------------------------------------
+ *
+ * A "type_t" definition of a type is a struct that contains function pointers
+ * to C functions that handle the type.  A type must specify a minimum of 3
+ * fields.
+ *
+ * Every type should be defined and accessed through a function like this:
+ *
+ * > const type_t *foo_type(void);
+ *
+ * A function pointer to a function with this type is called "typed_t".
+ *
+ * > typed_t which_type_is_it = foo_type;
+ *
+ * A "typed_t" is the core, fundamental part of a type's API.  A public type
+ * exports at least this; other parts are optional, e.g. a top-level "typed_t"
+ * reference.  Some types are procedurally generated, because they invoke other
+ * procedures to generate the type definition, and so can't use a constant
+ * initializer.
+ *
+ * So a minimal type definition requires at least this:
+ *
+ * > const type_t *<name_of_type>_type(void);
+ *
+ * This is a function declaration that "typed_t" function pointers can be
+ * assigned to.
+ *
+ * ----------------------------------------------------------------
+ *
+ * For convenience, some type_t implementations also provide an optional top-level
+ * "type_t" reference, but a const "type_t" definition requires a constant
+ * initializer, precluding e.g. using the API provided by "type_structs".
+ *
+ * For example:
+ *
+ * > const type_t *foo_type(void);
+ * > extern const type_t foo_type_def; /-* optional *-/
+ * >
+ * > ...
+ * >
+ * > const type_t *foo_type { return &foo_type_def };
+ * > const type_t foo_type_def =
+ * >   { type_type
+ * >
+ * >   , ...
+ * >   }
+ *
+ * ----------------------------------------------------------------
+ *
+ * Typically, a low-level "type_t" definition will look like this:
+ *
+ * > /-* intpair.h *-/
+ * >
+ * > ...
+ * >
+ * > /-* "intpair_type" *-/
+ * > const type_t *intpair_type(void);
+ * > /-* optional: *-/ extern const type_t intpair_type_def;
+ * > typedef struct intpair_s intpair_t;
+ * > struct intpair_s
+ * > {
+ * >   typed_t type;
+ * >
+ * >   memory_tracker memory;
+ * >
+ * >   int a;
+ * >   int b;
+ * > };
+ *
+ * > /-* intpair.c *-/
+ * >
+ * > ...
+ * >
+ * > const type_t *intpair_type(void)
+ * >   { return &intpair_type_def; }
+ * >
+ * > static const char          *intpair_type_name     (const type_t *self);
+ * > static size_t               intpair_type_size     (const type_t *self, const tval *val);
+ * > static const struct_info_t *intpair_type_is_struct(const type_t *self);
+ * >
+ * > const type_t intpair_type_def =
+ * >   { type_type
+ * > 
+ * >     /-* @: Required.           *-/
+ * > 
+ * >     /-* memory_tracker_defaults *-/
+ * >   , /-* memory                 *-/ MEMORY_TRACKER_DEFAULTS
+ * > 
+ * >   , /-* typed                  *-/ NULL
+ * > 
+ * >   , /-* @name                  *-/ intpair_type_name
+ * >   , /-* info                   *-/ NULL
+ * >   , /-* @size                  *-/ intpair_type_size
+ * >   , /-* @is_struct             *-/ intpair_type_is_struct
+ * > 
+ * >   , /-* cons_type              *-/ NULL
+ * >   , /-* init                   *-/ NULL
+ * >   , /-* free                   *-/ NULL
+ * >   , /-* has_default            *-/ NULL
+ * >   , /-* mem                    *-/ NULL
+ * >   , /-* mem_init               *-/ NULL
+ * >   , /-* mem_is_dyn             *-/ NULL
+ * >   , /-* mem_free               *-/ NULL
+ * >   , /-* default_memory_manager *-/ NULL
+ * >   , /-* dup                    *-/ NULL
+ * > 
+ * >   , /-* parity                 *-/ ""
+ * >   };
+ * >
+ * > static const char          *intpair_type_name     (const type_t *self)
+ * >   { return "memory_manager"; }
+ * >
+ * > static size_t               intpair_type_size     (const type_t *self, const tval *val)
+ * >   { return sizeof(intpair_t); }
+ * >
+ * > static const struct_info_t *intpair_type_is_struct(const type_t *self)
+ * >   {
+ * >     ...
+ * >
+ * >     return struct_info;
+ * >   }
+ *
+ * ----------------------------------------------------------------
+ */
+
 /* TODO: now that you've written common methods and method helpers, you're working on "type_defaults". */
 /*
  * Default fields for types.
@@ -4764,15 +4978,17 @@ static size_t default_type_is_struct_template_unused_value(const field_info_t *s
 const type_t type_defaults =
   { type_type
 
+    /* @: Required.           */
+
     /* memory_tracker_defaults */
   , /* memory                 */ MEMORY_TRACKER_DEFAULTS
 
   , /* typed                  */ default_type_typed
 
-  , /* name                   */ NULL /* default_type_name */
+  , /* @name                  */ NULL /* default_type_name */
   , /* info                   */ default_type_info
-  , /* size                   */ NULL /* default_type_size */
-  , /* is_struct              */ NULL /* default_type_is_struct */
+  , /* @size                  */ NULL /* default_type_size */
+  , /* @is_struct             */ NULL /* default_type_is_struct */
 
   , /* cons_type              */ default_type_cons_type
   , /* init                   */ default_type_init
@@ -4788,140 +5004,260 @@ const type_t type_defaults =
   , /* parity                 */ ""
   };
 
-/* typed default: type_is_typed. */
 static const type_t        *default_type_typed      (const type_t *self)
-  { return type_is_typed(self); }
+  { return type_is_typed_from_struct(self); }
 
 /*
 static const char          *default_type_name       (const type_t *self)
   { return "this"; }
+*/
 
-static const char          *default_type_info       (const type_t *self)
-  { return "typedef struct this_s this_t"; }
+static const char          *default_type_info       ( const type_t *type
+                                                    , char         *out_info_buf
+                                                    , size_t        info_buf_size
+                                                    )
+  { return type_has_no_info(type, out_info_buf, info_buf_size); }
 
+/*
 static size_t               default_type_size       (const type_t *self, const tval *val)
   { return sizeof(this_t); }
+*/
 
+/* TODO!!! */
+/*
 static const struct_info_t *default_type_is_struct  (const type_t *self)
   {
-    static const this_t empty;
-
-    static const struct_info_t struct_info =
-    { struct_info_type
-
-    , {
-      /-* typed_t type *-/
-        { field_info_type
-        , offsetof(this_t, type)
-        , sizeof(empty.type)
-        , /-* TODO *-/ NULL
-
-        , 0
-        , NULL
-        }
-
-      /-* void field0 *-/
-      , { field_info_type
-        , offsetof(this_t, field0)
-        , sizeof(empty.field0)
-        , /-* TODO *-/ NULL
-
-        , 0
-        , NULL
-        }
-
-      /-* void field1 *-/
-      , { field_info_type
-        , offsetof(this_t, field1)
-        , sizeof(empty.field1)
-        , /-* TODO *-/ NULL
-
-        , 0
-        , NULL
-        }
-
-      /-* terminating_field_info: end of fields. *-/
-      , { field_info_type, (size_t) (-1) }
-      }
-    , 3
-
-    , NULL
-
-    /-* No memory tracker field. *-/
-    , 0
-    , 0
-    };
-
-    return &struct_info;
   }
 */
 
 static typed_t              default_type_cons_type  (const type_t *self)
-  { return template_cons_type; }
+  { return type_has_template_cons_type(self); }
 
-/*
-static tval                *default_type_init       (const type_t *self, tval *cons)
-  {
-    static default_t *defaults = NULL;
-    if (!defaults)
-    {
-      static default_t this_defaults;
-
-      this_defaults = default_this;
-
-      defaults = &this_defaults;
-    }
-
-    return template_cons_dup_struct(cons, defaults, self->is_struct(self));
-  }
-*/
+static tval                *default_type_init       (const type_t *self, tval *cons);
+  { return type_has_template_cons_basic_initializer(self, cons); }
 
 static void                 default_type_free       (const type_t *self, tval *val)
-  {
-    template_cons_free_struct(val, self->is_struct(self));
-  }
+  { return type_has_template_cons_basic_freer(self, val); }
 
-/* By default there is no default value. */
-/* TODO: by default, use struct_info's defaults?
- * TODO: would this result in an infinite loop?
- */
 static const tval          *default_type_has_default(const type_t *self)
-  { return NULL; /* TODO */; }
+  { return type_has_no_default(self); }
 
-/*
- * TODO
- */
 static memory_tracker_t    *default_type_mem        (const type_t *self, tval *val_raw)
-  { return NULL; /* TODO */ }
+  { return type_mem_struct_or_global_dyn(self, val_raw); }
 
-static tval                *default_type_dup        (const type_t *self, tval *dest, const tval *src, int rec_copy, int dup_metadata, ref_traversal_t *ref_traversal)
+static void                *default_type_mem_init   ( const type_t *self
+                                                    , tval *val_raw
+                                                    , int is_dynamically_allocated
+                                                    )
+  { return type_supports_dynamic_allocation(self, val_raw, is_dynamically_allocated); }
+
+static int                  default_type_mem_is_dyn ( const type_t *self
+                                                    , tval         *val
+                                                    )
+  { return type_is_dyn_valueless_or_inside_value(self, val); }
+
+static int                  default_type_mem_free   ( const type_t *self
+                                                    , tval         *val
+                                                    )
+  { return mem_free_valueless_or_inside_value_allocation(self, val); }
+
+static const memory_manager_t
+                    *default_type_default_memory_manager
+                                                    ( const type_t *self
+                                                    , tval *val
+                                                    )
+  { return type_has_no_default_memory_manager(self, val); }
+
+static tval                *default_type_dup        ( const type_t *self
+                                                    , tval *dest
+                                                    , const tval *src
+                                                    , int defaults_src_unused
+                                                    , int rec_copy
+                                                    , int dup_metadata
+                                                    , ref_traversal_t *ref_traversal
+                                                    )
   {
-    struct_dup(self->is_struct(self), dest, src, 1, rec_copy, dup_metadata, ref_traversal);
-
-    return dest;
+    return
+      type_has_struct_dup_allow_malloc
+        ( self
+        , dest
+        , src
+        , defaults_src_unused
+        , rec_copy
+        , dup_metadata
+        , ref_traversal
+        );
   }
+
+/* TODO! */
+static size_t default_type_is_struct_default_value        (const field_info_t *self, void *dest_field_mem);
+static size_t default_type_is_struct_template_unused_value(const field_info_t *self, void *dest_field_mem);
 
 /* ---------------------------------------------------------------- */
 
 /* TODO */
-TODO
-const type_t        *type_typed      (const type_t *type);
-const char          *type_name       (const type_t *type);
-const char          *type_info       (const type_t *type);
-size_t               type_size       (const type_t *type, const tval *val);
-const struct_info_t *type_is_struct  (const type_t *type);
-typed_t              type_cons_type  (const type_t *type);
-tval                *type_init       (const type_t *type, tval *cons);
-void                 type_free       (const type_t *type, tval *val);
-const tval          *type_has_default(const type_t *type);
-memory_tracker_t    *type_mem        (const type_t *type, tval *val_raw);
+/*
+ * Fundamental "type_t" accessors.
+ */
+
+const type_t        *type_typed      (const type_t *type)
+{
+  if (!type || !type->typed)
+    return type_defaults.typed(type);
+  else
+    return type->typed(type);
+}
+
+const char          *type_name       (const type_t *type)
+{
+  if (!type || !type->name)
+    return NULL;
+  else
+    return type->name(type);
+}
+
+const char          *type_info       ( const type_t *type
+                                     , char         *out_info_buf
+                                     , size_t        info_buf_size
+                                     )
+{
+  if (!type || !type->info)
+    return type_defaults.info(type, out_info_buf, info_buf_size);
+  else
+    return type->info(type, out_info_buf, info_buf_size);
+}
+
+size_t               type_size       (const type_t *type, const tval *val)
+{
+  if (!type || !type->size)
+    return 0;
+  else
+    return type->size(type, val);
+}
+
+const struct_info_t *type_is_struct  (const type_t *type)
+{
+  if (!type || !type->is_struct)
+    return NULL;
+  else
+    return type->is_struct(type);
+}
+
+typed_t              type_cons_type  (const type_t *type)
+{
+  if (!type || !type->cons_type)
+    return type_defaults.cons_type(type);
+  else
+    return type->cons_type(type);
+}
+
+tval                *type_init       (const type_t *type, tval *cons)
+{
+  if (!type || !type->init)
+    return type_defaults.init(type, cons);
+  else
+    return type->init(type, cons);
+}
+
+void                 type_free       (const type_t *type, tval *val)
+{
+  if (!type || !type->free)
+    type_defaults.free(type, val);
+  else
+    type->free(type, val);
+}
+
+const tval          *type_has_default(const type_t *type)
+{
+  if (!type || !type->has_default)
+    return type_defaults.has_default(type);
+  else
+    return type->has_default(type);
+}
+
+memory_tracker_t    *type_mem        (const type_t *type, tval *val_raw)
+{
+  if (!type || !type->mem)
+    return type_defaults.mem(type, val_raw);
+  else
+    return type->mem(type, val_raw);
+}
+
+void                *type_mem_init   ( const type_t *type
+                                     , tval *val_raw
+                                     , int is_dynamically_allocated
+                                     )
+{
+  if (!type || !type->mem_init)
+    return type_defaults.mem_init(type, val_raw, is_dynamically_allocated);
+  else
+    return type->mem_init(type, val_raw, is_dynamically_allocated);
+}
+
+int                  type_mem_is_dyn ( const type_t *type
+                                     , tval         *val
+                                     )
+{
+  if (!type || !type->mem_is_dyn)
+    return type_defaults.mem_is_dyn(type, val);
+  else
+    return type->mem_is_dyn(type, val);
+}
+
+int                  type_mem_free   ( const type_t *type
+                                     , tval         *val
+                                     )
+{
+  if (!type || !type->mem_free)
+    return type_defaults.mem_free(type, val);
+  else
+    return type->mem_free(type, val);
+}
+
+const memory_manager_t
+                    *type_default_memory_manager
+                                     ( const type_t *type
+                                     , tval *val
+                                     )
+{
+  if (!type || !type->default_memory_manager)
+    return type_defaults.default_memory_manager(type, val);
+  else
+    return type->default_memory_manager(type, val);
+}
+
 tval                *type_dup        ( const type_t *type
                                      , tval *dest
                                      , const tval *src
+                                     , int defaults_src_unused
                                      , int rec_copy
                                      , int dup_metadata
                                      , ref_traversal_t *ref_traversal
-                                     );
+                                     )
+{
+  if (!type || !type->dup)
+    return
+      type_defaults.dup
+        ( type
+        , dest
+        , src
+        , defaults_src_unused
+        , rec_copy
+        , dup_metadata
+        , ref_traversal
+        );
+  else
+    return
+      type->dup
+        ( type
+        , dest
+        , src
+        , defaults_src_unused
+        , rec_copy
+        , dup_metadata
+        , ref_traversal
+        );
+}
 
 /* ---------------------------------------------------------------- */
 /* Template constructors, available for types to use.               */
