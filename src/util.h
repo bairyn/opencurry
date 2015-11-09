@@ -67,15 +67,24 @@ size_t max_size(size_t a, size_t b);
 /* ---------------------------------------------------------------- */
 
 /* Wrap code inside a single statement to avoid potential pitfalls. */
-#define CODE(body) \
-  do               \
-  {                \
-    body           \
+#define BLOCK_STATEMENT(body) \
+  do                          \
+  {                           \
+    body                      \
   } while(0)
 
 /* ---------------------------------------------------------------- */
 
 #define EXPAND1(a) a
+
+/* ---------------------------------------------------------------- */
+
+/* Thanks https://github.com/pfultz2/Cloak/wiki/C-Preprocessor-tricks,-tips,-and-idioms ! */
+
+#define BLANK
+
+#define EMPTY()
+#define DEFER(a) a EMPTY()
 
 /* ---------------------------------------------------------------- */
 
@@ -124,6 +133,8 @@ size_t size_less_null(size_t size);
 /* ARRAY_LEN_ALL treats the last element as a terminator and all other elements as values used in the array even when they are NULL or zero. */
 /* Thus this is just the number of elements in the array minus 1. */
 #define ARRAY_LEN_ALL(array) ((SIZE_LESS_NULL((ARRAY_NUM(array)))))
+#define ARRAY_FINAL_ELEM(array) array[ARRAY_LEN_ALL(array)]
+#define ARRAY_FINAL_REF(array) &array[ARRAY_LEN_ALL(array)]
 
 /* ---------------------------------------------------------------- */
 

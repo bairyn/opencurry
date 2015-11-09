@@ -38,6 +38,7 @@
 #ifndef TYPE_BASE_H
 #define TYPE_BASE_H
 /* stddef.h:
+ *   - offsetof
  *   - ptrdiff_t
  *   - size_t
  */
@@ -968,6 +969,32 @@ extern const field_info_t * const field_terminator;
 
 extern const field_info_t terminating_field_info;
 
+struct_info_t *struct_info_setup_fields(struct_info_t *struct_info
+
+/* ---------------------------------------------------------------- */
+
+struct_info_t *struct_info_init
+  ( struct_info_t *struct_info
+  , size_t      (*default_value)        (const field_info_t *self, void *dest_field_mem)
+  , size_t      (*template_unused_value)(const field_info_t *self, void *dest_field_mem)
+  );
+
+struct_info_t *struct_info_add_field_info(struct_info_t *struct_info, const field_info_t *field_info);
+
+#define OFFSET_FIELD(type, field) offsetof(type, field)
+#define SIZEOF_FIELD(type, field) sizeof(((const type *) NULL)->(field))
+
+struct_info_t *struct_info_add_field
+  ( struct_info_t *struct_info
+  , ptrdiff_t      field_pos
+  , size_t         field_size
+  , const type_t  *field_type
+  );
+
+struct_info_t *struct_info_add_field_terminator(struct_info_t *struct_info)
+
+field_info_t *struct_info_get_last_field(struct_info_t *struct_info)
+
 /* ---------------------------------------------------------------- */
 
 void *struct_info_iterate_chunks
@@ -1029,6 +1056,10 @@ enum verify_struct_info_status_e
   verify_struct_info_verify_field_info_error       
                                       = 5,
 
+  /* A field's field_pos is equal or lesser than that of its previous.  */
+  verify_struct_info_invalid_field_pos
+                                      = 6,
+
   verify_struct_info_end,
 
   /* 1: 0- 1 */
@@ -1039,6 +1070,8 @@ enum verify_struct_info_status_e
   verify_struct_info_end_mask = ONE_BIT_REPEAT(verify_struct_info_bits)
 };
 typedef enum verify_struct_info_status_e verify_struct_info_status_t;
+
+/* TODO: verify_struct_info: check for duplicates! */
 
 #define DEFAULT_BUF_SIZE_VERIFY_STRUCT_INFO 4096
 /*
@@ -1662,6 +1695,8 @@ const type_t *type_is_typed(const type_t *self);
 const type_t *type_is_untyped(const type_t *self);
 
 /* name */
+const char *type_has_name(const type_t *self, char *out_info_name, size_t name_buf_size, const char *name);
+const char *type_has_static_name(const type_t *self, const char *name);
 
 /* info */
 const char *type_has_no_info(const type_t *self, char *out_info_buf, size_t info_buf_size);
@@ -1669,15 +1704,119 @@ const char *type_has_no_info(const type_t *self, char *out_info_buf, size_t info
 /* size */
 
 /* is_struct */
-typed_t type_is_struct(const type_t *self);
+#define STRUCT_INFO_CACHE(struct_info)          \
+  static struct_info_t *struct_info = NULL;     \
+  if (struct_info)                              \
+  {                                             \
+    return (const struct_info_t *) struct_info; \
+  }                                             \
+  else                                          \
+  {                                             \
+    static struct_info_t struct_info_def;       \
+                                                \
+    struct_info = &struct_info_def;             \
+  }
 
-typed_t type_is_not_struct(const type_t *self);
+#define STRUCT_INFO_INIT_COMPLEX(struct_info, field_default_value, field_template_unused_value) \
+  do                                                                                            \
+  {                                                                                             \
+    /* Initialize struct_info. */                                                               \
+    struct_info = struct_info_init                                                              \
+      ( struct_info                                                                             \
+      , field_default_value                                                                     \
+      , field_template_unused_value                                                             \
+      );
+  } while(0)                                                                                    \
 
-size_t field_default_value_from_type
-  ( const field_info_t *self, void *dest_mem
-  , const type_t *type
-  );
-size_t field_default_value_zero(const field_info_t *self, void *dest_mem, typed_t type, ref_traversal_t *ref);
+#define STRUCT_INFO_DONE_COMPLEX(struct_info)                              \
+  do                                                                       \
+  {                                                                        \
+    /* Done adding fields. */                                              \
+    struct_info = struct_info_add_field_terminator(struct_info);           \
+                                                                           \
+    if (verify_struct(struct_info, NULL, 0) != verify_struct_info_success) \
+      struct_info = NULL;                                                  \
+                                                                           \
+    return ((const struct_type *) struct_info);                            \
+  } while(0)
+
+/* -- */
+
+#define STRUCT_INFO_BEGIN_COMPLEX(struct_type, struct_info, field_default_value, field_template_unused_value) \
+  /* typedef mystruct_t struct_type; */                                                                       \
+  typedef struct_type DEFER(struct_)##type;                                                                   \
+                                                                                                              \
+  /* struct_info_t *struct_info; */                                                                           \
+  STRUCT_INFO_CACHE(struct_info)                                                                              \
+                                                                                                              \
+  do                                                                                                          \
+  {                                                                                                           \
+    /* Initialize struct_info. */                                                                             \
+    STRUCT_INFO_INIT_COMPLEX(struct_info, field_default_value, field_template_unused_value);                  \
+  } while(0)
+
+#define STRUCT_INFO_ADD_COMPLEX(struct_info, struct_type, field_name, field_type_rep) \
+  do                                                                                  \
+  {                                                                                   \
+    struct_info = struct_info_add_field                                               \
+      ( struct_info                                                                   \
+      , OFFSET_FIELD(struct_type, field_name)                                         \
+      , SIZEOF_FIELD(struct_type, field_name)                                         \
+      , field_type_rep                                                                \
+      );                                                                              \
+  } while(0)
+
+#define STRUCT_INFO_REINIT_WITH_COMPLEX(field_default_value)                                           \
+  STRUCT_INFO_INIT_COMPLEX(struct_info, field_default_value, field_template_unused_value_zero)
+
+#define STRUCT_INFO_REINIT_WITH_COMPLEX_BOTH(field_default_value, field_template_unused_value)         \
+  STRUCT_INFO_INIT_COMPLEX(struct_info, field_default_value, field_template_unused_value)
+
+/* -- */
+
+/*
+ * An "is_struct" method can use these 4 macros to describe a struct's fields.
+ *
+ * Start with BEGIN, ADD each field, and then call DONE.
+ *
+ * To supply a custom field_default_value or field_template_unused_value, call
+ * "REINIT_WITH" after BEGIN.
+ *
+ * Example:
+ */
+
+#define STRUCT_INFO_BEGIN(struct_type) \
+  STRUCT_INFO_BEGIN_COMPLEX(struct_type, struct_info, field_default_value_from_type, field_template_unused_value_zero
+
+#define STRUCT_INFO_REINIT_WITH(type_name) \
+  STRUCT_INFO_REINIT_WITH_COMPLEX(CAT(type_name, _default_field_value))
+
+#define STRUCT_INFO_ADD(field_name, field_type_rep)                             \
+  STRUCT_INFO_ADD_COMPLEX(struct_info, struct_type, field_name, field_type_rep)
+
+#define STRUCT_INFO_DONE() \
+  STRUCT_INFO_DONE_COMPLEX(struct_info)
+
+/* -- */
+
+#define DEF_FIELD_DEFAULT_VALUE_FROM_TYPE(type_name)                                                 \
+  static size_t CAT(type_name, _default_field_value)(const field_info_t *self, void *dest_field_mem) \
+  {                                                                                                  \
+    return field_default_value_from_type(self, dest_field_mem, CAT(type_name, _type)());             \
+  }
+
+/* -- */
+
+const struct_info_t *type_is_struct(const type_t *self, const struct_info_t *struct_info);
+
+const struct_info_t *type_is_not_struct(const type_t *self);
+
+/* TODO: from_type: use the type's has_default, otherwise from_field_type. */
+size_t field_default_value_from_type      (const field_info_t *self, void *dest_field_mem, const type_t *type);
+size_t field_default_value_from_field_type(const field_info_t *self, void *dest_field_mem);
+size_t field_default_value_zero           (const field_info_t *self, void *dest_field_mem);
+
+size_t field_template_unused_value_zero(const field_info_t *self, void *dest_field_mem);
 
 /* cons_type" */
 typed_t type_has_template_cons_type(const type_t *self);
