@@ -191,12 +191,6 @@ static const struct_info_t *memory_manager_type_is_struct  (const type_t *self);
 /*                                                            );                                   */
 
 /*
- * We'll use these in the definition of "memory_manager_type_is_struct".
- */
-static size_t memory_manager_type_is_struct_default_value        (const field_info_t *self, void *dest_field_mem);
-static size_t memory_manager_type_is_struct_template_unused_value(const field_info_t *self, void *dest_field_mem);
-
-/*
  * "memory_manager_type"'s type_t definition.
  *
  * The main way to access "memory_manager_type"'s type_t is via
@@ -267,10 +261,6 @@ const type_t memory_manager_type_def =
   , /* parity                 */ ""
   };
 
-/* We could also directly set the "typed" field above to "type_is_typed". */
-static const type_t        *memory_manager_type_typed      (const type_t *self)
-  { return type_is_typed(self); }
-
 /*
  * Just return the name of the type.
  *
@@ -280,24 +270,21 @@ static const char          *memory_manager_type_name       (const type_t *self)
   { return "memory_manager"; }
 
 /*
- * Just return a string with general information about the type.
- */
-static const char          *memory_manager_type_info       (const type_t *self)
-  { return "typedef struct memory_manager_s memory_manager_t"; }
-
-/*
  * Return the size of values of the represented type.
  */
 static size_t               memory_manager_type_size       (const type_t *self, const tval *val)
   { return sizeof(memory_manager_t); }
 
 /*
-static size_t memory_manager_default_field_value(const field_info_t *self, void *dest_field_mem)
-{
-  return field_default_value_from_type(self, dest_field_mem, memory_manager_type());
-}
+> DEF_FIELD_DEFAULT_VALUE_FROM_TYPE(memory_manager)
+
+=>
+
+> static size_t memory_manager_default_field_value(const field_info_t *self, void *dest_field_mem)
+> {
+>   return field_default_value_from_type(self, dest_field_mem, memory_manager_type());
+> }
 */
-DEF_FIELD_DEFAULT_VALUE_FROM_TYPE(memory_manager)
 
 /*
  * "memory_manager_t" is a struct.
@@ -306,6 +293,7 @@ DEF_FIELD_DEFAULT_VALUE_FROM_TYPE(memory_manager)
  *
  * This is the most important part of the definiton of
  */
+DEF_FIELD_DEFAULT_VALUE_FROM_TYPE(memory_manager)
 static const struct_info_t *memory_manager_type_is_struct  (const type_t *self)
   {
     STRUCT_INFO_BEGIN(memory_manager_t);
@@ -340,338 +328,6 @@ static const struct_info_t *memory_manager_type_is_struct  (const type_t *self)
     STRUCT_INFO_ADD(size_type(),  state_size);
 
     STRUCT_INFO_DONE();
-  }
-
-/* memory_manager_type_is_struct methods. */
-
-/*
- * Return the default value for a field in "memory_manager_type_t".
- *
- * This function is how we assign a default value for each field in
- * "memory_manager_type_t"
- *
- * In the simplest case, we can choose 0/NULL as the default value for all
- * fields, by just using "default_value_zero".
- *
- * "memory_manager_type_is_struct" returns a "struct_info" where each
- * "field_info"'s "default_value" is set to this function.
- *
- * This function should handle NULL "dest_field_mem"'s, in which case the
- * caller is probably only concerned with whether this field has a default
- * value, and not with what that default value is.
- *
- * (Note: in this case, we could also direct set "default_value" to
- * "default_value_zero" in "memory_manager_type_is_struct" above.)
- *
- * ----------------------------------------------------------------
- *
- * Note: here we provide a low-level implementation allowing us greater control
- * TODO
- *
- * TODO: this doesn't match with memory_manager_defaults!
- */
-static size_t memory_manager_type_is_struct_default_value        (const field_info_t *self, void *dest_field_mem)
-{
-  /* We could choose a default value of 0 / NULL for all fields       */
-  /* with just the following:                                         */
-  /*                                                                  */
-  /* > return default_value_zero(self, dest_field_mem);               */
-  /*                                                                  */
-  /* However, we'll usually want to at least assign a default value   */
-  /* to the "typed_t type" field, if the type is "typed" (i.e. values */
-  /* are also "tval *"'s, because their first field is "typed_t".     */
-
-  /* ---------------------------------------------------------------- */
-
-  /* If this field lacks a default value, we should just return "0"   */
-  /* without writing to "dest_field_mem"; otherwise return the size   */
-  /* of the field's type after writing the default value.             */
-  /*                                                                  */
-  /* (Note: even if a default value is 0 or NULL, if this is a        */
-  /* default value, we'll still want to return a non-zero value.      */
-  /*                                                                  */
-  /* We shouldn't write a (0/NULL) default value and                  */
-  /* erroneously return zero,                                         */
-  /* incorrectly indicating that "dest_field_mem" was written to.     */
-
-  static const memory_manager_t empty;
-
-  return default_value_from_type(self, dest_field_mem, memory_manager_type, NULL);
-
-  /* TODO */
-
-  /* memory_manager_type_is_struct_default_value must be called with  */
-  /* "self".                                                          */
-  if (!self)
-    return 0;
-
-
-  /* Which field are we returning a default value for?                */
-
-  /* typed_t type                                                     */
-  if      (field_info_cref(self, &empty) == &empty.type)
-  {
-    typedef typed_t field_type;
-
-    field_type *dest_field = (field_type *) dest_field_mem;
-
-    if (dest_field) *dest_field =
-      memory_manager_type;
-
-    return sizeof(field_type);
-  }
-
-  /* void *(*malloc) (const memory_manager_t *self, size_t  size);    */
-  else if (field_info_cref(self, &empty) == &empty.malloc)
-  {
-    typedef void *(*field_type) (const memory_manager_t *self, size_t  size);
-
-    field_type *dest_field = (field_type *) dest_field_mem;
-
-    if (dest_field) *dest_field =
-      NULL;
-
-    return sizeof(field_type);
-  }
-
-  /* void  (*free)   (const memory_manager_t *self, void   *ptr);     */
-  else if (field_info_cref(self, &empty) == &empty.free)
-  {
-    typedef void  (*field_type)   (const memory_manager_t *self, void   *ptr);
-
-    field_type *dest_field = (field_type *) dest_field_mem;
-
-    if (dest_field) *dest_field =
-      NULL;
-
-    return sizeof(field_type);
-  }
-
-  /* void *(*calloc) (const memory_manager_t *self, size_t  nmemb, size_t size); */
-  else if (field_info_cref(self, &empty) == &empty.calloc)
-  {
-    typedef void *(*field_type) (const memory_manager_t *self, size_t  nmemb, size_t size);
-
-    field_type *dest_field = (field_type *) dest_field_mem;
-
-    if (dest_field) *dest_field =
-      NULL;
-
-    return sizeof(field_type);
-  }
-
-  /* void *(*realloc)(const memory_manager_t *self, void   *ptr,   size_t size); */
-  else if (field_info_cref(self, &empty) == &empty.realloc)
-  {
-    typedef void *(*field_type)(const memory_manager_t *self, void   *ptr,   size_t size);
-
-    field_type *dest_field = (field_type *) dest_field_mem;
-
-    if (dest_field) *dest_field =
-      NULL;
-
-    return sizeof(field_type);
-  }
-
-  /* void  (*on_oom) (const memory_manager_t *self, size_t      size); */
-  else if (field_info_cref(self, &empty) == &empty.on_oom)
-  {
-    typedef void  (*field_type) (const memory_manager_t *self, size_t      size);
-
-    field_type *dest_field = (field_type *) dest_field_mem;
-
-    if (dest_field) *dest_field =
-      memory_manager_default_on_oom;
-
-    return sizeof(field_type);
-  }
-
-  /* void  (*on_err) (const memory_manager_t *self, const char *msg); */
-  else if (field_info_cref(self, &empty) == &empty.on_err)
-  {
-    typedef void  (*field_type) (const memory_manager_t *self, const char *msg);
-
-    field_type *dest_field = (field_type *) dest_field_mem;
-
-    if (dest_field) *dest_field =
-      memory_manager_default_on_err;
-
-    return sizeof(field_type);
-  }
-
-  /* void   *state;                                                   */
-  else if (field_info_cref(self, &empty) == &empty.state)
-  {
-    typedef void   *field_type;
-
-    field_type *dest_field = (field_type *) dest_field_mem;
-
-    if (dest_field) *dest_field =
-      NULL;
-
-    return sizeof(field_type);
-  }
-
-  /* size_t  state_size;                                              */
-  else if (field_info_cref(self, &empty) == &empty.state_size)
-  {
-    typedef size_t  field_type;
-
-    field_type *dest_field = (field_type *) dest_field_mem;
-
-    if (dest_field) *dest_field =
-      0;
-
-    return sizeof(field_type);
-  }
-
-  /* (Note: an assignment for a field without a default value would   */
-  /* look like this):                                                 */
-  /*
-  /-* foo_t foo *-/
-  else if (field_info_cref(self, &empty) == &empty.foo)
-  {
-    return 0;
-  }
-  */
-
-  /* General case for all other fields, and unrecognized fields. */
-  else
-  {
-    return default_value_zero(self, dest_field_mem);
-  }
-}
-/*
- * TODO
- */
-static size_t memory_manager_type_is_struct_template_unused_value(const field_info_t *self, void *dest_field_mem)
-{
-  /* TODO */
-  return template_unused_value_zero(self, dest_field_mem);
-}
-
-/*
- * "memory_manager_type"'s constructor is the standard "template_cons_t" struct.
- *
- * This means a "memory_manager" is initialized from another "memory_manager_t"
- * contained in a "template_cons_t", where the fields are copied, and some
- * fields have default values when the constructor's "memory_manager_t"'s are
- * zero/NULL (or, less commonly, possibly some special value depending on the
- * type's struct_info).
- *
- * Thus "memory_manager_t"'s "init" function must be called with a
- * "template_cons_t *".
- *
- * (Note: we could also have directly assigned "memory_manager_type_def"'s
- * "cons_type" field to "type_uses_template_cons", since we don't do any
- * further initialization.)
- *
- * (Note: "type_uses_template_cons" directly returns "template_cons_type".
- * We could also have defined that directly...
- *
- * > static typed_t memory_manager_type_cons_type(const type_t *self)
- * >   { return template_cons_type; }
- *
- * ...at the sacrifice of modularity.)
- */
-static typed_t              memory_manager_type_cons_type  (const type_t *self)
-  { return template_cons_type; }
-
-/*
- * The initializer for "memory_manager_type".
- *
- * This is called to initialize an existing "memory_manager_t", and to "malloc"
- * (and also possibly initialize) a new "memory_manager_t *".
- *
- * "memory_manager_type"'s initializer uses a "template_cons_t" constructor.
- * This struct contains another "memory_manager_t" in this case, whose -
- * generally speaking - non-zero fields are copied and whose zero fields are
- * assigned a default value.
- *
- * So to initialize a new "memory_manager_t" with default values except for
- * specific fields, these fields can be assigned a non-zero/non-NULL value.
- *
- * A "template_cons_t" also contains other general information for
- * initialization.  For example, it can specify an alternate method to manage
- * memory, different from the default "malloc", whether to force all fields to
- * be copied rather than providing defaults for fields equal to zero/NULL, and
- * also whether to dynamically "malloc" a new "memory_manager_t *", etc.
- *
- * The most important parts of a "template_cons_t" constructor are these:
- *   - memory_manager_t *dest:
- *       The "memory_manager_t" to initialize.
- *
- *       If NULL, a new one is "malloc"'d.
- *   - memory_manager_t *initials;
- *
- * Example:
- *   > TODO
- */
-
-/*
- * Just use "template_cons_basic_initializer" to initialize our value.
- *
- * (Note: we could also have directly assigned "memory_manager_type_def"'s
- * "init" field to "template_cons_basic_initializer", since we don't do any
- * further initialization.)
- */
-static tval                *memory_manager_type_init       (const type_t *self, tval *cons)
-  {
-    /* Initialize a "memory_manager_t".     */
-    memory_tracker_t *val = template_cons_basic_initializer(self, cons);
-
-    /* Some types may want to perform more  */
-    /* initialization before returning:     */
-    /* if (val)
-     * {
-     *   /-* ... *-/
-     * }
-     */
-
-    /* Return the "memory_tracker_t" value. */
-    return val;
-  }
-
-/*
- * Free an initialized "memory_tracker_t *".
- *
- * Just use "template_cons_basic_freer".
- *
- * (Note: we could also have directly assigned "memory_manager_type_def"'s
- * "free" field to "template_cons_basic_free", since we don't do any
- * further initialization.)
- */
-static void                 memory_manager_type_free       (const type_t *self, tval *val)
-  {
-    template_cons_basic_freer(self, val);
-  }
-
-/*
- * TODO
- */
-static const tval          *memory_manager_type_has_default(const type_t *self)
-  { return &memory_manager_defaults; }
-
-/*
- * TODO
- */
-static memory_tracker_t    *memory_manager_type_mem        (const type_t *self, tval *val_raw)
-  { return NULL; /* TODO */ }
-
-/*
- * TODO
- */
-static tval                *memory_manager_type_dup        ( const type_t *self
-                                                           , tval *dest
-                                                           , const tval *src
-                                                           , int rec_copy
-                                                           , int dup_metadata
-                                                           , ref_traversal_t *ref_traversal
-                                                           )
-  {
-    struct_dup(self->is_struct(self), dest, src, 1, rec_copy, dup_metadata, ref_traversal);
-
-    return dest;
   }
 
 /* ---------------------------------------------------------------- */
