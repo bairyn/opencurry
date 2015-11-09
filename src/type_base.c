@@ -267,7 +267,7 @@ const type_t memory_manager_type_def =
  * "memory_manager".
  */
 static const char          *memory_manager_type_name       (const type_t *self)
-  { return "memory_manager"; }
+  { return "memory_manager_t"; }
 
 /*
  * Return the size of values of the represented type.
@@ -578,269 +578,80 @@ void  memory_manager_on_err (const memory_manager_t *memory_manager, const char 
 
 /* memory_tracker type. */
 
-static const type_t        *memory_tracker_type_typed      (const type_t *self);
-static const char          *memory_tracker_type_name       (const type_t *self);
-static const char          *memory_tracker_type_info       (const type_t *self);
-static size_t               memory_tracker_type_size       (const type_t *self, const tval *val);
-static const struct_info_t *memory_tracker_type_is_struct  (const type_t *self);
-static typed_t              memory_tracker_type_cons_type  (const type_t *self);
-static tval                *memory_tracker_type_init       (const type_t *self, tval *cons);
-static void                 memory_tracker_type_free       (const type_t *self, tval *val);
-static const tval          *memory_tracker_type_has_default(const type_t *self);
-static memory_tracker_t    *memory_tracker_type_mem        (const type_t *self, tval *val_raw);
-static tval                *memory_tracker_type_dup        ( const type_t *self
-                                                           , tval *dest
-                                                           , const tval *src
-                                                           , int rec_copy
-                                                           , int dup_metadata
-                                                           , ref_traversal_t *ref_traversal
-                                                           );
-
-static size_t memory_tracker_type_is_struct_default_value        (const field_info_t *self, void *dest_field_mem);
-static size_t memory_tracker_type_is_struct_template_unused_value(const field_info_t *self, void *dest_field_mem);
-
-const type_t memory_tracker_type_def =
-  { type_type
-
-    /* memory_tracker_defaults */
-  , /* memory      */ { memory_tracker_type, { memory_manager_type } }
-
-  , /* typed       */ memory_tracker_type_typed
-
-  , /* name        */ memory_tracker_type_name
-  , /* info        */ memory_tracker_type_info
-  , /* size        */ memory_tracker_type_size
-  , /* is_struct   */ memory_tracker_type_is_struct
-
-  , /* cons_type   */ memory_tracker_type_cons_type
-  , /* init        */ memory_tracker_type_init
-  , /* free        */ memory_tracker_type_free
-  , /* has_default */ memory_tracker_type_has_default
-  , /* mem         */ memory_tracker_type_mem
-  , /* dup         */ memory_tracker_type_dup
-
-  , /* parity      */ ""
-  };
-
 const type_t *memory_tracker_type(void)
   { return &memory_tracker_type_def; }
 
-static const type_t        *memory_tracker_type_typed      (const type_t *self)
-  { return type_is_typed(self); }
+static const char          *memory_tracker_type_name     (const type_t *self);
+static size_t               memory_tracker_type_size     (const type_t *self, const tval *val);
+static const struct_info_t *memory_tracker_type_is_struct(const type_t *self);
 
-static const char          *memory_tracker_type_name       (const type_t *self)
-  { return "memory_tracker"; }
+const type_t memory_manager_type_def =
+  { type_type
 
-static const char          *memory_tracker_type_info       (const type_t *self)
-  { return "typedef struct memory_tracker_s memory_tracker_t"; }
+    /* @: Required.           */
 
-static size_t               memory_tracker_type_size       (const type_t *self, const tval *val)
+    /* memory_tracker_defaults */
+  , /* memory                 */ MEMORY_TRACKER_DEFAULTS
+
+  , /* typed                  */ NULL
+
+  , /* @name                  */ memory_manager_type_name
+  , /* info                   */ NULL
+  , /* @size                  */ memory_manager_type_size
+  , /* @is_struct             */ memory_manager_type_is_struct
+
+  , /* cons_type              */ NULL
+  , /* init                   */ NULL
+  , /* free                   */ NULL
+  , /* has_default            */ NULL
+  , /* mem                    */ NULL
+  , /* mem_init               */ NULL
+  , /* mem_is_dyn             */ NULL
+  , /* mem_free               */ NULL
+  , /* default_memory_manager */ NULL
+  , /* dup                    */ NULL
+
+  , /* parity                 */ ""
+  };
+
+static const char          *memory_tracker_type_name     (const type_t *self)
+  { return "memory_tracker_t"; }
+
+static size_t               memory_tracker_type_size     (const type_t *self, const tval *val)
   { return sizeof(memory_tracker_t); }
 
+DEF_FIELD_DEFAULT_VALUE_FROM_TYPE(memory_tracker)
 static const struct_info_t *memory_tracker_type_is_struct  (const type_t *self)
   {
-    /* Procedurally initialize the type's struct_info. */
-    static const struct_info_t *struct_info = NULL;
-    if (!struct_info)
-    {
-      static struct_info_t struct_info_def;
-      struct_info = &struct_info_def;
+    STRUCT_INFO_BEGIN(memory_tracker_t);
 
-      /* ---------------------------------------------------------------- */
+    STRUCT_INFO_REINIT_WITH(memory_tracker);
 
-      {
-        const memory_tracker_t  empty;
+    /* typed_t type */
+    STRUCT_INFO_ADD(typed_type(), type);
 
-        field_info_t           *field;
-        size_t                  fields_len;
+    /* memory_manager_t memory_manager; */
+    STRUCT_INFO_ADD(memory_manager_type(), memory_manager);
 
-        size_t (*default_value)        (const field_info_t *self, void *dest_mem);
-        size_t (*template_unused_value)(const field_info_t *self, void *dest_mem);
+    /* void *dynamically_allocated_container; */
+    STRUCT_INFO_ADD(objp_type(), dynamically_allocated_container);
 
-        default_value         = memory_tracker_type_is_struct_default_value;
-        template_unused_value = memory_tracker_type_is_struct_template_unused_value;
+    /* void   **dynamically_allocated_buffers;      */
+    /* size_t   dynamically_allocated_buffers_num;  */
+    /* size_t   dynamically_allocated_buffers_size; */
+    STRUCT_INFO_ADD(objp_type(), dynamically_allocated_buffers);
+    STRUCT_INFO_ADD(size_type(), dynamically_allocated_buffers_num);
+    STRUCT_INFO_ADD(size_type(), dynamically_allocated_buffers_size);
 
-        /* struct_info->type */
-        struct_info_def.type = struct_info_type;
+    /* size_t   dynamically_allocated_buffers_last_even; */
+    /* size_t   dynamically_allocated_buffers_last_odd;  */
+    STRUCT_INFO_ADD(size_type(), dynamically_allocated_buffers_last_even);
+    STRUCT_INFO_ADD(size_type(), dynamically_allocated_buffers_last_odd);
 
-        /* struct_info->fields */
-        fields_len = 0;
-        {
-          /* typed_t type */
-          field = &struct_info_def.fields[fields_len++];
-
-          field->type                  = field_info_type;
-
-          field->field_pos             = field_pos(&empty, &empty.type);
-          field->field_size            = sizeof            (empty.type);
-          field->field_type            = typed_type();
-
-          field->is_metadata           = 0;
-          field->is_copyable_ref       = 0;
-          field->default_value         = default_value;
-          field->template_unused_value = template_unused_value;
-
-          /* memory_manager_t memory_manager; */
-          field = &struct_info_def.fields[fields_len++];
-
-          field->type                  = field_info_type;
-
-          field->field_pos             = field_pos(&empty, &empty.memory_manager);
-          field->field_size            = sizeof            (empty.memory_manager);
-          field->field_type            = memory_manager_type();
-
-          field->is_metadata           = 0;
-          field->is_copyable_ref       = 0;
-          field->default_value         = default_value;
-          field->template_unused_value = template_unused_value;
-
-          /* void *dynamically_allocated_container; */
-          field = &struct_info_def.fields[fields_len++];
-
-          field->type                  = field_info_type;
-
-          field->field_pos             = field_pos(&empty, &empty.dynamically_allocated_container);
-          field->field_size            = sizeof            (empty.dynamically_allocated_container);
-          field->field_type            = objp_type();
-
-          field->is_metadata           = 0;
-          field->is_copyable_ref       = 0;
-          field->default_value         = default_value;
-          field->template_unused_value = template_unused_value;
-
-          /* void   **dynamically_allocated_buffers; */
-          field = &struct_info_def.fields[fields_len++];
-
-          field->type                  = field_info_type;
-
-          field->field_pos             = field_pos(&empty, &empty.dynamically_allocated_buffers);
-          field->field_size            = sizeof            (empty.dynamically_allocated_buffers);
-          field->field_type            = objp_type();
-
-          field->is_metadata           = 0;
-          field->is_copyable_ref       = 0;
-          field->default_value         = default_value;
-          field->template_unused_value = template_unused_value;
-
-          /* size_t   dynamically_allocated_buffers_num; */
-          field = &struct_info_def.fields[fields_len++];
-
-          field->type                  = field_info_type;
-
-          field->field_pos             = field_pos(&empty, &empty.dynamically_allocated_buffers_num);
-          field->field_size            = sizeof            (empty.dynamically_allocated_buffers_num);
-          field->field_type            = size_type();
-
-          field->is_metadata           = 0;
-          field->is_copyable_ref       = 0;
-          field->default_value         = default_value;
-          field->template_unused_value = template_unused_value;
-
-          /* size_t   dynamically_allocated_buffers_size; */
-          field = &struct_info_def.fields[fields_len++];
-
-          field->type                  = field_info_type;
-
-          field->field_pos             = field_pos(&empty, &empty.dynamically_allocated_buffers_size);
-          field->field_size            = sizeof            (empty.dynamically_allocated_buffers_size);
-          field->field_type            = size_type();
-
-          field->is_metadata           = 0;
-          field->is_copyable_ref       = 0;
-          field->default_value         = default_value;
-          field->template_unused_value = template_unused_value;
-
-          /* size_t   dynamically_allocated_buffers_last_even; */
-          field = &struct_info_def.fields[fields_len++];
-
-          field->type                  = field_info_type;
-
-          field->field_pos             = field_pos(&empty, &empty.dynamically_allocated_buffers_last_even);
-          field->field_size            = sizeof            (empty.dynamically_allocated_buffers_last_even);
-          field->field_type            = size_type();
-
-          field->is_metadata           = 0;
-          field->is_copyable_ref       = 0;
-          field->default_value         = default_value;
-          field->template_unused_value = template_unused_value;
-
-          /* size_t   dynamically_allocated_buffers_last_odd; */
-          field = &struct_info_def.fields[fields_len++];
-
-          field->type                  = field_info_type;
-
-          field->field_pos             = field_pos(&empty, &empty.dynamically_allocated_buffers_last_odd);
-          field->field_size            = sizeof            (empty.dynamically_allocated_buffers_last_odd);
-          field->field_type            = size_type();
-
-          field->is_metadata           = 0;
-          field->is_copyable_ref       = 0;
-          field->default_value         = default_value;
-          field->template_unused_value = template_unused_value;
-
-
-          /* terminating_field_info: end of fields. */
-          struct_info_def.fields[fields_len] = terminating_field_info;
-        }
-
-        /* struct_info->... */
-        struct_info_def.fields_len           = fields_len;
-        struct_info_def.tail                 = NULL;
-
-        /* No memory tracker field. */
-        struct_info_def.has_memory_tracker   = 0;
-        struct_info_def.memory_tracker_field = 0;
-      }
-    }
-
-    return struct_info;
+    STRUCT_INFO_DONE();
   }
 
-static typed_t              memory_tracker_type_cons_type  (const type_t *self)
-  { return template_cons_type; }
-
-static tval                *memory_tracker_type_init       (const type_t *self, tval *cons)
-  {
-    static memory_tracker_t *defaults = NULL;
-    if (!defaults)
-    {
-      static memory_tracker_t type_defaults;
-
-      type_defaults = memory_tracker_default;
-
-      defaults = &type_defaults;
-    }
-
-    return template_cons_dup_struct(cons, defaults, self->is_struct(self));
-  }
-
-static void                 memory_tracker_type_free       (const type_t *self, tval *val)
-  {
-    template_cons_free_struct(val, self->is_struct(self));
-  }
-
-/*
- * TODO
- */
-static const tval          *memory_tracker_type_has_default(const type_t *self)
-  { return &memory_manager_defaults; }
-
-/*
- * TODO
- *
- * TODO: uhh, get it from the struct??
- *{ return (val_raw ? ((memory_manager_t *) val_raw)->memory : NULL); }
- */
-static memory_tracker_t    *memory_tracker_type_mem        (const type_t *self, tval *val_raw)
-  { return NULL; }
-
-static tval                *memory_tracker_type_dup        (const type_t *self, tval *dest, const tval *src, int rec_copy, int dup_metadata, ref_traversal_t *ref_traversal)
-  {
-    struct_dup(self->is_struct(self), dest, src, 1, rec_copy, dup_metadata, ref_traversal);
-
-    return dest;
-  }
-
+#if 0
 /* ---------------------------------------------------------------- */
 
 /*
@@ -5341,3 +5152,4 @@ const void *field_cref(ptrdiff_t   pos,  const void *base)
 {
   return (const void *) (((const unsigned char *) base) + pos);
 }
+#endif
