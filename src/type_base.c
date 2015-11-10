@@ -296,36 +296,34 @@ static size_t               memory_manager_type_size       (const type_t *self, 
 DEF_FIELD_DEFAULT_VALUE_FROM_TYPE(memory_manager)
 static const struct_info_t *memory_manager_type_is_struct  (const type_t *self)
   {
-    STRUCT_INFO_BEGIN(memory_manager_t);
-
-    STRUCT_INFO_REINIT_WITH(memory_manager);
+    STRUCT_INFO_BEGIN(memory_manager);
 
     /* typed_t type */
-    STRUCT_INFO_ADD(typed_type(), type);
+    STRUCT_INFO_RADD(typed_type(), type);
 
     /* void *(*malloc) (const memory_manager_t *self, size_t  size); */
-    STRUCT_INFO_ADD(funp_type(),  size);
+    STRUCT_INFO_RADD(funp_type(),  malloc);
 
     /* void  (*free)   (const memory_manager_t *self, void   *ptr); */
-    STRUCT_INFO_ADD(funp_type(),  ptr);
+    STRUCT_INFO_RADD(funp_type(),  free);
 
     /* void *(*calloc) (const memory_manager_t *self, size_t  nmemb, size_t size); */
-    STRUCT_INFO_ADD(funp_type(),  calloc);
+    STRUCT_INFO_RADD(funp_type(),  calloc);
 
     /* void *(*realloc)(const memory_manager_t *self, void   *ptr,   size_t size); */
-    STRUCT_INFO_ADD(funp_type(),  realloc);
+    STRUCT_INFO_RADD(funp_type(),  realloc);
 
     /* void  (*on_oom) (const memory_manager_t *self, size_t      size); */
-    STRUCT_INFO_ADD(funp_type(),  on_oom);
+    STRUCT_INFO_RADD(funp_type(),  on_oom);
 
     /* void  (*on_err) (const memory_manager_t *self, const char *msg); */
-    STRUCT_INFO_ADD(funp_type(),  on_err);
+    STRUCT_INFO_RADD(funp_type(),  on_err);
 
     /* void   *state; */
-    STRUCT_INFO_ADD(objp_type(),  state);
+    STRUCT_INFO_RADD(objp_type(),  state);
 
     /* size_t  state_size; */
-    STRUCT_INFO_ADD(size_type(),  state_size);
+    STRUCT_INFO_RADD(size_type(),  state_size);
 
     STRUCT_INFO_DONE();
   }
@@ -623,30 +621,28 @@ static size_t               memory_tracker_type_size     (const type_t *self, co
 DEF_FIELD_DEFAULT_VALUE_FROM_TYPE(memory_tracker)
 static const struct_info_t *memory_tracker_type_is_struct  (const type_t *self)
   {
-    STRUCT_INFO_BEGIN(memory_tracker_t);
-
-    STRUCT_INFO_REINIT_WITH(memory_tracker);
+    STRUCT_INFO_BEGIN(memory_tracker);
 
     /* typed_t type */
-    STRUCT_INFO_ADD(typed_type(), type);
+    STRUCT_INFO_RADD(typed_type(), type);
 
     /* memory_manager_t memory_manager; */
-    STRUCT_INFO_ADD(memory_manager_type(), memory_manager);
+    STRUCT_INFO_RADD(memory_manager_type(), memory_manager);
 
     /* void *dynamically_allocated_container; */
-    STRUCT_INFO_ADD(objp_type(), dynamically_allocated_container);
+    STRUCT_INFO_RADD(objp_type(), dynamically_allocated_container);
 
     /* void   **dynamically_allocated_buffers;      */
     /* size_t   dynamically_allocated_buffers_num;  */
     /* size_t   dynamically_allocated_buffers_size; */
-    STRUCT_INFO_ADD(objp_type(), dynamically_allocated_buffers);
-    STRUCT_INFO_ADD(size_type(), dynamically_allocated_buffers_num);
-    STRUCT_INFO_ADD(size_type(), dynamically_allocated_buffers_size);
+    STRUCT_INFO_RADD(objp_type(), dynamically_allocated_buffers);
+    STRUCT_INFO_RADD(size_type(), dynamically_allocated_buffers_num);
+    STRUCT_INFO_RADD(size_type(), dynamically_allocated_buffers_size);
 
     /* size_t   dynamically_allocated_buffers_last_even; */
     /* size_t   dynamically_allocated_buffers_last_odd;  */
-    STRUCT_INFO_ADD(size_type(), dynamically_allocated_buffers_last_even);
-    STRUCT_INFO_ADD(size_type(), dynamically_allocated_buffers_last_odd);
+    STRUCT_INFO_RADD(size_type(), dynamically_allocated_buffers_last_even);
+    STRUCT_INFO_RADD(size_type(), dynamically_allocated_buffers_last_odd);
 
     STRUCT_INFO_DONE();
   }
@@ -4522,17 +4518,16 @@ static size_t               default_type_size       (const type_t *self, const t
 DEF_FIELD_DEFAULT_VALUE_FROM_TYPE(this)
 static const struct_info_t *default_type_is_struct  (const type_t *self)
   {
-    STRUCT_INFO_BEGIN(this_t);
-    STRUCT_INFO_REINIT_WITH(this);
+    STRUCT_INFO_BEGIN(this);
 
     /-* typed_t type *-/
-    STRUCT_INFO_ADD(typed_type(), type);
+    STRUCT_INFO_RADD(typed_type(), type);
 
     /-* int foo *-/
-    STRUCT_INFO_ADD(int_type(),   foo);
+    STRUCT_INFO_RADD(int_type(),   foo);
 
     /-* int bar *-/
-    STRUCT_INFO_ADD(int_type(),   bar);
+    STRUCT_INFO_RADD(int_type(),   bar);
 
     STRUCT_INFO_DONE();
   }

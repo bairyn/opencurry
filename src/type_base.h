@@ -866,7 +866,7 @@ struct_info_t *struct_info_init
 struct_info_t *struct_info_add_field_info(struct_info_t *struct_info, const field_info_t *field_info);
 
 #define OFFSET_FIELD(type, field) offsetof(type, field)
-#define SIZEOF_FIELD(type, field) sizeof(((const type *) NULL)->(field))
+#define SIZEOF_FIELD(type, field) sizeof(((const type *) NULL)->field)
 
 struct_info_t *struct_info_add_field
   ( struct_info_t *struct_info
@@ -917,30 +917,30 @@ memory_tracker_t *struct_value_has_memory_tracker(const struct_info_t *struct_in
 
 enum verify_struct_info_status_e
 {
-  /* The checks that were requested to run passed.                      */
+  /* The checks that were requested to run passed.                       */
   verify_struct_info_success          = 0,
 
-  /* "verify_struct" was called with a NULL "struct_info" argument.     */
+  /* "verify_struct_info" was called with a NULL "struct_info" argument. */
   verify_struct_info_null_struct_info = 1,
 
-  /* fields_len is too big; excess fields need to be moved to the tail. */
+  /* fields_len is too big; excess fields need to be moved to the tail.  */
   verify_struct_info_need_tail_excess = 2,
 
-  /* fields_len is at max capacity with no field terminator.            */
-  /* At least one field needs to be moved to the tail.                  */
+  /* fields_len is at max capacity with no field terminator.             */
+  /* At least one field needs to be moved to the tail.                   */
   verify_struct_info_need_tail_max    = 3,
 
-  /* A call to "is_field_terminator" failed with a general error code.  */
+  /* A call to "is_field_terminator" failed with a general error code.   */
   verify_struct_info_is_field_terminator_error
                                       = 4,
-  /* Invalid field: a call to "verify_field_info" failed.               */
-  /*                                                                    */
-  /* The struct_info_field_error's bits are OR'd onto this beyond       */
-  /* verify_struct_info_bits.                                           */
+  /* Invalid field: a call to "verify_field_info" failed.                */
+  /*                                                                     */
+  /* The struct_info_field_error's bits are OR'd onto this beyond        */
+  /* verify_struct_info_bits.                                            */
   verify_struct_info_verify_field_info_error       
                                       = 5,
 
-  /* A field's field_pos is equal or lesser than that of its previous.  */
+  /* A field's field_pos is equal or lesser than that of its previous.   */
   verify_struct_info_invalid_field_pos
                                       = 6,
 
@@ -1612,16 +1612,16 @@ const char *type_has_no_info(const type_t *self, char *out_info_buf, size_t info
       );                                                                                        \
   } while(0)
 
-#define STRUCT_INFO_DONE_COMPLEX(struct_info)                              \
-  do                                                                       \
-  {                                                                        \
-    /* Done adding fields. */                                              \
-    struct_info = struct_info_add_field_terminator(struct_info);           \
-                                                                           \
-    if (verify_struct(struct_info, NULL, 0) != verify_struct_info_success) \
-      struct_info = NULL;                                                  \
-                                                                           \
-    return ((const struct_type *) struct_info);                            \
+#define STRUCT_INFO_DONE_COMPLEX(struct_info)                                   \
+  do                                                                            \
+  {                                                                             \
+    /* Done adding fields. */                                                   \
+    struct_info = struct_info_add_field_terminator(struct_info);                \
+                                                                                \
+    if (verify_struct_info(struct_info, NULL, 0) != verify_struct_info_success) \
+      struct_info = NULL;                                                       \
+                                                                                \
+    return ((const struct_info_t *) struct_info);                               \
   } while(0)
 
 /* -- */
@@ -1644,8 +1644,8 @@ const char *type_has_no_info(const type_t *self, char *out_info_buf, size_t info
   {                                                                                   \
     struct_info = struct_info_add_field                                               \
       ( struct_info                                                                   \
-      , OFFSET_FIELD(struct_type, field_name)                                         \
-      , SIZEOF_FIELD(struct_type, field_name)                                         \
+      , (size_t) (OFFSET_FIELD(struct_type, field_name))                              \
+      , (size_t) (SIZEOF_FIELD(struct_type, field_name))                              \
       , field_type_rep                                                                \
       );                                                                              \
   } while(0)
@@ -1669,14 +1669,14 @@ const char *type_has_no_info(const type_t *self, char *out_info_buf, size_t info
  * Example:
  */
 
-#define STRUCT_INFO_BEGIN(struct_type) \
-  STRUCT_INFO_BEGIN_COMPLEX(struct_type, struct_info, field_default_value_from_type, field_template_unused_value_zero)
-
-#define STRUCT_INFO_REINIT_WITH(type_name) \
-  STRUCT_INFO_REINIT_WITH_COMPLEX(CAT(type_name, _default_field_value))
+#define STRUCT_INFO_BEGIN(type_name) \
+  STRUCT_INFO_BEGIN_COMPLEX(CAT(type_name, _t), struct_info, CAT(type_name, _default_field_value), field_template_unused_value_zero)
 
 #define STRUCT_INFO_ADD(field_name, field_type_rep)                             \
   STRUCT_INFO_ADD_COMPLEX(struct_info, struct_type, field_name, field_type_rep)
+
+#define STRUCT_INFO_RADD(field_type_rep, field_name) \
+  STRUCT_INFO_ADD(field_name, field_type_rep)
 
 #define STRUCT_INFO_DONE() \
   STRUCT_INFO_DONE_COMPLEX(struct_info)
