@@ -651,7 +651,7 @@ static const struct_info_t *memory_tracker_type_is_struct  (const type_t *self)
     STRUCT_INFO_DONE();
   }
 
-#if 0
+#ifdef TODO
 /* ---------------------------------------------------------------- */
 
 /*
@@ -5152,4 +5152,4 @@ const void *field_cref(ptrdiff_t   pos,  const void *base)
 {
   return (const void *) (((const unsigned char *) base) + pos);
 }
-#endif
+#endif /* #ifdef TODO */
