@@ -778,7 +778,6 @@ static const tval          *field_info_type_has_default(const type_t *self)
 const field_info_t field_info_defaults =
   FIELD_INFO_DEFAULTS;
 
-#ifdef TODO
 /* ---------------------------------------------------------------- */
 
 /* The field has a default value of that represented by 0 bytes. */
@@ -809,18 +808,45 @@ size_t template_no_unused_value(const field_info_t *self, void *dest_mem)
   return 0;
 }
 
-int is_field_terminator(const field_info_t *field_info)
+int field_info_cmp(const field_info_t *a, const field_info_t *b)
 {
-  if (!field_info || !terminating_field_info)
+  if (!a)
+    return -3;
+  if (!b)
+    return -2;
+
+  if (a->type                  != b->type)
+    return -1;
+  if (a->field_pos             != b->field_pos)
+    return -1;
+  if (a->field_size            != b->field_size)
+    return -1;
+  if (a->field_type            != b->field_type)
+    return -1;
+  if (a->is_metadata           != b->is_metadata)
+    return -1;
+  if (a->is_copyable_ref       != b->is_copyable_ref)
+    return -1;
+  if (a->default_value         != b->default_value)
+    return -1;
+  if (a->template_unused_value != b->template_unused_value)
     return -1;
 
-  if (*field_info == *terminating_field_info)
+  return 0;
+}
+
+int is_field_terminator(const field_info_t *field_info)
+{
+  if (!field_info || !field_terminator)
+    return -1;
+
+  if (field_info_cmp(field_info, field_terminator) == 0)
     return 1;
   else
     return 0;
 }
 
-void       *field_info_ref (const field_info_t *field_info,  void       *val)
+void       *field_info_ref (const field_info_t *field_info,  void       *base)
 {
   if (!field_info || !base)
     return NULL;
@@ -828,7 +854,7 @@ void       *field_info_ref (const field_info_t *field_info,  void       *val)
   return field_ref(field_info->field_pos, base);
 }
 
-const void *field_info_cref(const field_info_t *field_info,  const void *val)
+const void *field_info_cref(const field_info_t *field_info,  const void *base)
 {
   if (!field_info || !base)
     return NULL;
@@ -839,7 +865,7 @@ const void *field_info_cref(const field_info_t *field_info,  const void *val)
 int field_memcmp(const field_info_t *field_info, const void *s1, const void *s2)
 {
   size_t i;
-  size_t size = self->field_size;
+  size_t size = field_info->field_size;
 
   if (!s1)
     return FIELD_MEMCMP_ERR_NULL_S1;
@@ -921,9 +947,9 @@ int is_field_template_unused(const field_info_t *field_info, const void *src_fie
       need_free = 1;
 
       if (!memory_manager)
-        memory_manager = malloc_manager;
+        memory_manager = &malloc_manager;
 
-      field_working_mem = memory_manager_malloc(memory_manager, field_info->field_size());
+      field_working_mem = memory_manager_malloc(memory_manager, field_info->field_size);
 
       if (!field_working_mem)
         return -1;
@@ -1004,7 +1030,7 @@ int is_field_template_unused(const field_info_t *field_info, const void *src_fie
   return is_unused;
 }
 
-verify_field_info_status_t verify_field_info(const field_info *field_info, char *out_err, size_t err_size)
+verify_field_info_status_t verify_field_info(const field_info_t *field_info, char *out_err, size_t err_size)
 {
   size_t field_type_size;
 
@@ -1030,7 +1056,7 @@ verify_field_info_status_t verify_field_info(const field_info *field_info, char 
   }
 
   /* Ensure the type's size matches field_size. */
-  field_type_size = type_size(field_type);
+  field_type_size = type_size(field_info->field_type, NULL);
   if (field_info->field_size != field_type_size)
   {
     if (out_err)
@@ -1055,14 +1081,12 @@ const char *field_dup(const field_info_t *field_info, void *dest, const void *sr
 {
   static char         err_buf[DEFAULT_ERR_BUF_SIZE];
   static const size_t err_buf_size = sizeof(err_buf);
-  static const size_t err_buf_num  = sizeof(err_buf) / sizeof(err_buf[0]);
-
-  size_t i;
+  /* static const size_t err_buf_num  = sizeof(err_buf) / sizeof(err_buf[0]); */
 
   verify_field_info_status_t verify_status;
 
   /* TODO: We're verifying this each time a field is dup'd! */
-  verify_status = verify_field_info(field_info, err_buf, err_buf_size, NULL);
+  verify_status = verify_field_info(field_info, err_buf, err_buf_size);
   if (!verify_status)
     return err_buf;
 
@@ -1086,9 +1110,10 @@ const char *field_dup(const field_info_t *field_info, void *dest, const void *sr
 
     type_dup_status =
       type_dup
-        ( field_info->type
+        ( field_info->field_type
         , field_info_ref (field_info, dest)
         , field_info_cref(field_info, src)
+        , defaults_src_unused
         , rec_copy
         , dup_metadata
         , NULL
@@ -1140,6 +1165,7 @@ const char *field_dup(const field_info_t *field_info, void *dest, const void *sr
   }
 }
 
+#ifdef TODO
 /* ---------------------------------------------------------------- */
 
 /* struct_info type. */

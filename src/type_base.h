@@ -759,10 +759,12 @@ size_t template_unused_value_zero(const field_info_t *self, void *dest_mem);
 
 size_t template_no_unused_value(const field_info_t *self, void *dest_mem);
 
+int field_info_cmp(const field_info_t *a, const field_info_t *b);
+
 int is_field_terminator(const field_info_t *field_info);
 
-void       *field_info_ref (const field_info_t *field_info,  void       *val);
-const void *field_info_cref(const field_info_t *field_info,  const void *val);
+void       *field_info_ref (const field_info_t *field_info,  void       *base);
+const void *field_info_cref(const field_info_t *field_info,  const void *base);
 
 #define FIELD_MEMCMP_ERR_NULL_S1 ((int) -0x37ED)
 #define FIELD_MEMCMP_ERR_NULL_S2 ((int) -0x37EE)
@@ -809,15 +811,15 @@ int is_field_template_unused(const field_info_t *field_info, const void *src_fie
 enum verify_field_info_status_e
 {
   /* The checks that were requested to run passed.                */
-  verify_field_info_success          = 0,
+  verify_field_info_success         = 0,
 
   /* "verify_field" was called with a NULL "field_info" argument. */
-  verify_field_info_null_struct_info = 1,
+  verify_field_info_null_field_info = 1,
 
   /* The "field_info"'s "type" field value is NULL.               */
-  verify_field_info_no_type          = 2,
+  verify_field_info_no_type         = 2,
 
-  verify_field_info_size_mismatch    = 3,
+  verify_field_info_size_mismatch   = 3,
 
   verify_field_info_end,
 
