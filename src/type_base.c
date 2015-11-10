@@ -647,7 +647,6 @@ static const struct_info_t *memory_tracker_type_is_struct  (const type_t *self)
     STRUCT_INFO_DONE();
   }
 
-#ifdef TODO
 /* ---------------------------------------------------------------- */
 
 /*
@@ -663,23 +662,29 @@ const char *memory_tracker_initialize_empty_with_container(memory_tracker_t *mem
 {
   if (!memory_tracker)
   {
-    return "error: memory_tracker_no_buffers: "memory_tracker" is NULL!\n"
+    return "error: memory_tracker_no_buffers: \"memory_tracker\" is NULL!\n";
   }
 
   if (!memory_manager)
     memory_manager = default_memory_manager;
 
-  memory_tracker->memory_manager                          = memory_manager;
+  memory_tracker->type = memory_tracker_type;
+
+  memory_tracker->memory_manager                          = *memory_manager;
+
   memory_tracker->dynamically_allocated_container         = dynamically_allocated_container;
-  memory_tracker->dynamically_allocated_buffers           = NULL
+
+  memory_tracker->dynamically_allocated_buffers           = NULL;
   memory_tracker->dynamically_allocated_buffers_num       = 0;
   memory_tracker->dynamically_allocated_buffers_size      = 0;
+
   memory_tracker->dynamically_allocated_buffers_last_even = 0;
   memory_tracker->dynamically_allocated_buffers_last_odd  = 0;
 
   return "";
 }
 
+#ifdef TODO
 /* ---------------------------------------------------------------- */
 /* struct_info_t and field_info_t                                   */
 /* ---------------------------------------------------------------- */
