@@ -170,12 +170,16 @@ unsigned int bits_is_odd_uint(unsigned int val);
 unsigned int bits_is_even_uint(unsigned int val);
 
 /* TODO: apply bitwise constraints */
-#define IS_NONZERO(val) (!val)
+#ifndef TODO
+#define IS_NONZERO(val) (!!val)
+#endif /* #ifndef TODO */
 unsigned int is_nonzero_uint(unsigned int val);
 
 /* TODO: apply bitwise constraints */
 /* ((val) | (((val) >> 1))) + 1 */
-#define IS_ZERO(val) (!!val)
+#ifndef TODO
+#define IS_ZERO(val) (!val)
+#endif /* #ifndef TODO */
 /* equivalent: (val - 1) + 1 == val */
 /* (val) (((val) >> 1) + (((val ^ 1)) & 1)) */
 /* #define IS_ZERO(val) BIT_NAT_PRED(val) + 1 - val */
@@ -197,7 +201,8 @@ unsigned int is_zero_uint(unsigned int val);
 (((val) >> 1) + (((val ^ 1)) & 1))
 val >> ((val ^ 1) & 1) ^
 */
-#define BIT_NAT_PRED(val) (IS_ZERO(val) ? 0 : (val-1))
+/* #define BIT_NAT_PRED(val) (IS_ZERO(val) ? 0 : (val-1)) */
+#define BIT_NAT_PRED(val) ((val) - IS_NONZERO((val)))
 unsigned int bit_nat_pred_uint(unsigned int num);
 
 /*
@@ -209,34 +214,12 @@ unsigned int bit_nat_pred_uint(unsigned int num);
  *   ONE_BIT_REPEAT(7): 0111 1111
  *   ONE_BIT_REPEAT(8): 1111 1111
  *
- * FIXME: 1st note
- *
  * Implementation note:
  *   1)
  *   "(1 <<  num   ) - 1" works except when generating fixed-width values with all
  *   1 bits, because what "(1 << num)" should be in this case is too large.
- *
- *   2)
- *   "(1 << (num-1)) - 1 | (1 << (num-1))" works except when num is 0, due to
- *   two instances of both negative shift width and unsigned subtraction
- *   overflow.
- *
- *   The latter problem we can solve with "BIT_NAT_PRED".
- *
- *   The first problem we can also partially solve with "BIT_NAD_PRED", but it
- *   is partial because it introduces a new problem in the case of "0":
- *
- *   "BIT_ANT_PRED(1 << BIT_NAT_PRED(num)) | (1 << BIT_NAT_PRED(num))":
- *
- *   Because the right-hand side results in "1" when "num" is "0".
- *
- * TODO: might be nice in the case of fixed-width bitfields and "num" greater
- * than the bitfields' width to result in all 1's, not 0's due to overflow?
- *
- * should we support num / pos greater than the width of fixed-width bitfields
- * for fixed-width bitfields?
  */
-#define ONE_BIT_REPEAT(num) ((BIT_NAT_PRED((1 << (BIT_NAT_PRED((num)))))) | ((1 << (BIT_NAT_PRED((num))))) >> (((num) - (BIT_NAT_PRED((num)))) ^ 1))
+#define ONE_BIT_REPEAT(num) ((BIT_NAT_PRED((1 << (num)))) | (BIT_NAT_PRED((1 << (BIT_NAT_PRED((num)))))) | ((IS_NONZERO((num))) << (BIT_NAT_PRED((num)))))
 unsigned int one_bit_repeat_uint(unsigned int num);
 
 #endif /* ifndef BITS_H */
