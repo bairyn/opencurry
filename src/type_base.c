@@ -562,7 +562,7 @@ void  memory_manager_on_oom (const memory_manager_t *memory_manager, size_t     
 
 void  memory_manager_on_err (const memory_manager_t *memory_manager, const char *msg)
 {
-  void (*on_err)(const memory_manager_t *self, size_t size);
+  void (*on_err)(const memory_manager_t *self, const char *msg);
 
   if (!memory_manager || !memory_manager->on_err)
     memory_manager = &malloc_manager;
@@ -585,7 +585,7 @@ static const char          *memory_tracker_type_name     (const type_t *self);
 static size_t               memory_tracker_type_size     (const type_t *self, const tval *val);
 static const struct_info_t *memory_tracker_type_is_struct(const type_t *self);
 
-const type_t memory_manager_type_def =
+const type_t memory_tracker_type_def =
   { type_type
 
     /* @: Required.           */
@@ -595,10 +595,10 @@ const type_t memory_manager_type_def =
 
   , /* typed                  */ NULL
 
-  , /* @name                  */ memory_manager_type_name
+  , /* @name                  */ memory_tracker_type_name
   , /* info                   */ NULL
-  , /* @size                  */ memory_manager_type_size
-  , /* @is_struct             */ memory_manager_type_is_struct
+  , /* @size                  */ memory_tracker_type_size
+  , /* @is_struct             */ memory_tracker_type_is_struct
 
   , /* cons_type              */ NULL
   , /* init                   */ NULL
@@ -2726,11 +2726,6 @@ const char *type_has_no_info(const type_t *self, char *out_info_buf, size_t info
 /* size */
 
 /* is_struct */
-const struct_info_t *type_is_struct(const type_t *self, const struct_info_t *struct_info)
-{
-  return struct_info;
-}
-
 const struct_info_t *type_is_not_struct(const type_t *self)
 {
   return NULL;
@@ -2950,7 +2945,7 @@ const tval *type_has_no_default(const type_t *self)
 }
 
 /*
- * type_has_default:
+ * type_has_default_value:
  *
  * This can be used when the type has a default value.
  *
@@ -2984,7 +2979,7 @@ const tval *type_has_no_default(const type_t *self)
  * > }
  * >
  * > static const tval *mytype_has_default(const type_t *self)
- * >   { return type_has_default(self, mytype_defaults); }
+ * >   { return type_has_default_value(self, mytype_defaults); }
  * >
  * > ...
  * >
@@ -2995,7 +2990,7 @@ const tval *type_has_no_default(const type_t *self)
  * >   , /-* b *-/ 0
  * >   };
  */
-const tval *type_has_default(const type_t *self, const tval *val)
+const tval *type_has_default_value(const type_t *self, const tval *val)
 {
   return val;
 }

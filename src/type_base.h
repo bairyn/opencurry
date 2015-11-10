@@ -59,6 +59,8 @@
 
 typedef struct type_s type_t;
 
+typedef struct template_cons_s template_cons_t;
+
 /* ---------------------------------------------------------------- */
 /* tval                                                             */
 /* ---------------------------------------------------------------- */
@@ -307,7 +309,7 @@ struct memory_tracker_s
   , /* dynamically_allocated_buffers_size      */ 0                       \
   , /* dynamically_allocated_buffers_last_even */ 0                       \
   , /* dynamically_allocated_buffers_last_odd  */ 0                       \
-  };
+  }
 
 /* A default memory tracker appropriate for top-level declarations. */
 /* Uses "default_manager" with a NULL buffer-array pointer.         */
@@ -334,7 +336,7 @@ const char *memory_tracker_initialize_empty_with_container(memory_tracker_t *mem
 
 
 /* Is this allocation being tracked? */
-int               memory_tracker_is_allocation_tracked  (memory_tracker_t *memory_tracker, const void *buffer_allocation), char *out_err_buf, size_t err_buf_size;
+int               memory_tracker_is_allocation_tracked  (memory_tracker_t *memory_tracker, const void *buffer_allocation, char *out_err_buf, size_t err_buf_size);
 
 /* Adds an already-malloc'd buffer to the memory tracker, returning NULL on failure, otherwise returning "memory_tracker". */
 memory_tracker_t *memory_tracker_track_allocation       (memory_tracker_t *memory_tracker, void *buffer_allocation, char *out_err_buf, size_t err_buf_size);
@@ -853,8 +855,6 @@ extern const field_info_t * const field_terminator;
 
 extern const field_info_t terminating_field_info;
 
-struct_info_t *struct_info_setup_fields(struct_info_t *struct_info
-
 /* ---------------------------------------------------------------- */
 
 struct_info_t *struct_info_init
@@ -875,9 +875,9 @@ struct_info_t *struct_info_add_field
   , const type_t  *field_type
   );
 
-struct_info_t *struct_info_add_field_terminator(struct_info_t *struct_info)
+struct_info_t *struct_info_add_field_terminator(struct_info_t *struct_info);
 
-field_info_t *struct_info_get_last_field(struct_info_t *struct_info)
+field_info_t *struct_info_get_last_field(struct_info_t *struct_info);
 
 /* ---------------------------------------------------------------- */
 
@@ -912,7 +912,7 @@ const field_info_t *struct_info_has_memory_tracker(const struct_info_t *struct_i
  *
  * With no value, return NULL.
  */
-typed             struct_value_has_typed_field   (const struct_info_t *struct_info, const void *val);
+typed_t           struct_value_has_typed_field   (const struct_info_t *struct_info, const void *val);
 memory_tracker_t *struct_value_has_memory_tracker(const struct_info_t *struct_info, void       *val);
 
 enum verify_struct_info_status_e
@@ -1609,8 +1609,8 @@ const char *type_has_no_info(const type_t *self, char *out_info_buf, size_t info
       ( struct_info                                                                             \
       , field_default_value                                                                     \
       , field_template_unused_value                                                             \
-      );
-  } while(0)                                                                                    \
+      );                                                                                        \
+  } while(0)
 
 #define STRUCT_INFO_DONE_COMPLEX(struct_info)                              \
   do                                                                       \
@@ -1628,7 +1628,7 @@ const char *type_has_no_info(const type_t *self, char *out_info_buf, size_t info
 
 #define STRUCT_INFO_BEGIN_COMPLEX(struct_type, struct_info, field_default_value, field_template_unused_value) \
   /* typedef mystruct_t struct_type; */                                                                       \
-  typedef struct_type DEFER(struct_)##type;                                                                   \
+  typedef struct_type struct_##type;                                                                          \
                                                                                                               \
   /* struct_info_t *struct_info; */                                                                           \
   STRUCT_INFO_CACHE(struct_info)                                                                              \
@@ -1670,7 +1670,7 @@ const char *type_has_no_info(const type_t *self, char *out_info_buf, size_t info
  */
 
 #define STRUCT_INFO_BEGIN(struct_type) \
-  STRUCT_INFO_BEGIN_COMPLEX(struct_type, struct_info, field_default_value_from_type, field_template_unused_value_zero
+  STRUCT_INFO_BEGIN_COMPLEX(struct_type, struct_info, field_default_value_from_type, field_template_unused_value_zero)
 
 #define STRUCT_INFO_REINIT_WITH(type_name) \
   STRUCT_INFO_REINIT_WITH_COMPLEX(CAT(type_name, _default_field_value))
@@ -1691,8 +1691,6 @@ const char *type_has_no_info(const type_t *self, char *out_info_buf, size_t info
 
 /* -- */
 
-const struct_info_t *type_is_struct(const type_t *self, const struct_info_t *struct_info);
-
 const struct_info_t *type_is_not_struct(const type_t *self);
 
 /* TODO: from_type: use the type's has_default, otherwise from_field_type. */
@@ -1706,7 +1704,7 @@ size_t field_template_unused_value_zero(const field_info_t *self, void *dest_fie
 typed_t type_has_template_cons_type(const type_t *self);
 
 /* init */
-tval *type_has_template_cons_basic_initializer(const type_t *type, tval *cons)
+tval *type_has_template_cons_basic_initializer(const type_t *type, tval *cons);
 tval *type_has_template_cons_basic_initializer_force_memory_manager(const type_t *type, tval *cons);
 
 tval *template_cons_basic_initializer(const type_t *type, template_cons_t *cons, int allow_alternate_memory_manager);
@@ -1718,7 +1716,7 @@ int template_cons_basic_freer(const type_t *type, tval *cons);
 
 /* has_default */
 const tval   *type_has_no_default(const type_t *self);
-const tval   *type_has_default(const type_t *self, const tval *val);
+const tval   *type_has_default_value(const type_t *self, const tval *val);
 
 /* mem */
 memory_tracker_t *type_mem_struct_or_global_dyn(const type_t *self, tval *val_raw);
@@ -1885,7 +1883,7 @@ memory_tracker_t *type_val_has_individual_mem(const type_t *type, tval *val);
 
 const type_t *template_cons_type(void);
 extern const type_t template_cons_type_def;
-typedef struct template_cons_s template_cons_t;
+/* Forward declaration: typedef struct template_cons_s template_cons_t; */
 struct template_cons_s
 {
   typed_t type;
@@ -1997,7 +1995,7 @@ extern const template_cons_t * const default_template_cons;
 /*
  * Standard constructor generators.
  */
-template_cons_t  template_cons_defaults(tval *dest);
+template_cons_t  template_cons_default(tval *dest);
 template_cons_t  template_cons_initials(tval *dest, const tval *initials);
 /* force_no_defaults, rec_copy. */
 template_cons_t  template_cons_copy    (tval *dest, const tval *src);
@@ -2034,7 +2032,7 @@ void *template_cons_dup_struct_meminit_type
   );
 
 void  template_cons_free_struct
-  ( tval *val,
+  ( tval *val
   , int                      (*mem_free)( const tval *self
                                         , tval       *val
                                         )
