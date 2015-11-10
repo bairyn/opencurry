@@ -37,42 +37,42 @@
 
 unsigned int on_uint(void)
 {
-  return ON()
+  return ON();
 }
 
 unsigned int off_uint(void)
 {
-  return OFF()
+  return OFF();
 }
 
 unsigned int true_uint(void)
 {
-  return TRUE()
+  return TRUE();
 }
 
 unsigned int false_uint(void)
 {
-  return FALSE()
+  return FALSE();
 }
 
 unsigned int yes_uint(void)
 {
-  return YES()
+  return YES();
 }
 
 unsigned int no_uint(void)
 {
-  return NO()
+  return NO();
 }
 
 unsigned int enabled_uint(void)
 {
-  return ENABLED()
+  return ENABLED();
 }
 
 unsigned int disabled_uint(void)
 {
-  return DISABLED()
+  return DISABLED();
 }
 
 unsigned int get_bit_uint(unsigned int pos, unsigned int val)
@@ -137,7 +137,7 @@ unsigned int is_zero_uint(unsigned int val)
 
 unsigned int bit_nat_pred_uint(unsigned int num)
 {
-  return BIT_NAT_PRED_UINT(num);
+  return BIT_NAT_PRED(num);
 }
 
 unsigned int one_bit_repeat_uint(unsigned int num)
