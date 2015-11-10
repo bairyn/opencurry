@@ -118,15 +118,15 @@ int proc_false_context(void *context)
 
 int are_bytes_reversed(void)
 {
-  typedef unsigned long long multibyte_integral_scalar_type;
+  typedef unsigned long multi_t;
 
-  unsigned char                   multibyte_integral_bytes[sizeof(multibyte_integral_scalar_type)];
-  multibyte_integral_scalar_type *multibyte_integral;
+  unsigned char  multibyte_integral_bytes[sizeof(multi_t)];
+  multi_t       *multibyte_integral;
 
-  multibyte_integral = &multibyte_integral_bytes[0];
+  multibyte_integral = (multi_t *) (&multibyte_integral_bytes[0]);
 
   *multibyte_integral = 0x01;
-  if (multibyte_integral_scalar_type[0] == 0)
+  if (multibyte_integral_bytes[0] == 0)
     return 1;
   else
     return 0;
@@ -136,7 +136,7 @@ static int is_big_endian_lazy_eval(void);
 static int (*is_big_endian_lazy)(void) = is_big_endian_lazy_eval;
 static int is_big_endian_lazy_eval(void)
 {
-  return (is_big_endian_lazy = proc_cond(are_bytes_reserved))();
+  return (is_big_endian_lazy = proc_cond(are_bytes_reversed()))();
 }
 
 int is_big_endian(void)
@@ -197,54 +197,62 @@ int set_null_terminator(char *buf, size_t len_before_terminator, size_t buf_size
 }
 
 /* Returns number of bytes written, excluding the NULL terminator. */
-char *strlcpy(char *dest, const char *src, size_t dest_size)
+size_t strlcpy(char *dest, const char *src, size_t dest_size)
 {
-  if (dest_size <= 0)
-    return NULL;
+  size_t len;
 
+  if (dest_size <= 0)
+    return 0;
+
+  len = 0;
   for (; dest_size >= 1; ++dest, ++src, --dest_size)
   {
     if (!*src)
       break;
 
     *dest = *src;
+    ++len;
   }
 
   *dest = 0;
 
-  return dest;
+  return len;
 }
 
 /* "src_max_bytes" can be either the size of the source buffer or the maximum
  * number of bytes to copy from the source buffer.
  */
-char *strlcpy_srcmax(char *dest, const char *src, size_t dest_size, size_t src_max_bytes)
+size_t strlcpy_srcmax(char *dest, const char *src, size_t dest_size, size_t src_max_bytes)
 {
+  size_t len;
+
   /* Check "dest_size" before adding "src_max_bytes" constraint, because
    * the latter could be 0 while the former could be positive, in which case we
    * still need to write the null terminator.
    */
   if (dest_size <= 0)
-    return NULL;
+    return 0;
 
   dest_size = min_size(dest_size, src_max_bytes);
 
+  len = 0;
   for (; dest_size >= 1; ++dest, ++src, --dest_size)
   {
     if (!*src)
       break;
 
     *dest = *src;
+    ++len;
   }
 
   *dest = 0;
 
-  return dest;
+  return len;
 }
 
-char *strlcpy_with_max(char *dest, const char *src, size_t dest_size, size_t src_size, size_t max_bytes)
+size_t strlcpy_with_max(char *dest, const char *src, size_t dest_size, size_t src_size, size_t max_bytes)
 {
-  strlcpy_srcmax(dest, src, dest_size, min_size(src_size, max_bytes));
+  return strlcpy_srcmax(dest, src, dest_size, min_size(src_size, max_bytes));
 }
 
 /* Get the length of the string limited by "size".
@@ -550,12 +558,12 @@ size_t strlinsert
   size_t inserted_dest_len;
 
   if (dest)
-    dest_num = size_min(dest_max_len, strllen(dest, dest_size));
+    dest_num = min_size(dest_max_len, strllen(dest, dest_size));
   else
     dest_num = 0;
 
   if (src)
-    src_num  = size_min(src_max_len,  strnlen(src,  src_size));
+    src_num  = min_size(src_max_len,  strnlen(src,  src_size));
   else
     src_num  = 0;
 
@@ -576,6 +584,8 @@ size_t strlinsert
 
   if (inserted_dest_len < dest_size)
     dest[inserted_dest_len] = 0;
+
+  return inserted_dest_len;
 }
 
 /*
@@ -594,6 +604,8 @@ size_t strlinsert_len
   , size_t            *out_num_truncated_src
   )
 {
+  size_t inserted_dest_len;
+
   size_t src_len  = 0;
   size_t dest_len = 0;
 
@@ -602,7 +614,7 @@ size_t strlinsert_len
   if (dest)
     dest_len = strnlen(dest, dest_size);
 
-  return
+  inserted_dest_len =
     strlinsert
       ( dest
       , src
@@ -619,6 +631,8 @@ size_t strlinsert_len
 
   if (inserted_dest_len < dest_size)
     dest[inserted_dest_len] = 0;
+
+  return inserted_dest_len;
 }
 
 /* Returns number of bytes written. */
@@ -675,14 +689,26 @@ const char *last_bytes(const char *str, size_t num_bytes)
 
 const char   indentation_spaces_buf[] =
   /* 80 * 80 = 6400 */
+  /* String literal length is limited to 509 characters. */
+  /*
   REPLICATE_80(
     "                                                                                "
   );
+  */
+  {
+    /* REPLICATE_COMMA_80(REPLICATE_COMMA_80(' ')), '\x00' */
+    REPLICATE_COMMA_6000(' '), REPLICATE_COMMA_400(' '), '\x00'
+  };
 const char   indentation_tabs_buf[] =
   /* 80 * 40 = 3200 */
+  /*
   REPLICATE_80(
     "\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t"
   );
+  */
+  {
+    REPLICATE_COMMA_3000(' '), REPLICATE_COMMA_200(' '), '\x00'
+  };
 
 const size_t indentation_spaces_buf_size =
   sizeof(indentation_spaces_buf);

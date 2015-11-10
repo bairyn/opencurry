@@ -77,6 +77,9 @@ size_t max_size(size_t a, size_t b);
 
 #define EXPAND1(a) a
 
+#define EXPAND_PARENS(a) EXPAND1 a
+#define CALL_EXPAND_PARENS(f, args) f args
+
 /* ---------------------------------------------------------------- */
 
 /* Thanks https://github.com/pfultz2/Cloak/wiki/C-Preprocessor-tricks,-tips,-and-idioms ! */
@@ -118,6 +121,102 @@ size_t max_size(size_t a, size_t b);
 
 
 #define DUPLICATE(a) CAT(a, a)
+
+/* ---------------------------------------------------------------- */
+
+#define HASH   #
+#define COMMA  ,
+#define LPAREN (
+#define RPAREN )
+
+#define JUX2(a, b) a b
+#define RJUX2(a, b) b a
+
+#define APPEND_COMMA( a) a,
+#define APPEND_LPAREN(a) a(
+#define APPEND_RPAREN(a) a)
+
+#define PREPEND_COMMA( a) ,a
+#define PREPEND_LPAREN(a) (a
+#define PREPEND_RPAREN(a) )a
+
+#define APPEND_COMMA_0( a) a
+#define APPEND_COMMA_1( a) a,
+#define APPEND_COMMA_2( a) a,,
+#define APPEND_COMMA_3( a) a,,,
+#define APPEND_COMMA_4( a) a,,,,
+#define APPEND_COMMA_5( a) a,,,,,
+#define APPEND_COMMA_6( a) a,,,,,,
+#define APPEND_COMMA_7( a) a,,,,,,,
+#define APPEND_COMMA_8( a) a,,,,,,,,
+#define APPEND_COMMA_9( a) a,,,,,,,,,
+#define APPEND_COMMA_10(a) a,,,,,,,,,,
+#define APPEND_COMMA_D(d, a) CAT(APPEND_COMMA_, d)(a)
+
+#define APPEND_LPAREN_0( a) a
+#define APPEND_LPAREN_1( a) a(
+#define APPEND_LPAREN_2( a) a((
+#define APPEND_LPAREN_3( a) a(((
+#define APPEND_LPAREN_4( a) a((((
+#define APPEND_LPAREN_5( a) a(((((
+#define APPEND_LPAREN_6( a) a((((((
+#define APPEND_LPAREN_7( a) a(((((((
+#define APPEND_LPAREN_8( a) a((((((((
+#define APPEND_LPAREN_9( a) a(((((((((
+#define APPEND_LPAREN_10(a) a((((((((((
+#define APPEND_LPAREN_D(d, a) CAT(APPEND_LPAREN_, d)(a)
+
+#define APPEND_RPAREN_0( a) a
+#define APPEND_RPAREN_1( a) a)
+#define APPEND_RPAREN_2( a) a))
+#define APPEND_RPAREN_3( a) a)))
+#define APPEND_RPAREN_4( a) a))))
+#define APPEND_RPAREN_5( a) a)))))
+#define APPEND_RPAREN_6( a) a))))))
+#define APPEND_RPAREN_7( a) a)))))))
+#define APPEND_RPAREN_8( a) a))))))))
+#define APPEND_RPAREN_9( a) a)))))))))
+#define APPEND_RPAREN_10(a) a))))))))))
+#define APPEND_RPAREN_D(d, a) CAT(APPEND_RPAREN_, d)(a)
+
+#define PREPEND_COMMA_0( a) a
+#define PREPEND_COMMA_1( a) ,a
+#define PREPEND_COMMA_2( a) ,,a
+#define PREPEND_COMMA_3( a) ,,,a
+#define PREPEND_COMMA_4( a) ,,,,a
+#define PREPEND_COMMA_5( a) ,,,,,a
+#define PREPEND_COMMA_6( a) ,,,,,,a
+#define PREPEND_COMMA_7( a) ,,,,,,,a
+#define PREPEND_COMMA_8( a) ,,,,,,,,a
+#define PREPEND_COMMA_9( a) ,,,,,,,,,a
+#define PREPEND_COMMA_10(a) ,,,,,,,,,,a
+#define PREPEND_COMMA_D(d, a) CAT(PREPEND_COMMA_, d)(a)
+
+#define PREPEND_LPAREN_0( a) a
+#define PREPEND_LPAREN_1( a) (a
+#define PREPEND_LPAREN_2( a) ((a
+#define PREPEND_LPAREN_3( a) (((a
+#define PREPEND_LPAREN_4( a) ((((a
+#define PREPEND_LPAREN_5( a) (((((a
+#define PREPEND_LPAREN_6( a) ((((((a
+#define PREPEND_LPAREN_7( a) (((((((a
+#define PREPEND_LPAREN_8( a) ((((((((a
+#define PREPEND_LPAREN_9( a) (((((((((a
+#define PREPEND_LPAREN_10(a) ((((((((((a
+#define PREPEND_LPAREN_D(d, a) CAT(PREPEND_LPAREN_, d)(a)
+
+#define PREPEND_RPAREN_0( a) a
+#define PREPEND_RPAREN_1( a) )a
+#define PREPEND_RPAREN_2( a) ))a
+#define PREPEND_RPAREN_3( a) )))a
+#define PREPEND_RPAREN_4( a) ))))a
+#define PREPEND_RPAREN_5( a) )))))a
+#define PREPEND_RPAREN_6( a) ))))))a
+#define PREPEND_RPAREN_7( a) )))))))a
+#define PREPEND_RPAREN_8( a) ))))))))a
+#define PREPEND_RPAREN_9( a) )))))))))a
+#define PREPEND_RPAREN_10(a) ))))))))))a
+#define PREPEND_RPAREN_D(d, a) CAT(PREPEND_RPAREN_, d)(a)
 
 /* ---------------------------------------------------------------- */
 
@@ -363,39 +462,345 @@ const char *last_bytes(const char *str, size_t num_bytes);
 
 /* ---------------------------------------------------------------- */
 
-#define REPLICATE_1(a)   (a)
+#define REPLICATE_0(a)
+#define REPLICATE_1(a)     a
+#define REPLICATE_2(a)     a a
 
-#define REPLICATE_2(a)   ((REPLICATE_1((a)))  (REPLICATE_1((a))))
-#define REPLICATE_3(a)   ((REPLICATE_2((a)))  (REPLICATE_1((a))))
+#define REPLICATE_3(a)     a REPLICATE_2 (a)
+#define REPLICATE_4(a)     a REPLICATE_3 (a)
+#define REPLICATE_5(a)     a REPLICATE_4 (a)
+#define REPLICATE_6(a)     a REPLICATE_5 (a)
+#define REPLICATE_7(a)     a REPLICATE_6 (a)
+#define REPLICATE_8(a)     a REPLICATE_7 (a)
+#define REPLICATE_9(a)     a REPLICATE_8 (a)
+#define REPLICATE_10(a)    a REPLICATE_9 (a)
+#define REPLICATE_11(a)    a REPLICATE_10(a)
+#define REPLICATE_12(a)    a REPLICATE_11(a)
+#define REPLICATE_13(a)    a REPLICATE_12(a)
+#define REPLICATE_14(a)    a REPLICATE_13(a)
+#define REPLICATE_15(a)    a REPLICATE_14(a)
 
-#define REPLICATE_4(a)   ((REPLICATE_2(((REPLICATE_2((a))))))
-#define REPLICATE_5(a)   ((REPLICATE_4((a)))  (REPLICATE_1((a))))
-#define REPLICATE_6(a)   ((REPLICATE_5((a)))  (REPLICATE_1((a))))
-#define REPLICATE_7(a)   ((REPLICATE_6((a)))  (REPLICATE_1((a))))
-#define REPLICATE_8(a)   ((REPLICATE_7((a)))  (REPLICATE_1((a))))
-#define REPLICATE_9(a)   ((REPLICATE_8((a)))  (REPLICATE_1((a))))
-#define REPLICATE_10(a)  ((REPLICATE_9((a)))  (REPLICATE_1((a))))
-#define REPLICATE_11(a)  ((REPLICATE_10((a))) (REPLICATE_1((a))))
-#define REPLICATE_12(a)  ((REPLICATE_11((a))) (REPLICATE_1((a))))
-#define REPLICATE_13(a)  ((REPLICATE_12((a))) (REPLICATE_1((a))))
-#define REPLICATE_14(a)  ((REPLICATE_13((a))) (REPLICATE_1((a))))
-#define REPLICATE_15(a)  ((REPLICATE_14((a))) (REPLICATE_1((a))))
+#define REPLICATE_16(a)    REPLICATE_2(REPLICATE_8   (a))
+#define REPLICATE_32(a)    REPLICATE_2(REPLICATE_16  (a))
+#define REPLICATE_64(a)    REPLICATE_2(REPLICATE_32  (a))
+#define REPLICATE_128(a)   REPLICATE_2(REPLICATE_64  (a))
+#define REPLICATE_256(a)   REPLICATE_2(REPLICATE_128 (a))
+#define REPLICATE_512(a)   REPLICATE_2(REPLICATE_256 (a))
+#define REPLICATE_1024(a)  REPLICATE_2(REPLICATE_512 (a))
+#define REPLICATE_2048(a)  REPLICATE_2(REPLICATE_1024(a))
+#define REPLICATE_4096(a)  REPLICATE_2(REPLICATE_2048(a))
+#define REPLICATE_8192(a)  REPLICATE_2(REPLICATE_4096(a))
+#define REPLICATE_16384(a) REPLICATE_2(REPLICATE_8192(a))
 
-#define REPLICATE_40(a)  ((REPLICATE_10(((REPLICATE_4((a))))))
-#define REPLICATE_80(a)  ((REPLICATE_10(((REPLICATE_8((a))))))
-#define REPLICATE_100(a) ((REPLICATE_10(((REPLICATE_10((a))))))
+#define REPLICATE_20(a)    REPLICATE_10(REPLICATE_2(a))
+#define REPLICATE_30(a)    REPLICATE_10(REPLICATE_3(a))
+#define REPLICATE_40(a)    REPLICATE_10(REPLICATE_4(a))
+#define REPLICATE_50(a)    REPLICATE_10(REPLICATE_5(a))
+#define REPLICATE_60(a)    REPLICATE_10(REPLICATE_6(a))
+#define REPLICATE_70(a)    REPLICATE_10(REPLICATE_7(a))
+#define REPLICATE_80(a)    REPLICATE_10(REPLICATE_8(a))
+#define REPLICATE_90(a)    REPLICATE_10(REPLICATE_9(a))
 
-#define REPLICATE_16(a)    ((REPLICATE_2(((REPLICATE_8((a))))))
-#define REPLICATE_32(a)    ((REPLICATE_2(((REPLICATE_16((a))))))
-#define REPLICATE_64(a)    ((REPLICATE_2(((REPLICATE_32((a))))))
-#define REPLICATE_128(a)   ((REPLICATE_2(((REPLICATE_64((a))))))
-#define REPLICATE_256(a)   ((REPLICATE_2(((REPLICATE_128((a))))))
-#define REPLICATE_512(a)   ((REPLICATE_2(((REPLICATE_256((a))))))
-#define REPLICATE_1024(a)  ((REPLICATE_2(((REPLICATE_512((a))))))
-#define REPLICATE_2048(a)  ((REPLICATE_2(((REPLICATE_1024((a))))))
-#define REPLICATE_4096(a)  ((REPLICATE_2(((REPLICATE_2048((a))))))
-#define REPLICATE_8192(a)  ((REPLICATE_2(((REPLICATE_4096((a))))))
-#define REPLICATE_16384(a) ((REPLICATE_2(((REPLICATE_8192((a))))))
+#define REPLICATE_100(a)   REPLICATE_10(REPLICATE_10  (a))
+#define REPLICATE_1000(a)  REPLICATE_10(REPLICATE_100 (a))
+#define REPLICATE_10000(a) REPLICATE_10(REPLICATE_1000(a))
+
+#define REPLICATE_19(a)    REPLICATE_10(REPLICATE_1(a)) REPLICATE_9(a)
+#define REPLICATE_29(a)    REPLICATE_10(REPLICATE_2(a)) REPLICATE_9(a)
+#define REPLICATE_39(a)    REPLICATE_10(REPLICATE_3(a)) REPLICATE_9(a)
+#define REPLICATE_49(a)    REPLICATE_10(REPLICATE_4(a)) REPLICATE_9(a)
+#define REPLICATE_59(a)    REPLICATE_10(REPLICATE_5(a)) REPLICATE_9(a)
+#define REPLICATE_69(a)    REPLICATE_10(REPLICATE_6(a)) REPLICATE_9(a)
+#define REPLICATE_79(a)    REPLICATE_10(REPLICATE_7(a)) REPLICATE_9(a)
+#define REPLICATE_89(a)    REPLICATE_10(REPLICATE_8(a)) REPLICATE_9(a)
+#define REPLICATE_99(a)    REPLICATE_10(REPLICATE_9(a)) REPLICATE_9(a)
+
+#define REPLICATE_21(a)                                  REPLICATE_10(REPLICATE_2(a)) REPLICATE_1(a)
+#define REPLICATE_31(a)                                  REPLICATE_10(REPLICATE_3(a)) REPLICATE_1(a)
+#define REPLICATE_41(a)                                  REPLICATE_10(REPLICATE_4(a)) REPLICATE_1(a)
+#define REPLICATE_51(a)                                  REPLICATE_10(REPLICATE_5(a)) REPLICATE_1(a)
+#define REPLICATE_61(a)                                  REPLICATE_10(REPLICATE_6(a)) REPLICATE_1(a)
+#define REPLICATE_71(a)                                  REPLICATE_10(REPLICATE_7(a)) REPLICATE_1(a)
+#define REPLICATE_81(a)                                  REPLICATE_10(REPLICATE_8(a)) REPLICATE_1(a)
+#define REPLICATE_91(a)                                  REPLICATE_10(REPLICATE_9(a)) REPLICATE_1(a)
+#define REPLICATE_101(a)   REPLICATE_100(REPLICATE_1(a)) REPLICATE_10(REPLICATE_0(a)) REPLICATE_1(a)
+
+/* ANSI C conformance require support for string literals of sizes of at least
+ * a minimum of 509.
+ */
+#define REPLICATE_500(a)   REPLICATE_100(REPLICATE_5(a)) REPLICATE_10(REPLICATE_0(a)) REPLICATE_1(REPLICATE_0(a))
+#define REPLICATE_501(a)   REPLICATE_100(REPLICATE_5(a)) REPLICATE_10(REPLICATE_0(a)) REPLICATE_1(REPLICATE_1(a))
+#define REPLICATE_502(a)   REPLICATE_100(REPLICATE_5(a)) REPLICATE_10(REPLICATE_0(a)) REPLICATE_1(REPLICATE_2(a))
+#define REPLICATE_503(a)   REPLICATE_100(REPLICATE_5(a)) REPLICATE_10(REPLICATE_0(a)) REPLICATE_1(REPLICATE_3(a))
+#define REPLICATE_504(a)   REPLICATE_100(REPLICATE_5(a)) REPLICATE_10(REPLICATE_0(a)) REPLICATE_1(REPLICATE_4(a))
+#define REPLICATE_505(a)   REPLICATE_100(REPLICATE_5(a)) REPLICATE_10(REPLICATE_0(a)) REPLICATE_1(REPLICATE_5(a))
+#define REPLICATE_506(a)   REPLICATE_100(REPLICATE_5(a)) REPLICATE_10(REPLICATE_0(a)) REPLICATE_1(REPLICATE_6(a))
+#define REPLICATE_507(a)   REPLICATE_100(REPLICATE_5(a)) REPLICATE_10(REPLICATE_0(a)) REPLICATE_1(REPLICATE_7(a))
+#define REPLICATE_508(a)   REPLICATE_100(REPLICATE_5(a)) REPLICATE_10(REPLICATE_0(a)) REPLICATE_1(REPLICATE_8(a))
+#define REPLICATE_509(a)   REPLICATE_100(REPLICATE_5(a)) REPLICATE_10(REPLICATE_0(a)) REPLICATE_1(REPLICATE_9(a))
+#define REPLICATE_510(a)   REPLICATE_100(REPLICATE_5(a)) REPLICATE_10(REPLICATE_1(a)) REPLICATE_1(REPLICATE_0(a))
+#define REPLICATE_511(a)   REPLICATE_100(REPLICATE_5(a)) REPLICATE_10(REPLICATE_1(a)) REPLICATE_1(REPLICATE_1(a))
+
+/*
+#define REPLICATE_DIGITS_1(            d1, a) REPLICATE_##d1(a)
+#define REPLICATE_DIGITS_2(        d2, d1, a) REPLICATE_##d1(a) REPLICATE_10(REPLICATE_##d2(a))
+#define REPLICATE_DIGITS_3(    d3, d2, d1, a) REPLICATE_##d1(a) REPLICATE_10(REPLICATE_##d2(a)) REPLICATE_100(REPLICATE_##d3(a))
+#define REPLICATE_DIGITS_4(d4, d3, d2, d1, a) REPLICATE_##d1(a) REPLICATE_10(REPLICATE_##d2(a)) REPLICATE_100(REPLICATE_##d3(a)) REPLICATE_1000(REPLICATE_##d4(a))
+*/
+
+#define REPLICATE_PLUS( num, a, acc) REPLICATE_##num(a) acc
+#define REPLICATE_TIMES(num, a, acc) REPLICATE_##num(acc)
+
+/* Takes a macro group that defines the following (an extra underscore was
+ * added for readability; pass prefix as "prefix_"):
+ *
+ * #define prefix_PLUS( num, a, acc)
+ * #define prefix_TIMES(num, a, acc)
+ * #define prefix_0(a)
+ * #define prefix_1(a)
+ * #define prefix_2(a)
+ * #define prefix_3(a)
+ * #define prefix_4(a)
+ * #define prefix_5(a)
+ * #define prefix_6(a)
+ * #define prefix_7(a)
+ * #define prefix_8(a)
+ * #define prefix_9(a)
+ * #define prefix_10(a)
+ *
+ * Such that, for 0 <= num1, num2 <= 10:
+ *
+ *  prefix_PLUS(num1, a, prefix_num2(a))
+ *   =
+ *  prefix_<num1+num2>(a)
+ *
+ * And
+ *
+ *  prefix_TIMES(num1, a, prefix_num2(a))
+ *   =
+ *  prefix_<num1*num2>(a)
+ *
+ * .
+ */
+
+/* prefix_0(a) */
+#define CALL_DIGITS_0(prefix,     a) CAT(prefix, 0)(a)
+/* prefix_d1(a) */
+#define CALL_DIGITS_1(prefix, d1, a) CAT(prefix, d1)(a)
+
+/* Add another least significant digit: 10*acc + d */
+#define CALL_ADD_ONES_DIGIT(prefix, d1, a, acc) CAT(prefix, PLUS)(d, a, CAT(prefix, TIMES)(10, a, acc))
+
+#define CALL_DIGITS_2(prefix,         d2, d1, a) \
+  CALL_ADD_ONES_DIGIT(prefix, d1, a, CALL_DIGITS_1(prefix,         d2, a))
+
+#define CALL_DIGITS_3(prefix,     d3, d2, d1, a) \
+  CALL_ADD_ONES_DIGIT(prefix, d1, a, CALL_DIGITS_2(prefix,     d3, d2, a))
+
+#define CALL_DIGITS_4(prefix, d4, d3, d2, d1, a) \
+  CALL_ADD_ONES_DIGIT(prefix, d1, a, CALL_DIGITS_3(prefix, d4, d3, d2, a))
+
+#define CALL_DIGITS_5(prefix, d4, d3, d2, d1, a) \
+  CALL_ADD_ONES_DIGIT(prefix, d1, a, CALL_DIGITS_3(prefix, d4, d3, d2, a))
+
+#define REPLICATE_PREFIX() REPLICATE_
+
+
+/*
+#define REPLICATE_DIGITS_0(                a) REPLICATE_0(a)
+#define REPLICATE_DIGITS_1(            d1, a) REPLICATE_##d1(a)
+#define REPLICATE_DIGITS_2(        d2, d1, a) REPLICATE_DIGITS1(d1, a) REPLICATE_DIGITS_1(d2, REPLICATE_10(a))
+*/
+
+/*
+#define APPLY_1ARY_0( f, a) a
+#define APPLY_1ARY_1( f, a) f(a)
+#define APPLY_1ARY_2( f, a) f(f(a))
+#define APPLY_1ARY_3( f, a) f(f(f(a)))
+#define APPLY_1ARY_4( f, a) f(f(f(f(a))))
+#define APPLY_1ARY_5( f, a) f(f(f(f(f(a)))))
+#define APPLY_1ARY_6( f, a) f(f(f(f(f(f(a))))))
+#define APPLY_1ARY_7( f, a) f(f(f(f(f(f(f(a)))))))
+#define APPLY_1ARY_8( f, a) f(f(f(f(f(f(f(f(a))))))))
+#define APPLY_1ARY_9( f, a) f(f(f(f(f(f(f(f(f(a)))))))))
+#define APPLY_1ARY_10(f, a) f(f(f(f(f(f(f(f(f(f(a))))))))))
+#define APPLY_1ARY_D(d, f, a) CAT(APPLY_1ARY_, d)(f, a)
+
+#define REMOVE_PAREN_LAYER(a) EXPAND1 a
+
+#define WRAP2(a, b) (a, b)
+#define UNWRAP2(ab) REMOVE_PAREN_LAYER(ab)
+#define _WRAP2_FST_EXPAND(a, b) a
+#define _WRAP2_SND_EXPAND(a, b) b
+#define WRAP2_FST(ab) _WRAP2_FST_EXPAND(EXPAND1(UNWRAP2(ab)))
+#define WRAP2_SND(ab) _WRAP2_SND_EXPAND(EXPAND1(UNWRAP2(ab)))
+
+#define APPLY_1ARY_PLUS( num, a, acc) APPLY_1ARY_D(num, WRAP2_FST(a), acc)
+#define APPLY_1ARY_TIMES(num, a, acc) APPLY_1ARY_D(num, )
+*/
+
+#define REPLICATE_COMMA_0( a)
+#define REPLICATE_COMMA_1( a) a
+#define REPLICATE_COMMA_2( a) a, a
+#define REPLICATE_COMMA_3( a) a, REPLICATE_COMMA_2(a)
+#define REPLICATE_COMMA_4( a) a, REPLICATE_COMMA_3(a)
+#define REPLICATE_COMMA_5( a) a, REPLICATE_COMMA_4(a)
+#define REPLICATE_COMMA_6( a) a, REPLICATE_COMMA_5(a)
+#define REPLICATE_COMMA_7( a) a, REPLICATE_COMMA_6(a)
+#define REPLICATE_COMMA_8( a) a, REPLICATE_COMMA_7(a)
+#define REPLICATE_COMMA_9( a) a, REPLICATE_COMMA_8(a)
+#define REPLICATE_COMMA_10(a) a, REPLICATE_COMMA_9(a)
+#define REPLICATE_COMMA_D(d, a) CAT(REPLICATE_COMMA_, d)(a)
+
+#define _SHORT_PRED_0( when_zero, a)  when_zero
+#define _SHORT_PRED_1( when_zero, a)  0
+#define _SHORT_PRED_2( when_zero, a)  1
+#define _SHORT_PRED_3( when_zero, a)  2
+#define _SHORT_PRED_4( when_zero, a)  3
+#define _SHORT_PRED_5( when_zero, a)  4
+#define _SHORT_PRED_6( when_zero, a)  5
+#define _SHORT_PRED_7( when_zero, a)  6
+#define _SHORT_PRED_8( when_zero, a)  7
+#define _SHORT_PRED_9( when_zero, a)  8
+#define _SHORT_PRED_10(when_zero, a) 9
+#define _SHORT_PRED_11(when_zero, a) 10
+#define _SHORT_PRED_12(when_zero, a) 11
+#define _SHORT_PRED_13(when_zero, a) 12
+#define _SHORT_PRED_14(when_zero, a) 13
+#define _SHORT_PRED_15(when_zero, a) 14
+#define _SHORT_PRED_16(when_zero, a) 15
+#define SHORT_PRED(when_zero, a) CAT(_SHORT_PRED_, a)(when_zero, a)
+
+#define _SHORT_SUCC_0( a)  1
+#define _SHORT_SUCC_1( a)  2
+#define _SHORT_SUCC_2( a)  3
+#define _SHORT_SUCC_3( a)  4
+#define _SHORT_SUCC_4( a)  5
+#define _SHORT_SUCC_5( a)  6
+#define _SHORT_SUCC_6( a)  7
+#define _SHORT_SUCC_7( a)  8
+#define _SHORT_SUCC_8( a)  9
+#define _SHORT_SUCC_9( a)  10
+#define _SHORT_SUCC_10(a) 11
+#define _SHORT_SUCC_11(a) 12
+#define _SHORT_SUCC_12(a) 13
+#define _SHORT_SUCC_13(a) 14
+#define _SHORT_SUCC_14(a) 15
+#define _SHORT_SUCC_15(a) 16
+#define _SHORT_SUCC_16(a) 17
+#define SHORT_SUCC(a) CAT(_SHORT_SUCC_, a)(a)
+
+#if 0
+#define REPLICATE_COMMA_SUFFIX_M1(a, suffix)
+#define REPLICATE_COMMA_SUFFIX_0( a, suffix) EXPAND_PARENS(suffix)
+#define REPLICATE_COMMA_SUFFIX_1( a, suffix) EXPAND_PARENS(a), EXPAND_PARENS(suffix)
+#define REPLICATE_COMMA_SUFFIX_2( a, suffix) EXPAND_PARENS(a), EXPAND_PARENS(a), EXPAND_PARENS(suffix)
+#define REPLICATE_COMMA_SUFFIX_3( a, suffix) EXPAND_PARENS(a), REPLICATE_COMMA_SUFFIX_2(a, suffix)
+#define REPLICATE_COMMA_SUFFIX_4( a, suffix) EXPAND_PARENS(a), REPLICATE_COMMA_SUFFIX_3(a, suffix)
+#define REPLICATE_COMMA_SUFFIX_5( a, suffix) EXPAND_PARENS(a), REPLICATE_COMMA_SUFFIX_4(a, suffix)
+#define REPLICATE_COMMA_SUFFIX_6( a, suffix) EXPAND_PARENS(a), REPLICATE_COMMA_SUFFIX_5(a, suffix)
+#define REPLICATE_COMMA_SUFFIX_7( a, suffix) EXPAND_PARENS(a), REPLICATE_COMMA_SUFFIX_6(a, suffix)
+#define REPLICATE_COMMA_SUFFIX_8( a, suffix) EXPAND_PARENS(a), REPLICATE_COMMA_SUFFIX_7(a, suffix)
+#define REPLICATE_COMMA_SUFFIX_9( a, suffix) EXPAND_PARENS(a), REPLICATE_COMMA_SUFFIX_8(a, suffix)
+#define REPLICATE_COMMA_SUFFIX_10(a, suffix) EXPAND_PARENS(a), REPLICATE_COMMA_SUFFIX_9(a, suffix)
+#define REPLICATE_COMMA_SUFFIX_D(    d, a, suffix) CAT(REPLICATE_COMMA_SUFFIX_, d)                (a, suffix)
+#define REPLICATE_COMMA_SUFFIX_DM1(  d, a, suffix) CAT(REPLICATE_COMMA_SUFFIX_, SHORT_PRED(M1, d))(a, suffix)
+#define REPLICATE_COMMA_SUFFIX_DM1_0(d, a, suffix) CAT(REPLICATE_COMMA_SUFFIX_, SHORT_PRED(0,  d))(a, suffix)
+
+#define REPLICATE_COMMA_D_1(                                           d1, a) REPLICATE_COMMA_SUFFIX_DM1(d1, a, a)
+#define REPLICATE_COMMA_D_2(                                       d2, d1, a) REPLICATE_COMMA_SUFFIX_D(d1, a, (REPLICATE_COMMA_D_1(                                       d2, (REPLICATE_COMMA_D_1(10, a)))))
+#define REPLICATE_COMMA_D_3(                                   d3, d2, d1, a) REPLICATE_COMMA_SUFFIX_D(d1, a, (REPLICATE_COMMA_D_2(                                   d3, d2, (REPLICATE_COMMA_D_1(10, a)))))
+#define REPLICATE_COMMA_D_4(                               d4, d3, d2, d1, a) REPLICATE_COMMA_SUFFIX_D(d1, a, (REPLICATE_COMMA_D_3(                               d4, d3, d2, (REPLICATE_COMMA_D_1(10, a)))))
+#define REPLICATE_COMMA_D_5(                           d5, d4, d3, d2, d1, a) REPLICATE_COMMA_SUFFIX_D(d1, a, (REPLICATE_COMMA_D_4(                           d5, d4, d3, d2, (REPLICATE_COMMA_D_1(10, a)))))
+#define REPLICATE_COMMA_D_6(                       d6, d5, d4, d3, d2, d1, a) REPLICATE_COMMA_SUFFIX_D(d1, a, (REPLICATE_COMMA_D_5(                       d6, d5, d4, d3, d2, (REPLICATE_COMMA_D_1(10, a)))))
+#define REPLICATE_COMMA_D_7(                   d7, d6, d5, d4, d3, d2, d1, a) REPLICATE_COMMA_SUFFIX_D(d1, a, (REPLICATE_COMMA_D_6(                   d7, d6, d5, d4, d3, d2, (REPLICATE_COMMA_D_1(10, a)))))
+#define REPLICATE_COMMA_D_8(               d8, d7, d6, d5, d4, d3, d2, d1, a) REPLICATE_COMMA_SUFFIX_D(d1, a, (REPLICATE_COMMA_D_7(               d8, d7, d6, d5, d4, d3, d2, (REPLICATE_COMMA_D_1(10, a)))))
+#define REPLICATE_COMMA_D_9(           d9, d8, d7, d6, d5, d4, d3, d2, d1, a) REPLICATE_COMMA_SUFFIX_D(d1, a, (REPLICATE_COMMA_D_8(           d9, d8, d7, d6, d5, d4, d3, d2, (REPLICATE_COMMA_D_1(10, a)))))
+#define REPLICATE_COMMA_D_10(     d10, d9, d8, d7, d6, d5, d4, d3, d2, d1, a) REPLICATE_COMMA_SUFFIX_D(d1, a, (REPLICATE_COMMA_D_9(      d10, d9, d8, d7, d6, d5, d4, d3, d2, (REPLICATE_COMMA_D_1(10, a)))))
+#define REPLICATE_COMMA_D_11(d11, d10, d9, d8, d7, d6, d5, d4, d3, d2, d1, a) REPLICATE_COMMA_SUFFIX_D(d1, a, (REPLICATE_COMMA_D_10(d11, d10, d9, d8, d7, d6, d5, d4, d3, d2, (REPLICATE_COMMA_D_1(10, a)))))
+
+#define REPLICATE_COMMA_20( a) REPLICATE_COMMA_D_2(   2, 0, (a))
+#define REPLICATE_COMMA_30( a) REPLICATE_COMMA_D_2(   3, 0, (a))
+#define REPLICATE_COMMA_40( a) REPLICATE_COMMA_D_2(   4, 0, (a))
+#define REPLICATE_COMMA_50( a) REPLICATE_COMMA_D_2(   5, 0, (a))
+#define REPLICATE_COMMA_60( a) REPLICATE_COMMA_D_2(   6, 0, (a))
+#define REPLICATE_COMMA_70( a) REPLICATE_COMMA_D_2(   7, 0, (a))
+#define REPLICATE_COMMA_80( a) REPLICATE_COMMA_D_2(   8, 0, (a))
+#define REPLICATE_COMMA_90( a) REPLICATE_COMMA_D_2(   9, 0, (a))
+#define REPLICATE_COMMA_100(a) REPLICATE_COMMA_D_3(1, 0, 0, (a))
+#endif
+
+#if 0
+#define REPLICATE_COMMA_SUFFIX_M1(a, suffix)
+#define REPLICATE_COMMA_SUFFIX_0( a, suffix) suffix
+#define REPLICATE_COMMA_SUFFIX_1( a, suffix) a COMMA_LATE() suffix
+#define REPLICATE_COMMA_SUFFIX_2( a, suffix) a COMMA_LATE() a COMMA_LATE() suffix
+#define REPLICATE_COMMA_SUFFIX_3( a, suffix) a COMMA_LATE() REPLICATE_COMMA_SUFFIX_2(a, suffix)
+#define REPLICATE_COMMA_SUFFIX_4( a, suffix) a COMMA_LATE() REPLICATE_COMMA_SUFFIX_3(a, suffix)
+#define REPLICATE_COMMA_SUFFIX_5( a, suffix) a COMMA_LATE() REPLICATE_COMMA_SUFFIX_4(a, suffix)
+#define REPLICATE_COMMA_SUFFIX_6( a, suffix) a COMMA_LATE() REPLICATE_COMMA_SUFFIX_5(a, suffix)
+#define REPLICATE_COMMA_SUFFIX_7( a, suffix) a COMMA_LATE() REPLICATE_COMMA_SUFFIX_6(a, suffix)
+#define REPLICATE_COMMA_SUFFIX_8( a, suffix) a COMMA_LATE() REPLICATE_COMMA_SUFFIX_7(a, suffix)
+#define REPLICATE_COMMA_SUFFIX_9( a, suffix) a COMMA_LATE() REPLICATE_COMMA_SUFFIX_8(a, suffix)
+#define REPLICATE_COMMA_SUFFIX_10(a, suffix) a COMMA_LATE() REPLICATE_COMMA_SUFFIX_9(a, suffix)
+#define REPLICATE_COMMA_SUFFIX_D(    d, a, suffix) CAT(REPLICATE_COMMA_SUFFIX_, d)                (a, suffix)
+#define REPLICATE_COMMA_SUFFIX_DM1(  d, a, suffix) CAT(REPLICATE_COMMA_SUFFIX_, SHORT_PRED(M1, d))(a, suffix)
+#define REPLICATE_COMMA_SUFFIX_DM1_0(d, a, suffix) CAT(REPLICATE_COMMA_SUFFIX_, SHORT_PRED(0,  d))(a, suffix)
+
+#define REPLICATE_COMMA_D_1(                                           d1, a) REPLICATE_COMMA_SUFFIX_DM1(d1, a, a)
+#define REPLICATE_COMMA_D_2(                                       d2, d1, a) REPLICATE_COMMA_SUFFIX_D(d1, a, REPLICATE_COMMA_D_1(                                       d2, REPLICATE_COMMA_D_1(10, a)))
+#define REPLICATE_COMMA_D_3(                                   d3, d2, d1, a) REPLICATE_COMMA_SUFFIX_D(d1, a, REPLICATE_COMMA_D_2(                                   d3, d2, REPLICATE_COMMA_D_1(10, a)))
+#define REPLICATE_COMMA_D_4(                               d4, d3, d2, d1, a) REPLICATE_COMMA_SUFFIX_D(d1, a, REPLICATE_COMMA_D_3(                               d4, d3, d2, REPLICATE_COMMA_D_1(10, a)))
+#define REPLICATE_COMMA_D_5(                           d5, d4, d3, d2, d1, a) REPLICATE_COMMA_SUFFIX_D(d1, a, REPLICATE_COMMA_D_4(                           d5, d4, d3, d2, REPLICATE_COMMA_D_1(10, a)))
+#define REPLICATE_COMMA_D_6(                       d6, d5, d4, d3, d2, d1, a) REPLICATE_COMMA_SUFFIX_D(d1, a, REPLICATE_COMMA_D_5(                       d6, d5, d4, d3, d2, REPLICATE_COMMA_D_1(10, a)))
+#define REPLICATE_COMMA_D_7(                   d7, d6, d5, d4, d3, d2, d1, a) REPLICATE_COMMA_SUFFIX_D(d1, a, REPLICATE_COMMA_D_6(                   d7, d6, d5, d4, d3, d2, REPLICATE_COMMA_D_1(10, a)))
+#define REPLICATE_COMMA_D_8(               d8, d7, d6, d5, d4, d3, d2, d1, a) REPLICATE_COMMA_SUFFIX_D(d1, a, REPLICATE_COMMA_D_7(               d8, d7, d6, d5, d4, d3, d2, REPLICATE_COMMA_D_1(10, a)))
+#define REPLICATE_COMMA_D_9(           d9, d8, d7, d6, d5, d4, d3, d2, d1, a) REPLICATE_COMMA_SUFFIX_D(d1, a, REPLICATE_COMMA_D_8(           d9, d8, d7, d6, d5, d4, d3, d2, REPLICATE_COMMA_D_1(10, a)))
+#define REPLICATE_COMMA_D_10(     d10, d9, d8, d7, d6, d5, d4, d3, d2, d1, a) REPLICATE_COMMA_SUFFIX_D(d1, a, REPLICATE_COMMA_D_9(      d10, d9, d8, d7, d6, d5, d4, d3, d2, REPLICATE_COMMA_D_1(10, a)))
+#define REPLICATE_COMMA_D_11(d11, d10, d9, d8, d7, d6, d5, d4, d3, d2, d1, a) REPLICATE_COMMA_SUFFIX_D(d1, a, REPLICATE_COMMA_D_10(d11, d10, d9, d8, d7, d6, d5, d4, d3, d2, REPLICATE_COMMA_D_1(10, a)))
+
+#define REPLICATE_COMMA_20( a) REPLICATE_COMMA_D_2(   2, 0, a)
+#define REPLICATE_COMMA_30( a) REPLICATE_COMMA_D_2(   3, 0, a)
+#define REPLICATE_COMMA_40( a) REPLICATE_COMMA_D_2(   4, 0, a)
+#define REPLICATE_COMMA_50( a) REPLICATE_COMMA_D_2(   5, 0, a)
+#define REPLICATE_COMMA_60( a) REPLICATE_COMMA_D_2(   6, 0, a)
+#define REPLICATE_COMMA_70( a) REPLICATE_COMMA_D_2(   7, 0, a)
+#define REPLICATE_COMMA_80( a) REPLICATE_COMMA_D_2(   8, 0, a)
+#define REPLICATE_COMMA_90( a) REPLICATE_COMMA_D_2(   9, 0, a)
+#define REPLICATE_COMMA_100(a) REPLICATE_COMMA_D_3(1, 0, 0, a)
+#endif
+
+/* ^^^ Commas are interfering; seems to work otherwise. */
+
+#define REPLICATE_COMMA_20( a) REPLICATE_COMMA_10(a), REPLICATE_COMMA_10(a)
+#define REPLICATE_COMMA_30( a) REPLICATE_COMMA_20(a), REPLICATE_COMMA_10(a)
+#define REPLICATE_COMMA_40( a) REPLICATE_COMMA_30(a), REPLICATE_COMMA_10(a)
+#define REPLICATE_COMMA_50( a) REPLICATE_COMMA_40(a), REPLICATE_COMMA_10(a)
+#define REPLICATE_COMMA_60( a) REPLICATE_COMMA_50(a), REPLICATE_COMMA_10(a)
+#define REPLICATE_COMMA_70( a) REPLICATE_COMMA_60(a), REPLICATE_COMMA_10(a)
+#define REPLICATE_COMMA_80( a) REPLICATE_COMMA_70(a), REPLICATE_COMMA_10(a)
+#define REPLICATE_COMMA_90( a) REPLICATE_COMMA_80(a), REPLICATE_COMMA_10(a)
+#define REPLICATE_COMMA_100(a) REPLICATE_COMMA_90(a), REPLICATE_COMMA_10(a)
+
+#define REPLICATE_COMMA_200( a) REPLICATE_COMMA_100(a), REPLICATE_COMMA_100(a)
+#define REPLICATE_COMMA_300( a) REPLICATE_COMMA_200(a), REPLICATE_COMMA_100(a)
+#define REPLICATE_COMMA_400( a) REPLICATE_COMMA_300(a), REPLICATE_COMMA_100(a)
+#define REPLICATE_COMMA_500( a) REPLICATE_COMMA_400(a), REPLICATE_COMMA_100(a)
+#define REPLICATE_COMMA_600( a) REPLICATE_COMMA_500(a), REPLICATE_COMMA_100(a)
+#define REPLICATE_COMMA_700( a) REPLICATE_COMMA_600(a), REPLICATE_COMMA_100(a)
+#define REPLICATE_COMMA_800( a) REPLICATE_COMMA_700(a), REPLICATE_COMMA_100(a)
+#define REPLICATE_COMMA_900( a) REPLICATE_COMMA_800(a), REPLICATE_COMMA_100(a)
+#define REPLICATE_COMMA_1000(a) REPLICATE_COMMA_900(a), REPLICATE_COMMA_100(a)
+
+#define REPLICATE_COMMA_2000( a) REPLICATE_COMMA_1000(a), REPLICATE_COMMA_1000(a)
+#define REPLICATE_COMMA_3000( a) REPLICATE_COMMA_2000(a), REPLICATE_COMMA_1000(a)
+#define REPLICATE_COMMA_4000( a) REPLICATE_COMMA_3000(a), REPLICATE_COMMA_1000(a)
+#define REPLICATE_COMMA_5000( a) REPLICATE_COMMA_4000(a), REPLICATE_COMMA_1000(a)
+#define REPLICATE_COMMA_6000( a) REPLICATE_COMMA_5000(a), REPLICATE_COMMA_1000(a)
+#define REPLICATE_COMMA_7000( a) REPLICATE_COMMA_6000(a), REPLICATE_COMMA_1000(a)
+#define REPLICATE_COMMA_8000( a) REPLICATE_COMMA_7000(a), REPLICATE_COMMA_1000(a)
+#define REPLICATE_COMMA_9000( a) REPLICATE_COMMA_8000(a), REPLICATE_COMMA_1000(a)
+#define REPLICATE_COMMA_10000(a) REPLICATE_COMMA_9000(a), REPLICATE_COMMA_1000(a)
 
 extern const char   indentation_spaces_buf[];
 extern const size_t indentation_spaces_size;
