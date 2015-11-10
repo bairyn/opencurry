@@ -469,6 +469,19 @@ struct field_info_s
   size_t      (*template_unused_value)(const field_info_t *self, void *dest_field_mem);
 };
 
+#define FIELD_INFO_DEFAULTS                                \
+  { field_info_type                                        \
+                                                           \
+  , /* field_pos             */ (ptrdiff_t) 0              \
+  , /* field_size            */ (size_t)    0              \
+  , /* field_type            */ NULL                       \
+                                                           \
+  , /* is_metadata           */ 0                          \
+  , /* is_copyable_ref       */ 0                          \
+                                                           \
+  , /* default_value         */ default_value_zero         \
+  , /* template_unused_value */ template_unused_value_zero \
+  }
 extern const field_info_t field_info_defaults;
 
 /*
