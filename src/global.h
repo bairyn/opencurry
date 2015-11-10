@@ -45,8 +45,8 @@
 
 /* ---------------------------------------------------------------- */
 
-#define DEFAULT_GLOBAL_BUF_SIZE 8192
-#define DEFAULT_GLOBAL_BUF_LEN  SIZE_LESS_NULL(DEFAULT_GLOBAL_BUF_SIZE)
+#define DEFAULT_GLOBAL_BUF_LEN  8192
+#define DEFAULT_GLOBAL_BUF_SIZE (DEFAULT_GLOBAL_BUF_LEN + 1)
 
 /* ---------------------------------------------------------------- */
 /* NULL.                                                            */
@@ -60,12 +60,12 @@ extern const size_t nullref_num;
 extern const size_t nullref_len;
 
 extern void * const loopref[];
-extern const size_t loopref_size = ARRAY_SIZE(   loopref);
+extern const size_t loopref_size;
 extern const size_t loopref_num;
 extern const size_t loopref_len;
 
 extern void * const selfref[];
-extern const size_t selfref_size = ARRAY_SIZE(   selfref);
+extern const size_t selfref_size;
 extern const size_t selfref_num;
 extern const size_t selfref_len;
 

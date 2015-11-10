@@ -71,29 +71,29 @@ const size_t        zeroes_size = ARRAY_SIZE(   zeroes);
 const size_t        zeroes_num  = ARRAY_NUM(    zeroes);
 const size_t        zeroes_len  = ARRAY_LEN_ALL(zeroes);
 
-const unsigned char * const zeroes_bytes = &zeroes[0];
+const unsigned char * const zeroes_bytes = (const unsigned char *) (&zeroes[0]);
 const size_t zeroes_bytes_size = sizeof(zeroes);
 const size_t zeroes_bytes_num  = sizeof(zeroes) / sizeof(*zeroes_bytes);
 const size_t zeroes_bytes_len  = SIZE_LESS_NULL(sizeof(zeroes) / sizeof(*zeroes_bytes));
 
-const char * const zeroes_chars = &zeroes[0];
-const size_t zeroes_chars_size = sizeof(zeroes);
-const size_t zeroes_chars_num  = sizeof(zeroes) / sizeof(*zeroes_chars);
-const size_t zeroes_chars_len  = SIZE_LESS_NULL(sizeof(zeroes) / sizeof(*zeroes_chars));
+const char * const zeroes_chars = (const char *) (&zeroes[0]);
+const size_t zeroes_chars_size  = sizeof(zeroes);
+const size_t zeroes_chars_num   = sizeof(zeroes) / sizeof(*zeroes_chars);
+const size_t zeroes_chars_len   = SIZE_LESS_NULL(sizeof(zeroes) / sizeof(*zeroes_chars));
 
-void * const zeroes_mem = &zeroes[0];
+void * const zeroes_mem = (void *) (&zeroes[0]);
 const size_t zeroes_mem_size = sizeof(zeroes);
 const size_t zeroes_mem_num  = sizeof(zeroes) / sizeof(unsigned char);
 const size_t zeroes_mem_len  = SIZE_LESS_NULL(sizeof(zeroes) / sizeof(unsigned char));
 
 /* ---------------------------------------------------------------- */
 
-const unsigned char spaces[SPACES_BUF_LEN + 1] = CAT(REPLICATE_, SPACES_BUF_LEN)(" ");
+const unsigned char spaces[SPACES_BUF_LEN + 1] = { CAT(REPLICATE_COMMA_, SPACES_BUF_LEN)(' '), '\x00' };
 const size_t        spaces_size = ARRAY_SIZE(   spaces);
 const size_t        spaces_num  = ARRAY_NUM(    spaces);
 const size_t        spaces_len  = ARRAY_LEN_ALL(spaces);
 
-const unsigned char tabs[TABS_BUF_LEN + 1] = CAT(REPLICATE_, TAB_BUF_LEN)("\t");
+const unsigned char tabs[TABS_BUF_LEN + 1] = { CAT(REPLICATE_COMMA_, SPACES_BUF_LEN)(' '), '\x00' };
 const size_t        tabs_size = ARRAY_SIZE(   spaces);
 const size_t        tabs_num  = ARRAY_NUM(    spaces);
 const size_t        tabs_len  = ARRAY_LEN_ALL(spaces);
