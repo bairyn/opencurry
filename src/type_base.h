@@ -1787,7 +1787,6 @@ const tval   *type_has_default_value(const type_t *self, const tval *val);
 /* mem */
 memory_tracker_t *type_mem_struct_or_global_dyn(const type_t *self, tval *val_raw);
 memory_tracker_t *type_mem_valueless(const type_t *self, tval *val_raw, memory_tracker_t *valueless_memory_tracker);
-memory_tracker_t *type_val_has_individual_mem(const type_t *type, tval *val);
 
 /* mem_init */
 

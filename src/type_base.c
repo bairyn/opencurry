@@ -2976,56 +2976,6 @@ void *type_mem_init_valueless_or_inside_value
 }
 
 /*
- * Get a value's contained memory tracker if it exists.
- *
- * If the type associates a memory tracker to a value that is different from
- * its valueless type tracker, return it.  (If the memory tracker's container
- * field is non-NULL but it is different from the value, something went wrong,
- * so return NULL in the case of this error.
- */
-/* TODO TODO TODO TODO FIXME FIXME FIXME FIXME: if "container" is not equal to
- * the value, e.g. if "container" points to the memory tracker itself, then
- * what?
- * Oh, oh, add a new field to memory_tracker_t!
- *
- * AFFECTS: at *least* mem_free and is_dyn methods!!
- */
-memory_tracker_t *type_val_has_individual_mem(const type_t *type, tval *val)
-{
-  memory_tracker_t *valueless_memory_tracker;
-  memory_tracker_t *memory_tracker;
-
-  if (!type || !val)
-    return NULL;
-
-
-  memory_tracker = type_mem(type, val);
-
-  if (!memory_tracker)
-    return NULL;
-
-
-  valueless_memory_tracker = type_mem(type, NULL);
-
-  if (memory_tracker == valueless_memory_tracker)
-    return NULL;
-
-  if (  memory_tracker->dynamically_allocated_container
-     && memory_tracker->dynamically_allocated_container != val
-     )
-  {
-    /* Error: the value should have its own memory tracker, but its
-     * "dynamically_allocated_container" value is non-NULL and somehow ended up
-     * referencing something different from the value and from the memory
-     * tracker itself.
-     */
-    return NULL;
-  }
-
-  return memory_tracker;
-}
-
-/*
  * Standard memory initialization behaviour.
  *
  * This is used for "mem_init", which is used for 2 purposes:
@@ -3042,6 +2992,10 @@ memory_tracker_t *type_val_has_individual_mem(const type_t *type, tval *val)
  * "memory_tracker_initialize_empty_with_container", with "val_memory_manager",
  * or with the type's "default_memory_manager" if none is provided, otherwise
  * with the global "default_memory_manager".
+ *
+ * This is inappropriate for types that lack a valueless tracker and that
+ * associate via "mem" independent memory trackers for each value trackers that
+ * exist *outside* the value.
  *
  * val_raw:
  * + NULL:
@@ -3592,22 +3546,6 @@ int mem_free_valueless_or_inside_value_allocation
     return -3;
   }
 
-  if (!type->mem_is_dyn)
-  {
-    /* Error: the type needs mem_free! */
-
-    if (out_err_buf)
-      snprintf
-        ( (char *) out_err_buf, (size_t) terminator_size(err_buf_size)
-        , "Error: mem_free_valueless_or_inside_value_allocation: the type lacks \"mem_is_dyn\"!\n"
-          "  Failed to free a value's dynamically allocated memory with no way to\n"
-          "   determine whether this value was dynamically allocated.\n"
-        );
-
-    /* Error occurred: return <= -1. */
-    return -4;
-  }
-
   is_dynamically_allocated = type_mem_is_dyn(type, val);
   if (is_dynamically_allocated < 0)
   {
@@ -3718,7 +3656,7 @@ int mem_free_valueless_or_inside_value_allocation
             );
 
         /* Error occurred: return <= -1. */
-        return -5;
+        return -4;
       }
 
       /* ---------------------------------------------------------------- */
