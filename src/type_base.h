@@ -317,10 +317,10 @@ struct memory_tracker_s
 extern const memory_tracker_t memory_tracker_defaults;
 
 /* A global memory tracker for general use. */
-extern const memory_tracker_t global_memory_tracker;
+extern memory_tracker_t global_memory_tracker;
 
 /* A global memory tracker for dynamic typed-value allocations, for types to use as a default. */
-extern const memory_tracker_t global_typed_dyn_memory_tracker;
+extern memory_tracker_t global_typed_dyn_memory_tracker;
 
 /*
  * Initialize a "memory_tracker" with no allocated buffers.
@@ -1807,14 +1807,24 @@ int type_is_dyn_valueless_or_inside_value
 int mem_is_dyn_valueless_or_inside_value
   ( const type_t *type
   , tval         *val
+
+  , char   *out_err_buf
+  , size_t  err_buf_size
   );
 
 /* mem_free */
+int type_mem_free_valueless_or_inside_value
+  ( const type_t *type
+  , tval         *val
+  );
 
 /* Standard optional-struct_info-based "mem_free" methods. */
 int mem_free_valueless_or_inside_value_allocation
   ( const type_t *self
   , tval         *val
+
+  , char   *out_err_buf
+  , size_t  err_buf_size
   );
 
 /* Procedure for standard "mem_free" freeing. */
@@ -2073,14 +2083,14 @@ void *template_cons_dup_struct_meminit_type
   , int         is_dynamically_allocated
   );
 
-void  template_cons_free_struct
+int template_cons_free_struct
   ( tval *val
   , int                      (*mem_free)( const tval *self
                                         , tval       *val
                                         )
   , const tval                *mem_free_object
   );
-void *template_cons_free_struct_memfree_type
+int template_cons_free_struct_memfree_type
   ( const tval *self
   , tval       *val
   );

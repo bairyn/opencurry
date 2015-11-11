@@ -2194,7 +2194,6 @@ static const struct_info_t *type_type_is_struct  (const type_t *self)
 static const tval          *type_type_has_default(const type_t *self)
   { return type_has_default_value(self, &type_defaults); }
 
-#ifdef TODO
 /* ---------------------------------------------------------------- */
 
 /*
@@ -2502,8 +2501,8 @@ tval *template_cons_basic_initializer(const type_t *type, template_cons_t *cons,
   void                    *(*mem_init)( const tval *self
                                       , tval       *val_raw
                                       , int         is_dynamically_allocated
-                                      )
-  const tval                *mem_init_object
+                                      );
+  const tval                *mem_init_object;
   const memory_manager_t    *def_memory_manager;
 
   if (!type)
@@ -2518,14 +2517,14 @@ tval *template_cons_basic_initializer(const type_t *type, template_cons_t *cons,
     return NULL;
   }
 
-  size               = type_size(type);
+  size               = type_size(type, NULL);
   default_initials   = type_has_default(type);
   struct_info        = type_is_struct(type);
   mem_init           = template_cons_dup_struct_meminit_type;
   mem_init_object    = (const tval *) type;
   def_memory_manager = type_default_memory_manager(type, NULL);
 
-  return template_cons_dup_struct(cons, size, default_initials, struct_info, mem_init, mem_init_object, def_memory_manager);
+  return template_cons_dup_struct(cons, size, default_initials, struct_info, mem_init, mem_init_object, def_memory_manager, allow_alternate_memory_manager);
 }
 
 /* free */
@@ -2567,17 +2566,17 @@ int template_cons_basic_freer(const type_t *type, tval *val)
 {
   int                      (*mem_free)( const tval *self
                                       , tval       *val
-                                      )
-  const tval                *mem_free_object
+                                      );
+  const tval                *mem_free_object;
 
   if (!type)
   {
     return -6;
   }
-  mem_free           = template_cons_dup_struct_memfree_type;
+  mem_free           = template_cons_free_struct_memfree_type;
   mem_free_object    = (const tval *) type;
 
-  return template_cons_basic_freer(val, mem_free, mem_free_object);
+  return template_cons_free_struct(val, mem_free, mem_free_object);
 }
 
 /* has_default */
@@ -2690,8 +2689,6 @@ const tval *type_has_default_value(const type_t *self, const tval *val)
  */
 memory_tracker_t *type_mem_struct_or_global_dyn(const type_t *self, tval *val_raw)
 {
-  memory_tracker_t *memory_tracker;
-
   const struct_info_t *struct_info = type_is_struct(self);
 
   if (!struct_info)
@@ -2718,8 +2715,8 @@ memory_tracker_t *type_mem_struct_or_global_dyn(const type_t *self, tval *val_ra
   /* value's memory tracker field.   */
   return
     (memory_tracker_t *)
-      field_into_ref
-        ( struct_info->fields[struct_info->memory_tracker_field]
+      field_info_ref
+        ( &struct_info->fields[struct_info->memory_tracker_field]
         , val_raw
         );
 }
@@ -2801,8 +2798,8 @@ memory_tracker_t *type_mem_valueless(const type_t *self, tval *val_raw, memory_t
  */
 void *type_supports_dynamic_allocation
   ( const type_t *self
-  , tval          *val_raw
-  , int            is_dynamically_allocated
+  , tval         *val_raw
+  , int           is_dynamically_allocated
   )
 {
   /* "type_supports_dynamic_allocation" is an alias of */
@@ -2837,15 +2834,15 @@ void *type_supports_dynamic_allocation_only_some_vals
     0;
 
   const memory_manager_t *val_memory_manager =
-    type_default_memory_manager(type, NULL);
+    type_default_memory_manager(self, NULL);
 
   return
     mem_init_type_valueless_or_inside_value
       ( self
       , val_raw
       , is_dynamically_allocated
-      , val_memory_manager
       , are_all_vals_supported
+      , val_memory_manager
 
       , NULL
       , 0
@@ -2917,15 +2914,15 @@ void *type_mem_init_valueless_or_inside_value
     1;
 
   const memory_manager_t *val_memory_manager =
-    type_default_memory_manager(type, NULL);
+    type_default_memory_manager(self, NULL);
 
   return
     mem_init_type_valueless_or_inside_value
       ( self
       , val_raw
       , is_dynamically_allocated
-      , val_memory_manager
       , are_all_vals_supported
+      , val_memory_manager
 
       , NULL
       , 0
@@ -3124,7 +3121,7 @@ void *mem_init_type_valueless_or_inside_value
         /* so this procedure can be called with a non-NULL "val_raw".     */
         /*                                                                */
         /* Yes: return non-NULL.                                          */
-        return type;
+        return (void *) type;
       }
       else
       {
@@ -3145,8 +3142,6 @@ void *mem_init_type_valueless_or_inside_value
       if (memory_tracker)
       {
         /* Track the value. */
-        memory_manager_t *memory_manager;
-
         const char *is_err;
 
         if (!val_memory_manager)
@@ -3228,7 +3223,7 @@ int type_is_dyn_valueless_or_inside_value
   , tval         *val
   )
 {
-  return mem_is_dyn_valueless_or_inside_value(self, val);
+  return mem_is_dyn_valueless_or_inside_value(self, val, NULL, 0);
 }
 
 /*
@@ -3240,6 +3235,9 @@ int type_is_dyn_valueless_or_inside_value
 int mem_is_dyn_valueless_or_inside_value
   ( const type_t *type
   , tval         *val
+
+  , char   *out_err_buf
+  , size_t  err_buf_size
   )
 {
   memory_tracker_t *valueless_memory_tracker;
@@ -3315,7 +3313,7 @@ int mem_is_dyn_valueless_or_inside_value
       }
 
       /* Error occurred: return <= -1. */
-      error_code = is_dynamically_allocated - 16;
+      error_code = is_value_tracked - 16;
       if (!(error_code <= 0))
         error_code = -16;
       return (int) error_code;
@@ -3334,7 +3332,7 @@ int mem_is_dyn_valueless_or_inside_value
       int success_code_yes;
 
       success_code_yes = is_value_tracked + 8 + 1;
-      if (!(success_code >= 1))
+      if (!(success_code_yes >= 1))
         success_code_yes = 8;
       return success_code_yes;
     }
@@ -3364,7 +3362,7 @@ int mem_is_dyn_valueless_or_inside_value
 
     memory_tracker_container = memory_tracker->dynamically_allocated_container;
 
-    if      (!memory_trackerer_container)
+    if      (!memory_tracker_container)
     {
       /* This value was not dynamically allocated. */
       return 0;
@@ -3498,14 +3496,14 @@ int mem_free_valueless_or_inside_value_allocation
     return -3;
   }
 
-  if (!type->is_dyn)
+  if (!type->mem_is_dyn)
   {
     /* Error: the type needs mem_free! */
 
     if (out_err_buf)
       snprintf
         ( (char *) out_err_buf, (size_t) terminator_size(err_buf_size)
-        , "Error: mem_free_valueless_or_inside_value_allocation: the type lacks \"is_dyn\"!\n"
+        , "Error: mem_free_valueless_or_inside_value_allocation: the type lacks \"mem_is_dyn\"!\n"
           "  Failed to free a value's dynamically allocated memory with no way to\n"
           "   determine whether this value was dynamically allocated.\n"
         );
@@ -3707,6 +3705,10 @@ const memory_manager_t *type_prefers_given_memory_manager(const type_t *self, tv
         /* Return the type's memory tracker's memory manager. */
         return &memory_tracker->memory_manager;
       }
+      else
+      {
+        return memory_manager;
+      }
     }
   }
   else
@@ -3722,7 +3724,7 @@ const memory_manager_t *type_prefers_default_memory_manager(const type_t *self, 
 
 const memory_manager_t *type_prefers_malloc_memory_manager(const type_t *self, tval *val)
 {
-  return type_prefers_given_memory_manager(self, val, malloc_manager);
+  return type_prefers_given_memory_manager(self, val, &malloc_manager);
 }
 
 /* dup */
@@ -3853,6 +3855,7 @@ tval *type_has_struct_dup_never_malloc( const type_t *self
   return dest;
 }
 
+#ifdef TODO
 /* ---------------------------------------------------------------- */
 
 /* TODO */
@@ -4794,7 +4797,7 @@ int   template_cons_free_struct
  * Treat the "self" object as a "type_t" in the method argument "mem_free" for
  * "template_cons_free_struct".
  */
-void *template_cons_free_struct_memfree_type
+int template_cons_free_struct_memfree_type
   ( const tval *self
   , tval       *val
   )
