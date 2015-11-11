@@ -824,11 +824,11 @@ const char *last_bytes(const char *str, size_t num_bytes);
 #define REPLICATE_COMMA_8192(a) REPLICATE_COMMA_8000(a), REPLICATE_COMMA_100(a), REPLICATE_COMMA_90(a), REPLICATE_COMMA_2(a)
 
 extern const char   indentation_spaces_buf[];
-extern const size_t indentation_spaces_size;
-extern const size_t indentation_spaces_len;
+extern const size_t indentation_spaces_buf_size;
+extern const size_t indentation_spaces_buf_len;
 extern const char   indentation_tabs_buf[];
-extern const size_t indentation_tabs_size;
-extern const size_t indentation_tabs_len;
+extern const size_t indentation_tabs_buf_size;
+extern const size_t indentation_tabs_buf_len;
 #define MAX_INDENTATION_SPACES          (SIZE_LESS_NULL((sizeof(indentation_spaces_buf))))
 #define MAX_INDENTATION_TABS            (SIZE_LESS_NULL((sizeof(indentation_tabs_buf))))
 #define DEFAULT_INDENTATION_STEP_SPACES (2)

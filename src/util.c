@@ -732,7 +732,7 @@ const char *indentation_spaces(size_t steps, size_t step_size)
   if (!step_size)
     step_size = default_indentation_step_spaces;
 
-  spaces = strl_constrain_index(indentation_spaces_len, 0, step_size * steps);
+  spaces = strl_constrain_index(indentation_spaces_buf_len, 0, step_size * steps);
 
   return last_bytes(indentation_spaces_buf, spaces);
 }
@@ -744,7 +744,7 @@ const char *indentation_tabs(size_t steps, size_t step_size)
   if (!step_size)
     step_size = default_indentation_step_tabs;
 
-  tabs = strl_constrain_index(indentation_tabs_len, 0, step_size * steps);
+  tabs = strl_constrain_index(indentation_tabs_buf_len, 0, step_size * steps);
 
   return last_bytes(indentation_spaces_buf, tabs);
 }
