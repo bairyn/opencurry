@@ -62,14 +62,16 @@
 /* Headers defining types we provide representations for. */
 #include <math.h>
 #include <setjmp.h>
+#include <signal.h>
 #include <stdarg.h>
 #include <stddef.h>
-#include <stdlib.h>
 #include <stdio.h>
 #include <time.h>
 
 #include "base.h"
 #include "type_base.h"
+
+#include "type_base_ext.h"
 
 #include "util.h"
 
@@ -2316,7 +2318,7 @@ memory_tracker_t *type_val_has_individual_mem(const type_t *type, tval *val)
 }
 
 /* ---------------------------------------------------------------- */
-/* type_t: Common methods and method helpers.                       */
+/* type_t: Various methods and method helpers.                      */
 /* ---------------------------------------------------------------- */
 
 /* typed */
@@ -2463,6 +2465,13 @@ const char *type_has_no_info(const type_t *self, char *out_info_buf, size_t info
 }
 
 /* size */
+size_t type_has_unknown_size(const type_t *self, const tval *val)
+{
+  if (!val)
+    return ((size_t) (TYPE_SIZE_VARIABLE_WIDTH_VALUE));
+  else
+    return ((size_t) (TYPE_SIZE_UNKNOWN_VALUE));
+}
 
 /* is_struct */
 const struct_info_t *type_is_not_struct(const type_t *self)
@@ -2647,7 +2656,7 @@ int template_cons_basic_freer(const type_t *type, tval *val)
 /* has_default */
 
 /*
- * type_has_no_default:
+ * type_has_no_default_value:
  *
  * This can be used when the type has no default value.
  *
@@ -2671,14 +2680,14 @@ int template_cons_basic_freer(const type_t *type, tval *val)
  * >     { type_type
  * >
  * >     , /-* ...         *-/ ...
- * >     , /-* has_default *-/ type_has_no_default
+ * >     , /-* has_default *-/ type_has_no_default_value
  * >     , /-* ...         *-/ ...
  * >     };
  * >
  * >   return &mytype_def;
  * > }
  */
-const tval *type_has_no_default(const type_t *self)
+const tval *type_has_no_default_value(const type_t *self)
 {
   return NULL;
 }
@@ -4236,7 +4245,7 @@ static void                 default_type_free       (const type_t *self, tval *v
   {        type_has_template_cons_basic_freer(self, val); }
 
 static const tval          *default_type_has_default(const type_t *self)
-  { return type_has_no_default(self); }
+  { return type_has_no_default_value(self); }
 
 static memory_tracker_t    *default_type_mem        (const type_t *self, tval *val_raw)
   { return type_mem_struct_or_global_dyn(self, val_raw); }
@@ -4928,59 +4937,117 @@ const type_t *void_type(void);
 
 extern const type_t void_type_def;
 
-/* General pointers. */
-PRIM_TYPE(funp, funp_cast_t, &funp_default)
-PRIM_TYPE(objp, objp_cast_t, &objp_default)
+/* ---------------------------------------------------------------- */
 
-const funp_cast_t funp_default = NULL;
-const objp_cast_t objp_default = NULL;
+#ifdef TODO
+/* General pointers. */
+PRIM_TYPE(objp, objp_t, type_has_default_value(&objp_default))
+PRIM_TYPE(funp, funp_t, type_has_default_value(&funp_default))
+
+const objp_t objp_default = (objp_t) NULL;
+const funp_t funp_default = (funp_t) NULL;
+#endif
+
+/* ---------------------------------------------------------------- */
 
 /* Scalar types. */
-PRIM_TYPE(char,    char,           &char_default)
-PRIM_TYPE(schar,   signed char,    &schar_default)
-PRIM_TYPE(uchar,   unsigned char,  &uchar_default)
+PRIM_TYPE(char,    char_t,    type_has_default_value(self, &char_default))
+PRIM_TYPE(schar,   schar_t,   type_has_default_value(self, &schar_default))
+PRIM_TYPE(uchar,   uchar_t,   type_has_default_value(self, &uchar_default))
 
-PRIM_TYPE(short,   short,          &short_default)
-PRIM_TYPE(ushort,  unsigned short, &ushort_default)
+PRIM_TYPE(short,   short_t,   type_has_default_value(self, &short_default))
+PRIM_TYPE(ushort,  ushort_t,  type_has_default_value(self, &ushort_default))
 
-PRIM_TYPE(int,     int,            &int_default)
-PRIM_TYPE(uint,    unsigned int,   &uint_default)
+PRIM_TYPE(int,     int_t,     type_has_default_value(self, &int_default))
+PRIM_TYPE(uint,    uint_t,    type_has_default_value(self, &uint_default))
 
-PRIM_TYPE(long,    long,           &long_default)
-PRIM_TYPE(ulong,   unsigned long,  &ulong_default)
+PRIM_TYPE(long,    long_t,    type_has_default_value(self, &long_default))
+PRIM_TYPE(ulong,   ulong_t,   type_has_default_value(self, &ulong_default))
 
-PRIM_TYPE(float,   float,          &float_default)
-PRIM_TYPE(double,  double,         &double_default)
-PRIM_TYPE(ldouble, long double,    &ldouble_default)
+PRIM_TYPE(float,   float_t,   type_has_default_value(self, &float_default))
+PRIM_TYPE(double,  double_t,  type_has_default_value(self, &double_default))
+PRIM_TYPE(ldouble, ldouble_t, type_has_default_value(self, &ldouble_default))
 
-const char           char_default    = '\x00';
-const signed char    schar_default   = '\x00';
-const unsigned char  uchar_default   = '\x00';
+const char_t    char_default    = (char)          '\x00';
+const schar_t   schar_default   = (signed char)   '\x00';
+const uchar_t   uchar_default   = (unsigned char) '\x00';
 
-const short          short_default   = 0;
-const unsigned short ushort_default  = 0;
+const short_t   short_default   = (short)          0;
+const ushort_t  ushort_default  = (unsigned short) 0U;
 
-const int            int_default     = 0;
-const unsigned int   uint_default    = 0;
+const int_t     int_default     = (int)            0;
+const uint_t    uint_default    = (unsigned int)   0U;
 
-const long           long_default    = 0L;
-const unsigned long  ulong_default   = 0L;
+const long_t    long_default    = (long)           0L;
+const ulong_t   ulong_default   = (unsigned long)  0LU;
 
-const float          float_default   = 0.0f;
-const double         double_default  = 0.0;
-const long double    ldouble_default = 0.0L;
+const float_t   float_default   = (float)          0.0f;
+const double_t  double_default  = (double)         0.0;
+const ldouble_t ldouble_default = (long double)    0.0L;
+
+/* ---------------------------------------------------------------- */
 
 /* Derived types. */
-/* TODO */
+
+/* array type. */
+
+const type_t *array_type(void)
+  { return &array_type_def; }
+
+static const char          *array_type_name       (const type_t *self);
+static const tval          *array_type_has_default(const type_t *self);
+
+const type_t array_type_def =
+  { type_type
+
+    /* @: Required.           */
+
+    /* memory_tracker_defaults */
+  , /* memory                 */ MEMORY_TRACKER_DEFAULTS
+
+  , /* typed                  */ type_is_untyped
+
+  , /* @name                  */ array_type_name
+  , /* info                   */ NULL
+  , /* @size                  */ type_has_unknown_size
+  , /* @is_struct             */ type_is_not_struct
+
+  , /* cons_type              */ NULL
+  , /* init                   */ NULL
+  , /* free                   */ NULL
+  , /* has_default            */ array_type_has_default
+  , /* mem                    */ NULL
+  , /* mem_init               */ NULL
+  , /* mem_is_dyn             */ NULL
+  , /* mem_free               */ NULL
+  , /* default_memory_manager */ NULL
+
+  , /* dup                    */ NULL
+
+  , /* parity                 */ ""
+  };
+
+static const char          *array_type_name       (const type_t *self)
+  { return "array_t"; }
+
+static const tval          *array_type_has_default(const type_t *self)
+  { return &array_default; }
+
+const array_t array_default      = { 0 };
+const size_t  array_default_size = ARRAY_SIZE   (array_default);
+const size_t  array_default_num  = ARRAY_NUM    (array_default);
+const size_t  array_default_len  = ARRAY_LEN_ALL(array_default);
+
+/* arrays are variable-width. */
 const type_t *array_type(void);
 
 extern const type_t array_type_def;
 
+/* ---------------------------------------------------------------- */
+
 /* <math.h> */
 
 /* div type. */
-
-static const div_t div_default = { 0, 0 };
 
 const type_t *div_type(void)
   { return &div_type_def; }
@@ -5021,10 +5088,10 @@ const type_t div_type_def =
   };
 
 static const char          *div_type_name       (const type_t *self)
-  { return "div_t"; }
+  { return "primdiv_t"; }
 
 static size_t               div_type_size       (const type_t *self, const tval *val)
-  { return sizeof(div_t); }
+  { return sizeof(primdiv_t); }
 
 DEF_FIELD_DEFAULT_VALUE_FROM_TYPE(div)
 static const struct_info_t *div_type_is_struct  (const type_t *self)
@@ -5043,9 +5110,9 @@ static const struct_info_t *div_type_is_struct  (const type_t *self)
 static const tval          *div_type_has_default(const type_t *self)
   { return &div_default; }
 
-/* ldiv type. */
+const primdiv_t div_default = { 0, 0 };
 
-static const ldiv_t ldiv_default = { 0L, 0L };
+/* ldiv type. */
 
 const type_t *ldiv_type(void)
   { return &ldiv_type_def; }
@@ -5086,10 +5153,10 @@ const type_t ldiv_type_def =
   };
 
 static const char          *ldiv_type_name       (const type_t *self)
-  { return "ldiv_t"; }
+  { return "primldiv_t"; }
 
 static size_t               ldiv_type_size       (const type_t *self, const tval *val)
-  { return sizeof(ldiv_t); }
+  { return sizeof(primldiv_t); }
 
 DEF_FIELD_DEFAULT_VALUE_FROM_TYPE(ldiv)
 static const struct_info_t *ldiv_type_is_struct  (const type_t *self)
@@ -5107,6 +5174,53 @@ static const struct_info_t *ldiv_type_is_struct  (const type_t *self)
 
 static const tval          *ldiv_type_has_default(const type_t *self)
   { return &ldiv_default; }
+
+const primldiv_t ldiv_default = { 0L, 0L };
+
+/* ---------------------------------------------------------------- */
+
+/* <setjmp.h> */
+
+PRIM_TYPE(jmp_buf, jmp_buf_t, type_has_default_value(self, &jmpbuf_default))
+
+const jmp_buf_t jump_buffer_placeholder, jmpbuf_default;
+
+/* ---------------------------------------------------------------- */
+
+/* <signal.h> */
+
+PRIM_TYPE(sig_atomic, primsig_atomic_t, type_has_no_default_value(self))
+
+/* ---------------------------------------------------------------- */
+
+/* <stdarg.h> */
+
+PRIM_TYPE(va_list, va_list_t, type_has_no_default_value(self))
+
+/* ---------------------------------------------------------------- */
+
+/* <stddef.h> */
+
+PRIM_TYPE(size,    primsize_t,    type_has_default_value(self, &size_default))
+PRIM_TYPE(ptrdiff, primptrdiff_t, type_has_default_value(self, &ptrdiff_default))
+
+const primsize_t    size_default    = (size_t)    0U;
+const primptrdiff_t ptrdiff_default = (ptrdiff_t) 0;
+
+/* ---------------------------------------------------------------- */
+
+/* <stdio.h> */
+
+PRIM_TYPE(file, file_t,     type_has_no_default_value(self))
+PRIM_TYPE(fpos, primfpos_t, type_has_no_default_value(self))
+
+/* ---------------------------------------------------------------- */
+
+/* <time.h> */
+
+PRIM_TYPE(tm,    tm_t,        type_has_no_default_value(self))
+PRIM_TYPE(time,  primtime_t,  type_has_no_default_value(self))
+PRIM_TYPE(clock, primclock_t, type_has_no_default_value(self))
 
 /* ---------------------------------------------------------------- */
 /* Utility functions.                                               */

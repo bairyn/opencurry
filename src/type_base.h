@@ -586,20 +586,20 @@ size_t default_value_from_type(const field_info_t *self, void *dest_mem, typed_t
  * > static size_t mystruct_type_is_struct_default_value(const field_info_t *self, void *dest_field_mem)
  * > {
  * >   static const mystruct_t empty;
- * > 
+ * >
  * >   /-* typed_t type                                                *-/
  * >   if      (field_info_cref(self, &empty) == &empty.type)
  * >   {
  * >     typedef typed_t field_type;
- * > 
+ * >
  * >     field_type *dest_field = (field_type *) dest_field_mem;
- * > 
+ * >
  * >     if (dest_field) *dest_field =
  * >       memory_manager_type;
- * > 
+ * >
  * >     return sizeof(field_type);
  * >   }
- * > 
+ * >
  * >   /-* General case for all other fields, and unrecognized fields. *-/
  * >   else
  * >   {
@@ -986,7 +986,7 @@ enum verify_struct_info_status_e
   /*                                                                     */
   /* The struct_info_field_error's bits are OR'd onto this beyond        */
   /* verify_struct_info_bits.                                            */
-  verify_struct_info_verify_field_info_error       
+  verify_struct_info_verify_field_info_error
                                       = 5,
 
   /* A field's field_pos is equal or lesser than that of its previous.   */
@@ -1106,6 +1106,8 @@ struct type_s
   /*                                                                  */
   /*   Constant-width types should return the size of any value when  */
   /*   "val" is NULL.                                                 */
+#define TYPE_SIZE_UNKNOWN_VALUE        0
+#define TYPE_SIZE_VARIABLE_WIDTH_VALUE 0
   size_t               (*size)       (const type_t *self, const tval *val);
 
   /* If this type describes a struct, return information about its    */
@@ -1636,6 +1638,7 @@ const char *type_has_static_name(const type_t *self, const char *name);
 const char *type_has_no_info(const type_t *self, char *out_info_buf, size_t info_buf_size);
 
 /* size */
+size_t type_has_unknown_size(const type_t *self, const tval *val);
 
 /* is_struct */
 #define STRUCT_INFO_CACHE(struct_info)          \
@@ -1765,7 +1768,7 @@ int type_has_template_cons_basic_freer(const type_t *type, tval *val);
 int template_cons_basic_freer(const type_t *type, tval *cons);
 
 /* has_default */
-const tval   *type_has_no_default(const type_t *self);
+const tval   *type_has_no_default_value(const type_t *self);
 const tval   *type_has_default_value(const type_t *self, const tval *val);
 
 /* mem */
@@ -2174,18 +2177,42 @@ objp_cast_t funp_to_objp(funp_cast_t ptr);
 
 /* General type. */
 const type_t *void_type(void);
+typedef void void_t;
 
 extern const type_t void_type_def;
 
 /* General pointers. */
-const type_t *funp_type(void);
 const type_t *objp_type(void);
+const type_t *funp_type(void);
 
-extern const type_t funp_type_def;
+typedef void *(*objp_t)(void *, ...);
+typedef void   *funp_t;
+
+typedef       void *(*       objpm_t)(void *, ...);
+typedef       void   *       funpm_t;
+typedef const void *(*       objpc_t)(void *, ...);
+typedef const void   *       funpc_t;
+
+typedef       void *(*       objmp_t)(void *, ...);
+typedef       void   *       funmp_t;
+typedef       void *(* const objcp_t)(void *, ...);
+typedef       void   * const funcp_t;
+
+typedef       void *(*       objmpm_t)(void *, ...);
+typedef       void   *       funmpm_t;
+typedef const void *(*       objmpc_t)(void *, ...);
+typedef const void   *       funmpc_t;
+typedef       void *(* const objcpm_t)(void *, ...);
+typedef       void   * const funcpm_t;
+typedef const void *(* const objcpc_t)(void *, ...);
+typedef const void   * const funcpc_t;
+
+
 extern const type_t objp_type_def;
+extern const type_t funp_type_def;
 
-extern const funp_cast_t funp_default;
-extern const objp_cast_t objp_default;
+extern const objp_t objp_default;
+extern const funp_t funp_default;
 
 /* Scalar types. */
 const type_t *char_type(void);
@@ -2206,6 +2233,24 @@ const type_t *double_type(void);
 const type_t *ldouble_type(void);
 
 
+typedef char           char_t;
+typedef signed char    schar_t;
+typedef unsigned char  uchar_t;
+
+typedef short          short_t;
+typedef unsigned short ushort_t;
+
+typedef int            int_t;
+typedef unsigned int   uint_t;
+
+typedef long           long_t;
+typedef unsigned long  ulong_t;
+
+typedef float          float_t;
+typedef double         double_t;
+typedef long double    ldouble_t;
+
+
 extern const type_t char_type_def;
 extern const type_t schar_type_def;
 extern const type_t uchar_type_def;
@@ -2224,27 +2269,36 @@ extern const type_t double_type_def;
 extern const type_t ldouble_type_def;
 
 
-extern const char           char_default;
-extern const signed char    schar_default;
-extern const unsigned char  uchar_default;
+extern const char_t    char_default;
+extern const schar_t   schar_default;
+extern const uchar_t   uchar_default;
 
-extern const short          short_default;
-extern const unsigned short ushort_default;
+extern const short_t   short_default;
+extern const ushort_t  ushort_default;
 
-extern const int            int_default;
-extern const unsigned int   uint_default;
+extern const int_t     int_default;
+extern const uint_t    uint_default;
 
-extern const long           long_default;
-extern const unsigned long  ulong_default;
+extern const long_t    long_default;
+extern const ulong_t   ulong_default;
 
-extern const float          float_default;
-extern const double         double_default;
-extern const long double    ldouble_default;
+extern const float_t   float_default;
+extern const double_t  double_default;
+extern const ldouble_t ldouble_default;
 
 /* Derived types. */
 const type_t *array_type(void);
 
+typedef unsigned char array_t[];
+
 extern const type_t array_type_def;
+
+extern const array_t array_default;
+#if 0
+extern const size_t  array_default_size;
+extern const size_t  array_default_num;
+extern const size_t  array_default_len;
+#endif
 
 /* <math.h> */
 const type_t *div_type(void);
@@ -2254,9 +2308,14 @@ extern const type_t div_type_def;
 extern const type_t ldiv_type_def;
 
 /* <setjmp.h> */
-const type_t *jmpbuf_type(void);
+const type_t *jmp_buf_type(void);
 
-extern const type_t jmpbuf_type_def;
+extern const type_t jmp_buf_type_def;
+
+/* <signal.h> */
+const type_t *sig_atomic_type(void);
+
+extern const type_t sig_atomic_type_def;
 
 /* <stdarg.h> */
 const type_t *va_list_type(void);
@@ -2269,11 +2328,6 @@ const type_t *ptrdiff_type(void);
 
 extern const type_t size_type_def;
 extern const type_t ptrdiff_type_def;
-
-/* <stdlib.h> */
-const type_t *sig_atomic_type(void);
-
-extern const type_t sig_atomic_type_def;
 
 /* <stdio.h> */
 const type_t *file_type(void);
@@ -2290,6 +2344,185 @@ const type_t *clock_type(void);
 extern const type_t tm_type_def;
 extern const type_t time_type_def;
 extern const type_t clock_type_def;
+
+/* ---------------------------------------------------------------- */
+
+typedef void_t    primvoid_t;
+
+typedef objp_t    primobjp_t;
+typedef funp_t    primfunp_t;
+typedef objpm_t   primobjpm_t;
+typedef funpm_t   primfunpm_t;
+typedef objpc_t   primobjpc_t;
+typedef funpc_t   primfunpc_t;
+typedef objmp_t   primobjmp_t;
+typedef funmp_t   primfunmp_t;
+typedef objcp_t   primobjcp_t;
+typedef funcp_t   primfuncp_t;
+typedef objmpm_t  primobjmpm_t;
+typedef funmpm_t  primfunmpm_t;
+typedef objmpc_t  primobjmpc_t;
+typedef funmpc_t  primfunmpc_t;
+typedef objcpm_t  primobjcpm_t;
+typedef funcpm_t  primfuncpm_t;
+typedef objcpc_t  primobjcpc_t;
+typedef funcpc_t  primfuncpc_t;
+
+typedef char_t    primchar_t;
+typedef schar_t   primschar_t;
+typedef uchar_t   primuchar_t;
+typedef short_t   primshort_t;
+typedef ushort_t  primushort_t;
+typedef int_t     primint_t;
+typedef uint_t    primuint_t;
+typedef long_t    primlong_t;
+typedef ulong_t   primulong_t;
+typedef float_t   primfloat_t;
+typedef double_t  primdouble_t;
+typedef ldouble_t primldouble_t;
+
+typedef array_t   primarray_t;
+
+/* ---------------------------------------------------------------- */
+
+/* Mutable vs. const typedefs. */
+
+/* "DUPCONST" is an empty tag that indicates the type being typedef's is
+ * already const. */
+#define DUPCONST
+
+typedef          void_t    mvoid_t;
+typedef const    void_t    cvoid_t;
+
+typedef          objp_t    mobjp_t;
+typedef          funp_t    mfunp_t;
+typedef          objpm_t   mobjpm_t;
+typedef          funpm_t   mfunpm_t;
+typedef          objpc_t   mobjpc_t;
+typedef          funpc_t   mfunpc_t;
+typedef          objmp_t   mobjmp_t;
+typedef          funmp_t   mfunmp_t;
+typedef          objcp_t   mobjcp_t;
+typedef          funcp_t   mfuncp_t;
+typedef          objmpm_t  mobjmpm_t;
+typedef          funmpm_t  mfunmpm_t;
+typedef          objmpc_t  mobjmpc_t;
+typedef          funmpc_t  mfunmpc_t;
+typedef          objcpm_t  mobjcpm_t;
+typedef          funcpm_t  mfuncpm_t;
+typedef          objcpc_t  mobjcpc_t;
+typedef          funcpc_t  mfuncpc_t;
+typedef const    objp_t    cobjp_t;
+typedef const    funp_t    cfunp_t;
+typedef const    objpm_t   cobjpm_t;
+typedef const    funpm_t   cfunpm_t;
+typedef const    objpc_t   cobjpc_t;
+typedef const    funpc_t   cfunpc_t;
+typedef const    objmp_t   cobjmp_t;
+typedef const    funmp_t   cfunmp_t;
+typedef DUPCONST objcp_t   cobjcp_t;
+typedef DUPCONST funcp_t   cfuncp_t;
+typedef const    objmpm_t  cobjmpm_t;
+typedef const    funmpm_t  cfunmpm_t;
+typedef const    objmpc_t  cobjmpc_t;
+typedef const    funmpc_t  cfunmpc_t;
+typedef DUPCONST objcpm_t  cobjcpm_t;
+typedef DUPCONST funcpm_t  cfuncpm_t;
+typedef DUPCONST objcpc_t  cobjcpc_t;
+typedef DUPCONST funcpc_t  cfuncpc_t;
+
+typedef          char_t    mchar_t;
+typedef          schar_t   mschar_t;
+typedef          uchar_t   muchar_t;
+typedef          short_t   mshort_t;
+typedef          ushort_t  mushort_t;
+typedef          int_t     mint_t;
+typedef          uint_t    muint_t;
+typedef          long_t    mlong_t;
+typedef          ulong_t   mulong_t;
+typedef          float_t   mfloat_t;
+typedef          double_t  mdouble_t;
+typedef          ldouble_t mldouble_t;
+typedef const    char_t    cchar_t;
+typedef const    schar_t   cschar_t;
+typedef const    uchar_t   cuchar_t;
+typedef const    short_t   cshort_t;
+typedef const    ushort_t  cushort_t;
+typedef const    int_t     cint_t;
+typedef const    uint_t    cuint_t;
+typedef const    long_t    clong_t;
+typedef const    ulong_t   culong_t;
+typedef const    float_t   cfloat_t;
+typedef const    double_t  cdouble_t;
+typedef const    ldouble_t cldouble_t;
+
+typedef          array_t   marray_t;
+typedef const    array_t   carray_t;
+
+typedef          primvoid_t    mprimvoid_t;
+typedef          primobjp_t    mprimobjp_t;
+typedef          primfunp_t    mprimfunp_t;
+typedef          primobjpm_t   mprimobjpm_t;
+typedef          primfunpm_t   mprimfunpm_t;
+typedef          primobjpc_t   mprimobjpc_t;
+typedef          primfunpc_t   mprimfunpc_t;
+typedef          primobjmp_t   mprimobjmp_t;
+typedef          primfunmp_t   mprimfunmp_t;
+typedef          primobjcp_t   mprimobjcp_t;
+typedef          primfuncp_t   mprimfuncp_t;
+typedef          primobjmpm_t  mprimobjmpm_t;
+typedef          primfunmpm_t  mprimfunmpm_t;
+typedef          primobjmpc_t  mprimobjmpc_t;
+typedef          primfunmpc_t  mprimfunmpc_t;
+typedef          primobjcpm_t  mprimobjcpm_t;
+typedef          primfuncpm_t  mprimfuncpm_t;
+typedef          primobjcpc_t  mprimobjcpc_t;
+typedef          primfuncpc_t  mprimfuncpc_t;
+typedef          primchar_t    mprimchar_t;
+typedef          primschar_t   mprimschar_t;
+typedef          primuchar_t   mprimuchar_t;
+typedef          primshort_t   mprimshort_t;
+typedef          primushort_t  mprimushort_t;
+typedef          primint_t     mprimint_t;
+typedef          primuint_t    mprimuint_t;
+typedef          primlong_t    mprimlong_t;
+typedef          primulong_t   mprimulong_t;
+typedef          primfloat_t   mprimfloat_t;
+typedef          primdouble_t  mprimdouble_t;
+typedef          primldouble_t mprimldouble_t;
+typedef          primarray_t   mprimarray_t;
+typedef const    primvoid_t    cprimvoid_t;
+typedef const    primobjp_t    cprimobjp_t;
+typedef const    primfunp_t    cprimfunp_t;
+typedef const    primobjpm_t   cprimobjpm_t;
+typedef const    primfunpm_t   cprimfunpm_t;
+typedef const    primobjpc_t   cprimobjpc_t;
+typedef const    primfunpc_t   cprimfunpc_t;
+typedef const    primobjmp_t   cprimobjmp_t;
+typedef const    primfunmp_t   cprimfunmp_t;
+typedef DUPCONST primobjcp_t   cprimobjcp_t;
+typedef DUPCONST primfuncp_t   cprimfuncp_t;
+typedef const    primobjmpm_t  cprimobjmpm_t;
+typedef const    primfunmpm_t  cprimfunmpm_t;
+typedef const    primobjmpc_t  cprimobjmpc_t;
+typedef const    primfunmpc_t  cprimfunmpc_t;
+typedef DUPCONST primobjcpm_t  cprimobjcpm_t;
+typedef DUPCONST primfuncpm_t  cprimfuncpm_t;
+typedef DUPCONST primobjcpc_t  cprimobjcpc_t;
+typedef DUPCONST primfuncpc_t  cprimfuncpc_t;
+typedef const    primchar_t    cprimchar_t;
+typedef const    primschar_t   cprimschar_t;
+typedef const    primuchar_t   cprimuchar_t;
+typedef const    primshort_t   cprimshort_t;
+typedef const    primushort_t  cprimushort_t;
+typedef const    primint_t     cprimint_t;
+typedef const    primuint_t    cprimuint_t;
+typedef const    primlong_t    cprimlong_t;
+typedef const    primulong_t   cprimulong_t;
+typedef const    primfloat_t   cprimfloat_t;
+typedef const    primdouble_t  cprimdouble_t;
+typedef const    primldouble_t cprimldouble_t;
+typedef const    primarray_t   cprimarray_t;
 
 /* ---------------------------------------------------------------- */
 /* Utility functions.                                               */
