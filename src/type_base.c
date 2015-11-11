@@ -4900,5 +4900,20 @@ const void *field_cref(ptrdiff_t   pos,  const void *base)
   return (const void *) (((const unsigned char *) base) + pos);
 }
 
-funp_cast_t objp_to_funp(objp_cast_t ptr);
-objp_cast_t funp_to_objp(funp_cast_t ptr);
+funp_cast_t objp_to_funp(objp_cast_t ptr)
+{
+  struct { funp_cast_t fun; } fun;
+
+  *((objp_cast_t *) (&fun)) = ptr;
+
+  return fun.fun;
+}
+
+objp_cast_t funp_to_objp(funp_cast_t ptr)
+{
+  struct { funp_cast_t fun; } fun;
+
+  fun.fun = ptr;
+
+  return *((objp_cast_t *) (&fun));
+}
