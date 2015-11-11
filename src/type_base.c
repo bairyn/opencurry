@@ -4977,8 +4977,136 @@ const type_t *array_type(void);
 extern const type_t array_type_def;
 
 /* <math.h> */
-const type_t *div_type(void);
-const type_t *ldiv_type(void);
+
+/* div type. */
+
+static const div_t div_default = { 0, 0 };
+
+const type_t *div_type(void)
+  { return &div_type_def; }
+
+static const char          *div_type_name       (const type_t *self);
+static size_t               div_type_size       (const type_t *self, const tval *val);
+static const struct_info_t *div_type_is_struct  (const type_t *self);
+static const tval          *div_type_has_default(const type_t *self);
+
+const type_t div_type_def =
+  { type_type
+
+    /* @: Required.           */
+
+    /* memory_tracker_defaults */
+  , /* memory                 */ MEMORY_TRACKER_DEFAULTS
+
+  , /* typed                  */ type_is_untyped
+
+  , /* @name                  */ div_type_name
+  , /* info                   */ NULL
+  , /* @size                  */ div_type_size
+  , /* @is_struct             */ div_type_is_struct
+
+  , /* cons_type              */ NULL
+  , /* init                   */ NULL
+  , /* free                   */ NULL
+  , /* has_default            */ div_type_has_default
+  , /* mem                    */ NULL
+  , /* mem_init               */ NULL
+  , /* mem_is_dyn             */ NULL
+  , /* mem_free               */ NULL
+  , /* default_memory_manager */ NULL
+
+  , /* dup                    */ NULL
+
+  , /* parity                 */ ""
+  };
+
+static const char          *div_type_name       (const type_t *self)
+  { return "div_t"; }
+
+static size_t               div_type_size       (const type_t *self, const tval *val)
+  { return sizeof(div_t); }
+
+DEF_FIELD_DEFAULT_VALUE_FROM_TYPE(div)
+static const struct_info_t *div_type_is_struct  (const type_t *self)
+  {
+    STRUCT_INFO_BEGIN(div);
+
+    /* int quot */
+    STRUCT_INFO_RADD(int_type(), quot);
+
+    /* int rem */
+    STRUCT_INFO_RADD(int_type(), rem);
+
+    STRUCT_INFO_DONE();
+  }
+
+static const tval          *div_type_has_default(const type_t *self)
+  { return &div_default; }
+
+/* ldiv type. */
+
+static const ldiv_t ldiv_default = { 0L, 0L };
+
+const type_t *ldiv_type(void)
+  { return &ldiv_type_def; }
+
+static const char          *ldiv_type_name       (const type_t *self);
+static size_t               ldiv_type_size       (const type_t *self, const tval *val);
+static const struct_info_t *ldiv_type_is_struct  (const type_t *self);
+static const tval          *ldiv_type_has_default(const type_t *self);
+
+const type_t ldiv_type_def =
+  { type_type
+
+    /* @: Required.           */
+
+    /* memory_tracker_defaults */
+  , /* memory                 */ MEMORY_TRACKER_DEFAULTS
+
+  , /* typed                  */ type_is_untyped
+
+  , /* @name                  */ ldiv_type_name
+  , /* info                   */ NULL
+  , /* @size                  */ ldiv_type_size
+  , /* @is_struct             */ ldiv_type_is_struct
+
+  , /* cons_type              */ NULL
+  , /* init                   */ NULL
+  , /* free                   */ NULL
+  , /* has_default            */ ldiv_type_has_default
+  , /* mem                    */ NULL
+  , /* mem_init               */ NULL
+  , /* mem_is_dyn             */ NULL
+  , /* mem_free               */ NULL
+  , /* default_memory_manager */ NULL
+
+  , /* dup                    */ NULL
+
+  , /* parity                 */ ""
+  };
+
+static const char          *ldiv_type_name       (const type_t *self)
+  { return "ldiv_t"; }
+
+static size_t               ldiv_type_size       (const type_t *self, const tval *val)
+  { return sizeof(ldiv_t); }
+
+DEF_FIELD_DEFAULT_VALUE_FROM_TYPE(ldiv)
+static const struct_info_t *ldiv_type_is_struct  (const type_t *self)
+  {
+    STRUCT_INFO_BEGIN(ldiv);
+
+    /* long quot */
+    STRUCT_INFO_RADD(long_type(), quot);
+
+    /* long rem */
+    STRUCT_INFO_RADD(long_type(), rem);
+
+    STRUCT_INFO_DONE();
+  }
+
+static const tval          *ldiv_type_has_default(const type_t *self)
+  { return &ldiv_default; }
 
 /* ---------------------------------------------------------------- */
 /* Utility functions.                                               */
