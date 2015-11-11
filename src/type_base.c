@@ -1059,6 +1059,13 @@ verify_field_info_status_t verify_field_info(const field_info_t *field_info, cha
   field_type_size = type_size(field_info->field_type, NULL);
   if (field_info->field_size != field_type_size)
   {
+#ifndef TODO
+    /* TODO: support array types associated with sizes!  Skipping arrays until
+     * this is done. */
+    if (field_info->field_type == array_type())
+      return verify_field_info_success;
+#endif
+
     if (out_err)
       snprintf
         ( (char *) out_err, (size_t) terminator_size(err_size)
@@ -1165,239 +1172,81 @@ const char *field_dup(const field_info_t *field_info, void *dest, const void *sr
   }
 }
 
-#ifdef TODO
 /* ---------------------------------------------------------------- */
 
 /* struct_info type. */
 
-static const type_t        *struct_info_type_typed      (const type_t *self);
+const type_t *struct_info_type(void)
+  { return &struct_info_type_def; }
+
 static const char          *struct_info_type_name       (const type_t *self);
-static const char          *struct_info_type_info       (const type_t *self);
 static size_t               struct_info_type_size       (const type_t *self, const tval *val);
 static const struct_info_t *struct_info_type_is_struct  (const type_t *self);
-static typed_t              struct_info_type_cons_type  (const type_t *self);
-static tval                *struct_info_type_init       (const type_t *self, tval *cons);
-static void                 struct_info_type_free       (const type_t *self, tval *val);
 static const tval          *struct_info_type_has_default(const type_t *self);
-static memory_tracker_t    *struct_info_type_mem        (const type_t *self, tval *val_raw);
-static tval                *struct_info_type_dup        ( const type_t *self
-                                                        , tval *dest
-                                                        , const tval *src
-                                                        , int rec_copy
-                                                        , int dup_metadata
-                                                        , ref_traversal_t *ref_traversal
-                                                        );
-
-static size_t struct_info_type_is_struct_default_value        (const field_info_t *self, void *dest_field_mem);
-static size_t struct_info_type_is_struct_template_unused_value(const field_info_t *self, void *dest_field_mem);
 
 const type_t struct_info_type_def =
   { type_type
 
+    /* @: Required.           */
+
     /* memory_tracker_defaults */
-  , /* memory      */ { memory_tracker_type, { memory_manager_type } }
+  , /* memory                 */ MEMORY_TRACKER_DEFAULTS
 
-  , /* typed       */ struct_info_type_typed
+  , /* typed                  */ NULL
 
-  , /* name        */ struct_info_type_name
-  , /* info        */ struct_info_type_info
-  , /* size        */ struct_info_type_size
-  , /* is_struct   */ struct_info_type_is_struct
+  , /* @name                  */ struct_info_type_name
+  , /* info                   */ NULL
+  , /* @size                  */ struct_info_type_size
+  , /* @is_struct             */ struct_info_type_is_struct
 
-  , /* cons_type   */ struct_info_type_cons_type
-  , /* init        */ struct_info_type_init
-  , /* free        */ struct_info_type_free
-  , /* has_default */ struct_info_type_has_default
-  , /* mem         */ struct_info_type_mem
-  , /* dup         */ struct_info_type_dup
+  , /* cons_type              */ NULL
+  , /* init                   */ NULL
+  , /* free                   */ NULL
+  , /* has_default            */ struct_info_type_has_default
+  , /* mem                    */ NULL
+  , /* mem_init               */ NULL
+  , /* mem_is_dyn             */ NULL
+  , /* mem_free               */ NULL
+  , /* default_memory_manager */ NULL
+  , /* dup                    */ NULL
 
-  , /* parity      */ ""
+  , /* parity                 */ ""
   };
 
-const type_t *struct_info_type(void)
-  { return &struct_info_type_def; }
-
-static const type_t        *struct_info_type_typed      (const type_t *self)
-  { return type_is_typed(self); }
-
 static const char          *struct_info_type_name       (const type_t *self)
-  { return "struct_info"; }
-
-static const char          *struct_info_type_info       (const type_t *self)
-  { return "typedef struct struct_info_s struct_info_t"; }
+  { return "struct_info_t"; }
 
 static size_t               struct_info_type_size       (const type_t *self, const tval *val)
-  { return sizeof(memory_tracker_t); }
+  { return sizeof(struct_info_t); }
 
+DEF_FIELD_DEFAULT_VALUE_FROM_TYPE(struct_info)
 static const struct_info_t *struct_info_type_is_struct  (const type_t *self)
   {
-    /* Procedurally initialize the type's struct_info. */
-    static const struct_info_t *struct_info = NULL;
-    if (!struct_info)
-    {
-      static struct_info_t struct_info_def;
-      struct_info = &struct_info_def;
+    STRUCT_INFO_BEGIN(struct_info);
 
-      /* ---------------------------------------------------------------- */
+    /* typed_t type */
+    STRUCT_INFO_RADD(typed_type(), type);
 
-      {
-        const struct_info_t     empty;
+    /* field_info_t fields[STRUCT_INFO_NUM_FIELDS]; */
+    /* size_t       fields_len;                     */
+    STRUCT_INFO_RADD(array_type(), fields);
+    STRUCT_INFO_RADD(size_type(),  fields_len);
 
-        field_info_t           *field;
-        size_t                  fields_len;
+    /* struct_info_t *tail; */
+    STRUCT_INFO_RADD(objp_type(),  tail);
 
-        size_t (*default_value)        (const field_info_t *self, void *dest_mem);
-        size_t (*template_unused_value)(const field_info_t *self, void *dest_mem);
+    /* int       has_memory_tracker; */
+    /* size_t    memory_tracker_field; */
+    STRUCT_INFO_RADD(int_type(),   has_memory_tracker);
+    STRUCT_INFO_RADD(size_type(),  memory_tracker_field);
 
-        default_value         = struct_info_type_is_struct_default_value;
-        template_unused_value = struct_info_type_is_struct_template_unused_value;
-
-        /* struct_info->type */
-        struct_info_def.type = struct_info_type;
-
-        /* struct_info->fields */
-        fields_len = 0;
-        {
-          /* typed_t type */
-          field = &struct_info_def.fields[fields_len++];
-
-          field->type                  = field_info_type;
-
-          field->field_pos             = field_pos(&empty, &empty.type);
-          field->field_size            = sizeof            (empty.type);
-          field->field_type            = typed_type();
-
-          field->is_metadata           = 0;
-          field->is_copyable_ref       = 0;
-          field->default_value         = default_value;
-          field->template_unused_value = template_unused_value;
-
-          /* field_info_t fields[STRUCT_INFO_NUM_FIELDS]; */
-          field = &struct_info_def.fields[fields_len++];
-
-          field->type                  = field_info_type;
-
-          field->field_pos             = field_pos(&empty, &empty.fields);
-          field->field_size            = sizeof            (empty.fields);
-          field->field_type            = array_type();
-
-          field->is_metadata           = 0;
-          field->is_copyable_ref       = 0;
-          field->default_value         = default_value;
-          field->template_unused_value = template_unused_value;
-
-          /* size_t       fields_len; */
-          field = &struct_info_def.fields[fields_len++];
-
-          field->type                  = field_info_type;
-
-          field->field_pos             = field_pos(&empty, &empty.fields_len);
-          field->field_size            = sizeof            (empty.fields_len);
-          field->field_type            = size_type();
-
-          field->is_metadata           = 0;
-          field->is_copyable_ref       = 0;
-          field->default_value         = default_value;
-          field->template_unused_value = template_unused_value;
-
-          /* struct_info_t *tail; */
-          field = &struct_info_def.fields[fields_len++];
-
-          field->type                  = field_info_type;
-
-          field->field_pos             = field_pos(&empty, &empty.tail);
-          field->field_size            = sizeof            (empty.tail);
-          field->field_type            = objp_type();
-
-          field->is_metadata           = 0;
-          field->is_copyable_ref       = 0;
-          field->default_value         = default_value;
-          field->template_unused_value = template_unused_value;
-
-          /* int       has_memory_tracker; */
-          field = &struct_info_def.fields[fields_len++];
-
-          field->type                  = field_info_type;
-
-          field->field_pos             = field_pos(&empty, &empty.has_memory_tracker);
-          field->field_size            = sizeof            (empty.has_memory_tracker);
-          field->field_type            = int_type();
-
-          field->is_metadata           = 0;
-          field->is_copyable_ref       = 0;
-          field->default_value         = default_value;
-          field->template_unused_value = template_unused_value;
-
-          /* size_t    memory_tracker_field; */
-          field = &struct_info_def.fields[fields_len++];
-
-          field->type                  = field_info_type;
-
-          field->field_pos             = field_pos(&empty, &empty.memory_tracker_field);
-          field->field_size            = sizeof            (empty.memory_tracker_field);
-          field->field_type            = size_type();
-
-          field->is_metadata           = 0;
-          field->is_copyable_ref       = 0;
-          field->default_value         = default_value;
-          field->template_unused_value = template_unused_value;
-
-
-          /* terminating_field_info: end of fields. */
-          struct_info_def.fields[fields_len] = terminating_field_info;
-        }
-
-        /* struct_info->... */
-        struct_info_def.fields_len           = fields_len;
-        struct_info_def.tail                 = NULL;
-
-        /* No memory tracker field. */
-        struct_info_def.has_memory_tracker   = 0;
-        struct_info_def.memory_tracker_field = 0;
-      }
-    }
-
-    return struct_info;
-  }
-
-static typed_t              struct_info_type_cons_type  (const type_t *self)
-  { return template_cons_type; }
-
-static tval                *struct_info_type_init       (const type_t *self, tval *cons)
-  {
-    static struct_info_t *defaults = NULL;
-    if (!defaults)
-    {
-      static struct_info_t struct_info_defaults;
-
-      struct_info_defaults = default_struct_info;
-
-      defaults = &struct_info_defaults;
-    }
-
-    return template_cons_dup_struct(cons, defaults, self->is_struct(self));
-  }
-
-static void                 struct_info_type_free       (const type_t *self, tval *val)
-  {
-    template_cons_free_struct(val, self->is_struct(self));
+    STRUCT_INFO_DONE();
   }
 
 static const tval          *struct_info_type_has_default(const type_t *self)
-  { return &struct_info_defaults; }
+  { return type_has_default_value(self, &struct_info_defaults); }
 
-/*
- * TODO
- */
-static memory_tracker_t    *struct_info_type_mem        (const type_t *self, tval *val_raw)
-  { return NULL; /* TODO */ }
-
-static memory_tracker_t    *struct_info_type_dup        (const type_t *self, tval *dest, const tval *src, int rec_copy, int dup_metadata, ref_traversal_t *ref_traversal)
-  {
-    struct_dup(self->is_struct(self), dest, src, 1, rec_copy, dup_metadata, ref_traversal);
-
-    return dest;
-  }
+/* ---------------------------------------------------------------- */
 
 const struct_info_t struct_info_defaults =
   { struct_info_type
@@ -1438,6 +1287,7 @@ struct_info_t *struct_info_init
     return NULL;
 
   struct_info->type = struct_info_type;
+
   struct_info->fields_len = 0;
 
   struct_info->tail = NULL;
@@ -1485,7 +1335,7 @@ struct_info_t *struct_info_add_field
   if (!struct_info)
     return NULL;
 
-  field_info_def.type = field_type;
+  field_info_def.type = field_info_type;
 
   field_info_def.field_pos  = field_pos;
   field_info_def.field_size = field_size;
@@ -1513,15 +1363,15 @@ struct_info_t *struct_info_add_field
   field_info_def.default_value         = ARRAY_FINAL_ELEM(struct_info->fields).default_value;
   field_info_def.template_unused_value = ARRAY_FINAL_ELEM(struct_info->fields).template_unused_value;
 
-  return struct_info_add_field_info(&field_info_def);
+  return struct_info_add_field_info(struct_info, &field_info_def);
 }
 
 struct_info_t *struct_info_add_field_terminator(struct_info_t *struct_info)
 {
-  return struct_info_add_field_info(struct_info, &field_terminator);
+  return struct_info_add_field_info(struct_info, field_terminator);
 }
 
-field_info_t *struct_info_get_last_field(struct_info_t *struct_info)
+field_info_t *struct_info_get_last_field_elem_ref(struct_info_t *struct_info)
 {
   if (!struct_info)
     return NULL;
@@ -1529,9 +1379,10 @@ field_info_t *struct_info_get_last_field(struct_info_t *struct_info)
   if (struct_info->fields_len <= 0)
     return NULL;
 
-  return struct_info_index_field(struct_info, size_less_null(struct_info->fields_len));
+  return struct_info_index_field_mutable(struct_info, size_less_null(struct_info->fields_len));
 }
 
+#ifdef TODO
 /* ---------------------------------------------------------------- */
 
 void *struct_info_iterate_chunks
@@ -1637,6 +1488,47 @@ const field_info_t *struct_info_num_tails(const struct_info_t *struct_info)
 const field_info_t *struct_info_index_field(const struct_info_t *struct_info, size_t index)
 {
   const field_info_t *field_info;
+  ref_traversal_t    *struct_info_skips, skips;
+
+  field_info = NULL;
+  for
+    ( struct_info_skips = ref_traversal_init_with_one(&skips, struct_info)
+    ; struct_info
+    ; struct_info       = ref_traversal_add(struct_info_skips, struct_info->tail)
+    )
+  {
+    if (struct_info->fields_len >= STRUCT_INFO_NUM_FIELDS)
+    {
+      /* Error: struct_info's fields_len is too big for this chunk. */
+      field_info = NULL;
+      break;
+    }
+
+    /* Is "index" refer to a field in this chunk? */
+    if (!(index < struct_info->fields_len))
+    {
+      index = size_minus(index, struct_info->fields_len);
+    }
+    else
+    {
+      /* Found the field. */
+      field_info = &struct_info->fields[index];
+
+      break;
+    }
+  }
+
+  tval_free(struct_info_skips);
+
+  return num_defined_fields;
+}
+
+/* Get a "struct_info"'s field, returning NULL if "index" is out of bounds for
+ * this "struct_info".
+ */
+field_info_t *struct_info_index_field_mutable(struct_info_t *struct_info, size_t index)
+{
+  field_info_t *field_info;
   ref_traversal_t    *struct_info_skips, skips;
 
   field_info = NULL;

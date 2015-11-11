@@ -863,6 +863,17 @@ struct struct_info_s
   size_t    memory_tracker_field;
 };
 
+#define STRUCT_INFO_DEFAULTS  \
+  { struct_info_type          \
+                              \
+  , { FIELD_INFO_DEFAULTS }   \
+  , 0                         \
+                              \
+  , NULL                      \
+                              \
+  , 0                         \
+  , 0                         \
+  }
 extern const struct_info_t struct_info_defaults;
 
 /* For redundantly verifying "fields_len" is correct. */
@@ -892,7 +903,7 @@ struct_info_t *struct_info_add_field
 
 struct_info_t *struct_info_add_field_terminator(struct_info_t *struct_info);
 
-field_info_t *struct_info_get_last_field(struct_info_t *struct_info);
+field_info_t *struct_info_get_last_field_elem_ref(struct_info_t *struct_info);
 
 /* ---------------------------------------------------------------- */
 
@@ -912,9 +923,10 @@ void *struct_info_iterate_fields
 
 /* Returns NULL when "index" is greater than        */
 /* the number of fields the "struct_info" contains. */
-const size_t        struct_info_num_fields (const struct_info_t *struct_info);
-const size_t        struct_info_num_tails  (const struct_info_t *struct_info);
-const field_info_t *struct_info_index_field(const struct_info_t *struct_info, size_t index);
+const size_t        struct_info_num_fields         (const struct_info_t *struct_info);
+const size_t        struct_info_num_tails          (const struct_info_t *struct_info);
+const field_info_t *struct_info_index_field        (const struct_info_t *struct_info, size_t index);
+field_info_t       *struct_info_index_field_mutable(      struct_info_t *struct_info, size_t index);
 
 #define STRUCT_INFO_TYPED_FIELD      (0)
 #define STRUCT_INFO_TYPED_FIELD_TYPE (typed_type())
