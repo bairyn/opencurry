@@ -68,9 +68,59 @@
 /* tval                                                             */
 /* ---------------------------------------------------------------- */
 
-/* TODO:
-const type_t *typed_type(void);
-*/
+/* typed type. */
+
+const type_t *typed_type(void)
+  { return &typed_type_def; }
+
+static const char          *typed_type_name(const type_t *self);
+static size_t               typed_type_size(const type_t *self, const tval *val);
+static const tval          *typed_type_has_default(const type_t *self);
+
+const type_t typed_type_def =
+  { type_type
+
+    /* @: Required.           */
+
+    /* memory_tracker_defaults */
+  , /* memory                 */ MEMORY_TRACKER_DEFAULTS
+
+  , /* typed                  */ type_is_untyped
+
+  , /* @name                  */ typed_type_name
+  , /* info                   */ NULL
+  , /* @size                  */ typed_type_size
+  , /* @is_struct             */ type_is_not_struct
+
+  , /* cons_type              */ NULL
+  , /* init                   */ NULL
+  , /* free                   */ NULL
+  , /* has_default            */ typed_type_has_default
+  , /* mem                    */ NULL
+  , /* mem_init               */ NULL
+  , /* mem_is_dyn             */ NULL
+  , /* mem_free               */ NULL
+  , /* default_memory_manager */ NULL
+
+  , /* dup                    */ NULL
+
+  , /* parity                 */ ""
+  };
+
+static const char          *typed_type_name(const type_t *self)
+  { return "typed_t"; }
+
+static size_t               typed_type_size(const type_t *self, const tval *val)
+  { return sizeof(typed_t); }
+
+static const tval          *typed_type_has_default(const type_t *self)
+  { return &typed_default; }
+
+/* ---------------------------------------------------------------- */
+
+const typed_t typed_default = typed_type;
+
+/* ---------------------------------------------------------------- */
 
 /*
  * Obtain the type of a "tval *".
@@ -4849,3 +4899,6 @@ const void *field_cref(ptrdiff_t   pos,  const void *base)
 {
   return (const void *) (((const unsigned char *) base) + pos);
 }
+
+funp_cast_t objp_to_funp(objp_cast_t ptr);
+objp_cast_t funp_to_objp(funp_cast_t ptr);

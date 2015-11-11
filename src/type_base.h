@@ -65,10 +65,17 @@ typedef struct template_cons_s template_cons_t;
 /* tval                                                             */
 /* ---------------------------------------------------------------- */
 
+/* typed type. */
+
 /* TODO: update documentation to reflect change from "type_t *" to "typed" for
  * procedurally generated types! */
 const type_t *typed_type(void);
+extern const type_t typed_type_def;
 typedef const type_t *(*typed_t)(void);
+
+#define TYPED_DEFAULT  \
+  typed_type
+extern const typed_t typed_default;
 
 /*
  * tval:
@@ -2168,6 +2175,14 @@ const type_t *clock_type(void);
 ptrdiff_t   field_pos (const void *base, const void *field);
 void       *field_ref (ptrdiff_t   pos,  void       *base);
 const void *field_cref(ptrdiff_t   pos,  const void *base);
+
+/* ---------------------------------------------------------------- */
+
+typedef void   *objp_cast_t;
+typedef void *(*funp_cast_t)(void *, ...);
+
+funp_cast_t objp_to_funp(objp_cast_t ptr);
+objp_cast_t funp_to_objp(funp_cast_t ptr);
 
 /* ---------------------------------------------------------------- */
 
