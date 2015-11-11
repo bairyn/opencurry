@@ -1449,12 +1449,25 @@ struct type_s
   /* memory tracker.                                                  */
   memory_tracker_t    *(*mem)        (const type_t *self, tval *val_raw);
 
-  /* TODO: update field_info! */
-  /* TODO: also does_type_support_dyn_alloc_all_values? */
-  /* How the memory trackers associated with new values should be     */
-  /* initialized during the initialization of values.                 */
+  /* How to track dynamic memory allocations.                         */
   /*                                                                  */
-  /* This should return NULL when dynamicaly memory allocation        */
+  /* This is called by predefined initializers and initializer        */
+  /* helpers when a value is dynamically allocated.                   */
+  /*                                                                  */
+  /* (The default "mem_init" method                                   */
+  /* "type_supports_dynamic_allocation"                               */
+  /* is in most cases appropriate: where if the type has its own      */
+  /* "valueless" memory tracker, use it, else use "is_struct"'s       */
+  /* memory tracker field.)                                           */
+  /*                                                                  */
+  /* (The default "mem" method type_mem_struct_or_global_dyn"         */
+  /* method only assigns a valueless memory tracker when the type     */
+  /* lacks a struct_info with a designated memory tracker field;      */
+  /* in this case it is assigned "global_typed_dyn_memory_tracker".)  */
+  /*                                                                  */
+  /* ---------------------------------------------------------------- */
+  /*                                                                  */
+  /* This should return NULL when dynamical memory allocation         */
   /* is not supported, for all values in general when "val_raw" is    */
   /* NULL, and for particular values otherwise.                       */
   /*                                                                  */
@@ -1473,7 +1486,7 @@ struct type_s
   /*                                                                  */
   /* ---------------------------------------------------------------- */
   /*                                                                  */
-  /* This can be NULL                                                 */
+  /* This can be NULL.                                                */
   void                *(*mem_init)   ( const type_t *self
                                      , tval         *val_raw
                                      , int           is_dynamically_allocated
@@ -1774,6 +1787,7 @@ const tval   *type_has_default_value(const type_t *self, const tval *val);
 /* mem */
 memory_tracker_t *type_mem_struct_or_global_dyn(const type_t *self, tval *val_raw);
 memory_tracker_t *type_mem_valueless(const type_t *self, tval *val_raw, memory_tracker_t *valueless_memory_tracker);
+memory_tracker_t *type_val_has_individual_mem(const type_t *type, tval *val);
 
 /* mem_init */
 
@@ -1928,8 +1942,6 @@ tval                *type_dup        ( const type_t *type
  */
 
 void              tval_free(tval *val);
-
-memory_tracker_t *type_val_has_individual_mem(const type_t *type, tval *val);
 
 /* ---------------------------------------------------------------- */
 /* Template constructors, available for types to use.               */

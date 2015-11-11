@@ -1382,6 +1382,15 @@ struct_info_t *struct_info_add_field_info(struct_info_t *struct_info, const fiel
   if (struct_info->fields_len >= STRUCT_INFO_NUM_FIELDS)
     return NULL;
 
+  if
+    (  !struct_info->has_memory_tracker
+    && field_type == memory_tracker_type()
+    )
+  {
+    struct_info->has_memory_tracker   = 1;
+    struct_info->memory_tracker_field = struct_info->fields_len;
+  }
+
   struct_info->fields[struct_info->fields_len] = *field_info;
   if (!is_field_terminator(field_info))
     ++struct_info->fields_len;
@@ -2267,56 +2276,6 @@ void tval_free(tval *val)
   type_free(tval_type(val), val);
 }
 
-/*
- * Get a value's contained memory tracker if it exists.
- *
- * If the type associates a memory tracker to a value that is different from
- * its valueless type tracker, return it.  (If the memory tracker's container
- * field is non-NULL but it is different from the value, something went wrong,
- * so return NULL in the case of this error.
- */
-/* TODO TODO TODO TODO FIXME FIXME FIXME FIXME: if "container" is not equal to
- * the value, e.g. if "container" points to the memory tracker itself, then
- * what?
- * Oh, oh, add a new field to memory_tracker_t!
- *
- * AFFECTS: at *least* mem_free and is_dyn methods!!
- */
-memory_tracker_t *type_val_has_individual_mem(const type_t *type, tval *val)
-{
-  memory_tracker_t *valueless_memory_tracker;
-  memory_tracker_t *memory_tracker;
-
-  if (!type || !val)
-    return NULL;
-
-
-  memory_tracker = type_mem(type, val);
-
-  if (!memory_tracker)
-    return NULL;
-
-
-  valueless_memory_tracker = type_mem(type, NULL);
-
-  if (memory_tracker == valueless_memory_tracker)
-    return NULL;
-
-  if (  memory_tracker->dynamically_allocated_container
-     && memory_tracker->dynamically_allocated_container != val
-     )
-  {
-    /* Error: the value should have its own memory tracker, but its
-     * "dynamically_allocated_container" value is non-NULL and somehow ended up
-     * referencing something different from the value and from the memory
-     * tracker itself.
-     */
-    return NULL;
-  }
-
-  return memory_tracker;
-}
-
 /* ---------------------------------------------------------------- */
 /* type_t: Various methods and method helpers.                      */
 /* ---------------------------------------------------------------- */
@@ -2748,10 +2707,13 @@ const tval *type_has_default_value(const type_t *self, const tval *val)
 /*
  * type_mem_struct_or_global_dyn:
  *
+ * Default memory tracker lookup method.
+ *
  * Use the type's "struct_info" to obtain a value's "memory_tracker" field,
  * defaulting to the global memory tracker used valuelessly when absent.
  *
- * The type has no valueless memory tracker.
+ * The type has no valueless memory unless it lacks a "struct_info" with a
+ * designated "memory_tracker" field.
  *
  * This can be used with a default "mem_init" when dynamically allocated values
  * should be tracked inside the value itself.
@@ -2763,19 +2725,27 @@ const tval *type_has_default_value(const type_t *self, const tval *val)
  */
 memory_tracker_t *type_mem_struct_or_global_dyn(const type_t *self, tval *val_raw)
 {
-  const struct_info_t *struct_info = type_is_struct(self);
+  const struct_info_t *struct_info;
+  const field_info_t  *memory_tracker_field;
 
+  /* Does the type have a struct_info with a designated memory tracker field?
+   */
+
+  struct_info = type_is_struct(self);
   if (!struct_info)
   {
     /* The type uses the global-dynamic-typed-allocations memory tracker valuelessly. */
     return &global_typed_dyn_memory_tracker;
   }
 
-  if (!struct_info->has_memory_tracker)
+  memory_tracker_field = struct_info_has_memory_tracker(struct_info);
+  if (!memory_tracker_field)
   {
     /* The type uses the global-dynamic-typed-allocations memory tracker valuelessly. */
     return &global_typed_dyn_memory_tracker;
   }
+
+  /* Yes, so track memory inside values. */
 
   if (!val_raw)
   {
@@ -2790,7 +2760,7 @@ memory_tracker_t *type_mem_struct_or_global_dyn(const type_t *self, tval *val_ra
   return
     (memory_tracker_t *)
       field_info_ref
-        ( &struct_info->fields[struct_info->memory_tracker_field]
+        ( memory_tracker_field
         , val_raw
         );
 }
@@ -2815,6 +2785,8 @@ memory_tracker_t *type_mem_valueless(const type_t *self, tval *val_raw, memory_t
 
 /*
  * type_supports_dynamical_allocation:
+ *
+ * Default allocation tracking method.
  *
  * This is an alias for "type_mem_init_valueless_or_inside_value".
  *
@@ -3004,6 +2976,56 @@ void *type_mem_init_valueless_or_inside_value
 }
 
 /*
+ * Get a value's contained memory tracker if it exists.
+ *
+ * If the type associates a memory tracker to a value that is different from
+ * its valueless type tracker, return it.  (If the memory tracker's container
+ * field is non-NULL but it is different from the value, something went wrong,
+ * so return NULL in the case of this error.
+ */
+/* TODO TODO TODO TODO FIXME FIXME FIXME FIXME: if "container" is not equal to
+ * the value, e.g. if "container" points to the memory tracker itself, then
+ * what?
+ * Oh, oh, add a new field to memory_tracker_t!
+ *
+ * AFFECTS: at *least* mem_free and is_dyn methods!!
+ */
+memory_tracker_t *type_val_has_individual_mem(const type_t *type, tval *val)
+{
+  memory_tracker_t *valueless_memory_tracker;
+  memory_tracker_t *memory_tracker;
+
+  if (!type || !val)
+    return NULL;
+
+
+  memory_tracker = type_mem(type, val);
+
+  if (!memory_tracker)
+    return NULL;
+
+
+  valueless_memory_tracker = type_mem(type, NULL);
+
+  if (memory_tracker == valueless_memory_tracker)
+    return NULL;
+
+  if (  memory_tracker->dynamically_allocated_container
+     && memory_tracker->dynamically_allocated_container != val
+     )
+  {
+    /* Error: the value should have its own memory tracker, but its
+     * "dynamically_allocated_container" value is non-NULL and somehow ended up
+     * referencing something different from the value and from the memory
+     * tracker itself.
+     */
+    return NULL;
+  }
+
+  return memory_tracker;
+}
+
+/*
  * Standard memory initialization behaviour.
  *
  * This is used for "mem_init", which is used for 2 purposes:
@@ -3139,7 +3161,7 @@ void *mem_init_type_valueless_or_inside_value
             snprintf
               ( (char *) out_err_buf, (size_t) terminator_size(err_buf_size)
               , "Error: mem_init_type_valueless_or_inside_value: failed to track dynamic allocation!\n"
-                "  Failed to initialize a value's associated memory tracker without succesful tracking.\n"
+                "  Failed to initialize a value's associated memory tracker without successful tracking.\n"
                 "  memory_tracker_track_allocation returned NULL, indicating failure.\n"
                 "TODO Error message returned from \"memory_tracker_initialize_empty_with_container\": "
               );
@@ -3646,7 +3668,7 @@ int mem_free_valueless_or_inside_value_allocation
             ( (char *) out_err_buf, (size_t) terminator_size(err_buf_size)
             , "Error: mem_free_valueless_or_inside_value_allocation: the call to \"memory_tracker_free_allocation\" failed!\n"
               "  Failed to free a value's valueless-type-memory-tracker allocation\n"
-              "  of dynamically allocated memory without a succesful invocation\n"
+              "  of dynamically allocated memory without a successful invocation\n"
               "  of \"memory_tracker_free_allocation\".\n"
               "\n"
               "  memory_tracker_free_allocation returned error code: %d\n"
@@ -3717,7 +3739,7 @@ int mem_free_valueless_or_inside_value_allocation
             ( (char *) out_err_buf, (size_t) terminator_size(err_buf_size)
             , "Error: mem_free_valueless_or_inside_value_allocation: the call to \"memory_tracker_free_container\" failed!\n"
               "  Failed to free a no-valueless-memory-tracker-typed value's\n"
-              "  dynamically allocated memory without a succesful invocation\n"
+              "  dynamically allocated memory without a successful invocation\n"
               "  of \"memory_tracker_free_container\".\n"
               "\n"
               "  memory_tracker_free_container returned error code: %d\n"
@@ -4584,6 +4606,10 @@ tval *template_cons_dup_struct
   , int                        allow_alternate_memory_manager
   )
 {
+  /* ---------------------------------------------------------------- */
+  /* Setup.                                                           */
+  /* ---------------------------------------------------------------- */
+
   tval             *dest;
 
   int               is_allocate;
@@ -4593,6 +4619,7 @@ tval *template_cons_dup_struct
 
   const memory_manager_t *memory_manager;
 
+  /* Is "cons" provided? */
   if (!cons)
   {
     cons = default_template_cons;
@@ -4600,6 +4627,7 @@ tval *template_cons_dup_struct
       cons = &template_cons_defaults;
   }
 
+  /* Set "memory_manager" as specified. */
   if (allow_alternate_memory_manager)
   {
     memory_manager = cons->memory_manager;
@@ -4651,9 +4679,13 @@ tval *template_cons_dup_struct
     }
   }
 
-  is_allocate_only = cons->allocate_only_with_num >= 1;
+  /* ---------------------------------------------------------------- */
+  /* Dynamic allocation.                                              */
+  /* ---------------------------------------------------------------- */
 
-  is_allocate = !cons->dest || is_allocate_only;
+  /* Are we allocating memory for this value, or only initializing? */
+  is_allocate_only = cons->allocate_only_with_num >= 1;
+  is_allocate      = !cons->dest || is_allocate_only;
 
   /* Do we need to dynamically allocate memory for this value? */
   if (is_allocate)
@@ -4661,6 +4693,23 @@ tval *template_cons_dup_struct
     int    is_array;
     size_t number_to_allocate;
 
+    /* Would "cons->dest" be ignored? */
+    if (cons->dest)
+    {
+      /* Error: "cons->dest" was provided, but since we're dynamically allocating
+       * a new value, it would be ignored.
+       */
+      if (cons->out_init_error_msg)
+        snprintf
+          ( (char *) cons->out_init_error_msg, (size_t) terminator_size(cons->init_error_msg_size)
+          , "Error: template_cons_dup_struct: \"cons\" provides \"dest\" reference to a value to initialize while enabling allocation.\n"
+            "  Aborting cautiously, rather than ignoring \"dest\".\n"
+          );
+
+      return NULL;
+    }
+
+    /* preserve_metadata is incompatible with allocation. */
     if (cons->preserve_metadata)
     {
       if (cons->out_init_error_msg)
@@ -4674,7 +4723,9 @@ tval *template_cons_dup_struct
       return NULL;
     }
 
-    if (!mem_init && (!struct_info || !struct_info->has_memory_tracker))
+    /* We need either "mem_init" or a memory tracker field to track this
+     * allocation. */
+    if (!mem_init && (!struct_info || !struct_info_has_memory_tracker(struct_info)))
     {
       if (cons->out_init_error_msg)
         snprintf
@@ -4686,12 +4737,15 @@ tval *template_cons_dup_struct
       return NULL;
     }
 
+    /* How many values are we allocating? */
     number_to_allocate = cons->allocate_only_with_num;
     if (number_to_allocate <= 0)
       number_to_allocate = 1;
 
+    /* Are we allocating an array or a single value */
     is_array = number_to_allocate >= 2;
 
+    /* Dynamically allocate memory. */
     if (!is_array && number_to_allocate == 1)
     {
       dest = memory_manager_malloc(memory_manager, size);
@@ -4701,6 +4755,7 @@ tval *template_cons_dup_struct
       dest = memory_manager_calloc(memory_manager, number_to_allocate, size);
     }
 
+    /* Allocation error checking. */
     if (!dest)
     {
       if (cons->out_init_error_msg)
@@ -4715,13 +4770,46 @@ tval *template_cons_dup_struct
   }
   else
   {
+    /* Don't dynamically allocate memory. */
+
     dest = cons->dest;
+
+    if (!dest)
+    {
+      if (cons->out_init_error_msg)
+        snprintf
+          ( (char *) cons->out_init_error_msg, (size_t) terminator_size(cons->init_error_msg_size)
+          , "Error: template_cons_dup_struct: \"cons\" provides no \"dest\" reference to the value to initialize!\n"
+            "  Failed to initialize new value without dynamic allocation without a reference to memory to initialize.\n"
+          );
+
+      return NULL;
+    }
   }
+
+  /* ---------------------------------------------------------------- */
+  /* Dynamic allocation tracking.                                     */
+  /* ---------------------------------------------------------------- */
 
   /* Initialize memory tracker if available or necessary. */
   if (cons->preserve_metadata)
   {
     /* preserve_metadata is set: Skip memory tracker initialization. */
+
+    if (is_allocate)
+    {
+      if (is_allocate)
+        memory_manager_free(memory_manager, dest);
+
+      if (cons->out_init_error_msg)
+        snprintf
+          ( (char *) cons->out_init_error_msg, (size_t) terminator_size(cons->init_error_msg_size)
+          , "Error: template_cons_dup_struct: preserve_metadata is incompatible with memory tracking!\n"
+            "  Failed to initialize new value without tracking it in a way that would not interfere with metadata.\n"
+          );
+
+      return NULL;
+    }
   }
   else
   {
@@ -4729,6 +4817,9 @@ tval *template_cons_dup_struct
     {
       /* We need to initialize the memory tracker. */
 
+      /* Does the type provide its own method of dynamic memory allocation
+       * tracking?
+       */
       if (mem_init)
       {
         void *mem_init_result;
@@ -4744,7 +4835,7 @@ tval *template_cons_dup_struct
             snprintf
               ( (char *) cons->out_init_error_msg, (size_t) terminator_size(cons->init_error_msg_size)
               , "Error: template_cons_dup_struct: we dynamically allocated memory, and calling \"mem_init\" returned NULL, indicating failure!\n"
-                "  Failed to initialize new value without succesful memory tracking addition.\n"
+                "  Failed to initialize new value without successful memory tracking addition.\n"
               );
 
           return NULL;
@@ -4783,7 +4874,7 @@ tval *template_cons_dup_struct
             snprintf
               ( (char *) cons->out_init_error_msg, (size_t) terminator_size(cons->init_error_msg_size)
               , "Error: template_cons_dup_struct: we dynamically allocated memory, and calling \"mem_init\" returned NULL, indicating failure!\n"
-                "  Failed to initialize new value without succesful memory tracking addition.\n"
+                "  Failed to initialize new value without successful memory tracking addition.\n"
               );
 
           return NULL;
@@ -4795,6 +4886,10 @@ tval *template_cons_dup_struct
       }
     }
   }
+
+  /* ---------------------------------------------------------------- */
+  /* Struct initialization.                                           */
+  /* ---------------------------------------------------------------- */
 
   /* Should we skip initialization? */
   if (is_allocate_only)
