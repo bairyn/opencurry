@@ -2029,6 +2029,21 @@ struct template_cons_s
   size_t  init_error_msg_size;
 };
 
+#define TEMPLATE_CONS_DEFAULTS              \
+  { template_cons_type                      \
+                                            \
+  , /* dest                   */ NULL       \
+  , /* memory_manager         */ NULL       \
+  , /* initials               */ NULL       \
+  , /* force_no_defaults      */ 0          \
+  , /* initials_copy_rec      */ 0          \
+  , /* ref_traversal          */ NULL       \
+  , /* preserve_nocopy        */ 0          \
+  , /* user                   */ NULL       \
+  , /* allocate_only_with_num */ (size_t) 0 \
+  , /* out_init_error_msg     */ NULL       \
+  , /* init_error_msg_size    */ (size_t) 0 \
+  }
 extern const template_cons_t template_cons_defaults;
 
 extern const template_cons_t * const default_template_cons;

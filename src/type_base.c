@@ -4220,7 +4220,6 @@ static tval                *default_type_dup        ( const type_t *self
         );
   }
 
-#ifdef TODO
 /* ---------------------------------------------------------------- */
 
 /* TODO */
@@ -4391,30 +4390,106 @@ tval                *type_dup        ( const type_t *type
 /* Template constructors, available for types to use.               */
 /* ---------------------------------------------------------------- */
 
-const template_cons_t * const default_template_cons = &template_cons_defaults;
+/* template_cons type. */
 
-const template_cons_t template_cons_defaults =
-  { template_cons_type
+const type_t *template_cons_type(void)
+  { return &template_cons_type_def; }
 
-  , /* dest                   */ NULL
-  , /* memory_manager         */ NULL
-  , /* initials               */ NULL
-  , /* force_no_defaults      */ 0
-  , /* initials_copy_rec      */ 0
-  , /* ref_traversal          */ NULL
-  , /* preserve_nocopy        */ 0
-  , /* user                   */ NULL
-  , /* allocate_only_with_num */ (size_t) 0
-  , /* out_init_error_msg     */ NULL
-  , /* init_error_msg_size    */ (size_t) 0
+static const char          *template_cons_type_name       (const type_t *self);
+static size_t               template_cons_type_size       (const type_t *self, const tval *val);
+static const struct_info_t *template_cons_type_is_struct  (const type_t *self);
+static const tval          *template_cons_type_has_default(const type_t *self);
+
+const type_t template_cons_type_def =
+  { type_type
+
+    /* @: Required.           */
+
+    /* memory_tracker_defaults */
+  , /* memory                 */ MEMORY_TRACKER_DEFAULTS
+
+  , /* typed                  */ NULL
+
+  , /* @name                  */ template_cons_type_name
+  , /* info                   */ NULL
+  , /* @size                  */ template_cons_type_size
+  , /* @is_struct             */ template_cons_type_is_struct
+
+  , /* cons_type              */ NULL
+  , /* init                   */ NULL
+  , /* free                   */ NULL
+  , /* has_default            */ template_cons_type_has_default
+  , /* mem                    */ NULL
+  , /* mem_init               */ NULL
+  , /* mem_is_dyn             */ NULL
+  , /* mem_free               */ NULL
+  , /* default_memory_manager */ NULL
+
+  , /* dup                    */ NULL
+
+  , /* parity                 */ ""
   };
+
+static const char          *template_cons_type_name       (const type_t *self)
+  { return "template_cons_t"; }
+
+static size_t               template_cons_type_size       (const type_t *self, const tval *val)
+  { return sizeof(template_cons_t); }
+
+DEF_FIELD_DEFAULT_VALUE_FROM_TYPE(template_cons)
+static const struct_info_t *template_cons_type_is_struct  (const type_t *self)
+  {
+    STRUCT_INFO_BEGIN(template_cons);
+
+    /* typed_t type */
+    STRUCT_INFO_RADD(typed_type(), type);
+
+    /* tval *dest; */
+    STRUCT_INFO_RADD(objp_type(), dest);
+
+    /* const memory_manager_t *memory_manager; */
+    STRUCT_INFO_RADD(objp_type(), memory_manager);
+
+    /* const tval *initials; */
+    STRUCT_INFO_RADD(objp_type(), initials);
+
+    /* int force_no_defaults; */
+    STRUCT_INFO_RADD(int_type(), force_no_defaults);
+
+    /* int initials_copy_rec; */
+    STRUCT_INFO_RADD(int_type(), initials_copy_rec);
+
+    /* ref_traversal_t *ref_traversal; */
+    STRUCT_INFO_RADD(objp_type(), ref_traversal);
+
+    /* int preserve_metadata; */
+    STRUCT_INFO_RADD(int_type(), preserve_metadata);
+
+    /* void *user; */
+    STRUCT_INFO_RADD(objp_type(), user);
+
+    /* size_t allocate_only_with_num; */
+    STRUCT_INFO_RADD(size_type(), allocate_only_with_num);
+
+    /* char   *out_init_error_msg;  */
+    /* size_t  init_error_msg_size; */
+    STRUCT_INFO_RADD(objp_type(), out_init_error_msg);
+    STRUCT_INFO_RADD(size_type(), init_error_msg_size);
+
+    STRUCT_INFO_DONE();
+  }
+
+static const tval          *template_cons_type_has_default(const type_t *self)
+  { return type_has_default_value(self, &template_cons_defaults); }
 
 /* ---------------------------------------------------------------- */
 
-typed_t memory_manager_type_cons_type(const type_t *self)
-{
-  return template_cons_type;
-}
+const template_cons_t * const default_template_cons = &template_cons_defaults;
+
+const template_cons_t template_cons_defaults =
+  TEMPLATE_CONS_DEFAULTS;
+
+/* ---------------------------------------------------------------- */
 
 /*
  * template_cons_dup_struct:
@@ -4442,7 +4517,7 @@ tval *template_cons_dup_struct
 
   const char       *is_err;
 
-  memory_manager_t *memory_manager;
+  const memory_manager_t *memory_manager;
 
   if (!cons)
   {
@@ -4504,7 +4579,7 @@ tval *template_cons_dup_struct
 
   is_allocate_only = cons->allocate_only_with_num >= 1;
 
-  is_allocate = !cons_dest || is_allocate_only;
+  is_allocate = !cons->dest || is_allocate_only;
 
   /* Do we need to dynamically allocate memory for this value? */
   if (is_allocate)
@@ -4518,20 +4593,20 @@ tval *template_cons_dup_struct
         snprintf
           ( (char *) cons->out_init_error_msg, (size_t) terminator_size(cons->init_error_msg_size)
           , "Error: template_cons_dup_struct: preserve_metadata flag is set, but the constructor dynamically allocates a value.\n"
-            "  Since "preserve_metadata" skips memory tracker initialization, tracking this dynamic allocation can't be added to it.\n"
+            "  Since \"preserve_metadata\" skips memory tracker initialization, tracking this dynamic allocation can't be added to it.\n"
             "  Failed to initialize value.\n"
           );
 
       return NULL;
     }
 
-    if (!mem && (!struct_info || !struct_info->has_memory_tracker))
+    if (!mem_init && (!struct_info || !struct_info->has_memory_tracker))
     {
       if (cons->out_init_error_msg)
         snprintf
           ( (char *) cons->out_init_error_msg, (size_t) terminator_size(cons->init_error_msg_size)
           , "Error: template_cons_dup_struct: constructor dynamically allocates memory, but there is no associated memory tracker!.\n"
-            "  Failed to initialize new value, because \"mem\" is NULL and no \"struct_info\" with a memory tracker field reference was provided.\n"
+            "  Failed to initialize new value, because \"mem_init\" is NULL and no \"struct_info\" with a memory tracker field reference was provided.\n"
           );
 
       return NULL;
@@ -4564,6 +4639,10 @@ tval *template_cons_dup_struct
       return NULL;
     }
   }
+  else
+  {
+    dest = cons->dest;
+  }
 
   /* Initialize memory tracker if available or necessary. */
   if (cons->preserve_metadata)
@@ -4580,7 +4659,7 @@ tval *template_cons_dup_struct
       {
         void *mem_init_result;
 
-        mem_init_result = mem_init(dest, is_allocate);
+        mem_init_result = mem_init(mem_init_object, dest, is_allocate);
 
         if (!mem_init_result)
         {
@@ -4619,7 +4698,7 @@ tval *template_cons_dup_struct
       {
         void *mem_init_result;
 
-        mem_init_result = mem_init(dest, is_allocate);
+        mem_init_result = mem_init(mem_init_object, dest, is_allocate);
 
         if (!mem_init_result)
         {
@@ -4660,7 +4739,6 @@ tval *template_cons_dup_struct
         ( (char *) cons->out_init_error_msg, (size_t) terminator_size(cons->init_error_msg_size)
         , "Error: template_cons_dup_struct: \"struct_info\" is NULL!\n"
           "  Failed to initialize a value without a representation of the struct.\n"
-        , (int) (number_to_allocate * size)
         );
 
     return NULL;
@@ -4723,7 +4801,7 @@ void *template_cons_dup_struct_meminit_type
  * and <= -1 on failure.
  */
 int   template_cons_free_struct
-  ( tval *val,
+  ( tval *val
   , int                      (*mem_free)( const tval *self
                                         , tval       *val
                                         )
@@ -4771,4 +4849,3 @@ const void *field_cref(ptrdiff_t   pos,  const void *base)
 {
   return (const void *) (((const unsigned char *) base) + pos);
 }
-#endif /* #ifdef TODO */
