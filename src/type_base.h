@@ -1813,7 +1813,7 @@ int mem_is_dyn_valueless_or_inside_value
   );
 
 /* mem_free */
-int type_mem_free_valueless_or_inside_value
+int type_mem_free_valueless_or_inside_value_allocation
   ( const type_t *type
   , tval         *val
   );
@@ -1822,15 +1822,6 @@ int type_mem_free_valueless_or_inside_value
 int mem_free_valueless_or_inside_value_allocation
   ( const type_t *self
   , tval         *val
-
-  , char   *out_err_buf
-  , size_t  err_buf_size
-  );
-
-/* Procedure for standard "mem_free" freeing. */
-int mem_free_value_buffer_allocation
-  ( const type_t *type
-  , tval          *val
 
   , char   *out_err_buf
   , size_t  err_buf_size

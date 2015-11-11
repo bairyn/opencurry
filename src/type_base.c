@@ -3402,7 +3402,7 @@ int mem_is_dyn_valueless_or_inside_value
 /* mem_free */
 
 /*
- * type_mem_free_valueless_or_inside_value:
+ * type_mem_free_valueless_or_inside_value_allocation:
  *
  * The type uses standard dynamic allocation, only tracking the allocation
  * buffer for dynamically allocated values.
@@ -3419,7 +3419,7 @@ int mem_is_dyn_valueless_or_inside_value
  * in this case dynamic memory allocation is usually not supported for this
  * type (not recommended).
  */
-int type_mem_free_valueless_or_inside_value
+int type_mem_free_valueless_or_inside_value_allocation
   ( const type_t *type
   , tval         *val
   )
@@ -3855,61 +3855,6 @@ tval *type_has_struct_dup_never_malloc( const type_t *self
   return dest;
 }
 
-#ifdef TODO
-/* ---------------------------------------------------------------- */
-
-/* TODO */
-/*
- * Fundamental "type_t" accessors.
- */
-
-const type_t        *type_typed      (const type_t *type)
-{
-  if (!type)
-    return NULL;
-
-  if (!type->typed && !type_defaults.typed)
-    return NULL;
-
-  if (type->typed)
-    return type->typed(type);
-  else
-    return type_defaults.typed(type);
-}
-
-const char          *type_name       (const type_t *type)
-const char          *type_info       (const type_t *type)
-size_t               type_size       (const type_t *type, const tval *val)
-const struct_info_t *type_is_struct  (const type_t *type)
-typed_t              type_cons_type  (const type_t *type)
-tval                *type_init       (const type_t *type, tval *cons)
-void                 type_free       (const type_t *type, tval *val)
-const tval          *type_has_default(const type_t *type)
-memory_tracker_t    *type_mem        (const type_t *type, tval *val_raw)
-void                *type_mem_init   ( const type_t *type
-                                     , tval *val_raw
-                                     , int is_dynamically_allocated
-                                     )
-int                  type_mem_is_dyn ( const type_t *type
-                                     , tval         *val
-                                     )
-int                  type_mem_free   ( const type_t *type
-                                     , tval         *val
-                                     )
-const memory_manager_t
-                    *type_default_memory_manager
-                                     ( const type_t *type
-                                     , tval *val
-                                     )
-tval                *type_dup        ( const type_t *type
-                                     , tval *dest
-                                     , const tval *src
-                                     , int defaults_src_unused
-                                     , int rec_copy
-                                     , int dup_metadata
-                                     , ref_traversal_t *ref_traversal
-                                     )
-
 /* ---------------------------------------------------------------- */
 /* type_t: Defaults.                                                */
 /* ---------------------------------------------------------------- */
@@ -4219,11 +4164,11 @@ static const struct_info_t *default_type_is_struct  (const type_t *self)
 static typed_t              default_type_cons_type  (const type_t *self)
   { return type_has_template_cons_type(self); }
 
-static tval                *default_type_init       (const type_t *self, tval *cons);
+static tval                *default_type_init       (const type_t *self, tval *cons)
   { return type_has_template_cons_basic_initializer(self, cons); }
 
 static void                 default_type_free       (const type_t *self, tval *val)
-  { return type_has_template_cons_basic_freer(self, val); }
+  {        type_has_template_cons_basic_freer(self, val); }
 
 static const tval          *default_type_has_default(const type_t *self)
   { return type_has_no_default(self); }
@@ -4245,7 +4190,7 @@ static int                  default_type_mem_is_dyn ( const type_t *self
 static int                  default_type_mem_free   ( const type_t *self
                                                     , tval         *val
                                                     )
-  { return mem_free_valueless_or_inside_value_allocation(self, val); }
+  { return type_mem_free_valueless_or_inside_value_allocation(self, val); }
 
 static const memory_manager_t
                     *default_type_default_memory_manager
@@ -4275,6 +4220,7 @@ static tval                *default_type_dup        ( const type_t *self
         );
   }
 
+#ifdef TODO
 /* ---------------------------------------------------------------- */
 
 /* TODO */
