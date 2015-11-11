@@ -1611,7 +1611,7 @@ struct type_s
 /* ---------------------------------------------------------------- */
 
 /*
- * Common "type_t" methods and method helpers.
+ * Various "type_t" methods and method helpers.
  */
 
 /* "typed" */
