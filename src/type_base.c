@@ -1382,25 +1382,49 @@ field_info_t *struct_info_get_last_field_elem_ref(struct_info_t *struct_info)
   return struct_info_index_field_mutable(struct_info, size_less_null(struct_info->fields_len));
 }
 
-#ifdef TODO
 /* ---------------------------------------------------------------- */
 
 void *struct_info_iterate_chunks
   ( const struct_info_t *struct_info
-  , void *(*with_field)(void *context, void *last_accumulator, const struct_info_t *struct_info_chunk, int *break_iteration)
+  , void *(*with_chunk)(void *context, void *last_accumulation, const struct_info_t *struct_info_chunk, int *break_iteration)
   , void *context
-  , void *initial_accumulator
+  , void *initial_accumulation
   )
 {
-  TODO
+  void *accumulation;
+  ref_traversal_t *struct_info_skips, skips;
+
+  if (!struct_info)
+    return NULL;
+  if (!with_chunk)
+    return NULL;
+
+  accumulation = initial_accumulation;
+  for
+    ( struct_info_skips = ref_traversal_init_with_one(&skips, (void *) struct_info)
+    ; struct_info
+    ; struct_info       = ref_traversal_add(struct_info_skips, struct_info->tail)
+    )
+  {
+    int break_iteration = 0;
+
+    accumulation = with_chunk(context, accumulation, struct_info, &break_iteration);
+
+    if (break_iteration)
+      break;
+  }
+
+  tval_free(struct_info_skips);
+
+  return accumulation;
 }
 
 /*
  * For each field, call the "with_field" callback method with the given
- * context, the accumulator value returned by the last invocation to the
- * "with_field" callback method, or "initial_accumulator" on the first
- * invocation, and the current field, and then return the last accumulator
- * value returned by the last invocation, or "initial_accumulator" if the
+ * context, the accumulation value returned by the last invocation to the
+ * "with_field" callback method, or "initial_accumulation" on the first
+ * invocation, and the current field, and then return the last accumulation
+ * value returned by the last invocation, or "initial_accumulation" if the
  * struct_info is empty, i.e. there are no fields to iterate.
  *
  * Write a non-zero value to "break_iteration" to treat the current field as
@@ -1408,23 +1432,151 @@ void *struct_info_iterate_chunks
  */
 void *struct_info_iterate_fields
   ( const struct_info_t *struct_info
-  , void *(*with_field)(void *context, void *last_accumulator, const field_info_t *field_info, int *break_iteration)
+  , void *(*with_field)(void *context, void *last_accumulation, const field_info_t *field_info, int *break_iteration)
   , void *context
-  , void *initial_accumulator
+  , void *initial_accumulation
   )
 {
-  int break_iteration = 0;
+  void *accumulation;
+  ref_traversal_t *struct_info_skips, skips;
+
+  if (!struct_info)
+    return NULL;
+  if (!with_field)
+    return NULL;
+
+  accumulation = initial_accumulation;
+  for
+    ( struct_info_skips = ref_traversal_init_with_one(&skips, (void *) struct_info)
+    ; struct_info
+    ; struct_info       = ref_traversal_add(struct_info_skips, struct_info->tail)
+    )
+  {
+    int break_iteration = 0;
+
+    size_t i;
+
+    if (struct_info->fields_len > STRUCT_INFO_NUM_FIELDS)
+      return NULL;
+
+    for (i = 0; i < struct_info->fields_len; ++i)
+    {
+      accumulation = with_field(context, accumulation, &struct_info->fields[i], &break_iteration);
+
+      if (break_iteration)
+        break;
+    }
+
+    if (break_iteration)
+      break;
+  }
+
+  tval_free(struct_info_skips);
+
+  return accumulation;
+}
+
+void *struct_info_iterate_chunks_mutable
+  ( struct_info_t *struct_info
+  , void *(*with_chunk)(void *context, void *last_accumulation, struct_info_t *struct_info_chunk, int *break_iteration)
+  , void *context
+  , void *initial_accumulation
+  )
+{
+  void *accumulation;
+  ref_traversal_t *struct_info_skips, skips;
+
+  if (!struct_info)
+    return NULL;
+  if (!with_chunk)
+    return NULL;
+
+  accumulation = initial_accumulation;
+  for
+    ( struct_info_skips = ref_traversal_init_with_one(&skips, (void *) struct_info)
+    ; struct_info
+    ; struct_info       = ref_traversal_add(struct_info_skips, struct_info->tail)
+    )
+  {
+    int break_iteration = 0;
+
+    accumulation = with_chunk(context, accumulation, struct_info, &break_iteration);
+
+    if (break_iteration)
+      break;
+  }
+
+  tval_free(struct_info_skips);
+
+  return accumulation;
+}
+
+/*
+ * For each field, call the "with_field" callback method with the given
+ * context, the accumulation value returned by the last invocation to the
+ * "with_field" callback method, or "initial_accumulation" on the first
+ * invocation, and the current field, and then return the last accumulation
+ * value returned by the last invocation, or "initial_accumulation" if the
+ * struct_info is empty, i.e. there are no fields to iterate.
+ *
+ * Write a non-zero value to "break_iteration" to treat the current field as
+ * the last.
+ */
+void *struct_info_iterate_fields_mutable
+  ( struct_info_t *struct_info
+  , void *(*with_field)(void *context, void *last_accumulation, field_info_t *field_info, int *break_iteration)
+  , void *context
+  , void *initial_accumulation
+  )
+{
+  void *accumulation;
+  ref_traversal_t *struct_info_skips, skips;
+
+  if (!struct_info)
+    return NULL;
+  if (!with_field)
+    return NULL;
+
+  accumulation = initial_accumulation;
+  for
+    ( struct_info_skips = ref_traversal_init_with_one(&skips, (void *) struct_info)
+    ; struct_info
+    ; struct_info       = ref_traversal_add(struct_info_skips, struct_info->tail)
+    )
+  {
+    int break_iteration = 0;
+
+    size_t i;
+
+    if (struct_info->fields_len > STRUCT_INFO_NUM_FIELDS)
+      return NULL;
+
+    for (i = 0; i < struct_info->fields_len; ++i)
+    {
+      accumulation = with_field(context, accumulation, &struct_info->fields[i], &break_iteration);
+
+      if (break_iteration)
+        break;
+    }
+
+    if (break_iteration)
+      break;
+  }
+
+  tval_free(struct_info_skips);
+
+  return accumulation;
 }
 
 /* Get a "struct_info"'s total number of fields, traversing its tails. */
-const size_t        struct_info_num_fields(const struct_info_t *struct_info)
+size_t struct_info_num_fields(const struct_info_t *struct_info)
 {
   size_t           num_defined_fields;
   ref_traversal_t *struct_info_skips, skips;
 
   num_defined_fields = 0;
   for
-    ( struct_info_skips = ref_traversal_init_with_one(&skips, struct_info)
+    ( struct_info_skips = ref_traversal_init_with_one(&skips, (void *) struct_info)
     ; struct_info
     ; struct_info       = ref_traversal_add(struct_info_skips, struct_info->tail)
     )
@@ -1432,6 +1584,7 @@ const size_t        struct_info_num_fields(const struct_info_t *struct_info)
     if (struct_info->fields_len >= STRUCT_INFO_NUM_FIELDS)
     {
       /* Error: struct_info's fields_len is too big for this chunk. */
+      tval_free(struct_info_skips);
       return 0;
     }
 
@@ -1444,42 +1597,27 @@ const size_t        struct_info_num_fields(const struct_info_t *struct_info)
 }
 
 /* Get a "struct_info"'s total number tails. */
-const field_info_t *struct_info_num_tails(const struct_info_t *struct_info)
+size_t struct_info_num_tails(const struct_info_t *struct_info)
 {
-  const field_info_t *field_info;
-  ref_traversal_t    *struct_info_skips, skips;
+  size_t num_chunks;
+  ref_traversal_t *struct_info_skips, skips;
 
-  field_info = NULL;
+  if (!struct_info)
+    return 0;
+
+  num_chunks = 0;
   for
-    ( struct_info_skips = ref_traversal_init_with_one(&skips, struct_info)
+    ( struct_info_skips = ref_traversal_init_with_one(&skips, (void *) struct_info)
     ; struct_info
     ; struct_info       = ref_traversal_add(struct_info_skips, struct_info->tail)
     )
   {
-    if (struct_info->fields_len >= STRUCT_INFO_NUM_FIELDS)
-    {
-      /* Error: struct_info's fields_len is too big for this chunk. */
-      field_info = NULL;
-      break;
-    }
-
-    /* Is "index" refer to a field in this chunk? */
-    if (!(index < struct_info->fields_len))
-    {
-      index = size_minus(index, struct_info->fields_len);
-    }
-    else
-    {
-      /* Found the field. */
-      field_info = &struct_info->fields[index];
-
-      break;
-    }
+    ++num_chunks;
   }
 
   tval_free(struct_info_skips);
 
-  return num_defined_fields;
+  return (size_t) (size_less_null(num_chunks));
 }
 
 /* Get a "struct_info"'s field, returning NULL if "index" is out of bounds for
@@ -1492,7 +1630,7 @@ const field_info_t *struct_info_index_field(const struct_info_t *struct_info, si
 
   field_info = NULL;
   for
-    ( struct_info_skips = ref_traversal_init_with_one(&skips, struct_info)
+    ( struct_info_skips = ref_traversal_init_with_one(&skips, (void *) struct_info)
     ; struct_info
     ; struct_info       = ref_traversal_add(struct_info_skips, struct_info->tail)
     )
@@ -1520,7 +1658,7 @@ const field_info_t *struct_info_index_field(const struct_info_t *struct_info, si
 
   tval_free(struct_info_skips);
 
-  return num_defined_fields;
+  return field_info;
 }
 
 /* Get a "struct_info"'s field, returning NULL if "index" is out of bounds for
@@ -1561,17 +1699,17 @@ field_info_t *struct_info_index_field_mutable(struct_info_t *struct_info, size_t
 
   tval_free(struct_info_skips);
 
-  return num_defined_fields;
+  return field_info;
 }
 
 const field_info_t *struct_info_has_typed_field(const struct_info_t *struct_info)
 {
   const field_info_t *field_info;
 
-  if (!struct_info
+  if (!struct_info)
       return NULL;
 
-  field_info = struct_info_field_index(struct_info, STRUCT_INFO_TYPED_FIELD, NULL);
+  field_info = struct_info_index_field(struct_info, STRUCT_INFO_TYPED_FIELD);
 
   if (!field_info)
     return NULL;
@@ -1593,8 +1731,11 @@ const field_info_t *struct_info_has_memory_tracker(const struct_info_t *struct_i
   return struct_info_index_field(struct_info, struct_info->memory_tracker_field);
 }
 
-typed struct_value_has_typed_field(const struct_info_t *struct_info, const void *val)
+typed_t struct_value_has_typed_field(const struct_info_t *struct_info, const void *val)
 {
+  struct { typed_t fun; } fun;
+  const void **funp = (const void **) &fun;
+
   const field_info_t *field_info;
 
   if (!struct_info || !val)
@@ -1605,7 +1746,9 @@ typed struct_value_has_typed_field(const struct_info_t *struct_info, const void 
   if (!field_info)
     return NULL;
 
-  return field_info_cref(field_info, val);
+  *funp = field_info_cref(field_info, val);
+
+  return fun.fun;
 }
 
 memory_tracker_t *struct_value_has_memory_tracker(const struct_info_t *struct_info, void *val)
@@ -1623,7 +1766,7 @@ memory_tracker_t *struct_value_has_memory_tracker(const struct_info_t *struct_in
   return field_info_ref(field_info, val);
 }
 
-verify_struct_info_status_t verify_struct_info(const struct_info_t *struct_info, char *out_err, size_t err_size, ref_traversal_t *structs_checked)
+verify_struct_info_status_t verify_struct_info_chunk(const struct_info_t *struct_info, char *out_err, size_t err_size)
 {
   size_t i;
   size_t num_fields;
@@ -1738,7 +1881,7 @@ verify_struct_info_status_t verify_struct_info(const struct_info_t *struct_info,
       "\n"
       "----------------------------------------------------------------\n"
       ;
-    static const size_t         prefix_size = sizeof(prefix);
+    /* static const size_t         prefix_size = sizeof(prefix); */
     size_t                      prefix_len;
 
     verify_field_info_status_t field_status;
@@ -1852,17 +1995,34 @@ verify_struct_info_status_t verify_struct_info(const struct_info_t *struct_info,
     }
   }
 
-  /* If the "struct_info" has a tail, recursively verify it. */
-  /*                                                         */
-  /* This is particular important when "fields" is,          */
-  /* non-ideally, terminated and is it max capacity.         */
-  if (struct_info->tail)
-  {
-    return verify_struct_info(struct_info, out_err, err_size, NULL);
-  }
-
   /* The conditions we checked for passed. */
   return verify_struct_info_success;
+}
+
+verify_struct_info_status_t verify_struct_info(const struct_info_t *struct_info, char *out_err, size_t err_size)
+{
+  verify_struct_info_status_t status;
+  ref_traversal_t *struct_info_skips, skips;
+
+  if (!struct_info)
+    return verify_struct_info_null_struct_info;
+
+  status = verify_struct_info_success;
+  for
+    ( struct_info_skips = ref_traversal_init_with_one(&skips, (void *) struct_info)
+    ; struct_info
+    ; struct_info       = ref_traversal_add(struct_info_skips, struct_info->tail)
+    )
+  {
+    status = verify_struct_info_chunk(struct_info, out_err, err_size);
+
+    if (status != verify_struct_info_success)
+      break;
+  }
+
+  tval_free(struct_info_skips);
+
+  return status;
 }
 
 /* NULL on success. */
@@ -1871,14 +2031,14 @@ const char *struct_dup(const struct_info_t *struct_info, void *dest, const void 
   /* FIXME: don't use global state to write errors! */
   static char         err_buf[DEFAULT_ERR_BUF_SIZE];
   static const size_t err_buf_size = sizeof(err_buf);
-  static const size_t err_buf_num  = sizeof(err_buf) / sizeof(err_buf[0]);
+  /* static const size_t err_buf_num  = sizeof(err_buf) / sizeof(err_buf[0]); */
 
   size_t i;
 
   verify_struct_info_status_t verify_status;
 
   /* TODO: We're verifying this each time a struct is dup'd! */
-  verify_status = verify_struct_info(struct_info, err_buf, err_buf_size, NULL);
+  verify_status = verify_struct_info(struct_info, err_buf, err_buf_size);
   if (!verify_status)
   {
     return err_buf;
@@ -1887,7 +2047,7 @@ const char *struct_dup(const struct_info_t *struct_info, void *dest, const void 
   /* Copy each field. */
   for (i = 0; i < struct_info->fields_len; ++i)
   {
-    const char *field_status;
+    const char *field_error_status;
 
     field_error_status = field_dup(&struct_info->fields[i], dest, src, defaults_src_unused, rec_copy, dup_metadata, NULL);
 
@@ -1904,6 +2064,7 @@ const char *struct_dup(const struct_info_t *struct_info, void *dest, const void 
   /* Done. */
   return NULL;
 }
+#ifdef TODO
 
 /* ---------------------------------------------------------------- */
 /* type_t                                                           */

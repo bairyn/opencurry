@@ -382,32 +382,32 @@ struct ref_traversal_s
 
   /* TODO void TODO_on_loop; */
 
-  const void **history;
-  size_t       history_num;
-  size_t       history_size;
-  size_t       history_len;
+  void   **history;
+  size_t   history_num;
+  size_t   history_size;
+  size_t   history_len;
 };
 
 ref_traversal_t *ref_traversal_init_empty(ref_traversal_t *dest);
-ref_traversal_t *ref_traversal_init_with_one(ref_traversal_t *dest, const void *reference);
+ref_traversal_t *ref_traversal_init_with_one(ref_traversal_t *dest, void *reference);
 
 /* Add the reference to "ref_traversal".  If it already exists, return NULL;
  * else return the reference.
  */
-const void *ref_traversal_add   (      ref_traversal_t *ref_traversal, const void *reference);
+void *ref_traversal_add   (      ref_traversal_t *ref_traversal, void *reference);
 
 /* Remove the reference from "ref_traversal".  If it exists and is removed,
  * return NULL; else return the reference.
  */
-const void *ref_traversal_remove(      ref_traversal_t *ref_traversal, const void *reference);
+void *ref_traversal_remove(      ref_traversal_t *ref_traversal, void *reference);
 
 /* Remove the reference from "ref_traversal".  If it exists and is removed,
  * return the reference; else return NULL.
  */
-const void *ref_traversal_take  (      ref_traversal_t *ref_traversal, const void *reference);
+void *ref_traversal_take  (      ref_traversal_t *ref_traversal, void *reference);
 
 /* A NULL "ref_traversal" is treated as an empty "ref_traversal_t". */
-const void *ref_traversal_exists(const ref_traversal_t *ref_traversal, const void *reference);
+void *ref_traversal_exists(const ref_traversal_t *ref_traversal, void *reference);
 
 /* TODO */
 
@@ -909,22 +909,36 @@ field_info_t *struct_info_get_last_field_elem_ref(struct_info_t *struct_info);
 
 void *struct_info_iterate_chunks
   ( const struct_info_t *struct_info
-  , void *(*with_field)(void *context, void *last_accumulator, const struct_info_t *struct_info_chunk, int *break_iteration)
+  , void *(*with_chunk)(void *context, void *last_accumulation, const struct_info_t *struct_info_chunk, int *break_iteration)
   , void *context
-  , void *initial_accumulator
+  , void *initial_accumulation
   );
 
 void *struct_info_iterate_fields
   ( const struct_info_t *struct_info
-  , void *(*with_field)(void *context, void *last_accumulator, const field_info_t *field_info)
+  , void *(*with_field)(void *context, void *last_accumulation, const field_info_t *field_info, int *break_iteration)
   , void *context
-  , void *initial_accumulator
+  , void *initial_accumulation
+  );
+
+void *struct_info_iterate_chunks_mutable
+  ( struct_info_t *struct_info
+  , void *(*with_chunk)(void *context, void *last_accumulation, struct_info_t *struct_info_chunk, int *break_iteration)
+  , void *context
+  , void *initial_accumulation
+  );
+
+void *struct_info_iterate_fields_mutable
+  ( struct_info_t *struct_info
+  , void *(*with_field)(void *context, void *last_accumulation, field_info_t *field_info, int *break_iteration)
+  , void *context
+  , void *initial_accumulation
   );
 
 /* Returns NULL when "index" is greater than        */
 /* the number of fields the "struct_info" contains. */
-const size_t        struct_info_num_fields         (const struct_info_t *struct_info);
-const size_t        struct_info_num_tails          (const struct_info_t *struct_info);
+size_t              struct_info_num_fields         (const struct_info_t *struct_info);
+size_t              struct_info_num_tails          (const struct_info_t *struct_info);
 const field_info_t *struct_info_index_field        (const struct_info_t *struct_info, size_t index);
 field_info_t       *struct_info_index_field_mutable(      struct_info_t *struct_info, size_t index);
 
@@ -988,7 +1002,8 @@ typedef enum verify_struct_info_status_e verify_struct_info_status_t;
 /*
  * Returns 0 on success.
  */
-int verify_struct_info(const struct_info_t *struct_info, char *out_err, size_t err_size);
+verify_struct_info_status_t verify_struct_info_chunk(const struct_info_t *struct_info, char *out_err, size_t err_size);
+verify_struct_info_status_t verify_struct_info(const struct_info_t *struct_info, char *out_err, size_t err_size);
 
 /*
  * struct_dup:
