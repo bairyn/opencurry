@@ -47,6 +47,7 @@
 #include "base.h"
 
 #include "bits.h"
+#include "util.h"
 
 /* TODO: type_t: is_const! */
 /* TODO: type_t: has_const_type, and has_unconst_type */
@@ -2109,17 +2110,82 @@ int template_cons_free_struct_memfree_type
   );
 
 /* ---------------------------------------------------------------- */
+/* Casting between pointer types.                                   */
+/* ---------------------------------------------------------------- */
+
+typedef void   *objp_cast_t;
+typedef void *(*funp_cast_t)(void *, ...);
+
+funp_cast_t objp_to_funp(objp_cast_t ptr);
+objp_cast_t funp_to_objp(funp_cast_t ptr);
+
+/* ---------------------------------------------------------------- */
 /* Primitive C data types.                                          */
 /* ---------------------------------------------------------------- */
 
 /* http://en.cppreference.com/w/c/header */
 
+#define PRIM_TYPE(name, type, default)                                                           \
+  const type_t *CAT(name, _type)(void)                                                           \
+    { return &CAT(name, _type_def); }                                                            \
+                                                                                                 \
+  static const char          *CAT(name, _type_name)       (const type_t *self);                  \
+  static size_t               CAT(name, _type_size)       (const type_t *self, const tval *val); \
+  static const tval          *CAT(name, _type_has_default)(const type_t *self);                  \
+                                                                                                 \
+  const type_t CAT(name, _type_def) =                                                            \
+    { type_type                                                                                  \
+                                                                                                 \
+      /* @: Required.           */                                                               \
+                                                                                                 \
+      /* memory_tracker_defaults */                                                              \
+    , /* memory                 */ MEMORY_TRACKER_DEFAULTS                                       \
+                                                                                                 \
+    , /* typed                  */ type_is_untyped                                               \
+                                                                                                 \
+    , /* @name                  */ CAT(name, _type_name)                                         \
+    , /* info                   */ NULL                                                          \
+    , /* @size                  */ CAT(name, _type_size)                                         \
+    , /* @is_struct             */ type_is_not_struct                                            \
+                                                                                                 \
+    , /* cons_type              */ NULL                                                          \
+    , /* init                   */ NULL                                                          \
+    , /* free                   */ NULL                                                          \
+    , /* has_default            */ CAT(name, _type_has_default)                                  \
+    , /* mem                    */ NULL                                                          \
+    , /* mem_init               */ NULL                                                          \
+    , /* mem_is_dyn             */ NULL                                                          \
+    , /* mem_free               */ NULL                                                          \
+    , /* default_memory_manager */ NULL                                                          \
+                                                                                                 \
+    , /* dup                    */ NULL                                                          \
+                                                                                                 \
+    , /* parity                 */ ""                                                            \
+    };                                                                                           \
+                                                                                                 \
+  static const char          *CAT(name, _type_name)       (const type_t *self)                   \
+    { return STR(name); }                                                                        \
+                                                                                                 \
+  static size_t               CAT(name, _type_size)       (const type_t *self, const tval *val)  \
+    { return sizeof(type); }                                                                     \
+                                                                                                 \
+  static const tval          *CAT(name, _type_has_default)(const type_t *self)                   \
+    { return default; }
+
 /* General type. */
 const type_t *void_type(void);
+
+extern const type_t void_type_def;
 
 /* General pointers. */
 const type_t *funp_type(void);
 const type_t *objp_type(void);
+
+extern const type_t funp_type_def;
+extern const type_t objp_type_def;
+
+extern const funp_cast_t funp_default;
+extern const objp_cast_t objp_default;
 
 /* Scalar types. */
 const type_t *char_type(void);
@@ -2139,34 +2205,91 @@ const type_t *float_type(void);
 const type_t *double_type(void);
 const type_t *ldouble_type(void);
 
+
+extern const type_t char_type_def;
+extern const type_t schar_type_def;
+extern const type_t uchar_type_def;
+
+extern const type_t short_type_def;
+extern const type_t ushort_type_def;
+
+extern const type_t int_type_def;
+extern const type_t uint_type_def;
+
+extern const type_t long_type_def;
+extern const type_t ulong_type_def;
+
+extern const type_t float_type_def;
+extern const type_t double_type_def;
+extern const type_t ldouble_type_def;
+
+
+extern const char           char_default;
+extern const signed char    schar_default;
+extern const unsigned char  uchar_default;
+
+extern const short          short_default;
+extern const unsigned short ushort_default;
+
+extern const int            int_default;
+extern const unsigned int   uint_default;
+
+extern const long           long_default;
+extern const unsigned long  ulong_default;
+
+extern const float          float_default;
+extern const double         double_default;
+extern const long double    ldouble_default;
+
 /* Derived types. */
 const type_t *array_type(void);
+
+extern const type_t array_type_def;
 
 /* <math.h> */
 const type_t *div_type(void);
 const type_t *ldiv_type(void);
 
+extern const type_t div_type_def;
+extern const type_t ldiv_type_def;
+
 /* <setjmp.h> */
 const type_t *jmpbuf_type(void);
 
+extern const type_t jmpbuf_type_def;
+
 /* <stdarg.h> */
 const type_t *va_list_type(void);
+
+extern const type_t va_list_type_def;
 
 /* <stddef.h> */
 const type_t *size_type(void);
 const type_t *ptrdiff_type(void);
 
+extern const type_t size_type_def;
+extern const type_t ptrdiff_type_def;
+
 /* <stdlib.h> */
 const type_t *sig_atomic_type(void);
+
+extern const type_t sig_atomic_type_def;
 
 /* <stdio.h> */
 const type_t *file_type(void);
 const type_t *fpos_type(void);
 
+extern const type_t file_type_def;
+extern const type_t fpos_type_def;
+
 /* <time.h> */
 const type_t *tm_type(void);
 const type_t *time_type(void);
 const type_t *clock_type(void);
+
+extern const type_t tm_type_def;
+extern const type_t time_type_def;
+extern const type_t clock_type_def;
 
 /* ---------------------------------------------------------------- */
 /* Utility functions.                                               */
@@ -2175,14 +2298,6 @@ const type_t *clock_type(void);
 ptrdiff_t   field_pos (const void *base, const void *field);
 void       *field_ref (ptrdiff_t   pos,  void       *base);
 const void *field_cref(ptrdiff_t   pos,  const void *base);
-
-/* ---------------------------------------------------------------- */
-
-typedef void   *objp_cast_t;
-typedef void *(*funp_cast_t)(void *, ...);
-
-funp_cast_t objp_to_funp(objp_cast_t ptr);
-objp_cast_t funp_to_objp(funp_cast_t ptr);
 
 /* ---------------------------------------------------------------- */
 

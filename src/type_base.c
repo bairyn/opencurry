@@ -59,6 +59,15 @@
  */
 #include <string.h>
 
+/* Headers defining types we provide representations for. */
+#include <math.h>
+#include <setjmp.h>
+#include <stdarg.h>
+#include <stddef.h>
+#include <stdlib.h>
+#include <stdio.h>
+#include <time.h>
+
 #include "base.h"
 #include "type_base.h"
 
@@ -73,8 +82,8 @@
 const type_t *typed_type(void)
   { return &typed_type_def; }
 
-static const char          *typed_type_name(const type_t *self);
-static size_t               typed_type_size(const type_t *self, const tval *val);
+static const char          *typed_type_name       (const type_t *self);
+static size_t               typed_type_size       (const type_t *self, const tval *val);
 static const tval          *typed_type_has_default(const type_t *self);
 
 const type_t typed_type_def =
@@ -107,10 +116,10 @@ const type_t typed_type_def =
   , /* parity                 */ ""
   };
 
-static const char          *typed_type_name(const type_t *self)
+static const char          *typed_type_name       (const type_t *self)
   { return "typed_t"; }
 
-static size_t               typed_type_size(const type_t *self, const tval *val)
+static size_t               typed_type_size       (const type_t *self, const tval *val)
   { return sizeof(typed_t); }
 
 static const tval          *typed_type_has_default(const type_t *self)
@@ -2250,6 +2259,11 @@ static const tval          *type_type_has_default(const type_t *self)
 /*
  * Procedures on or for "type_t"'s.
  */
+
+void tval_free(tval *val)
+{
+  type_free(tval_type(val), val);
+}
 
 /*
  * Get a value's contained memory tracker if it exists.
@@ -4883,23 +4897,8 @@ int template_cons_free_struct_memfree_type
 }
 
 /* ---------------------------------------------------------------- */
-/* Utility functions.                                               */
+/* Casting between pointer types.                                   */
 /* ---------------------------------------------------------------- */
-
-ptrdiff_t   field_pos (const void *base, const void *field)
-{
-  return ((const unsigned char *) field) - ((const unsigned char *) base);
-}
-
-void       *field_ref (ptrdiff_t   pos,  void       *base)
-{
-  return (void *) (((unsigned char *) base) + pos);
-}
-
-const void *field_cref(ptrdiff_t   pos,  const void *base)
-{
-  return (const void *) (((const unsigned char *) base) + pos);
-}
 
 funp_cast_t objp_to_funp(objp_cast_t ptr)
 {
@@ -4917,4 +4916,85 @@ objp_cast_t funp_to_objp(funp_cast_t ptr)
   fun.fun = ptr;
 
   return *((objp_cast_t *) (&fun));
+}
+
+/* ---------------------------------------------------------------- */
+/* Primitive C data types.                                          */
+/* ---------------------------------------------------------------- */
+
+/* General type. */
+/* TODO */
+const type_t *void_type(void);
+
+extern const type_t void_type_def;
+
+/* General pointers. */
+PRIM_TYPE(funp, funp_cast_t, &funp_default)
+PRIM_TYPE(objp, objp_cast_t, &objp_default)
+
+const funp_cast_t funp_default = NULL;
+const objp_cast_t objp_default = NULL;
+
+/* Scalar types. */
+PRIM_TYPE(char,    char,           &char_default)
+PRIM_TYPE(schar,   signed char,    &schar_default)
+PRIM_TYPE(uchar,   unsigned char,  &uchar_default)
+
+PRIM_TYPE(short,   short,          &short_default)
+PRIM_TYPE(ushort,  unsigned short, &ushort_default)
+
+PRIM_TYPE(int,     int,            &int_default)
+PRIM_TYPE(uint,    unsigned int,   &uint_default)
+
+PRIM_TYPE(long,    long,           &long_default)
+PRIM_TYPE(ulong,   unsigned long,  &ulong_default)
+
+PRIM_TYPE(float,   float,          &float_default)
+PRIM_TYPE(double,  double,         &double_default)
+PRIM_TYPE(ldouble, long double,    &ldouble_default)
+
+const char           char_default    = '\x00';
+const signed char    schar_default   = '\x00';
+const unsigned char  uchar_default   = '\x00';
+
+const short          short_default   = 0;
+const unsigned short ushort_default  = 0;
+
+const int            int_default     = 0;
+const unsigned int   uint_default    = 0;
+
+const long           long_default    = 0L;
+const unsigned long  ulong_default   = 0L;
+
+const float          float_default   = 0.0f;
+const double         double_default  = 0.0;
+const long double    ldouble_default = 0.0L;
+
+/* Derived types. */
+/* TODO */
+const type_t *array_type(void);
+
+extern const type_t array_type_def;
+
+/* <math.h> */
+const type_t *div_type(void);
+const type_t *ldiv_type(void);
+
+/* ---------------------------------------------------------------- */
+/* Utility functions.                                               */
+/* ---------------------------------------------------------------- */
+
+ptrdiff_t   field_pos (const void *base, const void *field)
+{
+  return ((const unsigned char *) field) - ((const unsigned char *) base);
+}
+
+void       *field_ref (ptrdiff_t   pos,  void       *base)
+{
+  return (void *) (((unsigned char *) base) + pos);
+}
+
+const void *field_cref(ptrdiff_t   pos,  const void *base)
+{
+  return (const void *) (((const unsigned char *) base) + pos);
 }
