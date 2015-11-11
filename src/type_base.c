@@ -118,7 +118,8 @@ static const tval          *typed_type_has_default(const type_t *self)
 
 /* ---------------------------------------------------------------- */
 
-const typed_t typed_default = typed_type;
+const typed_t typed_default =
+  TYPED_DEFAULT;
 
 /* ---------------------------------------------------------------- */
 
