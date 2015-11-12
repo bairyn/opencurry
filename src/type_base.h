@@ -1148,6 +1148,9 @@ struct type_s
   /* One-way non-extensible subtyping.          */
   /* Should return either NULL or "is_subtype". */
   /* Should not call "is_supertype".            */
+  /*                                            */
+  /* A subtype value reference can be cast to a */
+  /* supertype value reference.                 */
   const type_t        *(*is_subtype) ( const type_t *self
                                      , const type_t *is_subtype
                                      );
@@ -1833,6 +1836,8 @@ size_t field_default_value_zero           (const field_info_t *self, void *dest_
 size_t field_template_unused_value_zero(const field_info_t *self, void *dest_field_mem);
 
 /* is_mutable */
+tval *type_mutable_from_struct(const type_t *self, const tval *val);
+
 tval *type_mutable_field(const type_t *self, const tval *val, const field_info_t *self_reference);
 
 tval *type_no_mutable   (const type_t *self, const tval *val);
@@ -2136,7 +2141,7 @@ const type_t *is_type_equivalent(const type_t *this, const type_t *that);
 const type_t *is_subtype_via(const type_t *sub, const type_t *mid, const type_t *super);
 const type_t *is_proper_subtype(const type_t *sub, const type_t *super);
 const type_t *is_supertype(const type_t *super, const type_t *sub);
-const type_t *is_supertype_via(const type_t *super, mid, const type_t *sub);
+const type_t *is_supertype_via(const type_t *super, const type_t *mid, const type_t *sub);
 const type_t *is_proper_supertype(const type_t *super, const type_t *sub);
 
 /* ---------------------------------------------------------------- */

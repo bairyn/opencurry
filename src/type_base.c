@@ -1165,17 +1165,11 @@ verify_field_info_status_t verify_field_info(const field_info_t *field_info, cha
     return verify_field_info_no_type;
   }
 
-  /* Ensure the type's size matches field_size. */
+  /* Ensure the type's size matches field_size if the field's type size is
+   * known. */
   field_type_size = type_size(field_info->field_type, NULL);
-  if (field_info->field_size != field_type_size)
+  if (field_type_size > 0 && field_info->field_size != field_type_size)
   {
-#ifndef TODO
-    /* TODO: support array types associated with sizes!  Skipping arrays until
-     * this is done. */
-    if (field_info->field_type == array_type())
-      return verify_field_info_success;
-#endif
-
     if (out_err)
       snprintf
         ( (char *) out_err, (size_t) terminator_size(err_size)
@@ -1193,10 +1187,6 @@ verify_field_info_status_t verify_field_info(const field_info_t *field_info, cha
 }
 
 
-  if (!ref_traversal_tagged_add(vals, STRUCT_DUP_VALS_TAG_SRC,  src))
-    return "Error: struct_dup_recurse: infinite loop in_recursible_ref field in src.\n";
-  if (!ref_traversal_tagged_add(vals, STRUCT_DUP_VALS_TAG_DEST, dest))
-    return "Error: struct_dup_recurse: infinite loop in_recursible_ref field in dest.\n";
 /* NULL on success. */
 /* TODO: memory_manager! */
 const char *field_dup(const field_info_t *field_info, void *dest, const void *src, int defaults_src_unused, int rec_copy, int dup_metadata, ref_traversal_t *vals)
@@ -1444,7 +1434,7 @@ struct_info_t *struct_info_add_field_info(struct_info_t *struct_info, const fiel
 
   if
     (  !struct_info->has_memory_tracker
-    && field_type == memory_tracker_type()
+    && is_subtype(field_info->field_type, memory_tracker_type())
     )
   {
     struct_info->has_memory_tracker   = 1;
@@ -1479,7 +1469,7 @@ struct_info_t *struct_info_add_field
   if
     (!
       (  !struct_info->has_memory_tracker
-      && field_type == memory_tracker_type()
+      && is_subtype(field_type, memory_tracker_type())
       )
     )
   {
@@ -2178,9 +2168,9 @@ static const char *struct_dup_recurse(const struct_info_t *struct_info, void *de
   if (dest == src)
     return NULL;
 
-  if (!ref_traversal_tagged_add(vals, STRUCT_DUP_VALS_TAG_SRC,  src))
+  if (!ref_traversal_tagged_add(vals, STRUCT_DUP_VALS_TAG_SRC,  (void *) src))
     return "Error: struct_dup_recurse: infinite loop in_recursible_ref field in src.\n";
-  if (!ref_traversal_tagged_add(vals, STRUCT_DUP_VALS_TAG_DEST, dest))
+  if (!ref_traversal_tagged_add(vals, STRUCT_DUP_VALS_TAG_DEST, (void *) dest))
     return "Error: struct_dup_recurse: infinite loop in_recursible_ref field in dest.\n";
 
   /* TODO: We're verifying this each time a struct is dup'd! */
@@ -2215,7 +2205,7 @@ const char *struct_dup(const struct_info_t *struct_info, void *dest, const void 
 {
   if (vals)
   {
-    return struct_dup_recurse(struct_info, dest, src, default_src_unused, rec_copy, dup_metadata, vals);
+    return struct_dup_recurse(struct_info, dest, src, defaults_src_unused, rec_copy, dup_metadata, vals);
   }
   else
   {
@@ -2225,7 +2215,7 @@ const char *struct_dup(const struct_info_t *struct_info, void *dest, const void 
 
     ref_traversal_init_empty(&vals_def);
     {
-      result = struct_dup_recurse(struct_info, dest, src, default_src_unused, rec_copy, dup_metadata, vals);
+      result = struct_dup_recurse(struct_info, dest, src, defaults_src_unused, rec_copy, dup_metadata, vals);
     } tval_free(&vals_def);
 
     return result;
@@ -2247,8 +2237,6 @@ static void *struct_cmp_with_field(void *context, void *last_accumulation, const
 {
   struct_cmp_context_t      *tcontext;
   struct_cmp_accumulation_t *taccumulation;
-
-  struct_info_t *struct_info;
 
   if (!context || !last_accumulation || !field_info)
   {
@@ -2280,7 +2268,7 @@ static void *struct_cmp_with_field(void *context, void *last_accumulation, const
   {
     int subdeep;
 
-    subdeep = deep;
+    subdeep = tcontext->deep;
     if (subdeep < 0)
       ++subdeep;
 
@@ -2311,12 +2299,16 @@ static void *struct_cmp_with_field(void *context, void *last_accumulation, const
 
 static int struct_cmp_recurse(const struct_info_t *struct_info, const void *check, const void *baseline, int deep, ref_traversal_t *vals)
 {
-  struct_cmp_context_t      context      =
-    { check, baseline, deep, vals };
+  struct_cmp_context_t      context;
   struct_cmp_accumulation_t accumulation =
     struct_cmp_initial;
 
   struct_cmp_accumulation_t *result;
+
+  context.check    = check;
+  context.baseline = baseline;
+  context.deep     = deep;
+  context.vals     = vals;
 
   /* Missing input. */
   if (!struct_info || !check || !baseline || !vals)
@@ -2326,9 +2318,9 @@ static int struct_cmp_recurse(const struct_info_t *struct_info, const void *chec
     return 0;
 
   /* Infinite recursion in "copyable_ref" field. */
-  if (!ref_traversal_tagged_add(vals, STRUCT_CMP_VALS_TAG_CHECK,    check))
+  if (!ref_traversal_tagged_add(vals, STRUCT_CMP_VALS_TAG_CHECK,    (void *) check))
     return -1;
-  if (!ref_traversal_tagged_add(vals, STRUCT_CMP_VALS_TAG_BASELINE, baseline))
+  if (!ref_traversal_tagged_add(vals, STRUCT_CMP_VALS_TAG_BASELINE, (void *) baseline))
     return -1;
 
   result = struct_info_iterate_fields(struct_info, struct_cmp_with_field, &context, &accumulation);
@@ -2760,10 +2752,10 @@ tval *type_mutable_field(const type_t *self, const tval *val, const field_info_t
   if (!self || !val || !self_reference)
     return NULL;
 
-  if (!type_is_subtype(objp_type, self_reference->field_type))
+  if (!is_subtype(objp_type(), self_reference->field_type))
     return NULL;
 
-  mutable = field_info_ref(self_reference, val);
+  mutable = (void *) field_info_cref(self_reference, val);
 
   if ((const tval *) mutable != val)
     return NULL;
@@ -4267,7 +4259,7 @@ const void *type_has_no_cuser_data(const type_t *self, const tval *val)
 /* Compare fields if struct, otherwise compare memory. */
 int type_has_standard_cmp(const type_t *self, const tval *check, const tval *baseline, int deep, ref_traversal_t *vals)
 {
-  struct_info *struct_info;
+  const struct_info_t *struct_info;
 
   if (!self || !check || !baseline)
     return -1;
@@ -4799,7 +4791,7 @@ tval                *type_dup        ( const type_t *type
                                      , int defaults_src_unused
                                      , int rec_copy
                                      , int dup_metadata
-                                     , ref_traversal_t *ref_traversal
+                                     , ref_traversal_t *vals
                                      )
 {
   if (!type || !type->dup)
@@ -4932,7 +4924,7 @@ const type_t *is_supertype(const type_t *super, const type_t *sub)
   return is_subtype(sub, super);
 }
 
-const type_t *is_supertype_via(const type_t *super, mid, const type_t *sub)
+const type_t *is_supertype_via(const type_t *super, const type_t *mid, const type_t *sub)
 {
   return is_subtype_via(sub, mid, super);
 }
@@ -4971,6 +4963,8 @@ const type_t template_cons_type_def =
   , /* @size                  */ template_cons_type_size
   , /* @is_struct             */ template_cons_type_is_struct
   , /* is_mutable             */ NULL
+  , /* is_subtype             */ NULL
+  , /* is_supertype           */ NULL
 
   , /* cons_type              */ NULL
   , /* init                   */ NULL
@@ -5533,14 +5527,116 @@ void      *ptrdiff_to_objp(ptrdiff_t ptr_rep)
 }
 
 /* ---------------------------------------------------------------- */
+/* Universal type.                                                  */
+/* ---------------------------------------------------------------- */
+
+/* Universal type. */
+const type_t *universal_type(void);
+
+extern const type_t universal_type_def;
+
+const type_t *universal_type(void)
+  { return &universal_type_def; }
+
+static const char   *universal_type_name      (const type_t *self);
+static const type_t *universal_type_is_subtype( const type_t *self
+                                              , const type_t *is_subtype
+                                              );
+
+const type_t universal_type_def =
+  { type_type
+
+    /* @: Required.           */
+
+  , /* memory                 */ MEMORY_TRACKER_DEFAULTS
+  , /* is_self_mutable        */ NULL
+
+  , /* typed                  */ type_is_untyped
+
+  , /* @name                  */ universal_type_name
+  , /* info                   */ NULL
+  , /* @size                  */ type_has_unknown_size
+  , /* @is_struct             */ type_is_not_struct
+  , /* is_mutable             */ NULL
+  , /* is_subtype             */ universal_type_is_subtype
+  , /* is_supertype           */ NULL
+
+  , /* cons_type              */ NULL
+  , /* init                   */ NULL
+  , /* free                   */ NULL
+  , /* has_default            */ NULL
+  , /* mem                    */ NULL
+  , /* mem_init               */ NULL
+  , /* mem_is_dyn             */ NULL
+  , /* mem_free               */ NULL
+  , /* default_memory_manager */ NULL
+
+  , /* dup                    */ NULL
+
+  , /* user                   */ NULL
+  , /* cuser                  */ NULL
+  , /* cmp                    */ NULL
+
+  , /* parity                 */ ""
+  };
+
+static const char   *universal_type_name      (const type_t *self)
+  { return "universal_t"; }
+
+static const type_t *universal_type_is_subtype( const type_t *self
+                                              , const type_t *is_subtype
+                                              )
+  { if (!self) return NULL; else return is_subtype; }
+
+/* ---------------------------------------------------------------- */
 /* Primitive C data types.                                          */
 /* ---------------------------------------------------------------- */
 
 /* General type. */
-/* TODO */
-const type_t *void_type(void);
+const type_t *void_type(void)
+  { return &void_type_def; }
 
-extern const type_t void_type_def;
+static const char *void_type_name(const type_t *self);
+
+const type_t void_type_def =
+  { type_type
+
+    /* @: Required.           */
+
+  , /* memory                 */ MEMORY_TRACKER_DEFAULTS
+  , /* is_self_mutable        */ NULL
+
+  , /* typed                  */ type_is_untyped
+
+  , /* @name                  */ void_type_name
+  , /* info                   */ NULL
+  , /* @size                  */ type_has_unknown_size
+  , /* @is_struct             */ type_is_not_struct
+  , /* is_mutable             */ NULL
+  , /* is_subtype             */ NULL
+  , /* is_supertype           */ NULL
+
+  , /* cons_type              */ NULL
+  , /* init                   */ NULL
+  , /* free                   */ NULL
+  , /* has_default            */ NULL
+  , /* mem                    */ NULL
+  , /* mem_init               */ NULL
+  , /* mem_is_dyn             */ NULL
+  , /* mem_free               */ NULL
+  , /* default_memory_manager */ NULL
+
+  , /* dup                    */ NULL
+
+  , /* user                   */ NULL
+  , /* cuser                  */ NULL
+  , /* cmp                    */ NULL
+
+  , /* parity                 */ ""
+  };
+
+static const char *void_type_name(const type_t *self)
+  { return "void_t"; }
 
 /* ---------------------------------------------------------------- */
 
@@ -5617,6 +5713,8 @@ const type_t array_type_def =
   , /* @size                  */ type_has_unknown_size
   , /* @is_struct             */ type_is_not_struct
   , /* is_mutable             */ NULL
+  , /* is_subtype             */ NULL
+  , /* is_supertype           */ NULL
 
   , /* cons_type              */ NULL
   , /* init                   */ NULL
@@ -5648,11 +5746,6 @@ const size_t  array_default_size = ARRAY_SIZE   (array_default);
 const size_t  array_default_num  = ARRAY_NUM    (array_default);
 const size_t  array_default_len  = ARRAY_LEN_ALL(array_default);
 
-/* arrays are variable-width. */
-const type_t *array_type(void);
-
-extern const type_t array_type_def;
-
 /* ---------------------------------------------------------------- */
 
 /* <math.h> */
@@ -5682,6 +5775,8 @@ const type_t div_type_def =
   , /* @size                  */ div_type_size
   , /* @is_struct             */ div_type_is_struct
   , /* is_mutable             */ NULL
+  , /* is_subtype             */ NULL
+  , /* is_supertype           */ NULL
 
   , /* cons_type              */ NULL
   , /* init                   */ NULL
@@ -5752,6 +5847,8 @@ const type_t ldiv_type_def =
   , /* @size                  */ ldiv_type_size
   , /* @is_struct             */ ldiv_type_is_struct
   , /* is_mutable             */ NULL
+  , /* is_subtype             */ NULL
+  , /* is_supertype           */ NULL
 
   , /* cons_type              */ NULL
   , /* init                   */ NULL
