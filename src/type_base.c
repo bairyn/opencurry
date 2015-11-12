@@ -223,58 +223,58 @@ const type_t *memory_manager_type(void)
  *
  * (But they can still be accessed through "memory_manager_type"'s fields.)
  */
-/* static const type_t        *memory_manager_type_typed      (const type_t *self);                   */
+/* static const type_t        *memory_manager_type_typed      (const type_t *self);                  */
 static const char          *memory_manager_type_name       (const type_t *self);
-/* static const char          *memory_manager_type_info       ( const type_t *self                    */
-/*                                                            , char         *out_info_buf            */
-/*                                                            , size_t        info_buf_size           */
-/*                                                            );                                      */
+/* static const char          *memory_manager_type_info       ( const type_t *self                   */
+/*                                                            , char         *out_info_buf           */
+/*                                                            , size_t        info_buf_size          */
+/*                                                            );                                     */
 static size_t               memory_manager_type_size       (const type_t *self, const tval *val);
 static const struct_info_t *memory_manager_type_is_struct  (const type_t *self);
-/* static tval                *memory_manager_type_is_mutable (const type_t *self, const tval *val);  */
-/* static const type_t        *memory_manager_type_is_subtype ( const type_t *self                    */
-/*                                                            , const type_t *is_subtype              */
-/*                                                            );                                      */
-/* static const type_t        *memory_manager_type_is_supertype                                       */
-/*                                                            ( const type_t *self                    */
-/*                                                            , const type_t *is_supertype            */
-/*                                                            );                                      */
-/* static typed_t              memory_manager_type_cons_type  (const type_t *self);                   */
-/* static tval                *memory_manager_type_init       (const type_t *self, tval *cons);       */
-/* static void                 memory_manager_type_free       (const type_t *self, tval *val);        */
+/* static tval                *memory_manager_type_is_mutable (const type_t *self, const tval *val); */
+/* static const type_t        *memory_manager_type_is_subtype ( const type_t *self                   */
+/*                                                            , const type_t *is_subtype             */
+/*                                                            );                                     */
+/* static const type_t        *memory_manager_type_is_supertype                                      */
+/*                                                            ( const type_t *self                   */
+/*                                                            , const type_t *is_supertype           */
+/*                                                            );                                     */
+/* static typed_t              memory_manager_type_cons_type  (const type_t *self);                  */
+/* static tval                *memory_manager_type_init       (const type_t *self, tval *cons);      */
+/* static void                 memory_manager_type_free       (const type_t *self, tval *val);       */
 static const tval          *memory_manager_type_has_default(const type_t *self);
-/* static memory_tracker_t    *memory_manager_type_mem        (const type_t *self, tval *val_raw);    */
-/* static void                *memory_manager_type_mem_init   ( const type_t *self                    */
-/*                                                            , tval *val_raw                         */
-/*                                                            , int is_dynamically_allocated          */
-/*                                                            );                                      */
-/* static int                  memory_manager_type_mem_is_dyn ( const type_t *self                    */
-/*                                                            , tval         *val                     */
-/*                                                            );                                      */
-/* static int                  memory_manager_type_mem_free   ( const type_t *self                    */
-/*                                                            , tval         *val                     */
-/*                                                            );                                      */
-/* static const memory_manager_t                                                                      */
-/*                     *memory_manager_type_default_memory_manager                                    */
-/*                                                            ( const type_t *self                    */
-/*                                                            , tval *val                             */
-/*                                                            );                                      */
-/* static tval                *memory_manager_type_dup        ( const type_t *self                    */
-/*                                                            , tval *dest                            */
-/*                                                            , const tval *src                       */
-/*                                                            , int defaults_src_unused               */
-/*                                                            , int rec_copy                          */
-/*                                                            , int dup_metadata                      */
-/*                                                            , ref_traversal_t *vals                 */
-/*                                                            );                                      */
-/* static void                  *memory_manager_type_user       (const type_t *self, tval *val);      */
-/* static const void            *memory_manager_type_cuser      (const type_t *self, const tval *val);*/
-/* static int                    memory_manager_type_cmp        ( const type_t *self                  */
-/*                                                             , const tval *check                    */
-/*                                                             , const tval *baseline                 */
-/*                                                             , int deep                             */
-/*                                                             , ref_traversal_t *vals                */
-/*                                                             );                                     */
+/* static memory_tracker_t    *memory_manager_type_mem        (const type_t *self, tval *val_raw);   */
+/* static void                *memory_manager_type_mem_init   ( const type_t *self                   */
+/*                                                            , tval *val_raw                        */
+/*                                                            , int is_dynamically_allocated         */
+/*                                                            );                                     */
+/* static int                  memory_manager_type_mem_is_dyn ( const type_t *self                   */
+/*                                                            , tval         *val                    */
+/*                                                            );                                     */
+/* static int                  memory_manager_type_mem_free   ( const type_t *self                   */
+/*                                                            , tval         *val                    */
+/*                                                            );                                     */
+/* static const memory_manager_t                                                                     */
+/*                     *memory_manager_type_default_memory_manager                                   */
+/*                                                            ( const type_t *self                   */
+/*                                                            , tval *val                            */
+/*                                                            );                                     */
+/* static tval                *memory_manager_type_dup        ( const type_t *self                   */
+/*                                                            , tval *dest                           */
+/*                                                            , const tval *src                      */
+/*                                                            , int defaults_src_unused              */
+/*                                                            , int rec_copy                         */
+/*                                                            , int dup_metadata                     */
+/*                                                            , ref_traversal_t *vals                */
+/*                                                            );                                     */
+/* static void                  *memory_manager_type_user     (const type_t *self, tval *val);       */
+/* static const void            *memory_manager_type_cuser    (const type_t *self, const tval *val); */
+/* static int                    memory_manager_type_cmp      ( const type_t *self                   */
+/*                                                            , const tval *check                    */
+/*                                                            , const tval *baseline                 */
+/*                                                            , int deep                             */
+/*                                                            , ref_traversal_t *vals                */
+/*                                                            );                                     */
 
 /*
  * "memory_manager_type"'s type_t definition.
@@ -765,6 +765,12 @@ static const tval          *memory_tracker_type_has_default(const type_t *self)
  *   - No allocated buffers to track dynamically allocated memory.
  */
 const memory_tracker_t memory_tracker_defaults =
+  MEMORY_TRACKER_DEFAULTS;
+
+memory_tracker_t global_memory_tracker =
+  MEMORY_TRACKER_DEFAULTS;
+
+memory_tracker_t global_typed_dyn_memory_tracker =
   MEMORY_TRACKER_DEFAULTS;
 
 const char *memory_tracker_initialize_empty_with_container(memory_tracker_t *memory_tracker, const memory_manager_t *memory_manager, void *dynamically_allocated_container)
