@@ -52,6 +52,7 @@
 #include <stdlib.h>
 
 /* string.h:
+ *   - memcmp
  *   - memcpy
  *   - memmove
  *   - memset
@@ -117,6 +118,10 @@ const type_t typed_type_def =
   , /* default_memory_manager */ NULL
 
   , /* dup                    */ NULL
+
+  , /* user                   */ NULL
+  , /* cuser                  */ NULL
+  , /* cmp                    */ NULL
 
   , /* parity                 */ ""
   };
@@ -218,50 +223,58 @@ const type_t *memory_manager_type(void)
  *
  * (But they can still be accessed through "memory_manager_type"'s fields.)
  */
-/* static const type_t        *memory_manager_type_typed      (const type_t *self);                  */
+/* static const type_t        *memory_manager_type_typed      (const type_t *self);                   */
 static const char          *memory_manager_type_name       (const type_t *self);
-/* static const char          *memory_manager_type_info       ( const type_t *self                   */
-/*                                                            , char         *out_info_buf           */
-/*                                                            , size_t        info_buf_size          */
-/*                                                            );                                     */
+/* static const char          *memory_manager_type_info       ( const type_t *self                    */
+/*                                                            , char         *out_info_buf            */
+/*                                                            , size_t        info_buf_size           */
+/*                                                            );                                      */
 static size_t               memory_manager_type_size       (const type_t *self, const tval *val);
 static const struct_info_t *memory_manager_type_is_struct  (const type_t *self);
-/* static tval                *memory_manager_type_is_mutable (const type_t *self, const tval *val); */
-/* static const type_t        *memory_manager_type_is_subtype ( const type_t *self                   */
-/*                                                            , const type_t *is_subtype             */
-/*                                                            );                                     */
-/* static const type_t        *memory_manager_type_is_supertype                                      */
-/*                                                            ( const type_t *self                   */
-/*                                                            , const type_t *is_supertype           */
-/*                                                            );                                     */
-/* static typed_t              memory_manager_type_cons_type  (const type_t *self);                  */
-/* static tval                *memory_manager_type_init       (const type_t *self, tval *cons);      */
-/* static void                 memory_manager_type_free       (const type_t *self, tval *val);       */
+/* static tval                *memory_manager_type_is_mutable (const type_t *self, const tval *val);  */
+/* static const type_t        *memory_manager_type_is_subtype ( const type_t *self                    */
+/*                                                            , const type_t *is_subtype              */
+/*                                                            );                                      */
+/* static const type_t        *memory_manager_type_is_supertype                                       */
+/*                                                            ( const type_t *self                    */
+/*                                                            , const type_t *is_supertype            */
+/*                                                            );                                      */
+/* static typed_t              memory_manager_type_cons_type  (const type_t *self);                   */
+/* static tval                *memory_manager_type_init       (const type_t *self, tval *cons);       */
+/* static void                 memory_manager_type_free       (const type_t *self, tval *val);        */
 static const tval          *memory_manager_type_has_default(const type_t *self);
-/* static memory_tracker_t    *memory_manager_type_mem        (const type_t *self, tval *val_raw);   */
-/* static void                *memory_manager_type_mem_init   ( const type_t *self                   */
-/*                                                            , tval *val_raw                        */
-/*                                                            , int is_dynamically_allocated         */
-/*                                                            );                                     */
-/* static int                  memory_manager_type_mem_is_dyn ( const type_t *self                   */
-/*                                                            , tval         *val                    */
-/*                                                            );                                     */
-/* static int                  memory_manager_type_mem_free   ( const type_t *self                   */
-/*                                                            , tval         *val                    */
-/*                                                            );                                     */
-/* static const memory_manager_t                                                                     */
-/*                     *memory_manager_type_default_memory_manager                                   */
-/*                                                            ( const type_t *self                   */
-/*                                                            , tval *val                            */
-/*                                                            );                                     */
-/* static tval                *memory_manager_type_dup        ( const type_t *self                   */
-/*                                                            , tval *dest                           */
-/*                                                            , const tval *src                      */
-/*                                                            , int defaults_src_unused              */
-/*                                                            , int rec_copy                         */
-/*                                                            , int dup_metadata                     */
-/*                                                            , ref_traversal_t *ref_traversal       */
-/*                                                            );                                     */
+/* static memory_tracker_t    *memory_manager_type_mem        (const type_t *self, tval *val_raw);    */
+/* static void                *memory_manager_type_mem_init   ( const type_t *self                    */
+/*                                                            , tval *val_raw                         */
+/*                                                            , int is_dynamically_allocated          */
+/*                                                            );                                      */
+/* static int                  memory_manager_type_mem_is_dyn ( const type_t *self                    */
+/*                                                            , tval         *val                     */
+/*                                                            );                                      */
+/* static int                  memory_manager_type_mem_free   ( const type_t *self                    */
+/*                                                            , tval         *val                     */
+/*                                                            );                                      */
+/* static const memory_manager_t                                                                      */
+/*                     *memory_manager_type_default_memory_manager                                    */
+/*                                                            ( const type_t *self                    */
+/*                                                            , tval *val                             */
+/*                                                            );                                      */
+/* static tval                *memory_manager_type_dup        ( const type_t *self                    */
+/*                                                            , tval *dest                            */
+/*                                                            , const tval *src                       */
+/*                                                            , int defaults_src_unused               */
+/*                                                            , int rec_copy                          */
+/*                                                            , int dup_metadata                      */
+/*                                                            , ref_traversal_t *vals                 */
+/*                                                            );                                      */
+/* static void                  *memory_manager_type_user       (const type_t *self, tval *val);      */
+/* static const void            *memory_manager_type_cuser      (const type_t *self, const tval *val);*/
+/* static int                    memory_manager_type_cmp        ( const type_t *self                  */
+/*                                                             , const tval *check                    */
+/*                                                             , const tval *baseline                 */
+/*                                                             , int deep                             */
+/*                                                             , ref_traversal_t *vals                */
+/*                                                             );                                     */
 
 /*
  * "memory_manager_type"'s type_t definition.
@@ -334,6 +347,10 @@ const type_t memory_manager_type_def =
   , /* default_memory_manager */ NULL /* memory_manager_type_default_memory_manager  */
 
   , /* dup                    */ NULL /* memory_manager_type_dup                     */
+
+  , /* user                   */ NULL /* memory_manager_type_user                    */
+  , /* cuser                  */ NULL /* memory_manager_type_cuser                   */
+  , /* cmp                    */ NULL /* memory_manager_type_cmp                     */
 
   , /* parity                 */ ""
   };
@@ -694,6 +711,10 @@ const type_t memory_tracker_type_def =
 
   , /* dup                    */ NULL
 
+  , /* user                   */ NULL
+  , /* cuser                  */ NULL
+  , /* cmp                    */ NULL
+
   , /* parity                 */ ""
   };
 
@@ -816,6 +837,10 @@ const type_t field_info_type_def =
 
   , /* dup                    */ NULL
 
+  , /* user                   */ NULL
+  , /* cuser                  */ NULL
+  , /* cmp                    */ NULL
+
   , /* parity                 */ ""
   };
 
@@ -843,8 +868,8 @@ static const struct_info_t *field_info_type_is_struct  (const type_t *self)
     /* int           is_metadata; */
     STRUCT_INFO_RADD(int_type(), is_metadata);
 
-    /* int           is_copyable_ref; */
-    STRUCT_INFO_RADD(int_type(), is_copyable_ref);
+    /* int           is_recursible_ref; */
+    STRUCT_INFO_RADD(int_type(), is_recursible_ref);
 
     /* size_t      (*default_value)        (const field_info_t *self, void *dest_field_mem); */
     STRUCT_INFO_RADD(funp_type(), default_value);
@@ -910,7 +935,7 @@ int field_info_cmp(const field_info_t *a, const field_info_t *b)
     return -1;
   if (a->is_metadata           != b->is_metadata)
     return -1;
-  if (a->is_copyable_ref       != b->is_copyable_ref)
+  if (a->is_recursible_ref     != b->is_recursible_ref)
     return -1;
   if (a->default_value         != b->default_value)
     return -1;
@@ -947,20 +972,20 @@ const void *field_info_cref(const field_info_t *field_info,  const void *base)
   return field_cref(field_info->field_pos, base);
 }
 
-int field_memcmp(const field_info_t *field_info, const void *s1, const void *s2)
+int field_memcmp(const field_info_t *field_info, const void *field_val1, const void *field_val2)
 {
   size_t i;
   size_t size = field_info->field_size;
 
-  if (!s1)
-    return FIELD_MEMCMP_ERR_NULL_S1;
-  if (!s2)
-    return FIELD_MEMCMP_ERR_NULL_S2;
+  if (!field_val1)
+    return FIELD_MEMCMP_ERR_NULL_FIELD_VAL1;
+  if (!field_val2)
+    return FIELD_MEMCMP_ERR_NULL_FIELD_VAL2;
 
   for (i = 0; i < size; ++i)
   {
-    unsigned char b1 = ((const unsigned char *) s1)[i];
-    unsigned char b2 = ((const unsigned char *) s2)[i];
+    unsigned char b1 = ((const unsigned char *) field_val1)[i];
+    unsigned char b2 = ((const unsigned char *) field_val2)[i];
 
     if      (b1 > b2)
     {
@@ -1167,15 +1192,23 @@ verify_field_info_status_t verify_field_info(const field_info_t *field_info, cha
   return verify_field_info_success;
 }
 
+
+  if (!ref_traversal_tagged_add(vals, STRUCT_DUP_VALS_TAG_SRC,  src))
+    return "Error: struct_dup_recurse: infinite loop in_recursible_ref field in src.\n";
+  if (!ref_traversal_tagged_add(vals, STRUCT_DUP_VALS_TAG_DEST, dest))
+    return "Error: struct_dup_recurse: infinite loop in_recursible_ref field in dest.\n";
 /* NULL on success. */
 /* TODO: memory_manager! */
-const char *field_dup(const field_info_t *field_info, void *dest, const void *src, int defaults_src_unused, int rec_copy, int dup_metadata, ref_traversal_t *ref_traversal)
+const char *field_dup(const field_info_t *field_info, void *dest, const void *src, int defaults_src_unused, int rec_copy, int dup_metadata, ref_traversal_t *vals)
 {
   static char         err_buf[DEFAULT_ERR_BUF_SIZE];
   static const size_t err_buf_size = sizeof(err_buf);
   /* static const size_t err_buf_num  = sizeof(err_buf) / sizeof(err_buf[0]); */
 
   verify_field_info_status_t verify_status;
+
+  if (dest && src && dest == src)
+    return NULL;
 
   /* TODO: We're verifying this each time a field is dup'd! */
   verify_status = verify_field_info(field_info, err_buf, err_buf_size);
@@ -1193,7 +1226,7 @@ const char *field_dup(const field_info_t *field_info, void *dest, const void *sr
       return NULL;
   }
 
-  if (field_info->is_copyable_ref && rec_copy != 0)
+  if (field_info->is_recursible_ref && rec_copy != 0)
   {
     tval *type_dup_status;
 
@@ -1208,7 +1241,7 @@ const char *field_dup(const field_info_t *field_info, void *dest, const void *sr
         , defaults_src_unused
         , rec_copy
         , dup_metadata
-        , NULL
+        , vals
         );
 
     if (!type_dup_status)
@@ -1298,6 +1331,10 @@ const type_t struct_info_type_def =
   , /* default_memory_manager */ NULL
 
   , /* dup                    */ NULL
+
+  , /* user                   */ NULL
+  , /* cuser                  */ NULL
+  , /* cmp                    */ NULL
 
   , /* parity                 */ ""
   };
@@ -1456,7 +1493,7 @@ struct_info_t *struct_info_add_field
     struct_info->memory_tracker_field = struct_info->fields_len;
   }
 
-  field_info_def.is_copyable_ref = 0;
+  field_info_def.is_recursible_ref = 0;
 
   field_info_def.default_value         = ARRAY_FINAL_ELEM(struct_info->fields).default_value;
   field_info_def.template_unused_value = ARRAY_FINAL_ELEM(struct_info->fields).template_unused_value;
@@ -1484,13 +1521,13 @@ field_info_t *struct_info_get_last_field_elem_ref(struct_info_t *struct_info)
 
 void *struct_info_iterate_chunks
   ( const struct_info_t *struct_info
-  , void *(*with_chunk)(void *context, void *last_accumulation, const struct_info_t *struct_info_chunk, int *break_iteration)
+  , void *(*with_chunk)(void *context, void *last_accumulation, const struct_info_t *struct_info_chunk, int *out_iteration_break)
   , void *context
   , void *initial_accumulation
   )
 {
   void *accumulation;
-  ref_traversal_t *struct_info_skips, skips;
+  ref_traversal_t *struct_infos, ref_traversal;
 
   if (!struct_info)
     return NULL;
@@ -1499,9 +1536,9 @@ void *struct_info_iterate_chunks
 
   accumulation = initial_accumulation;
   for
-    ( struct_info_skips = ref_traversal_init_with_one(&skips, (void *) struct_info)
+    ( struct_infos = ref_traversal_init_with_one(&ref_traversal, (void *) struct_info)
     ; struct_info
-    ; struct_info       = ref_traversal_add(struct_info_skips, struct_info->tail)
+    ; struct_info  = ref_traversal_add(struct_infos, struct_info->tail)
     )
   {
     int break_iteration = 0;
@@ -1512,7 +1549,7 @@ void *struct_info_iterate_chunks
       break;
   }
 
-  tval_free(struct_info_skips);
+  tval_free(struct_infos);
 
   return accumulation;
 }
@@ -1525,18 +1562,18 @@ void *struct_info_iterate_chunks
  * value returned by the last invocation, or "initial_accumulation" if the
  * struct_info is empty, i.e. there are no fields to iterate.
  *
- * Write a non-zero value to "break_iteration" to treat the current field as
+ * Write a non-zero value to "out_iteration_break" to treat the current field as
  * the last.
  */
 void *struct_info_iterate_fields
   ( const struct_info_t *struct_info
-  , void *(*with_field)(void *context, void *last_accumulation, const field_info_t *field_info, int *break_iteration)
+  , void *(*with_field)(void *context, void *last_accumulation, const field_info_t *field_info, int *out_iteration_break)
   , void *context
   , void *initial_accumulation
   )
 {
   void *accumulation;
-  ref_traversal_t *struct_info_skips, skips;
+  ref_traversal_t *struct_infos, ref_traversal;
 
   if (!struct_info)
     return NULL;
@@ -1545,9 +1582,9 @@ void *struct_info_iterate_fields
 
   accumulation = initial_accumulation;
   for
-    ( struct_info_skips = ref_traversal_init_with_one(&skips, (void *) struct_info)
+    ( struct_infos = ref_traversal_init_with_one(&ref_traversal, (void *) struct_info)
     ; struct_info
-    ; struct_info       = ref_traversal_add(struct_info_skips, struct_info->tail)
+    ; struct_info  = ref_traversal_add(struct_infos, struct_info->tail)
     )
   {
     int break_iteration = 0;
@@ -1569,20 +1606,20 @@ void *struct_info_iterate_fields
       break;
   }
 
-  tval_free(struct_info_skips);
+  tval_free(struct_infos);
 
   return accumulation;
 }
 
 void *struct_info_iterate_chunks_mutable
   ( struct_info_t *struct_info
-  , void *(*with_chunk)(void *context, void *last_accumulation, struct_info_t *struct_info_chunk, int *break_iteration)
+  , void *(*with_chunk)(void *context, void *last_accumulation, struct_info_t *struct_info_chunk, int *out_iteration_break)
   , void *context
   , void *initial_accumulation
   )
 {
   void *accumulation;
-  ref_traversal_t *struct_info_skips, skips;
+  ref_traversal_t *struct_infos, ref_traversal;
 
   if (!struct_info)
     return NULL;
@@ -1591,9 +1628,9 @@ void *struct_info_iterate_chunks_mutable
 
   accumulation = initial_accumulation;
   for
-    ( struct_info_skips = ref_traversal_init_with_one(&skips, (void *) struct_info)
+    ( struct_infos = ref_traversal_init_with_one(&ref_traversal, (void *) struct_info)
     ; struct_info
-    ; struct_info       = ref_traversal_add(struct_info_skips, struct_info->tail)
+    ; struct_info  = ref_traversal_add(struct_infos, struct_info->tail)
     )
   {
     int break_iteration = 0;
@@ -1604,7 +1641,7 @@ void *struct_info_iterate_chunks_mutable
       break;
   }
 
-  tval_free(struct_info_skips);
+  tval_free(struct_infos);
 
   return accumulation;
 }
@@ -1617,18 +1654,18 @@ void *struct_info_iterate_chunks_mutable
  * value returned by the last invocation, or "initial_accumulation" if the
  * struct_info is empty, i.e. there are no fields to iterate.
  *
- * Write a non-zero value to "break_iteration" to treat the current field as
+ * Write a non-zero value to "out_iteration_break" to treat the current field as
  * the last.
  */
 void *struct_info_iterate_fields_mutable
   ( struct_info_t *struct_info
-  , void *(*with_field)(void *context, void *last_accumulation, field_info_t *field_info, int *break_iteration)
+  , void *(*with_field)(void *context, void *last_accumulation, field_info_t *field_info, int *out_iteration_break)
   , void *context
   , void *initial_accumulation
   )
 {
   void *accumulation;
-  ref_traversal_t *struct_info_skips, skips;
+  ref_traversal_t *struct_infos, ref_traversal;
 
   if (!struct_info)
     return NULL;
@@ -1637,9 +1674,9 @@ void *struct_info_iterate_fields_mutable
 
   accumulation = initial_accumulation;
   for
-    ( struct_info_skips = ref_traversal_init_with_one(&skips, (void *) struct_info)
+    ( struct_infos = ref_traversal_init_with_one(&ref_traversal, (void *) struct_info)
     ; struct_info
-    ; struct_info       = ref_traversal_add(struct_info_skips, struct_info->tail)
+    ; struct_info  = ref_traversal_add(struct_infos, struct_info->tail)
     )
   {
     int break_iteration = 0;
@@ -1661,7 +1698,7 @@ void *struct_info_iterate_fields_mutable
       break;
   }
 
-  tval_free(struct_info_skips);
+  tval_free(struct_infos);
 
   return accumulation;
 }
@@ -1670,26 +1707,26 @@ void *struct_info_iterate_fields_mutable
 size_t struct_info_num_fields(const struct_info_t *struct_info)
 {
   size_t           num_defined_fields;
-  ref_traversal_t *struct_info_skips, skips;
+  ref_traversal_t *struct_infos, ref_traversal;
 
   num_defined_fields = 0;
   for
-    ( struct_info_skips = ref_traversal_init_with_one(&skips, (void *) struct_info)
+    ( struct_infos = ref_traversal_init_with_one(&ref_traversal, (void *) struct_info)
     ; struct_info
-    ; struct_info       = ref_traversal_add(struct_info_skips, struct_info->tail)
+    ; struct_info  = ref_traversal_add(struct_infos, struct_info->tail)
     )
   {
     if (struct_info->fields_len >= STRUCT_INFO_NUM_FIELDS)
     {
       /* Error: struct_info's fields_len is too big for this chunk. */
-      tval_free(struct_info_skips);
+      tval_free(struct_infos);
       return 0;
     }
 
     num_defined_fields += struct_info->fields_len;
   }
 
-  tval_free(struct_info_skips);
+  tval_free(struct_infos);
 
   return num_defined_fields;
 }
@@ -1698,22 +1735,22 @@ size_t struct_info_num_fields(const struct_info_t *struct_info)
 size_t struct_info_num_tails(const struct_info_t *struct_info)
 {
   size_t num_chunks;
-  ref_traversal_t *struct_info_skips, skips;
+  ref_traversal_t *struct_infos, ref_traversal;
 
   if (!struct_info)
     return 0;
 
   num_chunks = 0;
   for
-    ( struct_info_skips = ref_traversal_init_with_one(&skips, (void *) struct_info)
+    ( struct_infos = ref_traversal_init_with_one(&ref_traversal, (void *) struct_info)
     ; struct_info
-    ; struct_info       = ref_traversal_add(struct_info_skips, struct_info->tail)
+    ; struct_info  = ref_traversal_add(struct_infos, struct_info->tail)
     )
   {
     ++num_chunks;
   }
 
-  tval_free(struct_info_skips);
+  tval_free(struct_infos);
 
   return (size_t) (size_less_null(num_chunks));
 }
@@ -1724,13 +1761,13 @@ size_t struct_info_num_tails(const struct_info_t *struct_info)
 const field_info_t *struct_info_index_field(const struct_info_t *struct_info, size_t index)
 {
   const field_info_t *field_info;
-  ref_traversal_t    *struct_info_skips, skips;
+  ref_traversal_t    *struct_infos, ref_traversal;
 
   field_info = NULL;
   for
-    ( struct_info_skips = ref_traversal_init_with_one(&skips, (void *) struct_info)
+    ( struct_infos = ref_traversal_init_with_one(&ref_traversal, (void *) struct_info)
     ; struct_info
-    ; struct_info       = ref_traversal_add(struct_info_skips, struct_info->tail)
+    ; struct_info  = ref_traversal_add(struct_infos, struct_info->tail)
     )
   {
     if (struct_info->fields_len >= STRUCT_INFO_NUM_FIELDS)
@@ -1754,7 +1791,7 @@ const field_info_t *struct_info_index_field(const struct_info_t *struct_info, si
     }
   }
 
-  tval_free(struct_info_skips);
+  tval_free(struct_infos);
 
   return field_info;
 }
@@ -1765,13 +1802,13 @@ const field_info_t *struct_info_index_field(const struct_info_t *struct_info, si
 field_info_t *struct_info_index_field_mutable(struct_info_t *struct_info, size_t index)
 {
   field_info_t *field_info;
-  ref_traversal_t    *struct_info_skips, skips;
+  ref_traversal_t    *struct_infos, ref_traversal;
 
   field_info = NULL;
   for
-    ( struct_info_skips = ref_traversal_init_with_one(&skips, struct_info)
+    ( struct_infos = ref_traversal_init_with_one(&ref_traversal, struct_info)
     ; struct_info
-    ; struct_info       = ref_traversal_add(struct_info_skips, struct_info->tail)
+    ; struct_info  = ref_traversal_add(struct_infos, struct_info->tail)
     )
   {
     if (struct_info->fields_len >= STRUCT_INFO_NUM_FIELDS)
@@ -1795,7 +1832,7 @@ field_info_t *struct_info_index_field_mutable(struct_info_t *struct_info, size_t
     }
   }
 
-  tval_free(struct_info_skips);
+  tval_free(struct_infos);
 
   return field_info;
 }
@@ -2100,16 +2137,16 @@ verify_struct_info_status_t verify_struct_info_chunk(const struct_info_t *struct
 verify_struct_info_status_t verify_struct_info(const struct_info_t *struct_info, char *out_err, size_t err_size)
 {
   verify_struct_info_status_t status;
-  ref_traversal_t *struct_info_skips, skips;
+  ref_traversal_t *struct_infos, ref_traversal;
 
   if (!struct_info)
     return verify_struct_info_null_struct_info;
 
   status = verify_struct_info_success;
   for
-    ( struct_info_skips = ref_traversal_init_with_one(&skips, (void *) struct_info)
+    ( struct_infos = ref_traversal_init_with_one(&ref_traversal, (void *) struct_info)
     ; struct_info
-    ; struct_info       = ref_traversal_add(struct_info_skips, struct_info->tail)
+    ; struct_info       = ref_traversal_add(struct_infos, struct_info->tail)
     )
   {
     status = verify_struct_info_chunk(struct_info, out_err, err_size);
@@ -2118,13 +2155,13 @@ verify_struct_info_status_t verify_struct_info(const struct_info_t *struct_info,
       break;
   }
 
-  tval_free(struct_info_skips);
+  tval_free(struct_infos);
 
   return status;
 }
 
 /* NULL on success. */
-const char *struct_dup(const struct_info_t *struct_info, void *dest, const void *src, int defaults_src_unused, int rec_copy, int dup_metadata, ref_traversal_t *ref_traversal)
+static const char *struct_dup_recurse(const struct_info_t *struct_info, void *dest, const void *src, int defaults_src_unused, int rec_copy, int dup_metadata, ref_traversal_t *vals)
 {
   /* FIXME: don't use global state to write errors! */
   static char         err_buf[DEFAULT_ERR_BUF_SIZE];
@@ -2134,6 +2171,17 @@ const char *struct_dup(const struct_info_t *struct_info, void *dest, const void 
   size_t i;
 
   verify_struct_info_status_t verify_status;
+
+  if (!struct_info || !dest || !src || !vals)
+    return "Error: struct_dup_recurse: missing input; an argument is NULL.\n";
+
+  if (dest == src)
+    return NULL;
+
+  if (!ref_traversal_tagged_add(vals, STRUCT_DUP_VALS_TAG_SRC,  src))
+    return "Error: struct_dup_recurse: infinite loop in_recursible_ref field in src.\n";
+  if (!ref_traversal_tagged_add(vals, STRUCT_DUP_VALS_TAG_DEST, dest))
+    return "Error: struct_dup_recurse: infinite loop in_recursible_ref field in dest.\n";
 
   /* TODO: We're verifying this each time a struct is dup'd! */
   verify_status = verify_struct_info(struct_info, err_buf, err_buf_size);
@@ -2147,7 +2195,7 @@ const char *struct_dup(const struct_info_t *struct_info, void *dest, const void 
   {
     const char *field_error_status;
 
-    field_error_status = field_dup(&struct_info->fields[i], dest, src, defaults_src_unused, rec_copy, dup_metadata, NULL);
+    field_error_status = field_dup(&struct_info->fields[i], dest, src, defaults_src_unused, rec_copy, dup_metadata, vals);
 
     if (field_error_status)
       return field_error_status;
@@ -2156,11 +2204,159 @@ const char *struct_dup(const struct_info_t *struct_info, void *dest, const void 
   /* Recurse. */
   if (struct_info->tail)
   {
-    return struct_dup(struct_info->tail, dest, src, defaults_src_unused, rec_copy, dup_metadata, NULL);
+    return struct_dup(struct_info->tail, dest, src, defaults_src_unused, rec_copy, dup_metadata, vals);
   }
 
   /* Done. */
   return NULL;
+}
+
+const char *struct_dup(const struct_info_t *struct_info, void *dest, const void *src, int defaults_src_unused, int rec_copy, int dup_metadata, ref_traversal_t *vals)
+{
+  if (vals)
+  {
+    return struct_dup_recurse(struct_info, dest, src, default_src_unused, rec_copy, dup_metadata, vals);
+  }
+  else
+  {
+    const char *result;
+
+    ref_traversal_t vals_def;
+
+    ref_traversal_init_empty(&vals_def);
+    {
+      result = struct_dup_recurse(struct_info, dest, src, default_src_unused, rec_copy, dup_metadata, vals);
+    } tval_free(&vals_def);
+
+    return result;
+  }
+}
+
+typedef struct
+{ const void *check;
+  const void *baseline;
+  int deep;
+  ref_traversal_t *vals;
+} struct_cmp_context_t;
+typedef struct
+{ int result;
+} struct_cmp_accumulation_t;
+static const struct_cmp_accumulation_t struct_cmp_initial = { 0 };
+
+static void *struct_cmp_with_field(void *context, void *last_accumulation, const field_info_t *field_info, int *out_iteration_break)
+{
+  struct_cmp_context_t      *tcontext;
+  struct_cmp_accumulation_t *taccumulation;
+
+  struct_info_t *struct_info;
+
+  if (!context || !last_accumulation || !field_info)
+  {
+    WRITE_OUTPUT(out_iteration_break, 1);
+    return NULL;
+  }
+
+  tcontext      = context;
+  taccumulation = last_accumulation;
+
+  if (taccumulation->result != 0)
+  {
+    /* Already found a difference. */
+    WRITE_OUTPUT(out_iteration_break, 1);
+    return taccumulation;
+  }
+
+  if (field_info->is_metadata)
+  {
+    /* Skip this field. */
+    return taccumulation;
+  }
+
+  /* Recurse? */
+  if
+    (  (field_info->is_recursible_ref)
+    && (tcontext->deep != 0)
+    )
+  {
+    int subdeep;
+
+    subdeep = deep;
+    if (subdeep < 0)
+      ++subdeep;
+
+    taccumulation->result =
+      type_cmp
+        ( field_info->field_type
+        , field_info_cref(field_info, tcontext->check)
+        , field_info_cref(field_info, tcontext->baseline)
+        , subdeep
+        , tcontext->vals
+        );
+  }
+  else
+  {
+    taccumulation->result =
+      field_memcmp
+        ( field_info
+        , field_info_cref(field_info, tcontext->check)
+        , field_info_cref(field_info, tcontext->baseline)
+        );
+  }
+
+  if (taccumulation->result != 0)
+    WRITE_OUTPUT(out_iteration_break, 1);
+
+  return taccumulation;
+}
+
+static int struct_cmp_recurse(const struct_info_t *struct_info, const void *check, const void *baseline, int deep, ref_traversal_t *vals)
+{
+  struct_cmp_context_t      context      =
+    { check, baseline, deep, vals };
+  struct_cmp_accumulation_t accumulation =
+    struct_cmp_initial;
+
+  struct_cmp_accumulation_t *result;
+
+  /* Missing input. */
+  if (!struct_info || !check || !baseline || !vals)
+    return -1;
+
+  if (check == baseline)
+    return 0;
+
+  /* Infinite recursion in "copyable_ref" field. */
+  if (!ref_traversal_tagged_add(vals, STRUCT_CMP_VALS_TAG_CHECK,    check))
+    return -1;
+  if (!ref_traversal_tagged_add(vals, STRUCT_CMP_VALS_TAG_BASELINE, baseline))
+    return -1;
+
+  result = struct_info_iterate_fields(struct_info, struct_cmp_with_field, &context, &accumulation);
+  if (!result)
+    return -1;
+
+  return result->result;
+}
+
+int struct_cmp(const struct_info_t *struct_info, const void *check, const void *baseline, int deep, ref_traversal_t *vals)
+{
+  if (vals)
+  {
+    return struct_cmp_recurse(struct_info, check, baseline, deep, vals);
+  }
+  else
+  {
+    int result;
+
+    ref_traversal_t vals_def;
+
+    ref_traversal_init_empty(&vals_def);
+    {
+      result = struct_cmp_recurse(struct_info, check, baseline, deep, &vals_def);
+    } tval_free(&vals_def);
+
+    return result;
+  }
 }
 
 /* ---------------------------------------------------------------- */
@@ -2176,6 +2372,8 @@ static const char          *type_type_name       (const type_t *self);
 static size_t               type_type_size       (const type_t *self, const tval *val);
 static const struct_info_t *type_type_is_struct  (const type_t *self);
 static const tval          *type_type_has_default(const type_t *self);
+static void                *type_type_user       (const type_t *self, tval *val);
+static const void          *type_type_cuser      (const type_t *self, const tval *val);
 
 const type_t type_type_def =
   { type_type
@@ -2206,6 +2404,10 @@ const type_t type_type_def =
   , /* default_memory_manager */ NULL
 
   , /* dup                    */ NULL
+
+  , /* user                   */ type_type_user
+  , /* cuser                  */ type_type_cuser
+  , /* cmp                    */ NULL
 
   , /* parity                 */ ""
   };
@@ -2292,9 +2494,21 @@ static const struct_info_t *type_type_is_struct  (const type_t *self)
     /*                                    , int defaults_src_unused        */
     /*                                    , int rec_copy                   */
     /*                                    , int dup_metadata               */
-    /*                                    , ref_traversal_t *ref_traversal */
+    /*                                    , ref_traversal_t *vals          */
     /*                                    );                               */
     STRUCT_INFO_RADD(funp_type(), dup);
+
+    /* void                *(*user)       (const type_t *self, tval *val);       */
+    /* const void          *(*cuser)      (const type_t *self, const tval *val); */
+    /* int                  (*cmp)        ( const type_t *self                   */
+    /*                                    , const tval *check                    */
+    /*                                    , const tval *baseline                 */
+    /*                                    , int deep                             */
+    /*                                    , ref_traversal_t *vals                */
+    /*                                    );                                     */
+    STRUCT_INFO_RADD(funp_type(), user);
+    STRUCT_INFO_RADD(funp_type(), cuser);
+    STRUCT_INFO_RADD(funp_type(), cmp);
 
     /* const char *parity; */
     STRUCT_INFO_RADD(objp_type(), parity);
@@ -2304,6 +2518,22 @@ static const struct_info_t *type_type_is_struct  (const type_t *self)
 
 static const tval          *type_type_has_default(const type_t *self)
   { return type_has_default_value(self, &type_defaults); }
+
+static void                *type_type_user       (const type_t *self, tval *val)
+{
+  if (!self || !val)
+    return NULL;
+
+  return type_user(val, NULL);
+}
+
+static const void          *type_type_cuser      (const type_t *self, const tval *val)
+{
+  if (!self || !val)
+    return NULL;
+
+  return type_cuser(val, NULL);
+}
 
 /* ---------------------------------------------------------------- */
 
@@ -4021,6 +4251,50 @@ tval *type_has_struct_dup_never_malloc( const type_t *self
   return dest;
 }
 
+/* user */
+void *type_has_no_user_data(const type_t *self, tval *val)
+{
+  return NULL;
+}
+
+/* cuser */
+const void *type_has_no_cuser_data(const type_t *self, const tval *val)
+{
+  return NULL;
+}
+
+/* cmp */
+/* Compare fields if struct, otherwise compare memory. */
+int type_has_standard_cmp(const type_t *self, const tval *check, const tval *baseline, int deep, ref_traversal_t *vals)
+{
+  struct_info *struct_info;
+
+  if (!self || !check || !baseline)
+    return -1;
+
+  if ((struct_info = type_is_struct(self)))
+  {
+    return struct_cmp(struct_info, check, baseline, deep, vals);
+  }
+  else
+  {
+    size_t check_size;
+    size_t baseline_size;
+
+    check_size    = type_size(self, check);
+    baseline_size = type_size(self, baseline);
+
+    if (check_size && baseline_size && check_size == baseline_size)
+    {
+      return memcmp(check, baseline, min_size(check_size, baseline_size));
+    }
+    else
+    {
+      return -1;
+    }
+  }
+}
+
 /* ---------------------------------------------------------------- */
 /* type_t: Defaults.                                                */
 /* ---------------------------------------------------------------- */
@@ -4146,6 +4420,10 @@ tval *type_has_struct_dup_never_malloc( const type_t *self
  * >   , /-* default_memory_manager *-/ NULL
  * >
  * >   , /-* dup                    *-/ NULL
+ * >
+ * >   , /-* user                   *-/ NULL
+ * >   , /-* cuser                  *-/ NULL
+ * >   , /-* cmp                    *-/ NULL
  * > 
  * >   , /-* parity                 *-/ ""
  * >   };
@@ -4340,6 +4618,20 @@ tval                *default_type_dup        ( const type_t *self
         );
   }
 
+void                *default_type_user       (const type_t *self, tval *val)
+  { return type_has_no_user_data(self, val); }
+
+const void          *default_type_cuser      (const type_t *self, const tval *val)
+  { return type_has_no_cuser_data(self, val); }
+
+int                  default_type_cmp        ( const type_t *self
+                                             , const tval *check
+                                             , const tval *baseline
+                                             , int deep
+                                             , ref_traversal_t *vals
+                                             )
+  { return type_has_standard_cmp(self, check, baseline, deep, vals); }
+
 /* ---------------------------------------------------------------- */
 
 /*
@@ -4519,7 +4811,7 @@ tval                *type_dup        ( const type_t *type
         , defaults_src_unused
         , rec_copy
         , dup_metadata
-        , ref_traversal
+        , vals
         );
   else
     return
@@ -4530,8 +4822,37 @@ tval                *type_dup        ( const type_t *type
         , defaults_src_unused
         , rec_copy
         , dup_metadata
-        , ref_traversal
+        , vals
         );
+}
+
+void                *type_user       (const type_t *type, tval *val)
+{
+  if (!type || !type->user)
+    return type_defaults.user(type, val);
+  else
+    return type->user(type, val);
+}
+
+const void          *type_cuser      (const type_t *type, const tval *val)
+{
+  if (!type || !type->cuser)
+    return type_defaults.cuser(type, val);
+  else
+    return type->cuser(type, val);
+}
+
+int                  type_cmp        ( const type_t *type
+                                     , const tval *check
+                                     , const tval *baseline
+                                     , int deep
+                                     , ref_traversal_t *vals
+                                     )
+{
+  if (!type || !type->cmp)
+    return type_defaults.cmp(type, check, baseline, deep, vals);
+  else
+    return type->cmp(type, check, baseline, deep, vals);
 }
 
 /* ---------------------------------------------------------------- */
@@ -4662,6 +4983,10 @@ const type_t template_cons_type_def =
   , /* default_memory_manager */ NULL
 
   , /* dup                    */ NULL
+
+  , /* user                   */ NULL
+  , /* cuser                  */ NULL
+  , /* cmp                    */ NULL
 
   , /* parity                 */ ""
   };
@@ -5162,6 +5487,51 @@ objp_cast_t funp_to_objp(funp_cast_t ptr)
   return *((objp_cast_t *) (&fun));
 }
 
+size_t     objp_to_size   (void     *ptr)
+{
+  size_t    ptr_rep;
+  ptrdiff_t distance;
+
+  distance = (ptrdiff_t) (((unsigned char *) ptr) - ((unsigned char *) NULL));
+
+  ptr_rep = (size_t) distance;
+
+  return ((size_t) ptr_rep);
+}
+
+void      *size_to_objp   (size_t    ptr_rep)
+{
+  unsigned char *ptr;
+  ptrdiff_t      distance;
+
+  distance = (ptrdiff_t) ptr_rep;
+
+  ptr = (unsigned char *) (((unsigned char *) NULL) + ((ptrdiff_t) distance));
+
+  return ((void *) ptr);
+}
+
+ptrdiff_t  objp_to_ptrdiff(void     *ptr)
+{
+  ptrdiff_t distance;
+
+  distance = (ptrdiff_t) (((unsigned char *) ptr) - ((unsigned char *) NULL));
+
+  return ((ptrdiff_t) distance);
+}
+
+void      *ptrdiff_to_objp(ptrdiff_t ptr_rep)
+{
+  unsigned char *ptr;
+  ptrdiff_t      distance;
+
+  distance = (ptrdiff_t) ptr_rep;
+
+  ptr = (unsigned char *) (((unsigned char *) NULL) + ((ptrdiff_t) distance));
+
+  return ((void *) ptr);
+}
+
 /* ---------------------------------------------------------------- */
 /* Primitive C data types.                                          */
 /* ---------------------------------------------------------------- */
@@ -5260,6 +5630,10 @@ const type_t array_type_def =
 
   , /* dup                    */ NULL
 
+  , /* user                   */ NULL
+  , /* cuser                  */ NULL
+  , /* cmp                    */ NULL
+
   , /* parity                 */ ""
   };
 
@@ -5320,6 +5694,10 @@ const type_t div_type_def =
   , /* default_memory_manager */ NULL
 
   , /* dup                    */ NULL
+
+  , /* user                   */ NULL
+  , /* cuser                  */ NULL
+  , /* cmp                    */ NULL
 
   , /* parity                 */ ""
   };
@@ -5386,6 +5764,10 @@ const type_t ldiv_type_def =
   , /* default_memory_manager */ NULL
 
   , /* dup                    */ NULL
+
+  , /* user                   */ NULL
+  , /* cuser                  */ NULL
+  , /* cmp                    */ NULL
 
   , /* parity                 */ ""
   };

@@ -843,6 +843,17 @@ const char *indentation_tabs(size_t steps, size_t step_size);
 
 /* ---------------------------------------------------------------- */
 
+#define WRITE_OPTIONAL(ptr, val) \
+  do                             \
+  {                              \
+    if ((ptr))                   \
+      *(ptr) = (val);            \
+  } while(0)
+
+#define WRITE_OUTPUT(ptr, val) WRITE_OPTIONAL(ptr, val)
+
+/* ---------------------------------------------------------------- */
+
 int snprintf(char *str, size_t size, const char *format, ...);
 /* TODO */
 /*

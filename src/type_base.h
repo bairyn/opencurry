@@ -417,6 +417,12 @@ void *ref_traversal_take  (      ref_traversal_t *ref_traversal, void *reference
 /* A NULL "ref_traversal" is treated as an empty "ref_traversal_t". */
 void *ref_traversal_exists(const ref_traversal_t *ref_traversal, void *reference);
 
+
+void *ref_traversal_tagged_add   (      ref_traversal_t *ref_traversal, unsigned char tag, void *reference);
+void *ref_traversal_tagged_remove(      ref_traversal_t *ref_traversal, unsigned char tag, void *reference);
+void *ref_traversal_tagged_take  (      ref_traversal_t *ref_traversal, unsigned char tag, void *reference);
+void *ref_traversal_tagged_exists(const ref_traversal_t *ref_traversal, unsigned char tag, void *reference);
+
 /* TODO */
 
 /* ---------------------------------------------------------------- */
@@ -456,7 +462,7 @@ struct field_info_s
   /* Is this field a reference that "dup" should         */
   /* recursively copy with the field's type's "dup"      */
   /* function when copying is requested?                 */
-  int           is_copyable_ref;
+  int           is_recursible_ref;
 
   /* Write the default value for this field.             */
   /*                                                     */
@@ -485,7 +491,7 @@ struct field_info_s
   , /* field_type            */ NULL                       \
                                                            \
   , /* is_metadata           */ 0                          \
-  , /* is_copyable_ref       */ 0                          \
+  , /* is_recursible_ref     */ 0                          \
                                                            \
   , /* default_value         */ default_value_zero         \
   , /* template_unused_value */ template_unused_value_zero \
@@ -774,8 +780,9 @@ int is_field_terminator(const field_info_t *field_info);
 void       *field_info_ref (const field_info_t *field_info,  void       *base);
 const void *field_info_cref(const field_info_t *field_info,  const void *base);
 
-#define FIELD_MEMCMP_ERR_NULL_S1 ((int) -0x37ED)
-#define FIELD_MEMCMP_ERR_NULL_S2 ((int) -0x37EE)
+#define FIELD_MEMCMP_ERR_NULL_FIELD_VAL1 ((int) -0x37ED)
+#define FIELD_MEMCMP_ERR_NULL_FIELD_VAL2 ((int) -0x37EE)
+
 /*
  * Directly compare the memory represents two values in a field.
  *
@@ -784,7 +791,7 @@ const void *field_info_cref(const field_info_t *field_info,  const void *base);
  *   > 0: First byte in "s1" is greater than first byte in "s2".
  *   < 0: First byte in "s1" is less    than first byte in "s2".
  */
-int field_memcmp(const field_info_t *field_info, const void *s1, const void *s2);
+int field_memcmp(const field_info_t *field_info, const void *field_val1, const void *field_val2);
 
 void *field_memcpy(const field_info_t *field_info, void *dest, const void *src);
 void *field_memmove(const field_info_t *field_info, void *dest, const void *src);
@@ -917,28 +924,28 @@ field_info_t *struct_info_get_last_field_elem_ref(struct_info_t *struct_info);
 
 void *struct_info_iterate_chunks
   ( const struct_info_t *struct_info
-  , void *(*with_chunk)(void *context, void *last_accumulation, const struct_info_t *struct_info_chunk, int *break_iteration)
+  , void *(*with_chunk)(void *context, void *last_accumulation, const struct_info_t *struct_info_chunk, int *out_iteration_break)
   , void *context
   , void *initial_accumulation
   );
 
 void *struct_info_iterate_fields
   ( const struct_info_t *struct_info
-  , void *(*with_field)(void *context, void *last_accumulation, const field_info_t *field_info, int *break_iteration)
+  , void *(*with_field)(void *context, void *last_accumulation, const field_info_t *field_info, int *out_iteration_break)
   , void *context
   , void *initial_accumulation
   );
 
 void *struct_info_iterate_chunks_mutable
   ( struct_info_t *struct_info
-  , void *(*with_chunk)(void *context, void *last_accumulation, struct_info_t *struct_info_chunk, int *break_iteration)
+  , void *(*with_chunk)(void *context, void *last_accumulation, struct_info_t *struct_info_chunk, int *out_iteration_break)
   , void *context
   , void *initial_accumulation
   );
 
 void *struct_info_iterate_fields_mutable
   ( struct_info_t *struct_info
-  , void *(*with_field)(void *context, void *last_accumulation, field_info_t *field_info, int *break_iteration)
+  , void *(*with_field)(void *context, void *last_accumulation, field_info_t *field_info, int *out_iteration_break)
   , void *context
   , void *initial_accumulation
   );
@@ -1041,7 +1048,13 @@ verify_struct_info_status_t verify_struct_info(const struct_info_t *struct_info,
  *
  * Returns NULL on success, and an error message on failure.
  */
+#define STRUCT_DUP_VALS_TAG_DEST 0
+#define STRUCT_DUP_VALS_TAG_SRC  1
 const char *struct_dup(const struct_info_t *struct_info, void *dest, const void *src, int force_no_default, int rec_copy, int dup_metadata, ref_traversal_t *ref_traversal);
+
+#define STRUCT_CMP_VALS_TAG_CHECK    0
+#define STRUCT_CMP_VALS_TAG_BASELINE 1
+int struct_cmp(const struct_info_t *struct_info, const void *check, const void *baseline, int deep, ref_traversal_t *vals);
 
 /* ---------------------------------------------------------------- */
 /* type_t                                                           */
@@ -1656,7 +1669,27 @@ struct type_s
                                      , int defaults_src_unused
                                      , int rec_copy
                                      , int dup_metadata
-                                     , ref_traversal_t *ref_traversal
+                                     , ref_traversal_t *vals
+                                     );
+
+  /* ---------------------------------------------------------------- */
+  /* Value accessors.                                                 */
+  /* ---------------------------------------------------------------- */
+
+  /* A type can associate an arbitrary value to a value, and to       */
+  /* the type itself when "val" is NULL.                              */
+  /*                                                                  */
+  /* This can be NULL.                                                */
+  void                *(*user)       (const type_t *self, tval *val);
+  const void          *(*cuser)      (const type_t *self, const tval *val);
+
+  /* Returns 0 when the two values are equal, non-zero otherwise and  */
+  /* on error.                                                        */
+  int                  (*cmp)        ( const type_t *self
+                                     , const tval *check
+                                     , const tval *baseline
+                                     , int deep
+                                     , ref_traversal_t *vals
                                      );
 
   /* ---------------------------------------------------------------- */
@@ -1927,6 +1960,15 @@ tval *type_has_struct_dup_never_malloc( const type_t *self
                                       , ref_traversal_t *ref_traversal
                                       );
 
+/* user */
+void *type_has_no_user_data(const type_t *self, tval *val);
+
+/* cuser */
+const void *type_has_no_cuser_data(const type_t *self, const tval *val);
+
+/* cmp */
+int type_has_standard_cmp(const type_t *self, const tval *check, const tval *baseline, int deep, ref_traversal_t *vals);
+
 /* ---------------------------------------------------------------- */
 
 /*
@@ -1977,6 +2019,14 @@ tval                *default_type_dup        ( const type_t *self
                                              , int dup_metadata
                                              , ref_traversal_t *ref_traversal
                                              );
+void                *default_type_user       (const type_t *self, tval *val);
+const void          *default_type_cuser      (const type_t *self, const tval *val);
+int                  default_type_cmp        ( const type_t *self
+                                             , const tval *check
+                                             , const tval *baseline
+                                             , int deep
+                                             , ref_traversal_t *vals
+                                             );
 
 #define TYPE_DEFAULTS                                                \
   { type_type                                                        \
@@ -2007,6 +2057,10 @@ tval                *default_type_dup        ( const type_t *self
   , /* default_memory_manager */ default_type_default_memory_manager \
                                                                      \
   , /* dup                    */ default_type_dup                    \
+                                                                     \
+  , /* user                   */ default_type_user                   \
+  , /* cuser                  */ default_type_cuser                  \
+  , /* cmp                    */ default_type_cmp                    \
                                                                      \
   , /* parity                 */ ""                                  \
   }
@@ -2061,6 +2115,14 @@ tval                *type_dup        ( const type_t *type
                                      , int rec_copy
                                      , int dup_metadata
                                      , ref_traversal_t *ref_traversal
+                                     );
+void                *type_user       (const type_t *type, tval *val);
+const void          *type_cuser      (const type_t *type, const tval *val);
+int                  type_cmp        ( const type_t *type
+                                     , const tval *check
+                                     , const tval *baseline
+                                     , int deep
+                                     , ref_traversal_t *vals
                                      );
 
 /* ---------------------------------------------------------------- */
@@ -2276,6 +2338,11 @@ typedef void *(*funp_cast_t)(void *, ...);
 funp_cast_t objp_to_funp(objp_cast_t ptr);
 objp_cast_t funp_to_objp(funp_cast_t ptr);
 
+size_t     objp_to_size   (void     *ptr);
+void      *size_to_objp   (size_t    ptr_rep);
+ptrdiff_t  objp_to_ptrdiff(void     *ptr);
+void      *ptrdiff_to_objp(ptrdiff_t ptr_rep);
+
 /* ---------------------------------------------------------------- */
 /* Primitive C data types.                                          */
 /* ---------------------------------------------------------------- */
@@ -2319,6 +2386,10 @@ objp_cast_t funp_to_objp(funp_cast_t ptr);
     , /* default_memory_manager */ NULL                                                          \
                                                                                                  \
     , /* dup                    */ NULL                                                          \
+                                                                                                 \
+    , /* user                   */ NULL                                                          \
+    , /* cuser                  */ NULL                                                          \
+    , /* cmp                    */ NULL                                                          \
                                                                                                  \
     , /* parity                 */ ""                                                            \
     };                                                                                           \
