@@ -32,7 +32,7 @@
 
 /*
  * tests/test_type_fun.h
- * ---------------------
+ * ------
  */
 
 #ifndef TESTS_TEST_TYPE_FUN_H
@@ -42,12 +42,12 @@
 
 #include "../util.h"
 
-int test_type_fun(int argc, char **argv);
+int test_type_fun_cli(int argc, char **argv);
 
-extern unit_test_t type_fun;
-extern unit_test_t *type_fun[];
+extern unit_test_t type_fun_test;
+extern unit_test_t *type_fun_tests[];
 
-unit_test_result_t test_type_fun(unit_test_context_t *context);
+unit_test_result_t test_type_fun_run(unit_test_context_t *context);
 
 /* ---------------------------------------------------------------- */
 

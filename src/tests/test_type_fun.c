@@ -36,28 +36,28 @@
 
 #include "../type_fun.h"
 
-int test_type_fun(int argc, char **argv)
+int test_type_fun_cli(int argc, char **argv)
 {
-  return run_test_suite(type_fun);
+  return run_test_suite(type_fun_test);
 }
 
 /* ---------------------------------------------------------------- */
 
 /* type_fun tests. */
-unit_test_t type_fun =
-  {  test_type_fun
+unit_test_t type_fun_test =
+  {  test_type_fun_run
   , "test_type_fun"
   , "type_fun tests."
   };
 
 /* Array of type_fun tests. */
-unit_test_t *type_fun[] =
+unit_test_t *type_fun_tests[] =
   { NULL
   };
 
-unit_test_result_t test_type_fun(unit_test_context_t *context)
+unit_test_result_t test_type_fun_run(unit_test_context_t *context)
 {
-  return run_tests(context, type_fun);
+  return run_tests(context, type_fun_tests);
 }
 
 /* ---------------------------------------------------------------- */
