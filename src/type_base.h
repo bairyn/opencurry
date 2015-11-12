@@ -253,6 +253,24 @@ void *memory_manager_realloc(const memory_manager_t *memory_manager, void   *ptr
 void  memory_manager_on_oom (const memory_manager_t *memory_manager, size_t      size);
 void  memory_manager_on_err (const memory_manager_t *memory_manager, const char *msg);
 
+/* ---------------------------------------------------------------- */
+/* Memory and value allocation trackers.                            */
+/* ---------------------------------------------------------------- */
+
+/*
+ * memory_tracker_t:
+ *
+ * A memory tracker is associated with one value, or alternatively a collection
+ * of values.
+ *
+ * A memory tracker is used primarily to track which values are dynamically
+ * allocated, and dynamic allocation dependencies.
+ *
+ * A memory tracker contains the following information:
+ *   - A collection
+ *
+ * A memory tracker contains the following information:
+ */
 
 /* TODO: Remove "buffers"; just use "allocations". */
 const type_t *memory_tracker_type(void);
@@ -263,6 +281,17 @@ struct memory_tracker_s
   typed_t type;
 
   memory_manager_t memory_manager;
+
+  /* Meta tracking. */
+
+  /* Whether this tracker resides in dynamically         */
+  /* allocated memory.                                   */
+  /*                                                     */
+  /* When this memory tracker is freed, this is freed    */
+  /* last.                                               */
+  void *dynamic_container;
+
+  tval **dynamic_dependents;
 
 
   /* If this memory tracker exists in dynamically        */
@@ -375,7 +404,7 @@ int               memory_tracker_get_tag                (memory_tracker_t *memor
 int               memory_tracker_set_tag                (memory_tracker_t *memory_tracker, void *buffer_allocation, size_t tag,      char *out_err_buf, size_t err_buf_size);
 
 /* ---------------------------------------------------------------- */
-/* struct_info_t, field_info_t, and ref_traversal_t                 */
+/* ref_traversal_t                                                  */
 /* ---------------------------------------------------------------- */
 
 /* TODO */
@@ -388,13 +417,31 @@ struct ref_traversal_s
 
   memory_tracker_t memory;
 
-  /* TODO void TODO_on_loop; */
+  ref_traversal_t *is_mutable;
 
   void   **history;
-  size_t   history_num;
   size_t   history_size;
+  size_t   history_num;
   size_t   history_len;
 };
+
+/* ---------------------------------------------------------------- */
+
+#define REF_TRAVERSAL_DEFAULTS                 \
+  { ref_traversal_type                         \
+                                               \
+  , /* memory       */ MEMORY_TRACKER_DEFAULTS \
+                                               \
+  , /* is_mutable   */ NULL                    \
+                                               \
+  , /* history      */ NULL                    \
+  , /* history_size */ 0                       \
+  , /* history_num  */ 0                       \
+  , /* history_len  */ 0                       \
+  }
+extern const ref_traversal_t ref_traversal_defaults;
+
+/* ---------------------------------------------------------------- */
 
 ref_traversal_t *ref_traversal_init_empty(ref_traversal_t *dest);
 ref_traversal_t *ref_traversal_init_with_one(ref_traversal_t *dest, void *reference);
@@ -422,6 +469,10 @@ void *ref_traversal_tagged_add   (      ref_traversal_t *ref_traversal, unsigned
 void *ref_traversal_tagged_remove(      ref_traversal_t *ref_traversal, unsigned char tag, void *reference);
 void *ref_traversal_tagged_take  (      ref_traversal_t *ref_traversal, unsigned char tag, void *reference);
 void *ref_traversal_tagged_exists(const ref_traversal_t *ref_traversal, unsigned char tag, void *reference);
+
+/* ---------------------------------------------------------------- */
+/* struct_info_t and field_info_t                                   */
+/* ---------------------------------------------------------------- */
 
 /* TODO */
 

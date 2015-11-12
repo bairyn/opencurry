@@ -670,6 +670,8 @@ void  memory_manager_on_err (const memory_manager_t *memory_manager, const char 
 }
 
 /* ---------------------------------------------------------------- */
+/* memory_tracker                                                   */
+/* ---------------------------------------------------------------- */
 
 /* memory_tracker type. */
 
@@ -767,11 +769,23 @@ static const tval          *memory_tracker_type_has_default(const type_t *self)
 const memory_tracker_t memory_tracker_defaults =
   MEMORY_TRACKER_DEFAULTS;
 
+/* ---------------------------------------------------------------- */
+
+/*
+ * Global memory trackers.
+ */
+
 memory_tracker_t global_memory_tracker =
   MEMORY_TRACKER_DEFAULTS;
 
 memory_tracker_t global_typed_dyn_memory_tracker =
   MEMORY_TRACKER_DEFAULTS;
+
+/* ---------------------------------------------------------------- */
+
+/*
+ * Memory tracker methods.
+ */
 
 const char *memory_tracker_initialize_empty_with_container(memory_tracker_t *memory_tracker, const memory_manager_t *memory_manager, void *dynamically_allocated_container)
 {
@@ -798,6 +812,126 @@ const char *memory_tracker_initialize_empty_with_container(memory_tracker_t *mem
 
   return "";
 }
+
+/* ---------------------------------------------------------------- */
+/* ref_traversal_t                                                  */
+/* ---------------------------------------------------------------- */
+
+/* TODO */
+#ifdef TODO
+/* TODO */
+const type_t *ref_traversal_type(void);
+extern const type_t ref_traversal_type_def;
+typedef struct ref_traversal_s ref_traversal_t;
+struct ref_traversal_s
+{
+  typed_t type;
+
+  memory_tracker_t memory;
+
+  /* TODO void TODO_on_loop; */
+
+  void   **history;
+  size_t   history_num;
+  size_t   history_size;
+  size_t   history_len;
+};
+
+/* ref_traversal type. */
+
+const type_t *ref_traversal_type(void)
+  { return &ref_traversal_type_def; }
+
+static const char          *ref_traversal_type_name       (const type_t *self);
+static size_t               ref_traversal_type_size       (const type_t *self, const tval *val);
+static const struct_info_t *ref_traversal_type_is_struct  (const type_t *self);
+static tval                *ref_traversal_type_init       (const type_t *self, tval *cons);
+static const tval          *ref_traversal_type_has_default(const type_t *self);
+
+const type_t ref_traversal_type_def =
+  { type_type
+
+    /* @: Required.           */
+
+  , /* memory                 */ MEMORY_TRACKER_DEFAULTS
+  , /* is_self_mutable        */ NULL
+
+  , /* typed                  */ NULL
+
+  , /* @name                  */ ref_traversal_type_name
+  , /* info                   */ NULL
+  , /* @size                  */ ref_traversal_type_size
+  , /* @is_struct             */ ref_traversal_type_is_struct
+  , /* is_mutable             */ NULL
+  , /* is_subtype             */ NULL
+  , /* is_supertype           */ NULL
+
+  , /* cons_type              */ NULL
+  , /* init                   */ ref_traversal_type_init
+  , /* free                   */ NULL
+  , /* has_default            */ ref_traversal_type_has_default
+  , /* mem                    */ NULL
+  , /* mem_init               */ NULL
+  , /* mem_is_dyn             */ NULL
+  , /* mem_free               */ NULL
+  , /* default_memory_manager */ NULL
+
+  , /* dup                    */ NULL
+
+  , /* user                   */ NULL
+  , /* cuser                  */ NULL
+  , /* cmp                    */ NULL
+
+  , /* parity                 */ ""
+  };
+
+static const char          *ref_traversal_type_name       (const type_t *self)
+  { return "ref_traversal_t"; }
+
+static size_t               ref_traversal_type_size       (const type_t *self, const tval *val)
+  { return sizeof(ref_traversal_t); }
+
+/* TODO */
+#ifdef TODO
+DEF_FIELD_DEFAULT_VALUE_FROM_TYPE(ref_traversal)
+static const struct_info_t *ref_traversal_type_is_struct  (const type_t *self)
+  {
+    STRUCT_INFO_BEGIN(ref_traversal);
+
+    /* typed_t type */
+    STRUCT_INFO_RADD(typed_type(), type);
+
+    /* ptrdiff_t     field_pos;  */
+    STRUCT_INFO_RADD(objp_type(),    TODO);
+
+    STRUCT_INFO_DONE();
+  }
+#endif /* #ifdef TODO */
+
+/*
+static tval                *ref_traversal_type_init       (const type_t *self, tval *cons)
+{
+  ref_traversal_t *val;
+
+  if ((!val = type_has_template_cons_basic_initializer(self, cons)))
+    return NULL;
+
+  val->is_mutable = val;
+
+  TODO
+}
+*/
+
+static const tval          *ref_traversal_type_has_default(const type_t *self)
+  { return type_has_default_value(self, &ref_traversal_defaults); }
+
+/* ---------------------------------------------------------------- */
+
+const ref_traversal_t ref_traversal_defaults =
+  REF_TRAVERSAL_DEFAULTS;
+#endif /* #ifdef TODO */
+
+/* ---------------------------------------------------------------- */
 
 /* ---------------------------------------------------------------- */
 /* struct_info_t and field_info_t                                   */
