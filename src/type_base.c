@@ -787,6 +787,33 @@ memory_tracker_t global_typed_dyn_memory_tracker =
  * Memory tracker methods.
  */
 
+#ifndef TODO
+int               memory_tracker_is_allocation_tracked  (memory_tracker_t *memory_tracker, const void *buffer_allocation, char *out_err_buf, size_t err_buf_size)
+{ /* TODO */ return 0; }
+memory_tracker_t *memory_tracker_track_allocation       (memory_tracker_t *memory_tracker, void *buffer_allocation, char *out_err_buf, size_t err_buf_size)
+{ /* TODO */ return buffer_allocation; }
+void             *memory_tracker_malloc_allocation      (memory_tracker_t *memory_tracker, size_t size, char *out_err_buf, size_t err_buf_size)
+{ /* TODO */ return NULL; }
+void             *memory_tracker_calloc_allocation      (memory_tracker_t *memory_tracker, size_t nmemb, size_t size, char *out_err_buf, size_t err_buf_size)
+{ /* TODO */ return NULL; }
+void             *memory_tracker_realloc_allocation     (memory_tracker_t *memory_tracker, void *buffer_allocation, size_t size, char *out_err_buf, size_t err_buf_size)
+{ /* TODO */ return NULL; }
+int               memory_tracker_untrack_allocation     (memory_tracker_t *memory_tracker, void *buffer_allocation, int allow_untracked, char *out_err_buf, size_t err_buf_size)
+{ /* TODO */ return 0; }
+int               memory_tracker_untrack_all_allocations(memory_tracker_t *memory_tracker, char *out_err_buf, size_t err_buf_size)
+{ /* TODO */ return 0; }
+int               memory_tracker_free_allocation        (memory_tracker_t *memory_tracker, void *buffer_allocation, int allow_untracked, char *out_err_buf, size_t err_buf_size)
+{ /* TODO */ return 0; }
+int               memory_tracker_free_all_allocations   (memory_tracker_t *memory_tracker, char *out_err_buf, size_t err_buf_size)
+{ /* TODO */ return 0; }
+int               memory_tracker_free_container         (memory_tracker_t *memory_tracker, char *out_err_buf, size_t err_buf_size)
+{ /* TODO */ return 0; }
+int               memory_tracker_get_tag                (memory_tracker_t *memory_tracker, void *buffer_allocation, size_t *out_tag, char *out_err_buf, size_t err_buf_size)
+{ /* TODO */ return 0; }
+int               memory_tracker_set_tag                (memory_tracker_t *memory_tracker, void *buffer_allocation, size_t tag,      char *out_err_buf, size_t err_buf_size)
+{ /* TODO */ return 0; }
+#endif /* #ifndef TODO */
+
 const char *memory_tracker_initialize_empty_with_container(memory_tracker_t *memory_tracker, const memory_manager_t *memory_manager, void *dynamically_allocated_container)
 {
   if (!memory_tracker)
@@ -932,6 +959,29 @@ const ref_traversal_t ref_traversal_defaults =
 #endif /* #ifdef TODO */
 
 /* ---------------------------------------------------------------- */
+
+/* ref_traversal methods.
+ */
+#ifndef TODO
+ref_traversal_t *ref_traversal_init_empty(ref_traversal_t *dest)
+{ /* TODO */ return NULL; }
+ref_traversal_t *ref_traversal_init_with_one(ref_traversal_t *dest, void *reference)
+{ /* TODO */ return NULL; }
+void *ref_traversal_add   (      ref_traversal_t *ref_traversal, void *reference)
+{ /* TODO */ return NULL; }
+void *ref_traversal_remove(      ref_traversal_t *ref_traversal, void *reference)
+{ /* TODO */ return NULL; }
+void *ref_traversal_exists(const ref_traversal_t *ref_traversal, void *reference)
+{ /* TODO */ return NULL; }
+void *ref_traversal_tagged_add   (      ref_traversal_t *ref_traversal, unsigned char tag, void *reference)
+{ /* TODO */ return NULL; }
+void *ref_traversal_tagged_remove(      ref_traversal_t *ref_traversal, unsigned char tag, void *reference)
+{ /* TODO */ return NULL; }
+void *ref_traversal_tagged_take  (      ref_traversal_t *ref_traversal, unsigned char tag, void *reference)
+{ /* TODO */ return NULL; }
+void *ref_traversal_tagged_exists(const ref_traversal_t *ref_traversal, unsigned char tag, void *reference)
+{ /* TODO */ return NULL; }
+#endif /* #ifndef TODO */
 
 /* ---------------------------------------------------------------- */
 /* struct_info_t and field_info_t                                   */
@@ -2839,6 +2889,17 @@ const struct_info_t *type_is_not_struct(const type_t *self)
 {
   return NULL;
 }
+
+#ifndef TODO
+size_t field_default_value_from_type      (const field_info_t *self, void *dest_field_mem, const type_t *type)
+{ /* TODO */ return 0; }
+size_t field_default_value_from_field_type(const field_info_t *self, void *dest_field_mem)
+{ /* TODO */ return 0; }
+size_t field_default_value_zero           (const field_info_t *self, void *dest_field_mem)
+{ /* TODO */ return 0; }
+size_t field_template_unused_value_zero(const field_info_t *self, void *dest_field_mem)
+{ /* TODO */ return 0; }
+#endif /* #ifndef TODO */
 
 /* is_mutable */
 

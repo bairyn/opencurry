@@ -282,6 +282,7 @@ struct memory_tracker_s
 
   memory_manager_t memory_manager;
 
+#ifdef TODO
   /* Meta tracking. */
 
   /* Whether this tracker resides in dynamically         */
@@ -292,6 +293,7 @@ struct memory_tracker_s
   void *dynamic_container;
 
   tval **dynamic_dependents;
+#endif /* #ifdef TODO */
 
 
   /* If this memory tracker exists in dynamically        */
