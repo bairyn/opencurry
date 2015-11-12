@@ -1451,7 +1451,6 @@ size_t assert_not_streqn_msg(unit_test_context_t *context, char *msg_out, size_t
 size_t assert_not_memeq_msg(unit_test_context_t *context, char *msg_out, size_t msg_out_size, const char *tag, void *check, void *model, size_t n)
 {
   int              l;
-  size_t           size_terminator;
 
   int              i, j;
   size_t           written = 0;
@@ -1462,8 +1461,6 @@ size_t assert_not_memeq_msg(unit_test_context_t *context, char *msg_out, size_t 
 
   static const int byte_print_width    = sizeof(" 0x00") - 1;
   static const int width               = ASSERT_MSG_WIDTH;
-
-  size_terminator = msg_out_size - 1;  /* Make room for terminating NULL byte. */
 
   /* ---------------------------------------------------------------- */
   /* Start writing error message. */
