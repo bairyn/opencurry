@@ -5640,14 +5640,12 @@ static const char *void_type_name(const type_t *self)
 
 /* ---------------------------------------------------------------- */
 
-#ifdef TODO
 /* General pointers. */
-PRIM_TYPE(objp, objp_t, type_has_default_value(&objp_default))
-PRIM_TYPE(funp, funp_t, type_has_default_value(&funp_default))
+PRIM_TYPE(objp, objp_t, type_has_default_value(self, &objp_default))
+PRIM_TYPE(funp, funp_t, type_has_default_value(self, &funp_default))
 
 const objp_t objp_default = (objp_t) NULL;
 const funp_t funp_default = (funp_t) NULL;
-#endif
 
 /* ---------------------------------------------------------------- */
 
