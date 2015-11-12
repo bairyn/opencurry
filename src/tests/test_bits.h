@@ -51,4 +51,10 @@ unit_test_result_t test_bits_run(unit_test_context_t *context);
 
 /* ---------------------------------------------------------------- */
 
+extern unit_test_t bits_consistency_test;
+unit_test_result_t bits_consistency_test_run(unit_test_context_t *context);
+
+extern unit_test_t bits_equalities_test;
+unit_test_result_t bits_equalities_test_run(unit_test_context_t *context);
+
 #endif /* ifndef TESTS_TEST_BITS_H */

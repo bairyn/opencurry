@@ -52,7 +52,10 @@ unit_test_t bits_test =
 
 /* Array of bits tests. */
 unit_test_t *bits_tests[] =
-  { NULL
+  { &bits_consistency_test
+  , &bits_equalities_test
+
+  , NULL
   };
 
 unit_test_result_t test_bits_run(unit_test_context_t *context)
@@ -62,3 +65,51 @@ unit_test_result_t test_bits_run(unit_test_context_t *context)
 
 /* ---------------------------------------------------------------- */
 
+unit_test_t bits_consistency_test =
+  {  bits_consistency_test_run
+  , "bits_consistency_test"
+  , "Testing consistency between macros and procedures provided by the \"bits\" module.."
+  };
+
+unit_test_result_t bits_consistency_test_run(unit_test_context_t *context)
+{
+  unit_test_result_t result = assert_success(context);
+
+  ENCLOSE()
+  {
+    ASSERT2( inteq, "on",  (int) on_uint(),  (int) ON()  );
+    ASSERT2( inteq, "off", (int) off_uint(), (int) OFF() );
+  }
+
+  return result;
+}
+
+/* ---------------------------------------------------------------- */
+
+unit_test_t bits_equalities_test =
+  {  bits_equalities_test_run
+  , "bits_equalities_test"
+  , "Equality tests for macros and procedures provided by the \"bits\" module."
+  };
+
+unit_test_result_t bits_equalities_test_run(unit_test_context_t *context)
+{
+  unit_test_result_t result = assert_success(context);
+
+  /*
+  result |=
+    assert_inteq(context, NULL, "local", (int) on_uint(), (int) 
+    ;
+  if (is_test_result_aborting(result)) return result;
+
+  return result;
+  */
+  /*
+  return
+    assert_inteq(context, NULL, "local",  (int) strlen(static_string),          (int) static_string_len)
+  | assert_inteq(context, NULL, "size",   (int) res_tests_static_string_size(), (int) static_string_len)
+  ;
+  */
+
+  return result;
+}

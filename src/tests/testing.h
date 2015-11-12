@@ -57,6 +57,8 @@
 #include "../base.h"
 #include "testing.h"
 
+#include "../util.h"
+
 /* ---------------------------------------------------------------- */
 /* Unit test context type. */
 
@@ -320,5 +322,107 @@ unit_test_result_t assert_not_streqn_continue(unit_test_context_t *context, cons
 
 unit_test_result_t assert_not_memeq(unit_test_context_t *context, const char *err_msg, const char *tag, void *check, void *model, size_t n);
 unit_test_result_t assert_not_memeq_continue(unit_test_context_t *context, const char *err_msg, const char *tag, void *check, void *model, size_t n);
+
+/* ---------------------------------------------------------------- */
+/* Utilities.                                                       */
+/* ---------------------------------------------------------------- */
+
+/* If "result" contains an error code indicating non-continuable failure,
+ * return it.
+ */
+#define ABORTABLE(result)                \
+  do                                     \
+  {                                      \
+    if (is_test_result_aborting(result)) \
+      return result;                     \
+  } while(0)
+
+/*
+ * Add a trivial block of code that can contain "break" to skip to the end.
+ */
+#define ENCLOSE() switch(0) default:
+
+/* Break when "result" contains an error code indicating non-continuable
+ * failure.
+ *
+ * Can be combined with "ENCLOSE" for code that requires cleanup, for example:
+ *
+ * > unit_test_result_t my_test_run(unit_test_context_t *context)
+ * > {
+ * >   unit_test_result_t result = assert_success(context);
+ * >
+ * >   void *foo = malloc(...);
+ * >
+ * >   ENCLOSE()
+ * >   {
+ * >     result |= assert_inteq(context, NULL, "1 = 1", 1, 1);
+ * >     BREAKABLE(result);
+ * >
+ * >     result |= assert_not_inteq(context, NULL, "2 + 2 != 5", 2 + 2, 5);
+ * >     BREAKABLE(result);
+ * >   }
+ * >
+ * >   free(foo);
+ * >
+ * >   return result;
+ * > }
+ */
+#define BREAKABLE(result)              \
+  if (is_test_result_aborting(result)) \
+    break;                             \
+  else                                 \
+    do {} while(0)
+
+#define COMPOUND(assertion) BREAKABLE((result |= assertion))
+
+/*
+ * n-arry COMPOUND-based assertions.
+ *
+ * Example:
+ * > unit_test_result_t my_unit_test_run(unit_test_context_t *context)
+ * > {
+ * >   unit_test_result_t result = assert_success(context);
+ * >
+ * >   ENCLOSE()
+ * >   {
+ * >     ASSERT2( inteq, "1=1", 1, 1 );
+ * >     ASSERT2( inteq, "2=2", 2, 2 );
+ * >   }
+ * >
+ * >   return result;
+ * > }
+ */
+#define ASSERT0(assert_method, tag) \
+  COMPOUND(CAT(assert_, assert_method)(context, NULL, tag))
+
+#define ASSERT1(assert_method, tag, arg1) \
+  COMPOUND(CAT(assert_, assert_method)(context, NULL, tag, arg1))
+
+#define ASSERT2(assert_method, tag, arg1, arg2) \
+  COMPOUND(CAT(assert_, assert_method)(context, NULL, tag, arg1, arg2))
+
+#define ASSERT3(assert_method, tag, arg1, arg2, arg3) \
+  COMPOUND(CAT(assert_, assert_method)(context, NULL, tag, arg1, arg2, arg3))
+
+#define ASSERT4(assert_method, tag, arg1, arg2, arg3, arg4) \
+  COMPOUND(CAT(assert_, assert_method)(context, NULL, tag, arg1, arg2, arg3, arg4))
+
+#define ASSERT5(assert_method, tag, arg1, arg2, arg3, arg4, arg5) \
+  COMPOUND(CAT(assert_, assert_method)(context, NULL, tag, arg1, arg2, arg3, arg4, arg5))
+
+#define ASSERT6(assert_method, tag, arg1, arg2, arg3, arg4, arg5, arg6) \
+  COMPOUND(CAT(assert_, assert_method)(context, NULL, tag, arg1, arg2, arg3, arg4, arg5, arg6))
+
+#define ASSERT7(assert_method, tag, arg1, arg2, arg3, arg4, arg5, arg6, arg7) \
+  COMPOUND(CAT(assert_, assert_method)(context, NULL, tag, arg1, arg2, arg3, arg4, arg5, arg6, arg7))
+
+#define ASSERT8(assert_method, tag, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8) \
+  COMPOUND(CAT(assert_, assert_method)(context, NULL, tag, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8))
+
+#define ASSERT9(assert_method, tag, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9) \
+  COMPOUND(CAT(assert_, assert_method)(context, NULL, tag, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9))
+
+#define ASSERT10(assert_method, tag, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10) \
+  COMPOUND(CAT(assert_, assert_method)(context, NULL, tag, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10))
 
 #endif /* ifndef TESTS_TESTING_H */
