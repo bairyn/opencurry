@@ -1068,6 +1068,8 @@ struct type_s
 
   memory_tracker_t memory;
 
+  type_t *self_is_mutable;
+
   /* ---------------------------------------------------------------- */
   /* Basic type info.                                                 */
   /* ---------------------------------------------------------------- */
@@ -1113,6 +1115,37 @@ struct type_s
   /* If this type describes a struct, return information about its    */
   /* fields; otherwise return NULL.                                   */
   const struct_info_t *(*is_struct)  (const type_t *self);
+
+  /* Can a "const tval *val" be made mutable?                         */
+  tval                *(*is_mutable) (const type_t *self, const tval *val);
+
+  /* One-way subtyping: "is_subtype" should not call any "is_supertype" method
+   * and visa versa.
+   *
+   * B is a subtype of A if at least one of "is_subtype" or "is_supertype"
+   * returns non-NULL.
+   *
+   * "is_subtype" overrides "is_supertype" when both return non-NULL, but given
+   * the current constraints, this is redundant.
+   *
+   * Both relational methods should return a most specific type (the subtype)
+   * when the relation holds.
+   */
+
+  /* One-way non-extensible subtyping.          */
+  /* Should return either NULL or "is_subtype". */
+  /* Should not call "is_supertype".            */
+  const type_t        *(*is_subtype) ( const type_t *self
+                                     , const type_t *is_subtype
+                                     );
+
+  /* One-way extensible subtyping.              */
+  /* Should return either NULL or "self".       */
+  /* Should not call "is_subtype".              */
+  const type_t        *(*is_supertype)
+                                     ( const type_t *self
+                                     , const type_t *is_supertype
+                                     );
 
 
   /* ---------------------------------------------------------------- */
@@ -1766,11 +1799,22 @@ size_t field_default_value_zero           (const field_info_t *self, void *dest_
 
 size_t field_template_unused_value_zero(const field_info_t *self, void *dest_field_mem);
 
+/* is_mutable */
+tval *type_mutable_field(const type_t *self, const tval *val, const field_info_t *self_reference);
+
+tval *type_no_mutable   (const type_t *self, const tval *val);
+
+/* is_subtype */
+const type_t *type_has_no_nonextensible_subtypes(const type_t *self, const type_t *is_subtype);
+
+/* is_supertype */
+const type_t *type_has_no_extensible_supertypes(const type_t *self, const type_t *is_supertype);
+
 /* cons_type" */
 typed_t type_has_template_cons_type(const type_t *self);
 
 /* init */
-tval *type_has_template_cons_basic_initializer(const type_t *type, tval *cons);
+tval *type_has_template_cons_basic_initializer                     (const type_t *type, tval *cons);
 tval *type_has_template_cons_basic_initializer_force_memory_manager(const type_t *type, tval *cons);
 
 tval *template_cons_basic_initializer(const type_t *type, template_cons_t *cons, int allow_alternate_memory_manager);
@@ -1782,7 +1826,7 @@ int template_cons_basic_freer(const type_t *type, tval *cons);
 
 /* has_default */
 const tval   *type_has_no_default_value(const type_t *self);
-const tval   *type_has_default_value(const type_t *self, const tval *val);
+const tval   *type_has_default_value   (const type_t *self, const tval *val);
 
 /* mem */
 memory_tracker_t *type_mem_struct_or_global_dyn(const type_t *self, tval *val_raw);
@@ -1889,6 +1933,83 @@ tval *type_has_struct_dup_never_malloc( const type_t *self
  * "type_t" defaults.
  */
 
+const type_t        *default_type_typed      (const type_t *self);
+/* const char          *default_type_name       (const type_t *self); */
+const char          *default_type_info       ( const type_t *type
+                                             , char         *out_info_buf
+                                             , size_t        info_buf_size
+                                             );
+/* size_t               default_type_size       (const type_t *self, const tval *val); */
+/* const struct_info_t *default_type_is_struct  (const type_t *self); */
+tval                *default_type_is_mutable (const type_t *self, const tval *val);
+const type_t        *default_type_is_subtype ( const type_t *self
+                                             , const type_t *is_subtype
+                                             );
+const type_t        *default_type_is_supertype
+                                             ( const type_t *self
+                                             , const type_t *is_supertype
+                                             );
+typed_t              default_type_cons_type  (const type_t *self);
+tval                *default_type_init       (const type_t *self, tval *cons);
+void                 default_type_free       (const type_t *self, tval *val);
+const tval          *default_type_has_default(const type_t *self);
+memory_tracker_t    *default_type_mem        (const type_t *self, tval *val_raw);
+void                *default_type_mem_init   ( const type_t *self
+                                             , tval *val_raw
+                                             , int is_dynamically_allocated
+                                             );
+int                  default_type_mem_is_dyn ( const type_t *self
+                                             , tval         *val
+                                             );
+int                  default_type_mem_free   ( const type_t *self
+                                             , tval         *val
+                                             );
+const memory_manager_t
+             *default_type_default_memory_manager
+                                             ( const type_t *self
+                                             , tval *val
+                                             );
+tval                *default_type_dup        ( const type_t *self
+                                             , tval *dest
+                                             , const tval *src
+                                             , int defaults_src_unused
+                                             , int rec_copy
+                                             , int dup_metadata
+                                             , ref_traversal_t *ref_traversal
+                                             );
+
+#define TYPE_DEFAULTS                                                \
+  { type_type                                                        \
+                                                                     \
+    /* @: Required.           */                                     \
+                                                                     \
+  , /* memory                 */ MEMORY_TRACKER_DEFAULTS             \
+  , /* is_self_mutable        */ NULL                                \
+                                                                     \
+  , /* typed                  */ default_type_typed                  \
+                                                                     \
+  , /* @name                  */ NULL /* default_type_name */        \
+  , /* info                   */ default_type_info                   \
+  , /* @size                  */ NULL /* default_type_size */        \
+  , /* @is_struct             */ NULL /* default_type_is_struct */   \
+  , /* is_mutable             */ default_type_is_mutable             \
+  , /* is_subtype             */ default_type_is_subtype             \
+  , /* is_supertype           */ default_type_is_supertype           \
+                                                                     \
+  , /* cons_type              */ default_type_cons_type              \
+  , /* init                   */ default_type_init                   \
+  , /* free                   */ default_type_free                   \
+  , /* has_default            */ default_type_has_default            \
+  , /* mem                    */ default_type_mem                    \
+  , /* mem_init               */ default_type_mem_init               \
+  , /* mem_is_dyn             */ default_type_mem_is_dyn             \
+  , /* mem_free               */ default_type_mem_free               \
+  , /* default_memory_manager */ default_type_default_memory_manager \
+                                                                     \
+  , /* dup                    */ default_type_dup                    \
+                                                                     \
+  , /* parity                 */ ""                                  \
+  }
 extern const type_t type_defaults;
 
 /* ---------------------------------------------------------------- */
@@ -1905,6 +2026,14 @@ const char          *type_info       ( const type_t *type
                                      );
 size_t               type_size       (const type_t *type, const tval *val);
 const struct_info_t *type_is_struct  (const type_t *type);
+tval                *type_is_mutable (const type_t *type, const tval *val);
+const type_t        *type_is_subtype ( const type_t *type
+                                     , const type_t *is_subtype
+                                     );
+const type_t        *type_is_supertype
+                                     ( const type_t *type
+                                     , const type_t *is_supertype
+                                     );
 typed_t              type_cons_type  (const type_t *type);
 tval                *type_init       (const type_t *type, tval *cons);
 void                 type_free       (const type_t *type, tval *val);
@@ -1933,6 +2062,20 @@ tval                *type_dup        ( const type_t *type
                                      , int dup_metadata
                                      , ref_traversal_t *ref_traversal
                                      );
+
+/* ---------------------------------------------------------------- */
+
+/*
+ * Compositional "type_t" accessors.
+ */
+
+const type_t *is_subtype(const type_t *sub, const type_t *super);
+const type_t *is_type_equivalent(const type_t *this, const type_t *that);
+const type_t *is_subtype_via(const type_t *sub, const type_t *mid, const type_t *super);
+const type_t *is_proper_subtype(const type_t *sub, const type_t *super);
+const type_t *is_supertype(const type_t *super, const type_t *sub);
+const type_t *is_supertype_via(const type_t *super, mid, const type_t *sub);
+const type_t *is_proper_supertype(const type_t *super, const type_t *sub);
 
 /* ---------------------------------------------------------------- */
 
@@ -2152,8 +2295,8 @@ objp_cast_t funp_to_objp(funp_cast_t ptr);
                                                                                                  \
       /* @: Required.           */                                                               \
                                                                                                  \
-      /* memory_tracker_defaults */                                                              \
     , /* memory                 */ MEMORY_TRACKER_DEFAULTS                                       \
+    , /* is_self_mutable        */ NULL                                                          \
                                                                                                  \
     , /* typed                  */ type_is_untyped                                               \
                                                                                                  \
@@ -2161,6 +2304,9 @@ objp_cast_t funp_to_objp(funp_cast_t ptr);
     , /* info                   */ NULL                                                          \
     , /* @size                  */ CAT(name, _type_size)                                         \
     , /* @is_struct             */ type_is_not_struct                                            \
+    , /* is_mutable             */ NULL                                                          \
+    , /* is_subtype             */ NULL                                                          \
+    , /* is_supertype           */ NULL                                                          \
                                                                                                  \
     , /* cons_type              */ NULL                                                          \
     , /* init                   */ NULL                                                          \

@@ -93,8 +93,8 @@ const type_t typed_type_def =
 
     /* @: Required.           */
 
-    /* memory_tracker_defaults */
   , /* memory                 */ MEMORY_TRACKER_DEFAULTS
+  , /* is_self_mutable        */ NULL
 
   , /* typed                  */ type_is_untyped
 
@@ -102,6 +102,9 @@ const type_t typed_type_def =
   , /* info                   */ NULL
   , /* @size                  */ typed_type_size
   , /* @is_struct             */ type_is_not_struct
+  , /* is_mutable             */ NULL
+  , /* is_subtype             */ NULL
+  , /* is_supertype           */ NULL
 
   , /* cons_type              */ NULL
   , /* init                   */ NULL
@@ -215,42 +218,50 @@ const type_t *memory_manager_type(void)
  *
  * (But they can still be accessed through "memory_manager_type"'s fields.)
  */
-/* static const type_t        *memory_manager_type_typed      (const type_t *self);         */
+/* static const type_t        *memory_manager_type_typed      (const type_t *self);                  */
 static const char          *memory_manager_type_name       (const type_t *self);
-/* static const char          *memory_manager_type_info       ( const type_t *self          */
-/*                                                            , char         *out_info_buf  */
-/*                                                            , size_t        info_buf_size */
-/*                                                            );                            */
+/* static const char          *memory_manager_type_info       ( const type_t *self                   */
+/*                                                            , char         *out_info_buf           */
+/*                                                            , size_t        info_buf_size          */
+/*                                                            );                                     */
 static size_t               memory_manager_type_size       (const type_t *self, const tval *val);
 static const struct_info_t *memory_manager_type_is_struct  (const type_t *self);
-/* static typed_t              memory_manager_type_cons_type  (const type_t *self);                */
-/* static tval                *memory_manager_type_init       (const type_t *self, tval *cons);    */
-/* static void                 memory_manager_type_free       (const type_t *self, tval *val);     */
+/* static tval                *memory_manager_type_is_mutable (const type_t *self, const tval *val); */
+/* static const type_t        *memory_manager_type_is_subtype ( const type_t *self                   */
+/*                                                            , const type_t *is_subtype             */
+/*                                                            );                                     */
+/* static const type_t        *memory_manager_type_is_supertype                                      */
+/*                                                            ( const type_t *self                   */
+/*                                                            , const type_t *is_supertype           */
+/*                                                            );                                     */
+/* static typed_t              memory_manager_type_cons_type  (const type_t *self);                  */
+/* static tval                *memory_manager_type_init       (const type_t *self, tval *cons);      */
+/* static void                 memory_manager_type_free       (const type_t *self, tval *val);       */
 static const tval          *memory_manager_type_has_default(const type_t *self);
-/* static memory_tracker_t    *memory_manager_type_mem        (const type_t *self, tval *val_raw); */
-/* static void                *memory_manager_type_mem_init   ( const type_t *self                 */
-/*                                                            , tval *val_raw                      */
-/*                                                            , int is_dynamically_allocated       */
-/*                                                            );                                   */
-/* static int                  memory_manager_type_mem_is_dyn ( const type_t *self                 */
-/*                                                            , tval         *val                  */
-/*                                                            );                                   */
-/* static int                  memory_manager_type_mem_free   ( const type_t *self                 */
-/*                                                            , tval         *val                  */
-/*                                                            );                                   */
-/* static const memory_manager_t                                                                   */
-/*                     *memory_manager_type_default_memory_manager                                 */
-/*                                                            ( const type_t *self                 */
-/*                                                            , tval *val                          */
-/*                                                            );                                   */
-/* static tval                *memory_manager_type_dup        ( const type_t *self                 */
-/*                                                            , tval *dest                         */
-/*                                                            , const tval *src                    */
-/*                                                            , int defaults_src_unused            */
-/*                                                            , int rec_copy                       */
-/*                                                            , int dup_metadata                   */
-/*                                                            , ref_traversal_t *ref_traversal     */
-/*                                                            );                                   */
+/* static memory_tracker_t    *memory_manager_type_mem        (const type_t *self, tval *val_raw);   */
+/* static void                *memory_manager_type_mem_init   ( const type_t *self                   */
+/*                                                            , tval *val_raw                        */
+/*                                                            , int is_dynamically_allocated         */
+/*                                                            );                                     */
+/* static int                  memory_manager_type_mem_is_dyn ( const type_t *self                   */
+/*                                                            , tval         *val                    */
+/*                                                            );                                     */
+/* static int                  memory_manager_type_mem_free   ( const type_t *self                   */
+/*                                                            , tval         *val                    */
+/*                                                            );                                     */
+/* static const memory_manager_t                                                                     */
+/*                     *memory_manager_type_default_memory_manager                                   */
+/*                                                            ( const type_t *self                   */
+/*                                                            , tval *val                            */
+/*                                                            );                                     */
+/* static tval                *memory_manager_type_dup        ( const type_t *self                   */
+/*                                                            , tval *dest                           */
+/*                                                            , const tval *src                      */
+/*                                                            , int defaults_src_unused              */
+/*                                                            , int rec_copy                         */
+/*                                                            , int dup_metadata                     */
+/*                                                            , ref_traversal_t *ref_traversal       */
+/*                                                            );                                     */
 
 /*
  * "memory_manager_type"'s type_t definition.
@@ -299,8 +310,8 @@ const type_t memory_manager_type_def =
 
     /* @: Required.           */
 
-    /* memory_tracker_defaults */
   , /* memory                 */ MEMORY_TRACKER_DEFAULTS
+  , /* is_self_mutable        */ NULL
 
   , /* typed                  */ type_is_typed /* memory_manager_type_typed          */
 
@@ -308,6 +319,9 @@ const type_t memory_manager_type_def =
   , /* info                   */ NULL /* memory_manager_type_info                    */
   , /* @size                  */ memory_manager_type_size
   , /* @is_struct             */ memory_manager_type_is_struct
+  , /* is_mutable             */ NULL /* memory_manager_type_is_mutable              */
+  , /* is_subtype             */ NULL /* memory_manager_type_is_subtype              */
+  , /* is_supertype           */ NULL /* memory_manager_type_is_supertype            */
 
   , /* cons_type              */ NULL /* memory_manager_type_cons_type               */
   , /* init                   */ NULL /* memory_manager_type_init                    */
@@ -655,8 +669,8 @@ const type_t memory_tracker_type_def =
 
     /* @: Required.           */
 
-    /* memory_tracker_defaults */
   , /* memory                 */ MEMORY_TRACKER_DEFAULTS
+  , /* is_self_mutable        */ NULL
 
   , /* typed                  */ NULL
 
@@ -664,6 +678,9 @@ const type_t memory_tracker_type_def =
   , /* info                   */ NULL
   , /* @size                  */ memory_tracker_type_size
   , /* @is_struct             */ memory_tracker_type_is_struct
+  , /* is_mutable             */ NULL
+  , /* is_subtype             */ NULL
+  , /* is_supertype           */ NULL
 
   , /* cons_type              */ NULL
   , /* init                   */ NULL
@@ -774,8 +791,8 @@ const type_t field_info_type_def =
 
     /* @: Required.           */
 
-    /* memory_tracker_defaults */
   , /* memory                 */ MEMORY_TRACKER_DEFAULTS
+  , /* is_self_mutable        */ NULL
 
   , /* typed                  */ NULL
 
@@ -783,6 +800,9 @@ const type_t field_info_type_def =
   , /* info                   */ NULL
   , /* @size                  */ field_info_type_size
   , /* @is_struct             */ field_info_type_is_struct
+  , /* is_mutable             */ NULL
+  , /* is_subtype             */ NULL
+  , /* is_supertype           */ NULL
 
   , /* cons_type              */ NULL
   , /* init                   */ NULL
@@ -1254,8 +1274,8 @@ const type_t struct_info_type_def =
 
     /* @: Required.           */
 
-    /* memory_tracker_defaults */
   , /* memory                 */ MEMORY_TRACKER_DEFAULTS
+  , /* is_self_mutable        */ NULL
 
   , /* typed                  */ NULL
 
@@ -1263,6 +1283,9 @@ const type_t struct_info_type_def =
   , /* info                   */ NULL
   , /* @size                  */ struct_info_type_size
   , /* @is_struct             */ struct_info_type_is_struct
+  , /* is_mutable             */ NULL
+  , /* is_subtype             */ NULL
+  , /* is_supertype           */ NULL
 
   , /* cons_type              */ NULL
   , /* init                   */ NULL
@@ -2159,8 +2182,8 @@ const type_t type_type_def =
 
     /* @: Required.           */
 
-    /* memory_tracker_defaults */
   , /* memory                 */ MEMORY_TRACKER_DEFAULTS
+  , /* is_self_mutable        */ NULL
 
   , /* typed                  */ type_is_typed
 
@@ -2168,6 +2191,9 @@ const type_t type_type_def =
   , /* info                   */ NULL
   , /* @size                  */ type_type_size
   , /* @is_struct             */ type_type_is_struct
+  , /* is_mutable             */ NULL
+  , /* is_subtype             */ NULL
+  , /* is_supertype           */ NULL
 
   , /* cons_type              */ NULL
   , /* init                   */ NULL
@@ -2201,41 +2227,55 @@ static const struct_info_t *type_type_is_struct  (const type_t *self)
     /* memory_tracker_t memory; */
     STRUCT_INFO_RADD(memory_tracker_type(), memory);
 
+    /* type_t *self_is_mutable; */
+    STRUCT_INFO_RADD(objp_type(), self_is_mutable);
+
     /* const type_t        *(*typed)      (const type_t *self); */
     STRUCT_INFO_RADD(funp_type(), typed);
 
-    /* const char          *(*name)       (const type_t *self);                  */
-    /* const char          *(*info)       ( const type_t *self                   */
-    /*                                    , char         *out_info_buf           */
-    /*                                    , size_t        info_buf_size          */
-    /*                                    );                                     */
-    /* size_t               (*size)       (const type_t *self, const tval *val); */
-    /* const struct_info_t *(*is_struct)  (const type_t *self);                  */
+    /* const char          *(*name)       (const type_t *self);                           */
+    /* const char          *(*info)       ( const type_t *self                            */
+    /*                                    , char         *out_info_buf                    */
+    /*                                    , size_t        info_buf_size                   */
+    /*                                    );                                              */
+    /* size_t               (*size)       (const type_t *self, const tval *val);          */
+    /* const struct_info_t *(*is_struct)  (const type_t *self);                           */
+    /* tval                *(*is_mutable) (const type_t *self, const tval *val);          */
+    /* const type_t        *(*is_subtype) ( const type_t *self                            */
+    /*                                    , const type_t *is_subtype                      */
+    /*                                    );                                              */
+    /* const type_t        *(*is_supertype)                                               */
+    /*                                    ( const type_t *self                            */
+    /*                                    , const type_t *is_supertype                    */
+    /*                                    );                                              */
     STRUCT_INFO_RADD(funp_type(), name);
     STRUCT_INFO_RADD(funp_type(), info);
     STRUCT_INFO_RADD(funp_type(), size);
     STRUCT_INFO_RADD(funp_type(), is_struct);
+    STRUCT_INFO_RADD(funp_type(), is_mutable);
+    STRUCT_INFO_RADD(funp_type(), is_subtype);
+    STRUCT_INFO_RADD(funp_type(), is_supertype);
 
-    /* typed_t              (*cons_type)  (const type_t *self);                    */
-    /* tval                *(*init)       (const type_t *self, tval *cons);        */
-    /* void                 (*free)       (const type_t *self, tval *val);         */
-    /* const tval          *(*has_default)(const type_t *self);                    */
-    /* memory_tracker_t    *(*mem)        (const type_t *self, tval *val_raw);     */
-    /* void                *(*mem_init)   ( const type_t *self                     */
-    /*                                    , tval         *val_raw                  */
-    /*                                    , int           is_dynamically_allocated */
-    /*                                    );                                       */
-    /* int                  (*mem_is_dyn) ( const type_t *self                     */
-    /*                                    , tval         *val                      */
-    /*                                    );                                       */
-    /* int                  (*mem_free)   ( const type_t *self                     */
-    /*                                    , tval         *val                      */
-    /*                                    );                                       */
-    /* const memory_manager_t                                                      */
-    /*                     *(*default_memory_manager)                              */
-    /*                                    ( const type_t *self                     */
-    /*                                    , tval *val                              */
-    /*                                    );                                       */
+    /* typed_t              (*cons_type)  (const type_t *self);                             */
+    /* tval                *(*init)       (const type_t *self, tval *cons);                 */
+    /* void                 (*free)       (const type_t *self, tval *val);                  */
+    /* const tval          *(*has_default)(const type_t *self);                             */
+    /* memory_tracker_t    *(*mem)        (const type_t *self, tval *val_raw);              */
+    /* void                *(*mem_init)   ( const type_t *self                              */
+    /*                                    , tval         *val_raw                           */
+    /*                                    , int           is_dynamically_allocated          */
+    /*                                    );                                                */
+    /* int                  (*mem_is_dyn) ( const type_t *self                              */
+    /*                                    , tval         *val                               */
+    /*                                    );                                                */
+    /* int                  (*mem_free)   ( const type_t *self                              */
+    /*                                    , tval         *val                               */
+    /*                                    );                                                */
+    /* const memory_manager_t                                                               */
+    /*                     *(*default_memory_manager)                                       */
+    /*                                    ( const type_t *self                              */
+    /*                                    , tval *val                                       */
+    /*                                    );                                                */
     STRUCT_INFO_RADD(funp_type(), cons_type);
     STRUCT_INFO_RADD(funp_type(), init);
     STRUCT_INFO_RADD(funp_type(), free);
@@ -2435,6 +2475,98 @@ size_t type_has_unknown_size(const type_t *self, const tval *val)
 /* is_struct */
 const struct_info_t *type_is_not_struct(const type_t *self)
 {
+  return NULL;
+}
+
+/* is_mutable */
+
+/* If the type has a struct, check the following fields for an objp whose
+ * value is equal to "val", returning it if so, otherwise NULL:
+ *
+ * - The field immediately following any designated "memory_tracker" field.
+ * - The field immediately following any designated "is_typed" field.
+ * - The first field.
+ */
+tval *type_mutable_from_struct(const type_t *self, const tval *val)
+{
+  tval *mutable;
+
+  const struct_info_t *struct_info;
+  const field_info_t  *field_info;
+
+  /* See whether we have a struct_info. */
+
+  if (!self || val)
+    return NULL;
+
+  struct_info = type_is_struct(self);
+  if (!struct_info)
+    return NULL;
+
+  /* Check each field. */
+
+  /* + 1: The field terminator requirement makes this safe. */
+  if ((field_info = struct_info_has_memory_tracker(struct_info)))
+    if ((mutable = type_mutable_field(self, val, field_info + 1)))
+      return mutable;
+
+  /* + 1: The field terminator requirement makes this safe. */
+  if ((field_info = struct_info_has_typed_field(struct_info)))
+    if ((mutable = type_mutable_field(self, val, field_info + 1)))
+      return mutable;
+
+  if (struct_info_num_fields(struct_info) >= 1)
+    if ((field_info = struct_info_index_field(struct_info, 0)))
+      if ((mutable = type_mutable_field(self, val, field_info)))
+        return mutable;
+
+  return NULL;
+}
+
+tval *type_mutable_field(const type_t *self, const tval *val, const field_info_t *self_reference)
+{
+  tval *mutable;
+
+  if (!self || !val || !self_reference)
+    return NULL;
+
+  if (!type_is_subtype(objp_type, self_reference->field_type))
+    return NULL;
+
+  mutable = field_info_ref(self_reference, val);
+
+  if ((const tval *) mutable != val)
+    return NULL;
+
+  return mutable;
+}
+
+tval *type_no_mutable   (const type_t *self, const tval *val)
+{
+  return NULL;
+}
+
+/* is_subtype */
+const type_t *type_has_no_nonextensible_subtypes(const type_t *self, const type_t *is_subtype)
+{
+  if (!self || !is_subtype)
+    return NULL;
+
+  if (self == is_subtype)
+    return is_subtype;
+
+  return NULL;
+}
+
+/* is_supertype */
+const type_t *type_has_no_extensible_supertypes(const type_t *self, const type_t *is_supertype)
+{
+  if (!self || !is_supertype)
+    return NULL;
+
+  if (self == is_supertype)
+    return self;
+
   return NULL;
 }
 
@@ -3990,8 +4122,8 @@ tval *type_has_struct_dup_never_malloc( const type_t *self
  * > 
  * >     /-* @: Required.           *-/
  * > 
- * >     /-* memory_tracker_defaults *-/
  * >   , /-* memory                 *-/ MEMORY_TRACKER_DEFAULTS
+ * >   , /-* is_self_mutable        *-/ NULL
  * > 
  * >   , /-* typed                  *-/ NULL
  * > 
@@ -3999,6 +4131,9 @@ tval *type_has_struct_dup_never_malloc( const type_t *self
  * >   , /-* info                   *-/ NULL
  * >   , /-* @size                  *-/ intpair_type_size
  * >   , /-* @is_struct             *-/ intpair_type_is_struct
+ * >   , /-* is_mutable             *-/ NULL
+ * >   , /-* is_subtype             *-/ NULL
+ * >   , /-* is_supertype           *-/ NULL
  * > 
  * >   , /-* cons_type              *-/ NULL
  * >   , /-* init                   *-/ NULL
@@ -4009,6 +4144,7 @@ tval *type_has_struct_dup_never_malloc( const type_t *self
  * >   , /-* mem_is_dyn             *-/ NULL
  * >   , /-* mem_free               *-/ NULL
  * >   , /-* default_memory_manager *-/ NULL
+ * >
  * >   , /-* dup                    *-/ NULL
  * > 
  * >   , /-* parity                 *-/ ""
@@ -4090,95 +4226,31 @@ tval *type_has_struct_dup_never_malloc( const type_t *self
  *       By default, a type has no information string.
  */
 
-static const type_t        *default_type_typed      (const type_t *self);
-/* static const char          *default_type_name       (const type_t *self); */
-static const char          *default_type_info       ( const type_t *type
-                                                    , char         *out_info_buf
-                                                    , size_t        info_buf_size
-                                                    );
-/* static size_t               default_type_size       (const type_t *self, const tval *val); */
-/* static const struct_info_t *default_type_is_struct  (const type_t *self); */
-static typed_t              default_type_cons_type  (const type_t *self);
-static tval                *default_type_init       (const type_t *self, tval *cons);
-static void                 default_type_free       (const type_t *self, tval *val);
-static const tval          *default_type_has_default(const type_t *self);
-static memory_tracker_t    *default_type_mem        (const type_t *self, tval *val_raw);
-static void                *default_type_mem_init   ( const type_t *self
-                                                    , tval *val_raw
-                                                    , int is_dynamically_allocated
-                                                    );
-static int                  default_type_mem_is_dyn ( const type_t *self
-                                                    , tval         *val
-                                                    );
-static int                  default_type_mem_free   ( const type_t *self
-                                                    , tval         *val
-                                                    );
-static const memory_manager_t
-                    *default_type_default_memory_manager
-                                                    ( const type_t *self
-                                                    , tval *val
-                                                    );
-static tval                *default_type_dup        ( const type_t *self
-                                                    , tval *dest
-                                                    , const tval *src
-                                                    , int defaults_src_unused
-                                                    , int rec_copy
-                                                    , int dup_metadata
-                                                    , ref_traversal_t *ref_traversal
-                                                    );
-
 const type_t type_defaults =
-  { type_type
+  TYPE_DEFAULTS;
 
-    /* @: Required.           */
-
-    /* memory_tracker_defaults */
-  , /* memory                 */ MEMORY_TRACKER_DEFAULTS
-
-  , /* typed                  */ default_type_typed
-
-  , /* @name                  */ NULL /* default_type_name */
-  , /* info                   */ default_type_info
-  , /* @size                  */ NULL /* default_type_size */
-  , /* @is_struct             */ NULL /* default_type_is_struct */
-
-  , /* cons_type              */ default_type_cons_type
-  , /* init                   */ default_type_init
-  , /* free                   */ default_type_free
-  , /* has_default            */ default_type_has_default
-  , /* mem                    */ default_type_mem
-  , /* mem_init               */ default_type_mem_init
-  , /* mem_is_dyn             */ default_type_mem_is_dyn
-  , /* mem_free               */ default_type_mem_free
-  , /* default_memory_manager */ default_type_default_memory_manager
-
-  , /* dup                    */ default_type_dup
-
-  , /* parity                 */ ""
-  };
-
-static const type_t        *default_type_typed      (const type_t *self)
+const type_t        *default_type_typed      (const type_t *self)
   { return type_is_typed_from_struct(self); }
 
 /*
-static const char          *default_type_name       (const type_t *self)
+const char          *default_type_name       (const type_t *self)
   { return "this"; }
 */
 
-static const char          *default_type_info       ( const type_t *type
+const char          *default_type_info       ( const type_t *type
                                                     , char         *out_info_buf
                                                     , size_t        info_buf_size
                                                     )
   { return type_has_no_info(type, out_info_buf, info_buf_size); }
 
 /*
-static size_t               default_type_size       (const type_t *self, const tval *val)
+size_t               default_type_size       (const type_t *self, const tval *val)
   { return sizeof(this_t); }
 */
 
 /*
 DEF_FIELD_DEFAULT_VALUE_FROM_TYPE(this)
-static const struct_info_t *default_type_is_struct  (const type_t *self)
+const struct_info_t *default_type_is_struct  (const type_t *self)
   {
     STRUCT_INFO_BEGIN(this);
 
@@ -4195,52 +4267,66 @@ static const struct_info_t *default_type_is_struct  (const type_t *self)
   }
 */
 
-static typed_t              default_type_cons_type  (const type_t *self)
+tval                *default_type_is_mutable (const type_t *self, const tval *val)
+  { return type_mutable_from_struct(self, val); }
+
+const type_t        *default_type_is_subtype ( const type_t *self
+                                             , const type_t *is_subtype
+                                             )
+  { return type_has_no_nonextensible_subtypes(self, is_subtype); }
+
+const type_t        *default_type_is_supertype
+                                             ( const type_t *self
+                                             , const type_t *is_supertype
+                                             )
+  { return type_has_no_extensible_supertypes(self, is_supertype); }
+
+typed_t              default_type_cons_type  (const type_t *self)
   { return type_has_template_cons_type(self); }
 
-static tval                *default_type_init       (const type_t *self, tval *cons)
+tval                *default_type_init       (const type_t *self, tval *cons)
   { return type_has_template_cons_basic_initializer(self, cons); }
 
-static void                 default_type_free       (const type_t *self, tval *val)
+void                 default_type_free       (const type_t *self, tval *val)
   {        type_has_template_cons_basic_freer(self, val); }
 
-static const tval          *default_type_has_default(const type_t *self)
+const tval          *default_type_has_default(const type_t *self)
   { return type_has_no_default_value(self); }
 
-static memory_tracker_t    *default_type_mem        (const type_t *self, tval *val_raw)
+memory_tracker_t    *default_type_mem        (const type_t *self, tval *val_raw)
   { return type_mem_struct_or_global_dyn(self, val_raw); }
 
-static void                *default_type_mem_init   ( const type_t *self
-                                                    , tval *val_raw
-                                                    , int is_dynamically_allocated
-                                                    )
+void                *default_type_mem_init   ( const type_t *self
+                                             , tval *val_raw
+                                             , int is_dynamically_allocated
+                                             )
   { return type_supports_dynamic_allocation(self, val_raw, is_dynamically_allocated); }
 
-static int                  default_type_mem_is_dyn ( const type_t *self
-                                                    , tval         *val
-                                                    )
+int                  default_type_mem_is_dyn ( const type_t *self
+                                             , tval         *val
+                                             )
   { return type_is_dyn_valueless_or_inside_value(self, val); }
 
-static int                  default_type_mem_free   ( const type_t *self
-                                                    , tval         *val
-                                                    )
+int                  default_type_mem_free   ( const type_t *self
+                                             , tval         *val
+                                             )
   { return type_mem_free_valueless_or_inside_value_allocation(self, val); }
 
-static const memory_manager_t
+const memory_manager_t
                     *default_type_default_memory_manager
-                                                    ( const type_t *self
-                                                    , tval *val
-                                                    )
+                                             ( const type_t *self
+                                             , tval *val
+                                             )
   { return type_has_no_default_memory_manager(self, val); }
 
-static tval                *default_type_dup        ( const type_t *self
-                                                    , tval *dest
-                                                    , const tval *src
-                                                    , int defaults_src_unused
-                                                    , int rec_copy
-                                                    , int dup_metadata
-                                                    , ref_traversal_t *ref_traversal
-                                                    )
+tval                *default_type_dup        ( const type_t *self
+                                             , tval *dest
+                                             , const tval *src
+                                             , int defaults_src_unused
+                                             , int rec_copy
+                                             , int dup_metadata
+                                             , ref_traversal_t *ref_traversal
+                                             )
   {
     return
       type_has_struct_dup_allow_malloc
@@ -4256,7 +4342,6 @@ static tval                *default_type_dup        ( const type_t *self
 
 /* ---------------------------------------------------------------- */
 
-/* TODO */
 /*
  * Fundamental "type_t" accessors.
  */
@@ -4302,6 +4387,35 @@ const struct_info_t *type_is_struct  (const type_t *type)
     return NULL;
   else
     return type->is_struct(type);
+}
+
+tval                *type_is_mutable (const type_t *type, const tval *val)
+{
+  if (!type || !type->is_mutable)
+    return type_defaults.is_mutable(type, val);
+  else
+    return type->is_mutable(type, val);
+}
+
+const type_t        *type_is_subtype ( const type_t *type
+                                     , const type_t *is_subtype
+                                     )
+{
+  if (!type || !type->is_subtype)
+    return type_defaults.is_subtype(type, is_subtype);
+  else
+    return type->is_subtype(type, is_subtype);
+}
+
+const type_t        *type_is_supertype
+                                     ( const type_t *type
+                                     , const type_t *is_supertype
+                                     )
+{
+  if (!type || !type->is_supertype)
+    return type_defaults.is_supertype(type, is_supertype);
+  else
+    return type->is_supertype(type, is_supertype);
 }
 
 typed_t              type_cons_type  (const type_t *type)
@@ -4421,6 +4535,93 @@ tval                *type_dup        ( const type_t *type
 }
 
 /* ---------------------------------------------------------------- */
+
+/*
+ * Compositional "type_t" accessors.
+ */
+
+const type_t *is_subtype(const type_t *sub, const type_t *super)
+{
+  const type_t *is_sub;
+
+  if (!sub || !super)
+    return NULL;
+
+  if ((is_sub = type_is_subtype(super, sub)))
+  {
+    return is_sub;
+  }
+  else
+  {
+    if ((is_sub = type_is_supertype(sub, super)))
+      return is_sub;
+  }
+
+  return NULL;
+}
+
+const type_t *is_type_equivalent(const type_t *this, const type_t *that)
+{
+  const type_t *this_subof_that;
+  const type_t *that_subof_this;
+
+  if
+    (  (this_subof_that = is_subtype(this, that))
+    && (that_subof_this = is_subtype(that, this))
+    )
+    return is_subtype(this_subof_that, that_subof_this);
+  else
+    return NULL;
+}
+
+const type_t *is_subtype_via(const type_t *sub, const type_t *mid, const type_t *super)
+{
+  const type_t *is_sub;
+
+  if ((is_sub = is_subtype(is_subtype(sub, mid), super)))
+  {
+    return is_sub;
+  }
+  else
+  {
+    if ((is_sub = is_subtype(sub, is_subtype(mid, super))))
+      return is_sub;
+  }
+
+  return NULL;
+}
+
+const type_t *is_proper_subtype(const type_t *sub, const type_t *super)
+{
+  if (!sub || !super)
+    return NULL;
+
+  if (!is_type_equivalent(sub, super))
+  {
+    return NULL;
+  }
+  else
+  {
+    return is_subtype(sub, super);
+  }
+}
+
+const type_t *is_supertype(const type_t *super, const type_t *sub)
+{
+  return is_subtype(sub, super);
+}
+
+const type_t *is_supertype_via(const type_t *super, mid, const type_t *sub)
+{
+  return is_subtype_via(sub, mid, super);
+}
+
+const type_t *is_proper_supertype(const type_t *super, const type_t *sub)
+{
+  return is_proper_subtype(sub, super);
+}
+
+/* ---------------------------------------------------------------- */
 /* Template constructors, available for types to use.               */
 /* ---------------------------------------------------------------- */
 
@@ -4439,8 +4640,8 @@ const type_t template_cons_type_def =
 
     /* @: Required.           */
 
-    /* memory_tracker_defaults */
   , /* memory                 */ MEMORY_TRACKER_DEFAULTS
+  , /* is_self_mutable        */ NULL
 
   , /* typed                  */ NULL
 
@@ -4448,6 +4649,7 @@ const type_t template_cons_type_def =
   , /* info                   */ NULL
   , /* @size                  */ template_cons_type_size
   , /* @is_struct             */ template_cons_type_is_struct
+  , /* is_mutable             */ NULL
 
   , /* cons_type              */ NULL
   , /* init                   */ NULL
@@ -5035,8 +5237,8 @@ const type_t array_type_def =
 
     /* @: Required.           */
 
-    /* memory_tracker_defaults */
   , /* memory                 */ MEMORY_TRACKER_DEFAULTS
+  , /* is_self_mutable        */ NULL
 
   , /* typed                  */ type_is_untyped
 
@@ -5044,6 +5246,7 @@ const type_t array_type_def =
   , /* info                   */ NULL
   , /* @size                  */ type_has_unknown_size
   , /* @is_struct             */ type_is_not_struct
+  , /* is_mutable             */ NULL
 
   , /* cons_type              */ NULL
   , /* init                   */ NULL
@@ -5095,8 +5298,8 @@ const type_t div_type_def =
 
     /* @: Required.           */
 
-    /* memory_tracker_defaults */
   , /* memory                 */ MEMORY_TRACKER_DEFAULTS
+  , /* is_self_mutable        */ NULL
 
   , /* typed                  */ type_is_untyped
 
@@ -5104,6 +5307,7 @@ const type_t div_type_def =
   , /* info                   */ NULL
   , /* @size                  */ div_type_size
   , /* @is_struct             */ div_type_is_struct
+  , /* is_mutable             */ NULL
 
   , /* cons_type              */ NULL
   , /* init                   */ NULL
@@ -5160,8 +5364,8 @@ const type_t ldiv_type_def =
 
     /* @: Required.           */
 
-    /* memory_tracker_defaults */
   , /* memory                 */ MEMORY_TRACKER_DEFAULTS
+  , /* is_self_mutable        */ NULL
 
   , /* typed                  */ type_is_untyped
 
@@ -5169,6 +5373,7 @@ const type_t ldiv_type_def =
   , /* info                   */ NULL
   , /* @size                  */ ldiv_type_size
   , /* @is_struct             */ ldiv_type_is_struct
+  , /* is_mutable             */ NULL
 
   , /* cons_type              */ NULL
   , /* init                   */ NULL
