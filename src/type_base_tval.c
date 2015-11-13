@@ -37,6 +37,7 @@
 
 #include "base.h"
 #include "type_base_prim.h"
+#include "type_base_type.h"
 #include "type_base_tval.h"
 
 /* ---------------------------------------------------------------- */
