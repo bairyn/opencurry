@@ -228,7 +228,7 @@ unsigned int bit_nat_pred_uint(unsigned int num);
  *   "(1 <<  num   ) - 1" works except when generating fixed-width values with all
  *   1 bits, because what "(1 << num)" should be in this case is too large.
  */
-#define ONE_BIT_REPEAT(num) ((BIT_NAT_PRED((1 << (BIT_NAT_PRED((num)))))) | ((IS_NONZERO((num))) << (BIT_NAT_PRED((num)))))
+#define ONE_BIT_REPEAT(num) ((BIT_NAT_PRED(((IS_NONZERO((num))) << (BIT_NAT_PRED((num)))))) | ((IS_NONZERO((num))) << (BIT_NAT_PRED((num)))))
 unsigned int one_bit_repeat_uint(unsigned int num);
 
 #endif /* ifndef BITS_H */
