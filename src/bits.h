@@ -168,6 +168,10 @@ unsigned int bit_group_no_ends_uint(unsigned int val);
 #define BIT_ONE_CONTAGIOUS(val) (((val) << 1) | (val) | ((val) >> 1))
 unsigned int bit_one_contagious_uint(unsigned int val);
 
+/* Set bits adjacent to 0 bits to 0. */
+#define BIT_ZERO_CONTAGIOUS(val) (((val) << 1) & (val) & ((val) >> 1))
+unsigned int bit_zero_contagious_uint(unsigned int val);
+
 #define BITS_IS_ODD(val) ((val) & 1)
 unsigned int bits_is_odd_uint(unsigned int val);
 

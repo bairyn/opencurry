@@ -125,6 +125,11 @@ unsigned int bit_one_contagious_uint(unsigned int val)
   return BIT_ONE_CONTAGIOUS(val);
 }
 
+unsigned int bit_zero_contagious_uint(unsigned int val)
+{
+  return BIT_ZERO_CONTAGIOUS(val);
+}
+
 unsigned int bits_is_odd_uint(unsigned int val)
 {
   return BITS_IS_ODD(val);

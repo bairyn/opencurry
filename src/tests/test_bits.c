@@ -141,6 +141,11 @@ unit_test_result_t bits_equalities_test_run(unit_test_context_t *context)
 
     ASSERT2( inteq, "nostarts", (int) bit_group_no_starts_uint(val), (int) 0x3C);
     ASSERT2( inteq, "noends",   (int) bit_group_no_ends_uint  (val), (int) 0x78);
+
+    /* ---------------------------------------------------------------- */
+
+    ASSERT2( inteq, "1contagious", (int) bit_one_contagious_uint (val), (int) 0xFE);
+    ASSERT2( inteq, "0contagious", (int) bit_zero_contagious_uint(val), (int) 0x38);
   }
 
   return result;
