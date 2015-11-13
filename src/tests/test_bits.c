@@ -98,32 +98,49 @@ unit_test_result_t bits_equalities_test_run(unit_test_context_t *context)
 
     /* 0111 1100 */
     val = 0x7C;
-    ASSERT2( inteq, "get_bit0",   (int) get_bit_uint(0, val),    (int) 0);
-    ASSERT2( inteq, "get_bit1",   (int) get_bit_uint(1, val),    (int) 0);
-    ASSERT2( inteq, "get_bit2",   (int) get_bit_uint(2, val),    (int) 1);
-    ASSERT2( inteq, "get_bit3",   (int) get_bit_uint(3, val),    (int) 1);
-    ASSERT2( inteq, "get_bit4",   (int) get_bit_uint(4, val),    (int) 1);
-    ASSERT2( inteq, "get_bit5",   (int) get_bit_uint(5, val),    (int) 1);
-    ASSERT2( inteq, "get_bit6",   (int) get_bit_uint(6, val),    (int) 1);
-    ASSERT2( inteq, "get_bit7",   (int) get_bit_uint(7, val),    (int) 0);
+    ASSERT2( inteq, "get_bit0",   (int) get_bit_uint (0,    val), (int) 0);
+    ASSERT2( inteq, "get_bit1",   (int) get_bit_uint (1,    val), (int) 0);
+    ASSERT2( inteq, "get_bit2",   (int) get_bit_uint (2,    val), (int) 1);
+    ASSERT2( inteq, "get_bit3",   (int) get_bit_uint (3,    val), (int) 1);
+    ASSERT2( inteq, "get_bit4",   (int) get_bit_uint (4,    val), (int) 1);
+    ASSERT2( inteq, "get_bit5",   (int) get_bit_uint (5,    val), (int) 1);
+    ASSERT2( inteq, "get_bit6",   (int) get_bit_uint (6,    val), (int) 1);
+    ASSERT2( inteq, "get_bit7",   (int) get_bit_uint (7,    val), (int) 0);
 
-    ASSERT2( inteq, "set_bit0_0", (int) set_bit_uint(0, 0, val), (int) 0x7C);
-    ASSERT2( inteq, "set_bit1_0", (int) set_bit_uint(1, 0, val), (int) 0x7C);
-    ASSERT2( inteq, "set_bit2_0", (int) set_bit_uint(2, 0, val), (int) 0x78);
-    ASSERT2( inteq, "set_bit3_0", (int) set_bit_uint(3, 0, val), (int) 0x74);
-    ASSERT2( inteq, "set_bit4_0", (int) set_bit_uint(4, 0, val), (int) 0x6C);
-    ASSERT2( inteq, "set_bit5_0", (int) set_bit_uint(5, 0, val), (int) 0x5C);
-    ASSERT2( inteq, "set_bit6_0", (int) set_bit_uint(6, 0, val), (int) 0x3C);
-    ASSERT2( inteq, "set_bit7_0", (int) set_bit_uint(7, 0, val), (int) 0x7C);
+    ASSERT2( inteq, "set_bit0_0", (int) set_bit_uint (0, 0, val), (int) 0x7C);
+    ASSERT2( inteq, "set_bit1_0", (int) set_bit_uint (1, 0, val), (int) 0x7C);
+    ASSERT2( inteq, "set_bit2_0", (int) set_bit_uint (2, 0, val), (int) 0x78);
+    ASSERT2( inteq, "set_bit3_0", (int) set_bit_uint (3, 0, val), (int) 0x74);
+    ASSERT2( inteq, "set_bit4_0", (int) set_bit_uint (4, 0, val), (int) 0x6C);
+    ASSERT2( inteq, "set_bit5_0", (int) set_bit_uint (5, 0, val), (int) 0x5C);
+    ASSERT2( inteq, "set_bit6_0", (int) set_bit_uint (6, 0, val), (int) 0x3C);
+    ASSERT2( inteq, "set_bit7_0", (int) set_bit_uint (7, 0, val), (int) 0x7C);
 
-    ASSERT2( inteq, "set_bit0_1", (int) set_bit_uint(0, 1, val), (int) 0x7D);
-    ASSERT2( inteq, "set_bit1_1", (int) set_bit_uint(1, 1, val), (int) 0x7E);
-    ASSERT2( inteq, "set_bit2_1", (int) set_bit_uint(2, 1, val), (int) 0x7C);
-    ASSERT2( inteq, "set_bit3_1", (int) set_bit_uint(3, 1, val), (int) 0x7C);
-    ASSERT2( inteq, "set_bit4_1", (int) set_bit_uint(4, 1, val), (int) 0x7C);
-    ASSERT2( inteq, "set_bit5_1", (int) set_bit_uint(5, 1, val), (int) 0x7C);
-    ASSERT2( inteq, "set_bit6_1", (int) set_bit_uint(6, 1, val), (int) 0x7C);
-    ASSERT2( inteq, "set_bit7_1", (int) set_bit_uint(7, 1, val), (int) 0xFC);
+    ASSERT2( inteq, "set_bit0_1", (int) set_bit_uint (0, 1, val), (int) 0x7D);
+    ASSERT2( inteq, "set_bit1_1", (int) set_bit_uint (1, 1, val), (int) 0x7E);
+    ASSERT2( inteq, "set_bit2_1", (int) set_bit_uint (2, 1, val), (int) 0x7C);
+    ASSERT2( inteq, "set_bit3_1", (int) set_bit_uint (3, 1, val), (int) 0x7C);
+    ASSERT2( inteq, "set_bit4_1", (int) set_bit_uint (4, 1, val), (int) 0x7C);
+    ASSERT2( inteq, "set_bit5_1", (int) set_bit_uint (5, 1, val), (int) 0x7C);
+    ASSERT2( inteq, "set_bit6_1", (int) set_bit_uint (6, 1, val), (int) 0x7C);
+    ASSERT2( inteq, "set_bit7_1", (int) set_bit_uint (7, 1, val), (int) 0xFC);
+
+    ASSERT2( inteq, "flip_bit0",  (int) flip_bit_uint(0,    val), (int) 0x7D);
+    ASSERT2( inteq, "flip_bit1",  (int) flip_bit_uint(1,    val), (int) 0x7E);
+    ASSERT2( inteq, "flip_bit2",  (int) flip_bit_uint(2,    val), (int) 0x78);
+    ASSERT2( inteq, "flip_bit3",  (int) flip_bit_uint(3,    val), (int) 0x74);
+    ASSERT2( inteq, "flip_bit4",  (int) flip_bit_uint(4,    val), (int) 0x6C);
+    ASSERT2( inteq, "flip_bit5",  (int) flip_bit_uint(5,    val), (int) 0x5C);
+    ASSERT2( inteq, "flip_bit6",  (int) flip_bit_uint(6,    val), (int) 0x3C);
+    ASSERT2( inteq, "flip_bit7",  (int) flip_bit_uint(7,    val), (int) 0xFC);
+
+    /* ---------------------------------------------------------------- */
+
+    ASSERT2( inteq, "starts",   (int) bit_group_starts_uint   (val), (int) 0x40);
+    ASSERT2( inteq, "ends",     (int) bit_group_ends_uint     (val), (int) 0x04);
+
+    ASSERT2( inteq, "nostarts", (int) bit_group_no_starts_uint(val), (int) 0x3C);
+    ASSERT2( inteq, "noends",   (int) bit_group_no_ends_uint  (val), (int) 0x78);
   }
 
   return result;
