@@ -230,5 +230,6 @@ unsigned int bit_nat_pred_uint(unsigned int num);
  */
 #define ONE_BIT_REPEAT(num) ((BIT_NAT_PRED(((IS_NONZERO(num)) << (BIT_NAT_PRED((num)))))) | ((IS_NONZERO((num))) << (BIT_NAT_PRED((num)))))
 unsigned int one_bit_repeat_uint(unsigned int num);
+unsigned long one_bit_repeat_ulong(unsigned long num);
 
 #endif /* ifndef BITS_H */

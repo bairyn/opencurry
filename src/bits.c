@@ -159,3 +159,8 @@ unsigned int one_bit_repeat_uint(unsigned int num)
 {
   return ONE_BIT_REPEAT(num);
 }
+
+unsigned long one_bit_repeat_ulong(unsigned long num)
+{
+  return ONE_BIT_REPEAT(num);
+}

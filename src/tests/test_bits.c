@@ -79,7 +79,8 @@ unit_test_result_t bits_consistency_test_run(unit_test_context_t *context)
   {
     unsigned int val;
 
-    typedef unsigned int uint;
+    typedef unsigned int  uint;
+    typedef unsigned long ulong;
 
     ASSERT2( uinteq, "on",       (uint) on_uint(),       (uint) ON()  );
     ASSERT2( uinteq, "off",      (uint) off_uint(),      (uint) OFF() );
@@ -177,7 +178,6 @@ unit_test_result_t bits_consistency_test_run(unit_test_context_t *context)
 
     /* ---------------------------------------------------------------- */
 
-    /* 0000 0111 */
     ASSERT2( uinteq, "0  repeating 1 bits", (uint) one_bit_repeat_uint(0),  (uint) ONE_BIT_REPEAT(0));
     ASSERT2( uinteq, "1  repeating 1 bits", (uint) one_bit_repeat_uint(1),  (uint) ONE_BIT_REPEAT(1));
     ASSERT2( uinteq, "2  repeating 1 bits", (uint) one_bit_repeat_uint(2),  (uint) ONE_BIT_REPEAT(2));
@@ -190,6 +190,17 @@ unit_test_result_t bits_consistency_test_run(unit_test_context_t *context)
 
     ASSERT2( uinteq, "31 repeating 1 bits", (uint) one_bit_repeat_uint(31), (uint) ONE_BIT_REPEAT(31));
     ASSERT2( uinteq, "32 repeating 1 bits", (uint) one_bit_repeat_uint(32), (uint) ONE_BIT_REPEAT(32U));
+
+    /* ---------------------------------------------------------------- */
+
+    ASSERT2( ulongeq, "1  repeating 1 bits", (ulong) one_bit_repeat_ulong(1LU),  (ulong) ONE_BIT_REPEAT(1LU));
+    ASSERT2( ulongeq, "2  repeating 1 bits", (ulong) one_bit_repeat_ulong(2LU),  (ulong) ONE_BIT_REPEAT(2LU));
+    ASSERT2( ulongeq, "3  repeating 1 bits", (ulong) one_bit_repeat_ulong(3LU),  (ulong) ONE_BIT_REPEAT(3LU));
+
+    ASSERT2( ulongeq, "61 repeating 1 bits", (ulong) one_bit_repeat_ulong(61LU), (ulong) ONE_BIT_REPEAT(61LU));
+    ASSERT2( ulongeq, "62 repeating 1 bits", (ulong) one_bit_repeat_ulong(62LU), (ulong) ONE_BIT_REPEAT(62LU));
+    ASSERT2( ulongeq, "63 repeating 1 bits", (ulong) one_bit_repeat_ulong(63LU), (ulong) ONE_BIT_REPEAT(63LU));
+    ASSERT2( ulongeq, "64 repeating 1 bits", (ulong) one_bit_repeat_ulong(64LU), (ulong) ONE_BIT_REPEAT(64LU));
   }
 
   return result;
@@ -211,7 +222,8 @@ unit_test_result_t bits_equalities_test_run(unit_test_context_t *context)
   {
     unsigned int val;
 
-    typedef unsigned int uint;
+    typedef unsigned int  uint;
+    typedef unsigned long ulong;
 
     ASSERT2( uinteq, "on",       (uint) on_uint(),       (uint) 1 );
     ASSERT2( uinteq, "off",      (uint) off_uint(),      (uint) 0 );
@@ -309,7 +321,6 @@ unit_test_result_t bits_equalities_test_run(unit_test_context_t *context)
 
     /* ---------------------------------------------------------------- */
 
-    /* 0000 0111 */
     ASSERT2( uinteq, "0  repeating 1 bits", (uint) one_bit_repeat_uint(0),  (uint) 0x00);
     ASSERT2( uinteq, "1  repeating 1 bits", (uint) one_bit_repeat_uint(1),  (uint) 0x01);
     ASSERT2( uinteq, "2  repeating 1 bits", (uint) one_bit_repeat_uint(2),  (uint) 0x03);
@@ -322,6 +333,17 @@ unit_test_result_t bits_equalities_test_run(unit_test_context_t *context)
 
     ASSERT2( uinteq, "31 repeating 1 bits", (uint) one_bit_repeat_uint(31), (uint) 0x7FFFFFFF);
     ASSERT2( uinteq, "32 repeating 1 bits", (uint) one_bit_repeat_uint(32), (uint) 0xFFFFFFFF);
+
+    /* ---------------------------------------------------------------- */
+
+    ASSERT2( ulongeq, "1  repeating 1 bits", (ulong) one_bit_repeat_ulong(1LU),  (ulong) 0x01LU);
+    ASSERT2( ulongeq, "2  repeating 1 bits", (ulong) one_bit_repeat_ulong(2LU),  (ulong) 0x03LU);
+    ASSERT2( ulongeq, "3  repeating 1 bits", (ulong) one_bit_repeat_ulong(3LU),  (ulong) 0x07LU);
+
+    ASSERT2( ulongeq, "61 repeating 1 bits", (ulong) one_bit_repeat_ulong(61LU), (ulong) 0x1FFFFFFFFFFFACEFUL | (ulong) 0x0FABFFFF);
+    ASSERT2( ulongeq, "62 repeating 1 bits", (ulong) one_bit_repeat_ulong(62LU), (ulong) 0x3FFFFFFFFFFFACEFUL | (ulong) 0x0FABFFFF);
+    ASSERT2( ulongeq, "63 repeating 1 bits", (ulong) one_bit_repeat_ulong(63LU), (ulong) 0x7FFFFFFFFFFFACEFUL | (ulong) 0x0FABFFFF);
+    ASSERT2( ulongeq, "64 repeating 1 bits", (ulong) one_bit_repeat_ulong(64LU), (ulong) 0xFFFFFFFFFFFFACEFUL | (ulong) 0x0FABFFFF);
   }
 
   return result;
