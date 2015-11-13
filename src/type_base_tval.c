@@ -37,6 +37,8 @@
 #include "type_base_type.h"
 #include "type_base_typed.h"
 
+#include "ptrs.h"
+
 /* ---------------------------------------------------------------- */
 /* tval                                                             */
 /* ---------------------------------------------------------------- */
@@ -68,5 +70,5 @@ const type_t *typeof_indirect(const tval *val)
  */
 typed_t tval_get_typed(const tval *val)
 {
-  return (typed_t) (objp_to_funp((void *) val));
+  return (typed_t) (objpc_to_funpc((void *) val));
 }
