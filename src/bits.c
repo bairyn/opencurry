@@ -75,6 +75,16 @@ unsigned int disabled_uint(void)
   return DISABLED();
 }
 
+unsigned int enable_uint(void)
+{
+  return ENABLE();
+}
+
+unsigned int disable_uint(void)
+{
+  return DISABLE();
+}
+
 unsigned int get_bit_uint(unsigned int pos, unsigned int val)
 {
   return GET_BIT(pos, val);

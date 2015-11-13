@@ -111,6 +111,11 @@ unsigned int no_uint(void);
 unsigned int enabled_uint(void);
 unsigned int disabled_uint(void);
 
+#define ENABLE()  (1)
+#define DISABLE() (0)
+unsigned int enable_uint(void);
+unsigned int disable_uint(void);
+
 /*
  * Return the bit at the given position.
  *
