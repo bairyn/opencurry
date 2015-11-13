@@ -68,7 +68,7 @@ unit_test_result_t test_bits_run(unit_test_context_t *context)
 unit_test_t bits_consistency_test =
   {  bits_consistency_test_run
   , "bits_consistency_test"
-  , "Testing consistency between macros and procedures provided by the \"bits\" module.."
+  , "Testing consistency between macros and procedures provided by the \"bits\" module."
   };
 
 unit_test_result_t bits_consistency_test_run(unit_test_context_t *context)
