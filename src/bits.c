@@ -90,9 +90,9 @@ unsigned int get_bit_uint(unsigned int pos, unsigned int val)
   return GET_BIT(pos, val);
 }
 
-unsigned int set_bit_uint(unsigned int pos, unsigned int rec, unsigned int bit)
+unsigned int set_bit_uint(unsigned int pos, unsigned int bit, unsigned int val)
 {
-  return SET_BIT(pos, rec, bit);
+  return SET_BIT(pos, bit, val);
 }
 
 unsigned int flip_bit_uint(unsigned int pos, unsigned int val)

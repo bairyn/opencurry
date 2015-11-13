@@ -135,8 +135,8 @@ unsigned int get_bit_uint(unsigned int pos, unsigned int val);
  * "bit" must be 0 or 1; it is undefined behaviour for it to contain any 1 bits
  * in any other position.
  */
-#define SET_BIT(pos, rec, bit) ((rec) ^ (((GET_BIT(((pos)), ((rec)))) ^ ((bit) & 1)) << (pos)))
-unsigned int set_bit_uint(unsigned int pos, unsigned int rec, unsigned int bit);
+#define SET_BIT(pos, bit, val) ((val) ^ (((GET_BIT(((pos)), ((val)))) ^ ((bit) & 1)) << (pos)))
+unsigned int set_bit_uint(unsigned int pos, unsigned int bit, unsigned int val);
 
 /*
  * Invert the bit at the given position, by returning a new value that is
