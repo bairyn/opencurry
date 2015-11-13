@@ -65,6 +65,39 @@ unit_test_result_t test_bits_run(unit_test_context_t *context)
 
 /* ---------------------------------------------------------------- */
 
+unit_test_t bits_consistency_test =
+  {  bits_consistency_test_run
+  , "bits_consistency_test"
+  , "Testing consistency between macros and procedures provided by the \"bits\" module.."
+  };
+
+unit_test_result_t bits_consistency_test_run(unit_test_context_t *context)
+{
+  unit_test_result_t result = assert_success(context);
+
+  ENCLOSE()
+  {
+    ASSERT2( inteq, "on",       (int) on_uint(),       (int) ON()  );
+    ASSERT2( inteq, "off",      (int) off_uint(),      (int) OFF() );
+
+    ASSERT2( inteq, "true",     (int) true_uint(),     (int) TRUE()  );
+    ASSERT2( inteq, "false",    (int) false_uint(),    (int) FALSE() );
+
+    ASSERT2( inteq, "yes",      (int) yes_uint(),      (int) YES()  );
+    ASSERT2( inteq, "no",       (int) no_uint(),       (int) NO() );
+
+    ASSERT2( inteq, "enabled",  (int) enabled_uint(),  (int) ENABLED()  );
+    ASSERT2( inteq, "disabled", (int) disabled_uint(), (int) DISABLED() );
+
+    ASSERT2( inteq, "enable",   (int) enable_uint(),   (int) ENABLE()  );
+    ASSERT2( inteq, "disable",  (int) disable_uint(),  (int) DISABLE() );
+  }
+
+  return result;
+}
+
+/* ---------------------------------------------------------------- */
+
 unit_test_t bits_equalities_test =
   {  bits_equalities_test_run
   , "bits_equalities_test"
@@ -146,39 +179,40 @@ unit_test_result_t bits_equalities_test_run(unit_test_context_t *context)
 
     ASSERT2( inteq, "1contagious", (int) bit_one_contagious_uint (val), (int) 0xFE);
     ASSERT2( inteq, "0contagious", (int) bit_zero_contagious_uint(val), (int) 0x38);
-  }
 
-  return result;
-}
+    /* ---------------------------------------------------------------- */
 
-/* ---------------------------------------------------------------- */
+    ASSERT2( inteq, "odd",  (int) bits_is_odd_uint (val), (int) 0);
+    ASSERT2( inteq, "even", (int) bits_is_even_uint(val), (int) 1);
 
-unit_test_t bits_consistency_test =
-  {  bits_consistency_test_run
-  , "bits_consistency_test"
-  , "Testing consistency between macros and procedures provided by the \"bits\" module.."
-  };
+    /* ---------------------------------------------------------------- */
 
-unit_test_result_t bits_consistency_test_run(unit_test_context_t *context)
-{
-  unit_test_result_t result = assert_success(context);
+    ASSERT2( inteq, "nonzero", (int) is_nonzero_uint(val), (int) 1);
+    ASSERT2( inteq, "zero",    (int) is_zero_uint   (val), (int) 0);
 
-  ENCLOSE()
-  {
-    ASSERT2( inteq, "on",       (int) on_uint(),       (int) ON()  );
-    ASSERT2( inteq, "off",      (int) off_uint(),      (int) OFF() );
+    /* ---------------------------------------------------------------- */
 
-    ASSERT2( inteq, "true",     (int) true_uint(),     (int) TRUE()  );
-    ASSERT2( inteq, "false",    (int) false_uint(),    (int) FALSE() );
+    ASSERT2( inteq, "predecessor val", (int) bit_nat_pred_uint(val),  (int) 0x7B);
+    ASSERT2( inteq, "predecessor 2"  , (int) bit_nat_pred_uint(0x02), (int) 0x01);
+    ASSERT2( inteq, "predecessor 1"  , (int) bit_nat_pred_uint(0x01), (int) 0x00);
+    ASSERT2( inteq, "predecessor 0"  , (int) bit_nat_pred_uint(0x00), (int) 0x00);
 
-    ASSERT2( inteq, "yes",      (int) yes_uint(),      (int) YES()  );
-    ASSERT2( inteq, "no",       (int) no_uint(),       (int) NO() );
+    /* ---------------------------------------------------------------- */
 
-    ASSERT2( inteq, "enabled",  (int) enabled_uint(),  (int) ENABLED()  );
-    ASSERT2( inteq, "disabled", (int) disabled_uint(), (int) DISABLED() );
+    /* 0000 0111 */
+    ASSERT2( inteq, "0  repeating 1 bits", (int) one_bit_repeat_uint(0),  (int) 0x00);
+    ASSERT2( inteq, "1  repeating 1 bits", (int) one_bit_repeat_uint(1),  (int) 0x01);
+    ASSERT2( inteq, "2  repeating 1 bits", (int) one_bit_repeat_uint(2),  (int) 0x03);
+    ASSERT2( inteq, "3  repeating 1 bits", (int) one_bit_repeat_uint(3),  (int) 0x07);
+    ASSERT2( inteq, "4  repeating 1 bits", (int) one_bit_repeat_uint(4),  (int) 0x0F);
+    ASSERT2( inteq, "5  repeating 1 bits", (int) one_bit_repeat_uint(5),  (int) 0x1F);
+    ASSERT2( inteq, "6  repeating 1 bits", (int) one_bit_repeat_uint(6),  (int) 0x3F);
+    ASSERT2( inteq, "7  repeating 1 bits", (int) one_bit_repeat_uint(7),  (int) 0x7F);
+    ASSERT2( inteq, "8  repeating 1 bits", (int) one_bit_repeat_uint(8),  (int) 0xFF);
 
-    ASSERT2( inteq, "enable",   (int) enable_uint(),   (int) ENABLE()  );
-    ASSERT2( inteq, "disable",  (int) disable_uint(),  (int) DISABLE() );
+    ASSERT2( inteq, "31 repeating 1 bits", (int) one_bit_repeat_uint(31), (int) 0x7FFFFFFF);
+    /* Handle overflow. */
+    ASSERT2( inteq, "32 repeating 1 bits", (int) ( ((long) 0xFFFFFFFF) - ((long) one_bit_repeat_uint(32)) ), (int) 0);
   }
 
   return result;
