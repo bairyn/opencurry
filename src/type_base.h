@@ -53,6 +53,8 @@
 
 #include "type_base_prim.h"
 
+#include "type_base_typed.h"
+
 #include "type_base_tval.h"
 
 /* TODO: type_t: is_const! */

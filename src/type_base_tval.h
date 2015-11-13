@@ -45,19 +45,7 @@
 /* tval                                                             */
 /* ---------------------------------------------------------------- */
 
-/* typed type. */
-
-/* TODO: update documentation to reflect change from "type_t *" to "typed" for
- * procedurally generated types! */
-const type_t *typed_type(void);
-extern const type_t typed_type_def;
-typedef const type_t *(*typed_t)(void);
-
-#define TYPED_DEFAULT  \
-  typed_type
-extern const typed_t typed_default;
-
-/* tval type. */
+/* tval: opaque type TODO TODO. */
 
 /*
  * tval:

@@ -30,80 +30,12 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-/* stddef.h:
- *   - size_t
- */
-#include <stddef.h>
-
 #include "base.h"
 #include "type_base_prim.h"
-#include "type_base_type.h"
 #include "type_base_tval.h"
 
 /* ---------------------------------------------------------------- */
 /* tval                                                             */
-/* ---------------------------------------------------------------- */
-
-/* typed type. */
-
-const type_t *typed_type(void)
-  { return &typed_type_def; }
-
-static const char          *typed_type_name       (const type_t *self);
-static size_t               typed_type_size       (const type_t *self, const tval *val);
-static const tval          *typed_type_has_default(const type_t *self);
-
-const type_t typed_type_def =
-  { type_type
-
-    /* @: Required.           */
-
-  , /* memory                 */ MEMORY_TRACKER_DEFAULTS
-  , /* is_self_mutable        */ NULL
-
-  , /* typed                  */ type_is_untyped
-
-  , /* @name                  */ typed_type_name
-  , /* info                   */ NULL
-  , /* @size                  */ typed_type_size
-  , /* @is_struct             */ type_is_not_struct
-  , /* is_mutable             */ NULL
-  , /* is_subtype             */ NULL
-  , /* is_supertype           */ NULL
-
-  , /* cons_type              */ NULL
-  , /* init                   */ NULL
-  , /* free                   */ NULL
-  , /* has_default            */ typed_type_has_default
-  , /* mem                    */ NULL
-  , /* mem_init               */ NULL
-  , /* mem_is_dyn             */ NULL
-  , /* mem_free               */ NULL
-  , /* default_memory_manager */ NULL
-
-  , /* dup                    */ NULL
-
-  , /* user                   */ NULL
-  , /* cuser                  */ NULL
-  , /* cmp                    */ NULL
-
-  , /* parity                 */ ""
-  };
-
-static const char          *typed_type_name       (const type_t *self)
-  { return "typed_t"; }
-
-static size_t               typed_type_size       (const type_t *self, const tval *val)
-  { return sizeof(typed_t); }
-
-static const tval          *typed_type_has_default(const type_t *self)
-  { return &typed_default; }
-
-/* ---------------------------------------------------------------- */
-
-const typed_t typed_default =
-  TYPED_DEFAULT;
-
 /* ---------------------------------------------------------------- */
 
 /*
