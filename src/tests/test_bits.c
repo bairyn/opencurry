@@ -154,8 +154,17 @@ unit_test_result_t bits_consistency_test_run(unit_test_context_t *context)
 
     /* ---------------------------------------------------------------- */
 
-    ASSERT2( inteq, "nonzero", (int) is_nonzero_uint(val), (int) IS_NONZERO(val));
-    ASSERT2( inteq, "zero",    (int) is_zero_uint   (val), (int) IS_ZERO   (val));
+    ASSERT2( inteq, "nonzero val", (int) is_nonzero_uint(val), (int) IS_NONZERO(val));
+    ASSERT2( inteq, "zero val",    (int) is_zero_uint   (val), (int) IS_ZERO   (val));
+
+    ASSERT2( inteq, "nonzero 0",   (int) is_nonzero_uint(0),   (int) IS_NONZERO(0));
+    ASSERT2( inteq, "zero 0",      (int) is_zero_uint   (0),   (int) IS_ZERO   (0));
+
+    ASSERT2( inteq, "nonzero 1",   (int) is_nonzero_uint(1),   (int) IS_NONZERO(1));
+    ASSERT2( inteq, "zero 1",      (int) is_zero_uint   (1),   (int) IS_ZERO   (1));
+
+    ASSERT2( inteq, "nonzero 2",   (int) is_nonzero_uint(2),   (int) IS_NONZERO(2));
+    ASSERT2( inteq, "zero 2",      (int) is_zero_uint   (2),   (int) IS_ZERO   (2));
 
     /* ---------------------------------------------------------------- */
 
@@ -179,7 +188,7 @@ unit_test_result_t bits_consistency_test_run(unit_test_context_t *context)
 
     ASSERT2( inteq, "31 repeating 1 bits", (int) one_bit_repeat_uint(31), (int) ONE_BIT_REPEAT(31));
     /* Handle overflow. */
-    ASSERT2( inteq, "32 repeating 1 bits", (int) ( ((long) ONE_BIT_REPEAT(32)) - ((long) one_bit_repeat_uint(32)) ), (int) 0);
+    ASSERT2( inteq, "32 repeating 1 bits", (int) ( ((long) ONE_BIT_REPEAT(32U)) - ((long) one_bit_repeat_uint(32)) ), (int) 0);
   }
 
   return result;
@@ -276,8 +285,17 @@ unit_test_result_t bits_equalities_test_run(unit_test_context_t *context)
 
     /* ---------------------------------------------------------------- */
 
-    ASSERT2( inteq, "nonzero", (int) is_nonzero_uint(val), (int) 1);
-    ASSERT2( inteq, "zero",    (int) is_zero_uint   (val), (int) 0);
+    ASSERT2( inteq, "nonzero val", (int) is_nonzero_uint(val), (int) 1);
+    ASSERT2( inteq, "zero val",    (int) is_zero_uint   (val), (int) 0);
+
+    ASSERT2( inteq, "nonzero 0",   (int) is_nonzero_uint(0),   (int) 0);
+    ASSERT2( inteq, "zero 0",      (int) is_zero_uint   (0),   (int) 1);
+
+    ASSERT2( inteq, "nonzero 1",   (int) is_nonzero_uint(1),   (int) 1);
+    ASSERT2( inteq, "zero 1",      (int) is_zero_uint   (1),   (int) 0);
+
+    ASSERT2( inteq, "nonzero 2",   (int) is_nonzero_uint(2),   (int) 1);
+    ASSERT2( inteq, "zero 2",      (int) is_zero_uint   (2),   (int) 0);
 
     /* ---------------------------------------------------------------- */
 
