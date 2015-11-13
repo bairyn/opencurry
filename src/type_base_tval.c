@@ -45,5 +45,16 @@
  */
 const type_t *typeof(const tval *val)
 {
+  return type_is_typed(typeof_indirect(val));
+}
+
+/*
+ * Obtain the indirect type of a "tval *", without calling "type_is_typed" to
+ * obtain a possibly more specific reference to the type.
+ *
+ * This casts from "const tval *" to "const type_t *".
+ */
+const type_t *typeof_indirect(const tval *val)
+{
   return (const type_t *) val;
 }

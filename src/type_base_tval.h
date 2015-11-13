@@ -149,7 +149,8 @@
  */
 typedef void tval;
 
-const type_t *typeof(const tval *val);
+const type_t *typeof         (const tval *val);
+const type_t *typeof_indirect(const tval *val);
 
 /* ---------------------------------------------------------------- */
 /* Post-dependencies.                                               */
