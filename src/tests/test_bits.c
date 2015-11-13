@@ -77,6 +77,8 @@ unit_test_result_t bits_consistency_test_run(unit_test_context_t *context)
 
   ENCLOSE()
   {
+    unsigned int val;
+
     ASSERT2( inteq, "on",       (int) on_uint(),       (int) ON()  );
     ASSERT2( inteq, "off",      (int) off_uint(),      (int) OFF() );
 
@@ -91,6 +93,93 @@ unit_test_result_t bits_consistency_test_run(unit_test_context_t *context)
 
     ASSERT2( inteq, "enable",   (int) enable_uint(),   (int) ENABLE()  );
     ASSERT2( inteq, "disable",  (int) disable_uint(),  (int) DISABLE() );
+
+    /* ---------------------------------------------------------------- */
+
+    /* 0111 1100 */
+    val = 0x7C;
+    ASSERT2( inteq, "get_bit0",   (int) get_bit_uint (0,    val), (int) GET_BIT (0,    val));
+    ASSERT2( inteq, "get_bit1",   (int) get_bit_uint (1,    val), (int) GET_BIT (1,    val));
+    ASSERT2( inteq, "get_bit2",   (int) get_bit_uint (2,    val), (int) GET_BIT (2,    val));
+    ASSERT2( inteq, "get_bit3",   (int) get_bit_uint (3,    val), (int) GET_BIT (3,    val));
+    ASSERT2( inteq, "get_bit4",   (int) get_bit_uint (4,    val), (int) GET_BIT (4,    val));
+    ASSERT2( inteq, "get_bit5",   (int) get_bit_uint (5,    val), (int) GET_BIT (5,    val));
+    ASSERT2( inteq, "get_bit6",   (int) get_bit_uint (6,    val), (int) GET_BIT (6,    val));
+    ASSERT2( inteq, "get_bit7",   (int) get_bit_uint (7,    val), (int) GET_BIT (7,    val));
+
+    ASSERT2( inteq, "set_bit0_0", (int) set_bit_uint (0, 0, val), (int) SET_BIT (0, 0, val));
+    ASSERT2( inteq, "set_bit1_0", (int) set_bit_uint (1, 0, val), (int) SET_BIT (1, 0, val));
+    ASSERT2( inteq, "set_bit2_0", (int) set_bit_uint (2, 0, val), (int) SET_BIT (2, 0, val));
+    ASSERT2( inteq, "set_bit3_0", (int) set_bit_uint (3, 0, val), (int) SET_BIT (3, 0, val));
+    ASSERT2( inteq, "set_bit4_0", (int) set_bit_uint (4, 0, val), (int) SET_BIT (4, 0, val));
+    ASSERT2( inteq, "set_bit5_0", (int) set_bit_uint (5, 0, val), (int) SET_BIT (5, 0, val));
+    ASSERT2( inteq, "set_bit6_0", (int) set_bit_uint (6, 0, val), (int) SET_BIT (6, 0, val));
+    ASSERT2( inteq, "set_bit7_0", (int) set_bit_uint (7, 0, val), (int) SET_BIT (7, 0, val));
+
+    ASSERT2( inteq, "set_bit0_1", (int) set_bit_uint (0, 1, val), (int) SET_BIT (0, 1, val));
+    ASSERT2( inteq, "set_bit1_1", (int) set_bit_uint (1, 1, val), (int) SET_BIT (1, 1, val));
+    ASSERT2( inteq, "set_bit2_1", (int) set_bit_uint (2, 1, val), (int) SET_BIT (2, 1, val));
+    ASSERT2( inteq, "set_bit3_1", (int) set_bit_uint (3, 1, val), (int) SET_BIT (3, 1, val));
+    ASSERT2( inteq, "set_bit4_1", (int) set_bit_uint (4, 1, val), (int) SET_BIT (4, 1, val));
+    ASSERT2( inteq, "set_bit5_1", (int) set_bit_uint (5, 1, val), (int) SET_BIT (5, 1, val));
+    ASSERT2( inteq, "set_bit6_1", (int) set_bit_uint (6, 1, val), (int) SET_BIT (6, 1, val));
+    ASSERT2( inteq, "set_bit7_1", (int) set_bit_uint (7, 1, val), (int) SET_BIT (7, 1, val));
+
+    ASSERT2( inteq, "flip_bit0",  (int) flip_bit_uint(0,    val), (int) FLIP_BIT(0,    val));
+    ASSERT2( inteq, "flip_bit1",  (int) flip_bit_uint(1,    val), (int) FLIP_BIT(1,    val));
+    ASSERT2( inteq, "flip_bit2",  (int) flip_bit_uint(2,    val), (int) FLIP_BIT(2,    val));
+    ASSERT2( inteq, "flip_bit3",  (int) flip_bit_uint(3,    val), (int) FLIP_BIT(3,    val));
+    ASSERT2( inteq, "flip_bit4",  (int) flip_bit_uint(4,    val), (int) FLIP_BIT(4,    val));
+    ASSERT2( inteq, "flip_bit5",  (int) flip_bit_uint(5,    val), (int) FLIP_BIT(5,    val));
+    ASSERT2( inteq, "flip_bit6",  (int) flip_bit_uint(6,    val), (int) FLIP_BIT(6,    val));
+    ASSERT2( inteq, "flip_bit7",  (int) flip_bit_uint(7,    val), (int) FLIP_BIT(7,    val));
+
+    /* ---------------------------------------------------------------- */
+
+    ASSERT2( inteq, "starts",   (int) bit_group_starts_uint   (val), (int) BIT_GROUP_STARTS   (val));
+    ASSERT2( inteq, "ends",     (int) bit_group_ends_uint     (val), (int) BIT_GROUP_ENDS     (val));
+
+    ASSERT2( inteq, "nostarts", (int) bit_group_no_starts_uint(val), (int) BIT_GROUP_NO_STARTS(val));
+    ASSERT2( inteq, "noends",   (int) bit_group_no_ends_uint  (val), (int) BIT_GROUP_NO_ENDS  (val));
+
+    /* ---------------------------------------------------------------- */
+
+    ASSERT2( inteq, "1contagious", (int) bit_one_contagious_uint (val), (int) BIT_ONE_CONTAGIOUS (val));
+    ASSERT2( inteq, "0contagious", (int) bit_zero_contagious_uint(val), (int) BIT_ZERO_CONTAGIOUS(val));
+
+    /* ---------------------------------------------------------------- */
+
+    ASSERT2( inteq, "odd",  (int) bits_is_odd_uint (val), (int) BITS_IS_ODD (val));
+    ASSERT2( inteq, "even", (int) bits_is_even_uint(val), (int) BITS_IS_EVEN(val));
+
+    /* ---------------------------------------------------------------- */
+
+    ASSERT2( inteq, "nonzero", (int) is_nonzero_uint(val), (int) IS_NONZERO(val));
+    ASSERT2( inteq, "zero",    (int) is_zero_uint   (val), (int) IS_ZERO   (val));
+
+    /* ---------------------------------------------------------------- */
+
+    ASSERT2( inteq, "predecessor val", (int) bit_nat_pred_uint(val),  (int) BIT_NAT_PRED(val));
+    ASSERT2( inteq, "predecessor 2"  , (int) bit_nat_pred_uint(0x02), (int) BIT_NAT_PRED(0x02));
+    ASSERT2( inteq, "predecessor 1"  , (int) bit_nat_pred_uint(0x01), (int) BIT_NAT_PRED(0x01));
+    ASSERT2( inteq, "predecessor 0"  , (int) bit_nat_pred_uint(0x00), (int) BIT_NAT_PRED(0x00));
+
+    /* ---------------------------------------------------------------- */
+
+    /* 0000 0111 */
+    ASSERT2( inteq, "0  repeating 1 bits", (int) one_bit_repeat_uint(0),  (int) ONE_BIT_REPEAT(0));
+    ASSERT2( inteq, "1  repeating 1 bits", (int) one_bit_repeat_uint(1),  (int) ONE_BIT_REPEAT(1));
+    ASSERT2( inteq, "2  repeating 1 bits", (int) one_bit_repeat_uint(2),  (int) ONE_BIT_REPEAT(2));
+    ASSERT2( inteq, "3  repeating 1 bits", (int) one_bit_repeat_uint(3),  (int) ONE_BIT_REPEAT(3));
+    ASSERT2( inteq, "4  repeating 1 bits", (int) one_bit_repeat_uint(4),  (int) ONE_BIT_REPEAT(4));
+    ASSERT2( inteq, "5  repeating 1 bits", (int) one_bit_repeat_uint(5),  (int) ONE_BIT_REPEAT(5));
+    ASSERT2( inteq, "6  repeating 1 bits", (int) one_bit_repeat_uint(6),  (int) ONE_BIT_REPEAT(6));
+    ASSERT2( inteq, "7  repeating 1 bits", (int) one_bit_repeat_uint(7),  (int) ONE_BIT_REPEAT(7));
+    ASSERT2( inteq, "8  repeating 1 bits", (int) one_bit_repeat_uint(8),  (int) ONE_BIT_REPEAT(8));
+
+    ASSERT2( inteq, "31 repeating 1 bits", (int) one_bit_repeat_uint(31), (int) ONE_BIT_REPEAT(31));
+    /* Handle overflow. */
+    ASSERT2( inteq, "32 repeating 1 bits", (int) ( ((long) ONE_BIT_REPEAT(32)) - ((long) one_bit_repeat_uint(32)) ), (int) 0);
   }
 
   return result;
