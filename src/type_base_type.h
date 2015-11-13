@@ -40,6 +40,7 @@
 #include "base.h"
 
 #include "type_base_prim.h"
+#include "type_base_typed.h"
 #ifndef TODO /* TODO */
 #include "type_base.h"
 #endif /* #ifndef TODO /-* TODO *-/ */

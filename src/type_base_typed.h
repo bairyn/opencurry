@@ -39,6 +39,10 @@
 #define TYPE_BASE_TYPED_H
 #include "base.h"
 
+/* ---------------------------------------------------------------- */
+/* Dependencies.                                                    */
+/* ---------------------------------------------------------------- */
+
 #include "type_base_prim.h"
 
 /* ---------------------------------------------------------------- */
@@ -56,5 +60,11 @@ typedef const type_t *(*typed_t)(void);
 #define TYPED_DEFAULT  \
   typed_type
 extern const typed_t typed_default;
+
+/* ---------------------------------------------------------------- */
+/* Post-dependencies.                                               */
+/* ---------------------------------------------------------------- */
+
+#include "type_base_type.h"
 
 #endif /* ifndef TYPE_BASE_TYPED_H */

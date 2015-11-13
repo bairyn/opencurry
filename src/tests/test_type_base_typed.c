@@ -52,7 +52,9 @@ unit_test_t type_base_typed_test =
 
 /* Array of type_base_typed tests. */
 unit_test_t *type_base_typed_tests[] =
-  { NULL
+  { &typed_correspondence_test
+
+  , NULL
   };
 
 unit_test_result_t test_type_base_typed_run(unit_test_context_t *context)
@@ -62,3 +64,20 @@ unit_test_result_t test_type_base_typed_run(unit_test_context_t *context)
 
 /* ---------------------------------------------------------------- */
 
+unit_test_t typed_correspondence_test =
+  {  typed_correspondence_test_run
+  , "typed_correspondence_test"
+  , "Testing typed_type corresponds to related declarations."
+  };
+
+unit_test_result_t typed_correspondence_test_run(unit_test_context_t *context)
+{
+  unit_test_result_t result = assert_success(context);
+
+  ENCLOSE()
+  {
+    ASSERT2( objpeq, "typed_type returns typed_type_def reference.", typed_type(), &typed_type_def);
+  }
+
+  return result;
+}
