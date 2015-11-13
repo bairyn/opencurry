@@ -1167,23 +1167,6 @@ int template_cons_free_struct_memfree_type
   );
 
 /* ---------------------------------------------------------------- */
-/* Casting between pointer types.                                   */
-/* ---------------------------------------------------------------- */
-
-/* TODO: move to new module "ptr". */
-
-typedef void   *objp_cast_t;
-typedef void *(*funp_cast_t)(void *, ...);
-
-funp_cast_t objp_to_funp(objp_cast_t ptr);
-objp_cast_t funp_to_objp(funp_cast_t ptr);
-
-size_t     objp_to_size   (void     *ptr);
-void      *size_to_objp   (size_t    ptr_rep);
-ptrdiff_t  objp_to_ptrdiff(void     *ptr);
-void      *ptrdiff_to_objp(ptrdiff_t ptr_rep);
-
-/* ---------------------------------------------------------------- */
 /* Primitive C data types.                                          */
 /* ---------------------------------------------------------------- */
 

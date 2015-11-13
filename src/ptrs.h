@@ -37,6 +37,40 @@
 
 #ifndef PTRS_H
 #define PTRS_H
+/* stddef.h:
+ *   - size_t
+ *   - ptrdiff_t
+ */
+#include <stddef.h>
+
 #include "base.h"
+
+/* ---------------------------------------------------------------- */
+/* Casting to and from pointers, possibly of different types.       */
+/* ---------------------------------------------------------------- */
+
+typedef void   *objp_cast_t;
+typedef void *(*funp_cast_t)(void *, ...);
+
+typedef       void   *objpm_cast_t;
+typedef       void *(*funpm_cast_t)(void *, ...);
+typedef const void   *objpc_cast_t;
+typedef const void *(*funpc_cast_t)(void *, ...);
+
+funp_cast_t objp_to_funp(objp_cast_t ptr);
+objp_cast_t funp_to_objp(funp_cast_t ptr);
+
+funpc_cast_t objpc_to_funpc(objpc_cast_t ptr);
+objpc_cast_t funpc_to_objpc(funpc_cast_t ptr);
+
+size_t     objp_to_size   (void     *ptr);
+void      *size_to_objp   (size_t    ptr_rep);
+ptrdiff_t  objp_to_ptrdiff(void     *ptr);
+void      *ptrdiff_to_objp(ptrdiff_t ptr_rep);
+
+size_t      objpc_to_size   (const void *ptr);
+const void *size_to_objpc   (size_t      ptr_rep);
+ptrdiff_t   objpc_to_ptrdiff(const void *ptr);
+const void *ptrdiff_to_objpc(ptrdiff_t   ptr_rep);
 
 #endif /* ifndef PTRS_H */

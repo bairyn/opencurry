@@ -30,7 +30,170 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+/* stddef.h:
+ *   - size_t
+ *   - ptrdiff_t
+ *   - NULL
+ */
+#include <stddef.h>
+
 #include "base.h"
 #include "ptrs.h"
 
-void ptrs_placeholder(void) { }
+/* ---------------------------------------------------------------- */
+/* Casting to and from pointers, possibly of different types.       */
+/* ---------------------------------------------------------------- */
+
+funp_cast_t objp_to_funp(objp_cast_t ptr);
+objp_cast_t funp_to_objp(funp_cast_t ptr);
+
+funpc_cast_t objpc_to_funpc(objpc_cast_t ptr);
+objpc_cast_t funpc_to_objpc(funpc_cast_t ptr);
+
+size_t     objp_to_size   (void     *ptr);
+void      *size_to_objp   (size_t    ptr_rep);
+ptrdiff_t  objp_to_ptrdiff(void     *ptr);
+void      *ptrdiff_to_objp(ptrdiff_t ptr_rep);
+
+size_t      objpc_to_size   (const void *ptr);
+const void *size_to_objpc   (size_t      ptr_rep);
+ptrdiff_t   objpc_to_ptrdiff(const void *ptr);
+const void *ptrdiff_to_objpc(ptrdiff_t   ptr_rep);
+
+/* ---------------------------------------------------------------- */
+/* Casting between pointers of different types.                     */
+/* ---------------------------------------------------------------- */
+
+funp_cast_t objp_to_funp(objp_cast_t ptr)
+{
+  struct { funp_cast_t fun; } fun;
+
+  *((objp_cast_t *) (&fun)) = ptr;
+
+  return fun.fun;
+}
+
+objp_cast_t funp_to_objp(funp_cast_t ptr)
+{
+  struct { funp_cast_t fun; } fun;
+
+  fun.fun = ptr;
+
+  return *((objp_cast_t *) (&fun));
+}
+
+/* ---------------------------------------------------------------- */
+
+funpc_cast_t objpc_to_funpc(objpc_cast_t ptr)
+{
+  struct { funpc_cast_t fun; } fun;
+
+  *((objpc_cast_t *) (&fun)) = ptr;
+
+  return fun.fun;
+}
+
+objpc_cast_t funpc_to_objpc(funpc_cast_t ptr)
+{
+  struct { funpc_cast_t fun; } fun;
+
+  fun.fun = ptr;
+
+  return *((objpc_cast_t *) (&fun));
+}
+
+/* ---------------------------------------------------------------- */
+/* Casting between pointers and scalar values.                      */
+/* ---------------------------------------------------------------- */
+
+size_t     objp_to_size   (void     *ptr)
+{
+  size_t    ptr_rep;
+  ptrdiff_t distance;
+
+  distance = (ptrdiff_t) (((unsigned char *) ptr) - ((unsigned char *) NULL));
+
+  ptr_rep = (size_t) distance;
+
+  return ((size_t) ptr_rep);
+}
+
+void      *size_to_objp   (size_t    ptr_rep)
+{
+  unsigned char *ptr;
+  ptrdiff_t      distance;
+
+  distance = (ptrdiff_t) ptr_rep;
+
+  ptr = (unsigned char *) (((unsigned char *) NULL) + ((ptrdiff_t) distance));
+
+  return ((void *) ptr);
+}
+
+ptrdiff_t  objp_to_ptrdiff(void     *ptr)
+{
+  ptrdiff_t distance;
+
+  distance = (ptrdiff_t) (((unsigned char *) ptr) - ((unsigned char *) NULL));
+
+  return ((ptrdiff_t) distance);
+}
+
+void      *ptrdiff_to_objp(ptrdiff_t ptr_rep)
+{
+  unsigned char *ptr;
+  ptrdiff_t      distance;
+
+  distance = (ptrdiff_t) ptr_rep;
+
+  ptr = (unsigned char *) (((unsigned char *) NULL) + ((ptrdiff_t) distance));
+
+  return ((void *) ptr);
+}
+
+/* ---------------------------------------------------------------- */
+
+size_t      objpc_to_size   (const void *ptr)
+{
+  size_t    ptr_rep;
+  ptrdiff_t distance;
+
+  distance = (ptrdiff_t) (((const unsigned char *) ptr) - ((const unsigned char *) NULL));
+
+  ptr_rep = (size_t) distance;
+
+  return ((size_t) ptr_rep);
+}
+
+const void *size_to_objpc   (size_t      ptr_rep)
+{
+  unsigned char *ptr;
+  ptrdiff_t      distance;
+
+  distance = (ptrdiff_t) ptr_rep;
+
+  ptr = (const unsigned char *) (((const unsigned char *) NULL) + ((ptrdiff_t) distance));
+
+  return ((const void *) ptr);
+}
+
+ptrdiff_t   objpc_to_ptrdiff(const void *ptr)
+{
+  ptrdiff_t distance;
+
+  distance = (ptrdiff_t) (((const unsigned char *) ptr) - ((const unsigned char *) NULL));
+
+  return ((ptrdiff_t) distance);
+}
+
+const void *ptrdiff_to_objpc(ptrdiff_t   ptr_rep)
+{
+  unsigned char *ptr;
+  ptrdiff_t      distance;
+
+  distance = (ptrdiff_t) ptr_rep;
+
+  ptr = (const unsigned char *) (((const unsigned char *) NULL) + ((ptrdiff_t) distance));
+
+  return ((const void *) ptr);
+}
