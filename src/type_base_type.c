@@ -30,6 +30,11 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+/* string.h:
+ *   - memcmp
+ */
+#include <string.h>
+
 #include "base.h"
 #include "type_base_prim.h"
 #ifndef TODO /* TODO */
