@@ -98,14 +98,14 @@ unit_test_result_t bits_equalities_test_run(unit_test_context_t *context)
 
     /* 0111 1100 */
     val = 0x7C;
-    ASSERT2( inteq, "get_bit0", (int) get_bit_uint(val, 0), (int) 0);
-    ASSERT2( inteq, "get_bit1", (int) get_bit_uint(val, 1), (int) 0);
-    ASSERT2( inteq, "get_bit2", (int) get_bit_uint(val, 2), (int) 1);
-    ASSERT2( inteq, "get_bit3", (int) get_bit_uint(val, 3), (int) 1);
-    ASSERT2( inteq, "get_bit4", (int) get_bit_uint(val, 4), (int) 1);
-    ASSERT2( inteq, "get_bit5", (int) get_bit_uint(val, 5), (int) 1);
-    ASSERT2( inteq, "get_bit6", (int) get_bit_uint(val, 6), (int) 1);
-    ASSERT2( inteq, "get_bit7", (int) get_bit_uint(val, 7), (int) 0);
+    ASSERT2( inteq, "get_bit0", (int) get_bit_uint(0, val), (int) 0);
+    ASSERT2( inteq, "get_bit1", (int) get_bit_uint(1, val), (int) 0);
+    ASSERT2( inteq, "get_bit2", (int) get_bit_uint(2, val), (int) 1);
+    ASSERT2( inteq, "get_bit3", (int) get_bit_uint(3, val), (int) 1);
+    ASSERT2( inteq, "get_bit4", (int) get_bit_uint(4, val), (int) 1);
+    ASSERT2( inteq, "get_bit5", (int) get_bit_uint(5, val), (int) 1);
+    ASSERT2( inteq, "get_bit6", (int) get_bit_uint(6, val), (int) 1);
+    ASSERT2( inteq, "get_bit7", (int) get_bit_uint(7, val), (int) 0);
   }
 
   return result;
