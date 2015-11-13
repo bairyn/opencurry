@@ -161,7 +161,6 @@ extern const typed_t typed_default;
  */
 typedef void tval;
 
-/* FIXME: misleading name! */
-const type_t *tval_type(const tval *val);
+const type_t *typeof(const tval *val);
 
 #endif /* ifndef TYPE_BASE_TVAL_H */

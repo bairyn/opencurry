@@ -37,6 +37,7 @@
 
 #include "base.h"
 #include "type_base_prim.h"
+#include "type_base_tval.h"
 #ifndef TODO /* TODO */
 #include "type_base.h"
 #endif /* #ifndef TODO /-* TODO *-/ */
@@ -216,17 +217,6 @@ static const void          *type_type_cuser      (const type_t *self, const tval
     return NULL;
 
   return type_cuser(val, NULL);
-}
-
-/* ---------------------------------------------------------------- */
-
-/*
- * Procedures on or for "type_t"'s.
- */
-
-void tval_free(tval *val)
-{
-  type_free(tval_type(val), val);
 }
 
 /* ---------------------------------------------------------------- */
@@ -2634,4 +2624,17 @@ const type_t *is_supertype_via(const type_t *super, const type_t *mid, const typ
 const type_t *is_proper_supertype(const type_t *super, const type_t *sub)
 {
   return is_proper_subtype(sub, super);
+}
+
+/*
+ * "type_t" accessors for typed "tval"s.
+ *
+ * All provided values must start with a "typed_t" value (so-called "tval"s)!
+ */
+
+/* TODO: more */
+
+void tval_free(tval *val)
+{
+  type_free(typeof(val), val);
 }

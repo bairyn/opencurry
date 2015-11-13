@@ -108,8 +108,10 @@ const typed_t typed_default =
 
 /*
  * Obtain the type of a "tval *".
+ *
+ * Only typed "tval"s are supported!
  */
-const type_t *tval_type(const tval *val)
+const type_t *typeof(const tval *val)
 {
   return (const type_t *) val;
 }

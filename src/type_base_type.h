@@ -1135,9 +1135,13 @@ const type_t *is_proper_supertype(const type_t *super, const type_t *sub);
 /* ---------------------------------------------------------------- */
 
 /*
- * Procedures on or for "type_t"'s.
+ * "type_t" accessors for typed "tval"s.
+ *
+ * All provided values must start with a "typed_t" value (so-called "tval"s)!
  */
 
-void              tval_free(tval *val);
+/* TODO: more */
+
+void tval_free (tval *val);
 
 #endif /* ifndef TYPE_BASE_TYPE_H */
