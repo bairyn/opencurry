@@ -51,4 +51,7 @@ unit_test_result_t test_type_base_prim_run(unit_test_context_t *context);
 
 /* ---------------------------------------------------------------- */
 
+extern unit_test_t prim_type_size_correspondence_test;
+unit_test_result_t prim_type_size_correspondence_test_run(unit_test_context_t *context);
+
 #endif /* ifndef TESTS_TEST_TYPE_BASE_PRIM_H */

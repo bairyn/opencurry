@@ -49,4 +49,13 @@ typedef struct type_s type_t;
 
 typedef struct template_cons_s template_cons_t;
 
+/* ---------------------------------------------------------------- */
+/* Post-dependencies.                                               */
+/* ---------------------------------------------------------------- */
+
+#ifdef TODO
+#include "type_base_type.h"
+#include "type_base_template_cons.h"
+#endif /* #ifdef TODO */
+
 #endif /* ifndef TYPE_BASE_PRIM_H */

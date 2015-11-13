@@ -65,6 +65,8 @@ extern const typed_t typed_default;
 /* Post-dependencies.                                               */
 /* ---------------------------------------------------------------- */
 
+#ifdef TODO
 #include "type_base_type.h"
+#endif /* #ifdef TODO */
 
 #endif /* ifndef TYPE_BASE_TYPED_H */

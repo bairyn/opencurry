@@ -35,6 +35,9 @@
 #include "test_type_base_typed.h"
 
 #include "../type_base_typed.h"
+#ifndef TODO
+#include "../type_base_type.h"
+#endif /* #ifndef TODO */
 
 int test_type_base_typed_cli(int argc, char **argv)
 {
@@ -76,7 +79,7 @@ unit_test_result_t typed_correspondence_test_run(unit_test_context_t *context)
 
   ENCLOSE()
   {
-    ASSERT2( objpeq, "typed_type returns typed_type_def reference.", typed_type(), &typed_type_def);
+    TASSERT2( objpeq, "typed_type returns typed_type_def reference.", typed_type(), &typed_type_def);
   }
 
   return result;

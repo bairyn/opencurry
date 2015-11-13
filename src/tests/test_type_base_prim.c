@@ -30,11 +30,19 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+/* stddef.h:
+ *   - size_t
+ */
+#include <stddef.h>
+
 #include "../base.h"
 #include "testing.h"
 #include "test_type_base_prim.h"
 
 #include "../type_base_prim.h"
+#ifndef TODO
+#include "../type_base_type.h"
+#endif /* #ifndef TODO */
 
 int test_type_base_prim_cli(int argc, char **argv)
 {
@@ -52,7 +60,9 @@ unit_test_t type_base_prim_test =
 
 /* Array of type_base_prim tests. */
 unit_test_t *type_base_prim_tests[] =
-  { NULL
+  { &prim_type_size_correspondence_test
+
+  , NULL
   };
 
 unit_test_result_t test_type_base_prim_run(unit_test_context_t *context)
@@ -62,3 +72,20 @@ unit_test_result_t test_type_base_prim_run(unit_test_context_t *context)
 
 /* ---------------------------------------------------------------- */
 
+unit_test_t prim_type_size_correspondence_test =
+  {  prim_type_size_correspondence_test_run
+  , "prim_type_size_correspondence_test"
+  , "Testing sizeof equivalence for type_t and its defining struct type."
+  };
+
+unit_test_result_t prim_type_size_correspondence_test_run(unit_test_context_t *context)
+{
+  unit_test_result_t result = assert_success(context);
+
+  ENCLOSE()
+  {
+    TASSERT2( sizeeq, "type_t sizeof equivalence", sizeof(type_t), sizeof(struct type_s));
+  }
+
+  return result;
+}
