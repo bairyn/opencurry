@@ -112,12 +112,12 @@ unsigned int bit_group_ends_uint(unsigned int val)
 
 unsigned int bit_group_no_starts_uint(unsigned int val)
 {
-  return BIT_GROUP_STARTS(val);
+  return BIT_GROUP_NO_STARTS(val);
 }
 
 unsigned int bit_group_no_ends_uint(unsigned int val)
 {
-  return BIT_GROUP_ENDS(val);
+  return BIT_GROUP_NO_ENDS(val);
 }
 
 unsigned int bit_one_contagious_uint(unsigned int val)
