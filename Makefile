@@ -98,6 +98,7 @@ SHARED_OBJS :=                              \
 	$(OBJ_DIR)/buffers.o                      \
 	$(OBJ_DIR)/mempool.o                      \
 	$(OBJ_DIR)/type_base.o                    \
+	$(OBJ_DIR)/type_base_prim.o               \
 	$(OBJ_DIR)/type_tags.o                    \
 	$(OBJ_DIR)/type_structs.o                 \
 	$(OBJ_DIR)/type_fun.o                     \
@@ -133,6 +134,7 @@ TEST_CLI_OBJS :=                            \
 	$(OBJ_DIR)/tests/test_buffers.o           \
 	$(OBJ_DIR)/tests/test_mempool.o           \
 	$(OBJ_DIR)/tests/test_type_base.o         \
+	$(OBJ_DIR)/tests/test_type_base_prim.o    \
 	$(OBJ_DIR)/tests/test_type_tags.o         \
 	$(OBJ_DIR)/tests/test_type_structs.o      \
 	$(OBJ_DIR)/tests/test_type_fun.o          \
