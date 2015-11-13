@@ -108,6 +108,7 @@ SHARED_OBJS :=                              \
 	$(OBJ_DIR)/type_adts.o                    \
 	$(OBJ_DIR)/type_util.o                    \
 	$(OBJ_DIR)/bits.o                         \
+	$(OBJ_DIR)/ptrs.o                         \
 	$(OBJ_DIR)/global.o                       \
 	$(OBJ_DIR)/bnf.o                          \
 	$(OBJ_DIR)/lex.o                          \
@@ -147,6 +148,7 @@ TEST_CLI_OBJS :=                            \
 	$(OBJ_DIR)/tests/test_type_adts.o         \
 	$(OBJ_DIR)/tests/test_type_util.o         \
 	$(OBJ_DIR)/tests/test_bits.o              \
+	$(OBJ_DIR)/tests/test_ptrs.o              \
 	$(OBJ_DIR)/tests/test_global.o            \
 	$(OBJ_DIR)/tests/test_bnf.o               \
 	$(OBJ_DIR)/tests/test_lex.o               \

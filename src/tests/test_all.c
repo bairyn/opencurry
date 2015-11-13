@@ -57,6 +57,7 @@
 #include "test_type_adts.h"
 #include "test_type_util.h"
 #include "test_bits.h"
+#include "test_ptrs.h"
 #include "test_global.h"
 #include "test_bnf.h"
 #include "test_lex.h"
@@ -102,6 +103,7 @@ unit_test_t *all_tests[] =
   , &type_adts_test
   , &type_util_test
   , &bits_test
+  , &ptrs_test
   , &global_test
   , &bnf_test
   , &lex_test
