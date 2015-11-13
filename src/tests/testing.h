@@ -337,11 +337,6 @@ unit_test_result_t assert_not_memeq_continue(unit_test_context_t *context, const
       return result;                     \
   } while(0)
 
-/*
- * Add a trivial block of code that can contain "break" to skip to the end.
- */
-#define ENCLOSE() switch(0) default:
-
 /* Break when "result" contains an error code indicating non-continuable
  * failure.
  *

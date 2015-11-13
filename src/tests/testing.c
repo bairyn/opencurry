@@ -285,7 +285,7 @@ unit_test_context_t *new_unit_test_context
   */
 
   context->err_buf_len           = 0;
-    context->err_buf_first_err_len = 0;
+  context->err_buf_first_err_len = 0;
   context->int_err_buf_len       = 0;
   context->details_buf_len       = 0;
 
@@ -861,7 +861,7 @@ unit_test_result_t run_tests_num(unit_test_context_t *context, unit_test_t **tes
   for (i = 0; i < num_tests; ++i)
   {
     int individual_result;
-    
+
     individual_result = run_test(context, *tests[i]);
 
     aborting = is_test_result_aborting(individual_result) || is_test_result_aborting(result_sum);
@@ -1656,9 +1656,9 @@ unit_test_result_t assert_success(unit_test_context_t *context)
 unit_test_result_t assert_failure(unit_test_context_t *context, const char *err_msg, const char *tag)
 {
   if (err_msg)
-    strncpy(context->err_buf, err_msg, context->err_buf_len);
+    strncpy(context->err_buf, err_msg, context->err_buf_halfsize);
   else
-    context->err_buf_len = assert_failure_msg(context, context->err_buf, context->err_buf_len, tag);
+    context->err_buf_len = assert_failure_msg(context, context->err_buf, context->err_buf_halfsize, tag);
 
   return UNIT_TEST_FAIL;
 }
@@ -1666,9 +1666,9 @@ unit_test_result_t assert_failure(unit_test_context_t *context, const char *err_
 unit_test_result_t assert_failure_continue(unit_test_context_t *context, const char *err_msg, const char *tag)
 {
   if (err_msg)
-    strncpy(context->err_buf, err_msg, context->err_buf_len);
+    strncpy(context->err_buf, err_msg, context->err_buf_halfsize);
   else
-    context->err_buf_len = assert_failure_msg(context, context->err_buf, context->err_buf_len, tag);
+    context->err_buf_len = assert_failure_msg(context, context->err_buf, context->err_buf_halfsize, tag);
 
   return UNIT_TEST_FAIL_CONTINUE;
 }
@@ -1684,9 +1684,9 @@ unit_test_result_t assert_true(unit_test_context_t *context, const char *err_msg
   else
   {
     if (err_msg)
-      strncpy(context->err_buf, err_msg, context->err_buf_len);
+      strncpy(context->err_buf, err_msg, context->err_buf_halfsize);
     else
-      context->err_buf_len = assert_true_msg(context, context->err_buf, context->err_buf_len, tag, condition);
+      context->err_buf_len = assert_true_msg(context, context->err_buf, context->err_buf_halfsize, tag, condition);
 
     return UNIT_TEST_FAIL;
   }
@@ -1701,9 +1701,9 @@ unit_test_result_t assert_true_continue(unit_test_context_t *context, const char
   else
   {
     if (err_msg)
-      strncpy(context->err_buf, err_msg, context->err_buf_len);
+      strncpy(context->err_buf, err_msg, context->err_buf_halfsize);
     else
-      context->err_buf_len = assert_true_msg(context, context->err_buf, context->err_buf_len, tag, condition);
+      context->err_buf_len = assert_true_msg(context, context->err_buf, context->err_buf_halfsize, tag, condition);
 
     return UNIT_TEST_FAIL_CONTINUE;
   }
@@ -1718,9 +1718,9 @@ unit_test_result_t assert_inteq(unit_test_context_t *context, const char *err_ms
   else
   {
     if (err_msg)
-      strncpy(context->err_buf, err_msg, context->err_buf_len);
+      strncpy(context->err_buf, err_msg, context->err_buf_halfsize);
     else
-      context->err_buf_len = assert_inteq_msg(context, context->err_buf, context->err_buf_len, tag, check, model);
+      context->err_buf_len = assert_inteq_msg(context, context->err_buf, context->err_buf_halfsize, tag, check, model);
 
     return UNIT_TEST_FAIL;
   }
@@ -1735,9 +1735,9 @@ unit_test_result_t assert_inteq_continue(unit_test_context_t *context, const cha
   else
   {
     if (err_msg)
-      strncpy(context->err_buf, err_msg, context->err_buf_len);
+      strncpy(context->err_buf, err_msg, context->err_buf_halfsize);
     else
-      context->err_buf_len = assert_inteq_msg(context, context->err_buf, context->err_buf_len, tag, check, model);
+      context->err_buf_len = assert_inteq_msg(context, context->err_buf, context->err_buf_halfsize, tag, check, model);
 
     return UNIT_TEST_FAIL_CONTINUE;
   }
@@ -1752,9 +1752,9 @@ unit_test_result_t assert_streqz(unit_test_context_t *context, const char *err_m
   else
   {
     if (err_msg)
-      strncpy(context->err_buf, err_msg, context->err_buf_len);
+      strncpy(context->err_buf, err_msg, context->err_buf_halfsize);
     else
-      context->err_buf_len = assert_streqz_msg(context, context->err_buf, context->err_buf_len, tag, check, model);
+      context->err_buf_len = assert_streqz_msg(context, context->err_buf, context->err_buf_halfsize, tag, check, model);
 
     return UNIT_TEST_FAIL;
   }
@@ -1769,9 +1769,9 @@ unit_test_result_t assert_streqz_continue(unit_test_context_t *context, const ch
   else
   {
     if (err_msg)
-      strncpy(context->err_buf, err_msg, context->err_buf_len);
+      strncpy(context->err_buf, err_msg, context->err_buf_halfsize);
     else
-      context->err_buf_len = assert_streqz_msg(context, context->err_buf, context->err_buf_len, tag, check, model);
+      context->err_buf_len = assert_streqz_msg(context, context->err_buf, context->err_buf_halfsize, tag, check, model);
 
     return UNIT_TEST_FAIL_CONTINUE;
   }
@@ -1786,9 +1786,9 @@ unit_test_result_t assert_streqn(unit_test_context_t *context, const char *err_m
   else
   {
     if (err_msg)
-      strncpy(context->err_buf, err_msg, context->err_buf_len);
+      strncpy(context->err_buf, err_msg, context->err_buf_halfsize);
     else
-      context->err_buf_len = assert_streqn_msg(context, context->err_buf, context->err_buf_len, tag, check, model, max_len);
+      context->err_buf_len = assert_streqn_msg(context, context->err_buf, context->err_buf_halfsize, tag, check, model, max_len);
 
     return UNIT_TEST_FAIL;
   }
@@ -1803,9 +1803,9 @@ unit_test_result_t assert_streqn_continue(unit_test_context_t *context, const ch
   else
   {
     if (err_msg)
-      strncpy(context->err_buf, err_msg, context->err_buf_len);
+      strncpy(context->err_buf, err_msg, context->err_buf_halfsize);
     else
-      context->err_buf_len = assert_streqn_msg(context, context->err_buf, context->err_buf_len, tag, check, model, max_len);
+      context->err_buf_len = assert_streqn_msg(context, context->err_buf, context->err_buf_halfsize, tag, check, model, max_len);
 
     return UNIT_TEST_FAIL_CONTINUE;
   }
@@ -1820,9 +1820,9 @@ unit_test_result_t assert_memeq(unit_test_context_t *context, const char *err_ms
   else
   {
     if (err_msg)
-      strncpy(context->err_buf, err_msg, context->err_buf_len);
+      strncpy(context->err_buf, err_msg, context->err_buf_halfsize);
     else
-      context->err_buf_len = assert_memeq_msg(context, context->err_buf, context->err_buf_len, tag, check, model, n);
+      context->err_buf_len = assert_memeq_msg(context, context->err_buf, context->err_buf_halfsize, tag, check, model, n);
 
     return UNIT_TEST_FAIL;
   }
@@ -1837,9 +1837,9 @@ unit_test_result_t assert_memeq_continue(unit_test_context_t *context, const cha
   else
   {
     if (err_msg)
-      strncpy(context->err_buf, err_msg, context->err_buf_len);
+      strncpy(context->err_buf, err_msg, context->err_buf_halfsize);
     else
-      context->err_buf_len = assert_memeq_msg(context, context->err_buf, context->err_buf_len, tag, check, model, n);
+      context->err_buf_len = assert_memeq_msg(context, context->err_buf, context->err_buf_halfsize, tag, check, model, n);
 
     return UNIT_TEST_FAIL_CONTINUE;
   }
@@ -1856,9 +1856,9 @@ unit_test_result_t assert_false(unit_test_context_t *context, const char *err_ms
   else
   {
     if (err_msg)
-      strncpy(context->err_buf, err_msg, context->err_buf_len);
+      strncpy(context->err_buf, err_msg, context->err_buf_halfsize);
     else
-      context->err_buf_len = assert_false_msg(context, context->err_buf, context->err_buf_len, tag, condition);
+      context->err_buf_len = assert_false_msg(context, context->err_buf, context->err_buf_halfsize, tag, condition);
 
     return UNIT_TEST_FAIL;
   }
@@ -1873,9 +1873,9 @@ unit_test_result_t assert_false_continue(unit_test_context_t *context, const cha
   else
   {
     if (err_msg)
-      strncpy(context->err_buf, err_msg, context->err_buf_len);
+      strncpy(context->err_buf, err_msg, context->err_buf_halfsize);
     else
-      context->err_buf_len = assert_false_msg(context, context->err_buf, context->err_buf_len, tag, condition);
+      context->err_buf_len = assert_false_msg(context, context->err_buf, context->err_buf_halfsize, tag, condition);
 
     return UNIT_TEST_FAIL_CONTINUE;
   }
@@ -1890,9 +1890,9 @@ unit_test_result_t assert_not_inteq(unit_test_context_t *context, const char *er
   else
   {
     if (err_msg)
-      strncpy(context->err_buf, err_msg, context->err_buf_len);
+      strncpy(context->err_buf, err_msg, context->err_buf_halfsize);
     else
-      context->err_buf_len = assert_not_inteq_msg(context, context->err_buf, context->err_buf_len, tag, check, model);
+      context->err_buf_len = assert_not_inteq_msg(context, context->err_buf, context->err_buf_halfsize, tag, check, model);
 
     return UNIT_TEST_FAIL;
   }
@@ -1907,9 +1907,9 @@ unit_test_result_t assert_not_inteq_continue(unit_test_context_t *context, const
   else
   {
     if (err_msg)
-      strncpy(context->err_buf, err_msg, context->err_buf_len);
+      strncpy(context->err_buf, err_msg, context->err_buf_halfsize);
     else
-      context->err_buf_len = assert_not_inteq_msg(context, context->err_buf, context->err_buf_len, tag, check, model);
+      context->err_buf_len = assert_not_inteq_msg(context, context->err_buf, context->err_buf_halfsize, tag, check, model);
 
     return UNIT_TEST_FAIL_CONTINUE;
   }
@@ -1924,9 +1924,9 @@ unit_test_result_t assert_not_streqz(unit_test_context_t *context, const char *e
   else
   {
     if (err_msg)
-      strncpy(context->err_buf, err_msg, context->err_buf_len);
+      strncpy(context->err_buf, err_msg, context->err_buf_halfsize);
     else
-      context->err_buf_len = assert_not_streqz_msg(context, context->err_buf, context->err_buf_len, tag, check, model);
+      context->err_buf_len = assert_not_streqz_msg(context, context->err_buf, context->err_buf_halfsize, tag, check, model);
 
     return UNIT_TEST_FAIL;
   }
@@ -1941,9 +1941,9 @@ unit_test_result_t assert_not_streqz_continue(unit_test_context_t *context, cons
   else
   {
     if (err_msg)
-      strncpy(context->err_buf, err_msg, context->err_buf_len);
+      strncpy(context->err_buf, err_msg, context->err_buf_halfsize);
     else
-      context->err_buf_len = assert_not_streqz_msg(context, context->err_buf, context->err_buf_len, tag, check, model);
+      context->err_buf_len = assert_not_streqz_msg(context, context->err_buf, context->err_buf_halfsize, tag, check, model);
 
     return UNIT_TEST_FAIL_CONTINUE;
   }
@@ -1958,9 +1958,9 @@ unit_test_result_t assert_not_streqn(unit_test_context_t *context, const char *e
   else
   {
     if (err_msg)
-      strncpy(context->err_buf, err_msg, context->err_buf_len);
+      strncpy(context->err_buf, err_msg, context->err_buf_halfsize);
     else
-      context->err_buf_len = assert_not_streqn_msg(context, context->err_buf, context->err_buf_len, tag, check, model, max_len);
+      context->err_buf_len = assert_not_streqn_msg(context, context->err_buf, context->err_buf_halfsize, tag, check, model, max_len);
 
     return UNIT_TEST_FAIL;
   }
@@ -1975,9 +1975,9 @@ unit_test_result_t assert_not_streqn_continue(unit_test_context_t *context, cons
   else
   {
     if (err_msg)
-      strncpy(context->err_buf, err_msg, context->err_buf_len);
+      strncpy(context->err_buf, err_msg, context->err_buf_halfsize);
     else
-      context->err_buf_len = assert_not_streqn_msg(context, context->err_buf, context->err_buf_len, tag, check, model, max_len);
+      context->err_buf_len = assert_not_streqn_msg(context, context->err_buf, context->err_buf_halfsize, tag, check, model, max_len);
 
     return UNIT_TEST_FAIL_CONTINUE;
   }
@@ -1992,9 +1992,9 @@ unit_test_result_t assert_not_memeq(unit_test_context_t *context, const char *er
   else
   {
     if (err_msg)
-      strncpy(context->err_buf, err_msg, context->err_buf_len);
+      strncpy(context->err_buf, err_msg, context->err_buf_halfsize);
     else
-      context->err_buf_len = assert_not_memeq_msg(context, context->err_buf, context->err_buf_len, tag, check, model, n);
+      context->err_buf_len = assert_not_memeq_msg(context, context->err_buf, context->err_buf_halfsize, tag, check, model, n);
 
     return UNIT_TEST_FAIL;
   }
@@ -2009,9 +2009,9 @@ unit_test_result_t assert_not_memeq_continue(unit_test_context_t *context, const
   else
   {
     if (err_msg)
-      strncpy(context->err_buf, err_msg, context->err_buf_len);
+      strncpy(context->err_buf, err_msg, context->err_buf_halfsize);
     else
-      context->err_buf_len = assert_not_memeq_msg(context, context->err_buf, context->err_buf_len, tag, check, model, n);
+      context->err_buf_len = assert_not_memeq_msg(context, context->err_buf, context->err_buf_halfsize, tag, check, model, n);
 
     return UNIT_TEST_FAIL_CONTINUE;
   }
