@@ -263,35 +263,36 @@ size_t test_add_details_msg(unit_test_context_t *context, const char *msg);
 size_t assert_snprintf_error_msg(unit_test_context_t *context, int snprintf_error_code, char *msg_out, size_t msg_out_size, const char *tag);
 size_t assert_msg_check_snprintf(unit_test_context_t *context, int snprintf_result, char *msg_out, size_t msg_out_size, const char *tag, int *out_is_err);
 
-
 size_t assert_msg_append_details(unit_test_context_t *context, size_t len, char *msg_out, size_t msg_out_size, const char *tag);
 
-size_t assert_failure_msg(unit_test_context_t *context, char *msg_out, size_t msg_out_size, const char *tag);
+/* ---------------------------------------------------------------- */
 
-size_t assert_true_msg(unit_test_context_t *context, char *msg_out, size_t msg_out_size, const char *tag, int condition);
+size_t assert_failure_msg       (unit_test_context_t *context, char *msg_out, size_t msg_out_size, const char *tag);
 
-size_t assert_inteq_msg(unit_test_context_t *context, char *msg_out, size_t msg_out_size, const char *tag, int check, int model);
-size_t assert_uinteq_msg(unit_test_context_t *context, char *msg_out, size_t msg_out_size, const char *tag, unsigned int check, unsigned int model);
-size_t assert_ulongeq_msg(unit_test_context_t *context, char *msg_out, size_t msg_out_size, const char *tag, unsigned long check, unsigned long model);
-size_t assert_sizeeq_msg(unit_test_context_t *context, char *msg_out, size_t msg_out_size, const char *tag, size_t check, size_t model);
+size_t assert_true_msg          (unit_test_context_t *context, char *msg_out, size_t msg_out_size, const char *tag, int            condition);
 
-size_t assert_streqz_msg(unit_test_context_t *context, char *msg_out, size_t msg_out_size, const char *tag, const char *check, const char *model);
-size_t assert_streqn_msg(unit_test_context_t *context, char *msg_out, size_t msg_out_size, const char *tag, const char *check, const char *model, size_t max_len);
+size_t assert_inteq_msg         (unit_test_context_t *context, char *msg_out, size_t msg_out_size, const char *tag, int            check,     int            model);
+size_t assert_uinteq_msg        (unit_test_context_t *context, char *msg_out, size_t msg_out_size, const char *tag, unsigned int   check,     unsigned int   model);
+size_t assert_ulongeq_msg       (unit_test_context_t *context, char *msg_out, size_t msg_out_size, const char *tag, unsigned long  check,     unsigned long  model);
+size_t assert_sizeeq_msg        (unit_test_context_t *context, char *msg_out, size_t msg_out_size, const char *tag, size_t         check,     size_t         model);
 
-size_t assert_memeq_msg(unit_test_context_t *context, char *msg_out, size_t msg_out_size, const char *tag, void *check, void *model, size_t n);
+size_t assert_streqz_msg        (unit_test_context_t *context, char *msg_out, size_t msg_out_size, const char *tag, const char    *check,     const char    *model);
+size_t assert_streqn_msg        (unit_test_context_t *context, char *msg_out, size_t msg_out_size, const char *tag, const char    *check,     const char    *model, size_t max_len);
+
+size_t assert_memeq_msg         (unit_test_context_t *context, char *msg_out, size_t msg_out_size, const char *tag, void          *check,     void          *model, size_t n);
 
 
-size_t assert_false_msg(unit_test_context_t *context, char *msg_out, size_t msg_out_size, const char *tag, int condition);
+size_t assert_false_msg         (unit_test_context_t *context, char *msg_out, size_t msg_out_size, const char *tag, int            condition);
 
-size_t assert_not_inteq_msg(unit_test_context_t *context, char *msg_out, size_t msg_out_size, const char *tag, int check, int model);
-size_t assert_not_uinteq_msg(unit_test_context_t *context, char *msg_out, size_t msg_out_size, const char *tag, unsigned int check, unsigned int model);
-size_t assert_not_ulongeq_msg(unit_test_context_t *context, char *msg_out, size_t msg_out_size, const char *tag, unsigned long check, unsigned long model);
-size_t assert_not_sizeeq_msg(unit_test_context_t *context, char *msg_out, size_t msg_out_size, const char *tag, size_t check, size_t model);
+size_t assert_not_inteq_msg     (unit_test_context_t *context, char *msg_out, size_t msg_out_size, const char *tag, int            check,     int            model);
+size_t assert_not_uinteq_msg    (unit_test_context_t *context, char *msg_out, size_t msg_out_size, const char *tag, unsigned int   check,     unsigned int   model);
+size_t assert_not_ulongeq_msg   (unit_test_context_t *context, char *msg_out, size_t msg_out_size, const char *tag, unsigned long  check,     unsigned long  model);
+size_t assert_not_sizeeq_msg    (unit_test_context_t *context, char *msg_out, size_t msg_out_size, const char *tag, size_t         check,     size_t         model);
 
-size_t assert_not_streqz_msg(unit_test_context_t *context, char *msg_out, size_t msg_out_size, const char *tag, const char *check, const char *model);
-size_t assert_not_streqn_msg(unit_test_context_t *context, char *msg_out, size_t msg_out_size, const char *tag, const char *check, const char *model, size_t max_len);
+size_t assert_not_streqz_msg    (unit_test_context_t *context, char *msg_out, size_t msg_out_size, const char *tag, const char    *check,     const char    *model);
+size_t assert_not_streqn_msg    (unit_test_context_t *context, char *msg_out, size_t msg_out_size, const char *tag, const char    *check,     const char    *model, size_t max_len);
 
-size_t assert_not_memeq_msg(unit_test_context_t *context, char *msg_out, size_t msg_out_size, const char *tag, void *check, void *model, size_t n);
+size_t assert_not_memeq_msg     (unit_test_context_t *context, char *msg_out, size_t msg_out_size, const char *tag, void          *check,     void          *model, size_t n);
 
 /* ---------------------------------------------------------------- */
 /* Assertions with default error messages; non-zero on failure. */
