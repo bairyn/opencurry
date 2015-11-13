@@ -84,7 +84,7 @@ unit_test_result_t prim_type_size_correspondence_test_run(unit_test_context_t *c
 
   ENCLOSE()
   {
-    TASSERT2( sizeeq, "type_t sizeof equivalence", sizeof(type_t), sizeof(struct type_s));
+    MASSERT2(sizeeq, "type_t sizeof equivalence", sizeof(type_t), sizeof(struct type_s));
   }
 
   return result;

@@ -486,4 +486,41 @@ unit_test_result_t assert_not_memeq_continue  (unit_test_context_t *context, con
 #define ASSERT10(assert_method, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10) \
   TASSERT10(assert_method, STR(assert_method) STR((..., arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10)), arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10)
 
+/* n-ary assertions with a tag prefixed to the call.  Effectively combines
+ * ASSERT(...) and TASSERT(...).
+ */
+
+#define MASSERT0( assert_method, tag) \
+  TASSERT0 (assert_method, tag ": " STR(assert_method) STR((...)                                                             ))
+
+#define MASSERT1( assert_method, tag, arg1) \
+  TASSERT1 (assert_method, tag ": " STR(assert_method) STR((..., arg1)                                                       ), arg1)
+
+#define MASSERT2( assert_method, tag, arg1, arg2) \
+  TASSERT2 (assert_method, tag ": " STR(assert_method) STR((..., arg1, arg2)                                                 ), arg1, arg2)
+
+#define MASSERT3( assert_method, tag, arg1, arg2, arg3) \
+  TASSERT3 (assert_method, tag ": " STR(assert_method) STR((..., arg1, arg2, arg3)                                           ), arg1, arg2, arg3)
+
+#define MASSERT4( assert_method, tag, arg1, arg2, arg3, arg4) \
+  TASSERT4 (assert_method, tag ": " STR(assert_method) STR((..., arg1, arg2, arg3, arg4)                                     ), arg1, arg2, arg3, arg4)
+
+#define MASSERT5( assert_method, tag, arg1, arg2, arg3, arg4, arg5) \
+  TASSERT5 (assert_method, tag ": " STR(assert_method) STR((..., arg1, arg2, arg3, arg4, arg5)                               ), arg1, arg2, arg3, arg4, arg5)
+
+#define MASSERT6( assert_method, tag, arg1, arg2, arg3, arg4, arg5, arg6) \
+  TASSERT6 (assert_method, tag ": " STR(assert_method) STR((..., arg1, arg2, arg3, arg4, arg5, arg6)                         ), arg1, arg2, arg3, arg4, arg5, arg6)
+
+#define MASSERT7( assert_method, tag, arg1, arg2, arg3, arg4, arg5, arg6, arg7) \
+  TASSERT7 (assert_method, tag ": " STR(assert_method) STR((..., arg1, arg2, arg3, arg4, arg5, arg6, arg7)                   ), arg1, arg2, arg3, arg4, arg5, arg6, arg7)
+
+#define MASSERT8( assert_method, tag, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8) \
+  TASSERT8 (assert_method, tag ": " STR(assert_method) STR((..., arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8)             ), arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8)
+
+#define MASSERT9( assert_method, tag, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9) \
+  TASSERT9 (assert_method, tag ": " STR(assert_method) STR((..., arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9)       ), arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9)
+
+#define MASSERT10(assert_method, tag, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10) \
+  TASSERT10(assert_method, tag ": " STR(assert_method) STR((..., arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10)), arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10)
+
 #endif /* ifndef TESTS_TESTING_H */
