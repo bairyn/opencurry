@@ -1452,7 +1452,7 @@ size_t assert_not_inteq_msg(unit_test_context_t *context, char *msg_out, size_t 
   return assert_msg_append_details(context, (size_t) l, msg_out, msg_out_size, tag);
 }
 
-size_t assert_not_inteq_msg(unit_test_context_t *context, char *msg_out, size_t msg_out_size, const char *tag, unsigned int check, unsigned int model)
+size_t assert_not_uinteq_msg(unit_test_context_t *context, char *msg_out, size_t msg_out_size, const char *tag, unsigned int check, unsigned int model)
 {
   int    l;
 
