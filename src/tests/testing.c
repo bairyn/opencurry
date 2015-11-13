@@ -1128,6 +1128,38 @@ size_t assert_inteq_msg(unit_test_context_t *context, char *msg_out, size_t msg_
   return assert_msg_append_details(context, (size_t) l, msg_out, msg_out_size, tag);
 }
 
+size_t assert_ulongeq_msg(unit_test_context_t *context, char *msg_out, size_t msg_out_size, const char *tag, unsigned long check, unsigned long model)
+{
+  int    l;
+
+  l = snprintf
+    ( (char *) msg_out, (size_t) terminator_size(msg_out_size)
+    , "Assertion '%s' failed - unsigned long integers must be equal, but differ:\n  should be:   %lu\n  actually is: %lu\n"
+    , (const char *) tag
+    , (unsigned long) model
+    , (unsigned long) check
+    );
+  if (l < 0) return assert_msg_check_snprintf(context, l, msg_out, msg_out_size, tag, &context->is_snprintf_err);
+
+  return assert_msg_append_details(context, (size_t) l, msg_out, msg_out_size, tag);
+}
+
+size_t assert_sizeeq_msg(unit_test_context_t *context, char *msg_out, size_t msg_out_size, const char *tag, size_t check, size_t model)
+{
+  int    l;
+
+  l = snprintf
+    ( (char *) msg_out, (size_t) terminator_size(msg_out_size)
+    , "Assertion '%s' failed - size_t integers must be equal, but differ:\n  should be:   %zu\n  actually is: %zu\n"
+    , (const char *) tag
+    , (size_t) model
+    , (size_t) check
+    );
+  if (l < 0) return assert_msg_check_snprintf(context, l, msg_out, msg_out_size, tag, &context->is_snprintf_err);
+
+  return assert_msg_append_details(context, (size_t) l, msg_out, msg_out_size, tag);
+}
+
 size_t assert_streqz_msg(unit_test_context_t *context, char *msg_out, size_t msg_out_size, const char *tag, const char *check, const char *model)
 {
   int    l;
@@ -1394,10 +1426,42 @@ size_t assert_not_inteq_msg(unit_test_context_t *context, char *msg_out, size_t 
 
   l = snprintf
     ( (char *) msg_out, (size_t) terminator_size(msg_out_size)
-    , "Inverse assertion '%s' failed - integers must differ, but they are the same:\n  should differ from:  %d\n  but still is:        %d\n"
+    , "Inverse assertion '%s' failed - integers must differ, but they are the same:\n  should differ from:  % d\n  but still is:        % d\n"
     , (const char *) tag
     , (int) model
     , (int) check
+    );
+  if (l < 0) return assert_msg_check_snprintf(context, l, msg_out, msg_out_size, tag, &context->is_snprintf_err);
+
+  return assert_msg_append_details(context, (size_t) l, msg_out, msg_out_size, tag);
+}
+
+size_t assert_not_ulongeq_msg(unit_test_context_t *context, char *msg_out, size_t msg_out_size, const char *tag, unsigned long check, unsigned long model)
+{
+  int    l;
+
+  l = snprintf
+    ( (char *) msg_out, (size_t) terminator_size(msg_out_size)
+    , "Inverse assertion '%s' failed - unsigned long integers must differ, but they are the same:\n  should differ from:  %lu\n  but still is:        %lu\n"
+    , (const char *) tag
+    , (unsigned long) model
+    , (unsigned long) check
+    );
+  if (l < 0) return assert_msg_check_snprintf(context, l, msg_out, msg_out_size, tag, &context->is_snprintf_err);
+
+  return assert_msg_append_details(context, (size_t) l, msg_out, msg_out_size, tag);
+}
+
+size_t assert_not_sizeeq_msg(unit_test_context_t *context, char *msg_out, size_t msg_out_size, const char *tag, size_t check, size_t model)
+{
+  int    l;
+
+  l = snprintf
+    ( (char *) msg_out, (size_t) terminator_size(msg_out_size)
+    , "Inverse assertion '%s' failed - size_t integers must differ, but they are the same:\n  should differ from:  %zu\n  but still is:        %zu\n"
+    , (const char *) tag
+    , (size_t) model
+    , (size_t) check
     );
   if (l < 0) return assert_msg_check_snprintf(context, l, msg_out, msg_out_size, tag, &context->is_snprintf_err);
 
@@ -1743,6 +1807,74 @@ unit_test_result_t assert_inteq_continue(unit_test_context_t *context, const cha
   }
 }
 
+unit_test_result_t assert_ulongeq(unit_test_context_t *context, const char *err_msg, const char *tag, unsigned long check, unsigned long model)
+{
+  if (check == model)
+  {
+    return UNIT_TEST_PASS;
+  }
+  else
+  {
+    if (err_msg)
+      strncpy(context->err_buf, err_msg, context->err_buf_halfsize);
+    else
+      context->err_buf_len = assert_ulongeq_msg(context, context->err_buf, context->err_buf_halfsize, tag, check, model);
+
+    return UNIT_TEST_FAIL;
+  }
+}
+
+unit_test_result_t assert_ulongeq_continue(unit_test_context_t *context, const char *err_msg, const char *tag, unsigned long check, unsigned long model)
+{
+  if (check == model)
+  {
+    return UNIT_TEST_PASS;
+  }
+  else
+  {
+    if (err_msg)
+      strncpy(context->err_buf, err_msg, context->err_buf_halfsize);
+    else
+      context->err_buf_len = assert_ulongeq_msg(context, context->err_buf, context->err_buf_halfsize, tag, check, model);
+
+    return UNIT_TEST_FAIL_CONTINUE;
+  }
+}
+
+unit_test_result_t assert_sizeeq(unit_test_context_t *context, const char *err_msg, const char *tag, size_t check, size_t model)
+{
+  if (check == model)
+  {
+    return UNIT_TEST_PASS;
+  }
+  else
+  {
+    if (err_msg)
+      strncpy(context->err_buf, err_msg, context->err_buf_halfsize);
+    else
+      context->err_buf_len = assert_sizeeq_msg(context, context->err_buf, context->err_buf_halfsize, tag, check, model);
+
+    return UNIT_TEST_FAIL;
+  }
+}
+
+unit_test_result_t assert_sizeeq_continue(unit_test_context_t *context, const char *err_msg, const char *tag, size_t check, size_t model)
+{
+  if (check == model)
+  {
+    return UNIT_TEST_PASS;
+  }
+  else
+  {
+    if (err_msg)
+      strncpy(context->err_buf, err_msg, context->err_buf_halfsize);
+    else
+      context->err_buf_len = assert_sizeeq_msg(context, context->err_buf, context->err_buf_halfsize, tag, check, model);
+
+    return UNIT_TEST_FAIL_CONTINUE;
+  }
+}
+
 unit_test_result_t assert_streqz(unit_test_context_t *context, const char *err_msg, const char *tag, const char *check, const char *model)
 {
   if (strcmp(check, model) == 0)
@@ -1910,6 +2042,74 @@ unit_test_result_t assert_not_inteq_continue(unit_test_context_t *context, const
       strncpy(context->err_buf, err_msg, context->err_buf_halfsize);
     else
       context->err_buf_len = assert_not_inteq_msg(context, context->err_buf, context->err_buf_halfsize, tag, check, model);
+
+    return UNIT_TEST_FAIL_CONTINUE;
+  }
+}
+
+unit_test_result_t assert_not_ulongeq(unit_test_context_t *context, const char *err_msg, const char *tag, unsigned long check, unsigned long model)
+{
+  if (!(check == model))
+  {
+    return UNIT_TEST_PASS;
+  }
+  else
+  {
+    if (err_msg)
+      strncpy(context->err_buf, err_msg, context->err_buf_halfsize);
+    else
+      context->err_buf_len = assert_not_ulongeq_msg(context, context->err_buf, context->err_buf_halfsize, tag, check, model);
+
+    return UNIT_TEST_FAIL;
+  }
+}
+
+unit_test_result_t assert_not_ulongeq_continue(unit_test_context_t *context, const char *err_msg, const char *tag, unsigned long check, unsigned long model)
+{
+  if (!(check == model))
+  {
+    return UNIT_TEST_PASS;
+  }
+  else
+  {
+    if (err_msg)
+      strncpy(context->err_buf, err_msg, context->err_buf_halfsize);
+    else
+      context->err_buf_len = assert_not_ulongeq_msg(context, context->err_buf, context->err_buf_halfsize, tag, check, model);
+
+    return UNIT_TEST_FAIL_CONTINUE;
+  }
+}
+
+unit_test_result_t assert_not_sizeeq(unit_test_context_t *context, const char *err_msg, const char *tag, size_t check, size_t model)
+{
+  if (!(check == model))
+  {
+    return UNIT_TEST_PASS;
+  }
+  else
+  {
+    if (err_msg)
+      strncpy(context->err_buf, err_msg, context->err_buf_halfsize);
+    else
+      context->err_buf_len = assert_not_sizeeq_msg(context, context->err_buf, context->err_buf_halfsize, tag, check, model);
+
+    return UNIT_TEST_FAIL;
+  }
+}
+
+unit_test_result_t assert_not_sizeeq_continue(unit_test_context_t *context, const char *err_msg, const char *tag, size_t check, size_t model)
+{
+  if (!(check == model))
+  {
+    return UNIT_TEST_PASS;
+  }
+  else
+  {
+    if (err_msg)
+      strncpy(context->err_buf, err_msg, context->err_buf_halfsize);
+    else
+      context->err_buf_len = assert_not_sizeeq_msg(context, context->err_buf, context->err_buf_halfsize, tag, check, model);
 
     return UNIT_TEST_FAIL_CONTINUE;
   }
