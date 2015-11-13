@@ -40,6 +40,7 @@
 #include "base.h"
 
 #include "type_base_prim.h"
+#include "type_base_typed.h"
 
 /* ---------------------------------------------------------------- */
 /* tval                                                             */
@@ -151,6 +152,7 @@ typedef void tval;
 
 const type_t *typeof         (const tval *val);
 const type_t *typeof_indirect(const tval *val);
+typed_t       tval_get_typed (const tval *val);
 
 /* ---------------------------------------------------------------- */
 /* Post-dependencies.                                               */

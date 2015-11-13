@@ -1170,6 +1170,8 @@ int template_cons_free_struct_memfree_type
 /* Casting between pointer types.                                   */
 /* ---------------------------------------------------------------- */
 
+/* TODO: move to new module "ptr". */
+
 typedef void   *objp_cast_t;
 typedef void *(*funp_cast_t)(void *, ...);
 

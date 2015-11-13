@@ -35,6 +35,7 @@
 #include "type_base_tval.h"
 
 #include "type_base_type.h"
+#include "type_base_typed.h"
 
 /* ---------------------------------------------------------------- */
 /* tval                                                             */
@@ -53,10 +54,19 @@ const type_t *typeof(const tval *val)
 /*
  * Obtain the indirect type of a "tval *", without calling "type_is_typed" to
  * obtain a possibly more specific reference to the type.
- *
- * This casts from "const tval *" to "const type_t *".
  */
 const type_t *typeof_indirect(const tval *val)
 {
-  return (const type_t *) val;
+  return (const type_t *) (tval_get_typed(val)());
+}
+
+/*
+ * "tval *"s are values that can be cast to "typed_t", generally because they
+ * are structs whose first field has type "typed_t".
+ *
+ * Interpret the "tval *" as its type, "typed_t".
+ */
+typed_t tval_get_typed(const tval *val)
+{
+  return (typed_t) (objp_to_funp((void *) val));
 }
