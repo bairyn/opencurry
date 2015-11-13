@@ -400,7 +400,7 @@ unit_test_result_t assert_not_memeq_continue  (unit_test_context_t *context, con
 #define COMPOUND(assertion) BREAKABLE((result |= assertion))
 
 /*
- * n-arry COMPOUND-based assertions.
+ * n-ary COMPOUND-based assertions.
  *
  * Example:
  * > unit_test_result_t my_unit_test_run(unit_test_context_t *context)
@@ -416,37 +416,74 @@ unit_test_result_t assert_not_memeq_continue  (unit_test_context_t *context, con
  * >   return result;
  * > }
  */
-#define ASSERT0(assert_method, tag) \
+#define TASSERT0( assert_method, tag) \
   COMPOUND(CAT(assert_, assert_method)(context, NULL, tag))
 
-#define ASSERT1(assert_method, tag, arg1) \
+#define TASSERT1( assert_method, tag, arg1) \
   COMPOUND(CAT(assert_, assert_method)(context, NULL, tag, arg1))
 
-#define ASSERT2(assert_method, tag, arg1, arg2) \
+#define TASSERT2( assert_method, tag, arg1, arg2) \
   COMPOUND(CAT(assert_, assert_method)(context, NULL, tag, arg1, arg2))
 
-#define ASSERT3(assert_method, tag, arg1, arg2, arg3) \
+#define TASSERT3( assert_method, tag, arg1, arg2, arg3) \
   COMPOUND(CAT(assert_, assert_method)(context, NULL, tag, arg1, arg2, arg3))
 
-#define ASSERT4(assert_method, tag, arg1, arg2, arg3, arg4) \
+#define TASSERT4( assert_method, tag, arg1, arg2, arg3, arg4) \
   COMPOUND(CAT(assert_, assert_method)(context, NULL, tag, arg1, arg2, arg3, arg4))
 
-#define ASSERT5(assert_method, tag, arg1, arg2, arg3, arg4, arg5) \
+#define TASSERT5( assert_method, tag, arg1, arg2, arg3, arg4, arg5) \
   COMPOUND(CAT(assert_, assert_method)(context, NULL, tag, arg1, arg2, arg3, arg4, arg5))
 
-#define ASSERT6(assert_method, tag, arg1, arg2, arg3, arg4, arg5, arg6) \
+#define TASSERT6( assert_method, tag, arg1, arg2, arg3, arg4, arg5, arg6) \
   COMPOUND(CAT(assert_, assert_method)(context, NULL, tag, arg1, arg2, arg3, arg4, arg5, arg6))
 
-#define ASSERT7(assert_method, tag, arg1, arg2, arg3, arg4, arg5, arg6, arg7) \
+#define TASSERT7( assert_method, tag, arg1, arg2, arg3, arg4, arg5, arg6, arg7) \
   COMPOUND(CAT(assert_, assert_method)(context, NULL, tag, arg1, arg2, arg3, arg4, arg5, arg6, arg7))
 
-#define ASSERT8(assert_method, tag, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8) \
+#define TASSERT8( assert_method, tag, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8) \
   COMPOUND(CAT(assert_, assert_method)(context, NULL, tag, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8))
 
-#define ASSERT9(assert_method, tag, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9) \
+#define TASSERT9( assert_method, tag, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9) \
   COMPOUND(CAT(assert_, assert_method)(context, NULL, tag, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9))
 
-#define ASSERT10(assert_method, tag, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10) \
+#define TASSERT10(assert_method, tag, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10) \
   COMPOUND(CAT(assert_, assert_method)(context, NULL, tag, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10))
+
+/* n-ary assertions where the tag passed is a stringification of the assertion
+ * method and select arguments.
+ */
+
+#define ASSERT0( assert_method) \
+  TASSERT0 (assert_method, STR(assert_method) STR((...)                                                             ))
+
+#define ASSERT1( assert_method, arg1) \
+  TASSERT1 (assert_method, STR(assert_method) STR((..., arg1)                                                       ), arg1)
+
+#define ASSERT2( assert_method, arg1, arg2) \
+  TASSERT2 (assert_method, STR(assert_method) STR((..., arg1, arg2)                                                 ), arg1, arg2)
+
+#define ASSERT3( assert_method, arg1, arg2, arg3) \
+  TASSERT3 (assert_method, STR(assert_method) STR((..., arg1, arg2, arg3)                                           ), arg1, arg2, arg3)
+
+#define ASSERT4( assert_method, arg1, arg2, arg3, arg4) \
+  TASSERT4 (assert_method, STR(assert_method) STR((..., arg1, arg2, arg3, arg4)                                     ), arg1, arg2, arg3, arg4)
+
+#define ASSERT5( assert_method, arg1, arg2, arg3, arg4, arg5) \
+  TASSERT5 (assert_method, STR(assert_method) STR((..., arg1, arg2, arg3, arg4, arg5)                               ), arg1, arg2, arg3, arg4, arg5)
+
+#define ASSERT6( assert_method, arg1, arg2, arg3, arg4, arg5, arg6) \
+  TASSERT6 (assert_method, STR(assert_method) STR((..., arg1, arg2, arg3, arg4, arg5, arg6)                         ), arg1, arg2, arg3, arg4, arg5, arg6)
+
+#define ASSERT7( assert_method, arg1, arg2, arg3, arg4, arg5, arg6, arg7) \
+  TASSERT7 (assert_method, STR(assert_method) STR((..., arg1, arg2, arg3, arg4, arg5, arg6, arg7)                   ), arg1, arg2, arg3, arg4, arg5, arg6, arg7)
+
+#define ASSERT8( assert_method, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8) \
+  TASSERT8 (assert_method, STR(assert_method) STR((..., arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8)             ), arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8)
+
+#define ASSERT9( assert_method, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9) \
+  TASSERT9 (assert_method, STR(assert_method) STR((..., arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9)       ), arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9)
+
+#define ASSERT10(assert_method, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10) \
+  TASSERT10(assert_method, STR(assert_method) STR((..., arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10)), arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10)
 
 #endif /* ifndef TESTS_TESTING_H */
