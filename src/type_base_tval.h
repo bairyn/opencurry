@@ -151,4 +151,12 @@ typedef void tval;
 
 const type_t *typeof(const tval *val);
 
+/* ---------------------------------------------------------------- */
+/* Post-dependencies.                                               */
+/* ---------------------------------------------------------------- */
+
+#ifdef TODO
+#include "type_base_type.h"
+#endif /* #ifdef TODO */
+
 #endif /* ifndef TYPE_BASE_TVAL_H */
