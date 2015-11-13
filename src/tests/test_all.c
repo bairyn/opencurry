@@ -48,6 +48,7 @@
 #include "test_mempool.h"
 #include "test_type_base.h"
 #include "test_type_base_prim.h"
+#include "test_type_base_typed.h"
 #include "test_type_base_tval.h"
 #include "test_type_base_type.h"
 #include "test_type_tags.h"
@@ -92,6 +93,7 @@ unit_test_t *all_tests[] =
   , &mempool_test
   , &type_base_test
   , &type_base_prim_test
+  , &type_base_typed_test
   , &type_base_tval_test
   , &type_base_type_test
   , &type_tags_test
