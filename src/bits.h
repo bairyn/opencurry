@@ -180,14 +180,14 @@ unsigned int bits_is_even_uint(unsigned int val);
 
 /* TODO: apply bitwise constraints */
 #ifndef TODO
-#define IS_NONZERO(val) (!!val)
+#define IS_NONZERO(val) (!!(val))
 #endif /* #ifndef TODO */
 unsigned int is_nonzero_uint(unsigned int val);
 
 /* TODO: apply bitwise constraints */
 /* ((val) | (((val) >> 1))) + 1 */
 #ifndef TODO
-#define IS_ZERO(val) (!val)
+#define IS_ZERO(val) (!(val))
 #endif /* #ifndef TODO */
 /* equivalent: (val - 1) + 1 == val */
 /* (val) (((val) >> 1) + (((val ^ 1)) & 1)) */
@@ -211,7 +211,7 @@ unsigned int is_zero_uint(unsigned int val);
 val >> ((val ^ 1) & 1) ^
 */
 /* #define BIT_NAT_PRED(val) (IS_ZERO(val) ? 0 : (val-1)) */
-#define BIT_NAT_PRED(val) ((val) - IS_NONZERO((val)))
+#define BIT_NAT_PRED(val) ((val) - (IS_NONZERO((val))))
 unsigned int bit_nat_pred_uint(unsigned int num);
 
 /*
@@ -228,7 +228,7 @@ unsigned int bit_nat_pred_uint(unsigned int num);
  *   "(1 <<  num   ) - 1" works except when generating fixed-width values with all
  *   1 bits, because what "(1 << num)" should be in this case is too large.
  */
-#define ONE_BIT_REPEAT(num) ((BIT_NAT_PRED((1 << (num)))) | (BIT_NAT_PRED((1 << (BIT_NAT_PRED((num)))))) | ((IS_NONZERO((num))) << (BIT_NAT_PRED((num)))))
+#define ONE_BIT_REPEAT(num) ((BIT_NAT_PRED((1 << (BIT_NAT_PRED((num)))))) | ((IS_NONZERO((num))) << (BIT_NAT_PRED((num)))))
 unsigned int one_bit_repeat_uint(unsigned int num);
 
 #endif /* ifndef BITS_H */
