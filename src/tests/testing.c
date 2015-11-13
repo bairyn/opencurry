@@ -1128,6 +1128,22 @@ size_t assert_inteq_msg(unit_test_context_t *context, char *msg_out, size_t msg_
   return assert_msg_append_details(context, (size_t) l, msg_out, msg_out_size, tag);
 }
 
+size_t assert_uinteq_msg(unit_test_context_t *context, char *msg_out, size_t msg_out_size, const char *tag, unsigned int check, unsigned int model)
+{
+  int    l;
+
+  l = snprintf
+    ( (char *) msg_out, (size_t) terminator_size(msg_out_size)
+    , "Assertion '%s' failed - unsigned integers must be equal, but differ:\n  should be:   % u\n  actually is: % u\n"
+    , (const char *) tag
+    , (unsigned int) model
+    , (unsigned int) check
+    );
+  if (l < 0) return assert_msg_check_snprintf(context, l, msg_out, msg_out_size, tag, &context->is_snprintf_err);
+
+  return assert_msg_append_details(context, (size_t) l, msg_out, msg_out_size, tag);
+}
+
 size_t assert_ulongeq_msg(unit_test_context_t *context, char *msg_out, size_t msg_out_size, const char *tag, unsigned long check, unsigned long model)
 {
   int    l;
@@ -1430,6 +1446,22 @@ size_t assert_not_inteq_msg(unit_test_context_t *context, char *msg_out, size_t 
     , (const char *) tag
     , (int) model
     , (int) check
+    );
+  if (l < 0) return assert_msg_check_snprintf(context, l, msg_out, msg_out_size, tag, &context->is_snprintf_err);
+
+  return assert_msg_append_details(context, (size_t) l, msg_out, msg_out_size, tag);
+}
+
+size_t assert_not_inteq_msg(unit_test_context_t *context, char *msg_out, size_t msg_out_size, const char *tag, unsigned int check, unsigned int model)
+{
+  int    l;
+
+  l = snprintf
+    ( (char *) msg_out, (size_t) terminator_size(msg_out_size)
+    , "Inverse assertion '%s' failed - unsigned integers must differ, but they are the same:\n  should differ from:  % d\n  but still is:        % d\n"
+    , (const char *) tag
+    , (unsigned int) model
+    , (unsigned int) check
     );
   if (l < 0) return assert_msg_check_snprintf(context, l, msg_out, msg_out_size, tag, &context->is_snprintf_err);
 
@@ -1807,6 +1839,40 @@ unit_test_result_t assert_inteq_continue(unit_test_context_t *context, const cha
   }
 }
 
+unit_test_result_t assert_uinteq(unit_test_context_t *context, const char *err_msg, const char *tag, unsigned int check, unsigned int model)
+{
+  if (check == model)
+  {
+    return UNIT_TEST_PASS;
+  }
+  else
+  {
+    if (err_msg)
+      strncpy(context->err_buf, err_msg, context->err_buf_halfsize);
+    else
+      context->err_buf_len = assert_uinteq_msg(context, context->err_buf, context->err_buf_halfsize, tag, check, model);
+
+    return UNIT_TEST_FAIL;
+  }
+}
+
+unit_test_result_t assert_uinteq_continue(unit_test_context_t *context, const char *err_msg, const char *tag, unsigned int check, unsigned int model)
+{
+  if (check == model)
+  {
+    return UNIT_TEST_PASS;
+  }
+  else
+  {
+    if (err_msg)
+      strncpy(context->err_buf, err_msg, context->err_buf_halfsize);
+    else
+      context->err_buf_len = assert_uinteq_msg(context, context->err_buf, context->err_buf_halfsize, tag, check, model);
+
+    return UNIT_TEST_FAIL_CONTINUE;
+  }
+}
+
 unit_test_result_t assert_ulongeq(unit_test_context_t *context, const char *err_msg, const char *tag, unsigned long check, unsigned long model)
 {
   if (check == model)
@@ -2042,6 +2108,40 @@ unit_test_result_t assert_not_inteq_continue(unit_test_context_t *context, const
       strncpy(context->err_buf, err_msg, context->err_buf_halfsize);
     else
       context->err_buf_len = assert_not_inteq_msg(context, context->err_buf, context->err_buf_halfsize, tag, check, model);
+
+    return UNIT_TEST_FAIL_CONTINUE;
+  }
+}
+
+unit_test_result_t assert_not_uinteq(unit_test_context_t *context, const char *err_msg, const char *tag, unsigned int check, unsigned int model)
+{
+  if (!(check == model))
+  {
+    return UNIT_TEST_PASS;
+  }
+  else
+  {
+    if (err_msg)
+      strncpy(context->err_buf, err_msg, context->err_buf_halfsize);
+    else
+      context->err_buf_len = assert_not_uinteq_msg(context, context->err_buf, context->err_buf_halfsize, tag, check, model);
+
+    return UNIT_TEST_FAIL;
+  }
+}
+
+unit_test_result_t assert_not_uinteq_continue(unit_test_context_t *context, const char *err_msg, const char *tag, unsigned int check, unsigned int model)
+{
+  if (!(check == model))
+  {
+    return UNIT_TEST_PASS;
+  }
+  else
+  {
+    if (err_msg)
+      strncpy(context->err_buf, err_msg, context->err_buf_halfsize);
+    else
+      context->err_buf_len = assert_not_uinteq_msg(context, context->err_buf, context->err_buf_halfsize, tag, check, model);
 
     return UNIT_TEST_FAIL_CONTINUE;
   }

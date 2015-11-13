@@ -271,6 +271,7 @@ size_t assert_failure_msg(unit_test_context_t *context, char *msg_out, size_t ms
 size_t assert_true_msg(unit_test_context_t *context, char *msg_out, size_t msg_out_size, const char *tag, int condition);
 
 size_t assert_inteq_msg(unit_test_context_t *context, char *msg_out, size_t msg_out_size, const char *tag, int check, int model);
+size_t assert_uinteq_msg(unit_test_context_t *context, char *msg_out, size_t msg_out_size, const char *tag, unsigned int check, unsigned int model);
 size_t assert_ulongeq_msg(unit_test_context_t *context, char *msg_out, size_t msg_out_size, const char *tag, unsigned long check, unsigned long model);
 size_t assert_sizeeq_msg(unit_test_context_t *context, char *msg_out, size_t msg_out_size, const char *tag, size_t check, size_t model);
 
@@ -283,6 +284,7 @@ size_t assert_memeq_msg(unit_test_context_t *context, char *msg_out, size_t msg_
 size_t assert_false_msg(unit_test_context_t *context, char *msg_out, size_t msg_out_size, const char *tag, int condition);
 
 size_t assert_not_inteq_msg(unit_test_context_t *context, char *msg_out, size_t msg_out_size, const char *tag, int check, int model);
+size_t assert_not_uinteq_msg(unit_test_context_t *context, char *msg_out, size_t msg_out_size, const char *tag, unsigned int check, unsigned int model);
 size_t assert_not_ulongeq_msg(unit_test_context_t *context, char *msg_out, size_t msg_out_size, const char *tag, unsigned long check, unsigned long model);
 size_t assert_not_sizeeq_msg(unit_test_context_t *context, char *msg_out, size_t msg_out_size, const char *tag, size_t check, size_t model);
 
@@ -303,6 +305,8 @@ unit_test_result_t assert_true_continue       (unit_test_context_t *context, con
 
 unit_test_result_t assert_inteq               (unit_test_context_t *context, const char *err_msg, const char *tag, int           check,     int           model);
 unit_test_result_t assert_inteq_continue      (unit_test_context_t *context, const char *err_msg, const char *tag, int           check,     int           model);
+unit_test_result_t assert_uinteq              (unit_test_context_t *context, const char *err_msg, const char *tag, unsigned int  check,     unsigned int  model);
+unit_test_result_t assert_uinteq_continue     (unit_test_context_t *context, const char *err_msg, const char *tag, unsigned int  check,     unsigned int  model);
 unit_test_result_t assert_ulongeq             (unit_test_context_t *context, const char *err_msg, const char *tag, unsigned long check,     unsigned long model);
 unit_test_result_t assert_ulongeq_continue    (unit_test_context_t *context, const char *err_msg, const char *tag, unsigned long check,     unsigned long model);
 unit_test_result_t assert_sizeeq              (unit_test_context_t *context, const char *err_msg, const char *tag, size_t        check,     size_t         model);
@@ -322,6 +326,8 @@ unit_test_result_t assert_false_continue      (unit_test_context_t *context, con
 
 unit_test_result_t assert_not_inteq           (unit_test_context_t *context, const char *err_msg, const char *tag, int           check,     int            model);
 unit_test_result_t assert_not_inteq_continue  (unit_test_context_t *context, const char *err_msg, const char *tag, int           check,     int            model);
+unit_test_result_t assert_not_uinteq          (unit_test_context_t *context, const char *err_msg, const char *tag, unsigned int  check,     unsigned int   model);
+unit_test_result_t assert_not_uinteq_continue (unit_test_context_t *context, const char *err_msg, const char *tag, unsigned int  check,     unsigned int   model);
 unit_test_result_t assert_not_ulongeq         (unit_test_context_t *context, const char *err_msg, const char *tag, unsigned long check,     unsigned long  model);
 unit_test_result_t assert_not_ulongeq_continue(unit_test_context_t *context, const char *err_msg, const char *tag, unsigned long check,     unsigned long  model);
 unit_test_result_t assert_not_sizeeq          (unit_test_context_t *context, const char *err_msg, const char *tag, size_t        check,     size_t         model);
