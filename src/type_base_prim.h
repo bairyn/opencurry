@@ -39,4 +39,14 @@
 #define TYPE_BASE_PRIM_H
 #include "base.h"
 
+/* ---------------------------------------------------------------- */
+/* Forward type_base type declarations.                             */
+/* ---------------------------------------------------------------- */
+
+/* Declarations for types used before their definitions. */
+
+typedef struct type_s type_t;
+
+typedef struct template_cons_s template_cons_t;
+
 #endif /* ifndef TYPE_BASE_PRIM_H */

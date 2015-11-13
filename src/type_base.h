@@ -49,18 +49,12 @@
 #include "bits.h"
 #include "util.h"
 
+/* ---------------------------------------------------------------- */
+
+#include "type_base_prim.h"
+
 /* TODO: type_t: is_const! */
 /* TODO: type_t: has_const_type, and has_unconst_type */
-
-/* ---------------------------------------------------------------- */
-/* Out-of-order forward declarations.                               */
-/* ---------------------------------------------------------------- */
-
-/* Declarations for types used before their definitions. */
-
-typedef struct type_s type_t;
-
-typedef struct template_cons_s template_cons_t;
 
 /* ---------------------------------------------------------------- */
 /* tval                                                             */
