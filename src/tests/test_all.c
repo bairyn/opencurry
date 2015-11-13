@@ -40,34 +40,35 @@
 #include "test_all.h"
 
 #include "test_testing.h"
+
 #include "test_resources.h"
-#include "test_opencurry.h"
-#include "test_cli.h"
+#include "test_bits.h"
 #include "test_util.h"
+#include "test_unicode.h"
+#include "test_utf8.h"
 #include "test_buffers.h"
-#include "test_mempool.h"
-#include "test_type_base.h"
+#include "test_ptrs.h"
 #include "test_type_base_prim.h"
 #include "test_type_base_typed.h"
 #include "test_type_base_tval.h"
 #include "test_type_base_type.h"
+#include "test_type_base.h"
+#include "test_type_util.h"
 #include "test_type_tags.h"
 #include "test_type_structs.h"
 #include "test_type_fun.h"
 #include "test_type_adts.h"
-#include "test_type_util.h"
-#include "test_bits.h"
-#include "test_ptrs.h"
-#include "test_global.h"
-#include "test_bnf.h"
-#include "test_lex.h"
-#include "test_unicode.h"
-#include "test_utf8.h"
 #include "test_integer.h"
-#include "test_ansi_c_ast.h"
+#include "test_mempool.h"
+#include "test_global.h"
+#include "test_cli.h"
+#include "test_lex.h"
+#include "test_bnf.h"
 #include "test_ansi_c_ast_base.h"
 #include "test_ansi_c_ast_gen.h"
 #include "test_ansi_c_ast_render.h"
+#include "test_ansi_c_ast.h"
+#include "test_opencurry.h"
 
 int test_all(int argc, char **argv)
 {
@@ -86,34 +87,36 @@ unit_test_t test_all_test =
 /* Array of all test groups. */
 unit_test_t *all_tests[] =
   { &testing_test
+
   , &resources_test
-  , &opencurry_test
-  , &cli_test
+  , &bits_test
   , &util_test
+  , &unicode_test
+  , &utf8_test
   , &buffers_test
-  , &mempool_test
-  , &type_base_test
+  , &ptrs_test
   , &type_base_prim_test
   , &type_base_typed_test
   , &type_base_tval_test
   , &type_base_type_test
+  , &type_base_test
+  , &type_util_test
   , &type_tags_test
   , &type_structs_test
   , &type_fun_test
   , &type_adts_test
-  , &type_util_test
-  , &bits_test
-  , &ptrs_test
-  , &global_test
-  , &bnf_test
-  , &lex_test
-  , &unicode_test
-  , &utf8_test
   , &integer_test
-  , &ansi_c_ast_test
+  , &mempool_test
+  , &global_test
+  , &cli_test
+  , &lex_test
+  , &bnf_test
   , &ansi_c_ast_base_test
   , &ansi_c_ast_gen_test
   , &ansi_c_ast_render_test
+  , &ansi_c_ast_test
+  , &opencurry_test
+
   , NULL
   };
 

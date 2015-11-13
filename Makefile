@@ -92,73 +92,78 @@ BUILD_DIRECTORIES :=  \
 
 SHARED_OBJS :=                              \
 	$(OBJ_DIR)/resources.o                    \
-	$(OBJ_DIR)/opencurry.o                    \
-	$(OBJ_DIR)/cli.o                          \
+	$(OBJ_DIR)/bits.o                         \
 	$(OBJ_DIR)/util.o                         \
+	$(OBJ_DIR)/unicode.o                      \
+	$(OBJ_DIR)/utf8.o                         \
 	$(OBJ_DIR)/buffers.o                      \
-	$(OBJ_DIR)/mempool.o                      \
-	$(OBJ_DIR)/type_base.o                    \
+	$(OBJ_DIR)/ptrs.o                         \
 	$(OBJ_DIR)/type_base_prim.o               \
 	$(OBJ_DIR)/type_base_typed.o              \
 	$(OBJ_DIR)/type_base_tval.o               \
 	$(OBJ_DIR)/type_base_type.o               \
+	$(OBJ_DIR)/type_base.o                    \
+	$(OBJ_DIR)/type_util.o                    \
 	$(OBJ_DIR)/type_tags.o                    \
 	$(OBJ_DIR)/type_structs.o                 \
 	$(OBJ_DIR)/type_fun.o                     \
 	$(OBJ_DIR)/type_adts.o                    \
-	$(OBJ_DIR)/type_util.o                    \
-	$(OBJ_DIR)/bits.o                         \
-	$(OBJ_DIR)/ptrs.o                         \
-	$(OBJ_DIR)/global.o                       \
-	$(OBJ_DIR)/bnf.o                          \
-	$(OBJ_DIR)/lex.o                          \
-	$(OBJ_DIR)/unicode.o                      \
-	$(OBJ_DIR)/utf8.o                         \
 	$(OBJ_DIR)/integer.o                      \
-	$(OBJ_DIR)/ansi_c_ast.o                   \
+	$(OBJ_DIR)/mempool.o                      \
+	$(OBJ_DIR)/global.o                       \
+	$(OBJ_DIR)/cli.o                          \
+	$(OBJ_DIR)/lex.o                          \
+	$(OBJ_DIR)/bnf.o                          \
 	$(OBJ_DIR)/ansi_c_ast_base.o              \
 	$(OBJ_DIR)/ansi_c_ast_gen.o               \
-	$(OBJ_DIR)/ansi_c_ast_render.o
+	$(OBJ_DIR)/ansi_c_ast_render.o            \
+	$(OBJ_DIR)/ansi_c_ast.o                   \
+	$(OBJ_DIR)/opencurry.o
 
 CLI_OBJS :=                                 \
 	$(SHARED_OBJS)                            \
 	$(OBJ_DIR)/main.o
 TEST_CLI_OBJS :=                            \
 	$(SHARED_OBJS)                            \
-	$(OBJ_DIR)/tests/main.o                   \
-	$(OBJ_DIR)/tests/testing.o                \
 	$(OBJ_DIR)/tests/resources.o              \
+	$(OBJ_DIR)/tests/testing.o                \
+	                                          \
 	$(OBJ_DIR)/tests/ansi_c_ast_base.o        \
+	                                          \
 	$(OBJ_DIR)/tests/test_testing.o           \
-	$(OBJ_DIR)/tests/test_all.o               \
+	                                          \
 	$(OBJ_DIR)/tests/test_resources.o         \
-	$(OBJ_DIR)/tests/test_opencurry.o         \
-	$(OBJ_DIR)/tests/test_cli.o               \
+	$(OBJ_DIR)/tests/test_bits.o              \
 	$(OBJ_DIR)/tests/test_util.o              \
+	$(OBJ_DIR)/tests/test_unicode.o           \
+	$(OBJ_DIR)/tests/test_utf8.o              \
 	$(OBJ_DIR)/tests/test_buffers.o           \
-	$(OBJ_DIR)/tests/test_mempool.o           \
-	$(OBJ_DIR)/tests/test_type_base.o         \
+	$(OBJ_DIR)/tests/test_ptrs.o              \
 	$(OBJ_DIR)/tests/test_type_base_prim.o    \
 	$(OBJ_DIR)/tests/test_type_base_typed.o   \
 	$(OBJ_DIR)/tests/test_type_base_tval.o    \
 	$(OBJ_DIR)/tests/test_type_base_type.o    \
+	$(OBJ_DIR)/tests/test_type_base.o         \
+	$(OBJ_DIR)/tests/test_type_util.o         \
 	$(OBJ_DIR)/tests/test_type_tags.o         \
 	$(OBJ_DIR)/tests/test_type_structs.o      \
 	$(OBJ_DIR)/tests/test_type_fun.o          \
 	$(OBJ_DIR)/tests/test_type_adts.o         \
-	$(OBJ_DIR)/tests/test_type_util.o         \
-	$(OBJ_DIR)/tests/test_bits.o              \
-	$(OBJ_DIR)/tests/test_ptrs.o              \
-	$(OBJ_DIR)/tests/test_global.o            \
-	$(OBJ_DIR)/tests/test_bnf.o               \
-	$(OBJ_DIR)/tests/test_lex.o               \
-	$(OBJ_DIR)/tests/test_unicode.o           \
-	$(OBJ_DIR)/tests/test_utf8.o              \
 	$(OBJ_DIR)/tests/test_integer.o           \
-	$(OBJ_DIR)/tests/test_ansi_c_ast.o        \
+	$(OBJ_DIR)/tests/test_mempool.o           \
+	$(OBJ_DIR)/tests/test_global.o            \
+	$(OBJ_DIR)/tests/test_cli.o               \
+	$(OBJ_DIR)/tests/test_lex.o               \
+	$(OBJ_DIR)/tests/test_bnf.o               \
 	$(OBJ_DIR)/tests/test_ansi_c_ast_base.o   \
 	$(OBJ_DIR)/tests/test_ansi_c_ast_gen.o    \
-	$(OBJ_DIR)/tests/test_ansi_c_ast_render.o
+	$(OBJ_DIR)/tests/test_ansi_c_ast_render.o \
+	$(OBJ_DIR)/tests/test_ansi_c_ast.o        \
+	$(OBJ_DIR)/tests/test_opencurry.o         \
+	                                          \
+	$(OBJ_DIR)/tests/test_all.o               \
+	                                          \
+	$(OBJ_DIR)/tests/main.o
 
 #------------------------------------------------------------------------------
 # Resource files, to be statically linked with the binary executable.
