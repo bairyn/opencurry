@@ -30,6 +30,13 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+/* stddef.h:
+ *   - size_t
+ *   - ptrdiff_t
+ *   - NULL
+ */
+#include <stddef.h>
+
 #include "../base.h"
 #include "testing.h"
 #include "test_ptrs.h"
@@ -52,7 +59,9 @@ unit_test_t ptrs_test =
 
 /* Array of ptrs tests. */
 unit_test_t *ptrs_tests[] =
-  { NULL
+  { &ptrs_identities_test
+
+  , NULL
   };
 
 unit_test_result_t test_ptrs_run(unit_test_context_t *context)
@@ -62,3 +71,125 @@ unit_test_result_t test_ptrs_run(unit_test_context_t *context)
 
 /* ---------------------------------------------------------------- */
 
+typedef int (*add3_t)(int a);
+static int add3(int a)
+{
+  return a + 3;
+}
+
+static const int num42 = 42;
+
+/* ---------------------------------------------------------------- */
+
+unit_test_t ptrs_identities_test =
+  {  ptrs_identities_test_run
+  , "ptrs_identities_test"
+  , "Casting from one type to another should be identity when the sizes are equal."
+  };
+
+unit_test_result_t ptrs_identities_test_run(unit_test_context_t *context)
+{
+  unit_test_result_t result = assert_success(context);
+
+  ENCLOSE()
+  {
+    void        *objp = NULL;
+    funp_cast_t  funp = NULL;
+    size_t       size = 0;
+    ptrdiff_t    diff = 0;
+
+    /* ---------------------------------------------------------------- */
+    /* funp <-> objp                                                    */
+    /* ---------------------------------------------------------------- */
+
+    funp = (funp_cast_t) add3;
+    objp = funp_to_objp(funp);
+    funp = objp_to_funp(objp);
+
+    MASSERT2
+      ( funpeq, "funp_to_objp -> objp_to_funp = 1"
+      , (tests_funp_t) funp, (tests_funp_t) &add3
+      );
+
+    MASSERT2
+      ( inteq,  "funp_to_objp -> objp_to_funp validity"
+      , ((add3_t) funp)(7), 10
+      );
+
+    /* ---------------------------------------------------------------- */
+
+    objp = (void *) &num42;
+    funp = objp_to_funp(objp);
+    objp = funp_to_objp(funp);
+
+    MASSERT2
+      ( objpeq, "objp_to_funp -> funp_to_objp = 1"
+      , (const void *) objp, (const void *) &num42
+      );
+
+    MASSERT2
+      ( inteq,  "objp_to_funp -> funp_to_objp validity"
+      , *((const int *) objp), 42
+      );
+
+    /* ---------------------------------------------------------------- */
+    /* objp <-> size                                                    */
+    /* ---------------------------------------------------------------- */
+
+    objp = (void *) &num42;
+    size = objp_to_size(objp);
+    objp = size_to_objp(size);
+
+    MASSERT2
+      ( objpeq, "objp_to_size -> size_to_objp = 1"
+      , (const void *) objp, (const void *) &num42
+      );
+
+    MASSERT2
+      ( inteq,  "objp_to_size -> size_to_objp validity"
+      , *((const int *) objp), 42
+      );
+
+    /* ---------------------------------------------------------------- */
+
+    size = 0;
+    objp = size_to_objp(size);
+    size = objp_to_size(objp);
+
+    MASSERT2
+      ( inteq,  "size_to_objp -> objp_to_size = 1"
+      , (int) size, 0
+      );
+
+    /* ---------------------------------------------------------------- */
+    /* objp <-> ptrdiff                                                 */
+    /* ---------------------------------------------------------------- */
+
+    objp = (void *) &num42;
+    diff = objp_to_ptrdiff(objp);
+    objp = ptrdiff_to_objp(diff);
+
+    MASSERT2
+      ( objpeq, "objp_to_ptrdiff -> ptrdiff_to_objp = 1"
+      , (const void *) objp, (const void *) &num42
+      );
+
+    MASSERT2
+      ( inteq,  "objp_to_ptrdiff -> ptrdiff_to_objp validity"
+      , *((const int *) objp), 42
+      );
+
+    /* ---------------------------------------------------------------- */
+
+    diff = 0;
+    objp = ptrdiff_to_objp(diff);
+    diff = objp_to_ptrdiff(objp);
+
+    MASSERT2
+      ( inteq,  "ptrdiff_to_objp -> objp_to_ptrdiff = 1"
+      , (int) diff, 0
+      );
+  }
+
+  return result;
+}

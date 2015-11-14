@@ -51,4 +51,7 @@ unit_test_result_t test_ptrs_run(unit_test_context_t *context);
 
 /* ---------------------------------------------------------------- */
 
+extern unit_test_t ptrs_identities_test;
+unit_test_result_t ptrs_identities_test_run(unit_test_context_t *context);
+
 #endif /* ifndef TESTS_TEST_PTRS_H */
