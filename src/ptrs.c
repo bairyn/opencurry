@@ -167,7 +167,7 @@ size_t      objpc_to_size   (const void *ptr)
 
 const void *size_to_objpc   (size_t      ptr_rep)
 {
-  unsigned char *ptr;
+  const unsigned char *ptr;
   ptrdiff_t      distance;
 
   distance = (ptrdiff_t) ptr_rep;
@@ -188,7 +188,7 @@ ptrdiff_t   objpc_to_ptrdiff(const void *ptr)
 
 const void *ptrdiff_to_objpc(ptrdiff_t   ptr_rep)
 {
-  unsigned char *ptr;
+  const unsigned char *ptr;
   ptrdiff_t      distance;
 
   distance = (ptrdiff_t) ptr_rep;
