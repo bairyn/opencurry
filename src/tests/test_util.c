@@ -80,6 +80,8 @@ unit_test_result_t util_equalities_num_test_run(unit_test_context_t *context)
   {
     void *object;
 
+    /* ---------------------------------------------------------------- */
+
     ASSERT2( inteq, min_int( 3,  7),  3 );
     ASSERT2( inteq, max_int( 3,  7),  7 );
     ASSERT2( inteq, min_int(-3, -7), -7 );
@@ -104,6 +106,110 @@ unit_test_result_t util_equalities_num_test_run(unit_test_context_t *context)
     ASSERT2( inteq, proc_false_context(&object), 0 );
 
     ASSERT2( inteq, is_big_endian(), !are_bytes_reversed() );
+
+    /* ---------------------------------------------------------------- */
+
+    ASSERT2( sizeeq, size_minus(8, 0),  8  );
+    ASSERT2( sizeeq, size_minus(8, 1),  7  );
+    ASSERT2( sizeeq, size_minus(8, 7),  1  );
+    ASSERT2( sizeeq, size_minus(8, 8),  0  );
+    ASSERT2( sizeeq, size_minus(8, 9),  0  );
+    ASSERT2( sizeeq, size_minus(8, 10), 0  );
+    ASSERT2( sizeeq, size_minus(8, 99), 0  );
+
+    ASSERT2( sizeeq, size_minus(1, 0),  1  );
+    ASSERT2( sizeeq, size_minus(1, 1),  0  );
+    ASSERT2( sizeeq, size_minus(1, 2),  0  );
+    ASSERT2( sizeeq, size_minus(1, 4),  0  );
+    ASSERT2( sizeeq, size_minus(1, 8),  0  );
+    ASSERT2( sizeeq, size_minus(1, 99), 0  );
+
+    ASSERT2( sizeeq, size_minus(0, 0),  0  );
+    ASSERT2( sizeeq, size_minus(0, 1),  0  );
+    ASSERT2( sizeeq, size_minus(0, 2),  0  );
+    ASSERT2( sizeeq, size_minus(0, 4),  0  );
+    ASSERT2( sizeeq, size_minus(0, 8),  0  );
+    ASSERT2( sizeeq, size_minus(0, 99), 0  );
+
+
+    ASSERT2( sizeeq, size_minus(0,  8), 0  );
+    ASSERT2( sizeeq, size_minus(1,  8), 0  );
+    ASSERT2( sizeeq, size_minus(7,  8), 0  );
+    ASSERT2( sizeeq, size_minus(8,  8), 0  );
+    ASSERT2( sizeeq, size_minus(9,  8), 1  );
+    ASSERT2( sizeeq, size_minus(10, 8), 2  );
+    ASSERT2( sizeeq, size_minus(99, 8), 91 );
+
+    ASSERT2( sizeeq, size_minus(0,  1), 0  );
+    ASSERT2( sizeeq, size_minus(1,  1), 0  );
+    ASSERT2( sizeeq, size_minus(2,  1), 1  );
+    ASSERT2( sizeeq, size_minus(4,  1), 3  );
+    ASSERT2( sizeeq, size_minus(8,  1), 7  );
+    ASSERT2( sizeeq, size_minus(99, 1), 98 );
+
+    ASSERT2( sizeeq, size_minus(0,  0), 0  );
+    ASSERT2( sizeeq, size_minus(1,  0), 1  );
+    ASSERT2( sizeeq, size_minus(2,  0), 2  );
+    ASSERT2( sizeeq, size_minus(4,  0), 4  );
+    ASSERT2( sizeeq, size_minus(8,  0), 8  );
+    ASSERT2( sizeeq, size_minus(99, 0), 99 );
+
+    /* ---------------------------------------------------------------- */
+
+    ASSERT2( sizeeq, size_distance(8, 0),  8  );
+    ASSERT2( sizeeq, size_distance(8, 1),  7  );
+    ASSERT2( sizeeq, size_distance(8, 7),  1  );
+    ASSERT2( sizeeq, size_distance(8, 8),  0  );
+    ASSERT2( sizeeq, size_distance(8, 9),  1  );
+    ASSERT2( sizeeq, size_distance(8, 10), 2  );
+    ASSERT2( sizeeq, size_distance(8, 99), 91 );
+
+    ASSERT2( sizeeq, size_distance(1, 0),  1  );
+    ASSERT2( sizeeq, size_distance(1, 1),  0  );
+    ASSERT2( sizeeq, size_distance(1, 2),  1  );
+    ASSERT2( sizeeq, size_distance(1, 4),  3  );
+    ASSERT2( sizeeq, size_distance(1, 8),  7  );
+    ASSERT2( sizeeq, size_distance(1, 99), 98 );
+
+    ASSERT2( sizeeq, size_distance(0, 0),  0  );
+    ASSERT2( sizeeq, size_distance(0, 1),  1  );
+    ASSERT2( sizeeq, size_distance(0, 2),  2  );
+    ASSERT2( sizeeq, size_distance(0, 4),  4  );
+    ASSERT2( sizeeq, size_distance(0, 8),  8  );
+    ASSERT2( sizeeq, size_distance(0, 99), 99 );
+
+
+    ASSERT2( sizeeq, size_distance(0,  8), 8  );
+    ASSERT2( sizeeq, size_distance(1,  8), 7  );
+    ASSERT2( sizeeq, size_distance(7,  8), 1  );
+    ASSERT2( sizeeq, size_distance(8,  8), 0  );
+    ASSERT2( sizeeq, size_distance(9,  8), 1  );
+    ASSERT2( sizeeq, size_distance(10, 8), 2  );
+    ASSERT2( sizeeq, size_distance(99, 8), 91 );
+
+    ASSERT2( sizeeq, size_distance(0,  1), 1  );
+    ASSERT2( sizeeq, size_distance(1,  1), 0  );
+    ASSERT2( sizeeq, size_distance(2,  1), 1  );
+    ASSERT2( sizeeq, size_distance(4,  1), 3  );
+    ASSERT2( sizeeq, size_distance(8,  1), 7  );
+    ASSERT2( sizeeq, size_distance(99, 1), 98 );
+
+    ASSERT2( sizeeq, size_distance(0,  0), 0  );
+    ASSERT2( sizeeq, size_distance(1,  0), 1  );
+    ASSERT2( sizeeq, size_distance(2,  0), 2  );
+    ASSERT2( sizeeq, size_distance(4,  0), 4  );
+    ASSERT2( sizeeq, size_distance(8,  0), 8  );
+    ASSERT2( sizeeq, size_distance(99, 0), 99 );
+
+    /* ---------------------------------------------------------------- */
+
+    ASSERT2( sizeeq, terminator_size(99), 98 );
+    ASSERT2( sizeeq, terminator_size(8),  7  );
+    ASSERT2( sizeeq, terminator_size(4),  3 );
+    ASSERT2( sizeeq, terminator_size(3),  2 );
+    ASSERT2( sizeeq, terminator_size(2),  1 );
+    ASSERT2( sizeeq, terminator_size(1),  0 );
+    ASSERT2( sizeeq, terminator_size(0),  0 );
   }
 
   return result;
