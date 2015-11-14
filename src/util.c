@@ -220,9 +220,7 @@ size_t strlcpy(char *dest, const char *src, size_t dest_size)
   return len;
 }
 
-/* "src_max_bytes" can be either the size of the source buffer or the maximum
- * number of bytes to copy from the source buffer.
- */
+/* strlcpy with a limit on bytes to copy from "src". */
 size_t strlcpy_srcmax(char *dest, const char *src, size_t dest_size, size_t src_max_bytes)
 {
   size_t len;
@@ -231,13 +229,13 @@ size_t strlcpy_srcmax(char *dest, const char *src, size_t dest_size, size_t src_
    * the latter could be 0 while the former could be positive, in which case we
    * still need to write the null terminator.
    */
-  if (dest_size <= 0)
+  if (dest_size     <= 0)
+    return 0;
+  if (src_max_bytes <= 0)
     return 0;
 
-  dest_size = min_size(dest_size, src_max_bytes);
-
   len = 0;
-  for (; dest_size >= 1; ++dest, ++src, --dest_size)
+  for (; dest_size >= 2 && src_max_bytes >= 1; ++dest, ++src, --dest_size, --src_max_bytes)
   {
     if (!*src)
       break;

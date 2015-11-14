@@ -214,13 +214,24 @@ unit_test_result_t util_equalities_str_test_run(unit_test_context_t *context)
     char dest[1024];
     /* char smalldest[8]; */
     const char love[] = "love";
-    /* const char peace[] = "peace"; */
+    const char peace[] = "peace";
+
+    /* ---------------------------------------------------------------- */
 
     MASSERT2( inteq,  "strlcpy", strlcpy(dest, love, 5), 4);
     MASSERT3( streqn, "strlcpy", dest, "love", sizeof(dest) );
 
     MASSERT2( inteq,  "strlcpy", strlcpy(dest, love, 4), 3);
     MASSERT3( streqn, "strlcpy", dest, "lov",  sizeof(dest) );
+
+    MASSERT2( inteq,  "strlcpy", strlcpy(dest, love, 1), 0);
+    MASSERT3( streqn, "strlcpy", dest, "",     sizeof(dest) );
+
+    MASSERT2( inteq,  "strlcpy", strlcpy(dest, peace, sizeof(dest)), 5);
+    MASSERT2( inteq,  "strlcpy", strlcpy(dest, love,  0),            0);
+    MASSERT3( streqn, "strlcpy", dest, "peace", sizeof(dest) );
+
+    /* ---------------------------------------------------------------- */
   }
 
   return result;
