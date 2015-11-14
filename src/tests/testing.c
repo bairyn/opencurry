@@ -476,8 +476,9 @@ void print_test_suite_result(unit_test_context_t *context, unit_test_result_t re
 
     fprintf
       ( out
-      , "pass: %d/%d tests and test groups.\n"
-      
+      , "\n"
+        "pass: %d/%d tests and test groups.\n"
+
       , (int) (context->num_pass)
       , (int) (context->num_pass + context->num_skip)
       );
@@ -487,19 +488,39 @@ void print_test_suite_result(unit_test_context_t *context, unit_test_result_t re
     || is_test_result_skip   (result)
     )
   {
-    out = context->out;
+    if (is_test_result_can_continue(result))
+    {
+      out = context->out;
 
-    fprintf
-      ( out
-      , "pass: %d/%d test groups.\n"
-        "*** skipped: %d/%d tests and test groups.\n"
-      
-      , (int) (context->num_pass)
-      , (int) (context->num_pass + context->num_skip)
+      fprintf
+        ( out
+        , "\n"
+          "pass: %d/%d tests and test groups.\n"
+          "*** skipped: %d/%d tests and test groups.\n"
 
-      , (int) (context->num_skip)
-      , (int) (context->num_pass + context->num_skip)
-      );
+        , (int) (context->num_pass)
+        , (int) (context->num_pass + context->num_skip)
+
+        , (int) (context->num_skip)
+        , (int) (context->num_pass + context->num_skip)
+        );
+    }
+    else
+    {
+      out = context->out;
+
+      fprintf
+        ( out
+        , "\n"
+          "pass: %d tests and test groups.\n"
+          "*** skipped: %d tests and test groups.\n"
+          "*** Error: skipped test signaled testing can't continue.\n"
+
+        , (int) (context->num_pass)
+
+        , (int) (context->num_skip)
+        );
+    }
   }
   else
   {
@@ -513,7 +534,8 @@ void print_test_suite_result(unit_test_context_t *context, unit_test_result_t re
     {
       fprintf
         ( out
-        , "*** Error: %d tests failed:\n  last failed test #: %d\n  number of tests run: %d\n  can continue testing after last failure?: %s\n\nLast error message%s:\n\n%s%s"
+        , "\n"
+          "*** Error: %d tests failed:\n  last failed test #: %d\n  number of tests run: %d\n  can continue testing after last failure?: %s\n\nLast error message%s:\n\n%s%s"
 
         , (int) (context->num_fail)
         , (int) (context->last_fail)
@@ -530,7 +552,8 @@ void print_test_suite_result(unit_test_context_t *context, unit_test_result_t re
     {
       fprintf
         ( out
-        , "*** Error: %d tests failed:\n"
+        , "\n"
+          "*** Error: %d tests failed:\n"
           "  can continue testing after last failure?: %s\n"
           "  first failed test #: %d\n"
           "  number of tests run: %d\n"
