@@ -232,7 +232,7 @@ unit_test_result_t run_test(unit_test_context_t *context, unit_test_t test);
   void process_test_result(unit_test_context_t *context, unit_test_t test, int id, unit_test_result_t result, unsigned int seed_start);
   void process_first_test_failure(unit_test_context_t *context, unit_test_t test, int id, unit_test_result_t result, unsigned int seed_start);
 
-  void print_test_indent(unit_test_context_t *context);
+  void print_test_indent(unit_test_context_t *context, int alert);
   void print_test_prefix(unit_test_context_t *context, unit_test_t test, int id);
   void print_test_result(unit_test_context_t *context, unit_test_t test, int id, unit_test_result_t result, unsigned int seed_start);
   void print_passed_test_result(unit_test_context_t *context, unit_test_t test, int id, unit_test_result_t result, unsigned int seed_start);

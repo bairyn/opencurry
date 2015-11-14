@@ -466,11 +466,33 @@ void print_test_suite_result(unit_test_context_t *context, unit_test_result_t re
 
   FILE *out;
 
-  if (is_test_result_success(result))
+  if      (is_test_result_success(result))
   {
     out = context->out;
 
-    fprintf(out, "pass: %d/%d test groups.\n", (int) (context->num_pass), (int) (context->num_pass));
+    fprintf
+      ( out
+      , "pass: %d/%d test groups.\n"
+      
+      , (int) (context->num_pass)
+      , (int) (context->num_pass + context->num_skip)
+      );
+  }
+  else if (is_test_result_skip   (result))
+  {
+    out = context->out;
+
+    fprintf
+      ( out
+      , "*** skipped: %d/%d test groups.\n"
+        "pass: %d/%d test groups.\n"
+
+      , (int) (context->num_skip)
+      , (int) (context->num_pass + context->num_skip)
+      
+      , (int) (context->num_pass)
+      , (int) (context->num_pass + context->num_skip)
+      );
   }
   else
   {
@@ -484,7 +506,7 @@ void print_test_suite_result(unit_test_context_t *context, unit_test_result_t re
     {
       fprintf
         ( out
-        , "Error: %d tests failed:\n  last failed test #: %d\n  number of tests run: %d\n  can continue testing after last failure?: %s\n\nLast error message%s:\n\n%s%s"
+        , "*** Error: %d tests failed:\n  last failed test #: %d\n  number of tests run: %d\n  can continue testing after last failure?: %s\n\nLast error message%s:\n\n%s%s"
         , (int) (context->num_fail)
         , (int) (context->last_fail)
         , (int) (context->next_test_id - context->num_skip)
@@ -500,7 +522,7 @@ void print_test_suite_result(unit_test_context_t *context, unit_test_result_t re
     {
       fprintf
         ( out
-        , "Error: %d tests failed:\n"
+        , "*** Error: %d tests failed:\n"
           "  can continue testing after last failure?: %s\n"
           "  first failed test #: %d\n"
           "  number of tests run: %d\n"
@@ -643,13 +665,25 @@ void process_first_test_failure(unit_test_context_t *context, unit_test_t test, 
   context->err_buf_first_err_len = context->err_buf_len;
 }
 
-void print_test_indent(unit_test_context_t *context)
+void print_test_indent(unit_test_context_t *context, int alert)
 {
   int i;
 
-  for (i = 0; i < context->group_depth; ++i)
+  if (!alert)
   {
-    fprintf(context->out, "| ");
+    for (i = 0; i < context->group_depth; ++i)
+    {
+      fprintf(context->out, "| ");
+    }
+  }
+  else
+  {
+    fprintf(context->out, "*** ");
+
+    for (i = 2; i < context->group_depth; ++i)
+    {
+      fprintf(context->out, "| ");
+    }
   }
 }
 
@@ -663,7 +697,7 @@ void print_test_prefix(unit_test_context_t *context, unit_test_t test, int id)
     return;
   }
 
-  print_test_indent(context);
+  print_test_indent(context, 0);
 
   fprintf(context->out, "- %d: %s:\n", id, test.name);
 }
@@ -702,7 +736,7 @@ void print_test_result(unit_test_context_t *context, unit_test_t test, int id, u
 
 void print_passed_test_result(unit_test_context_t *context, unit_test_t test, int id, unit_test_result_t result, unsigned int seed_start)
 {
-  print_test_indent(context);
+  print_test_indent(context, 0);
 
   /* fprintf(context->out, "  %*.s   =)\n", 2 * context->group_depth, ""); */
   fprintf(context->out, "  %*.s   =): pass: %s\n", 2 * context->group_depth, "", test.description);
@@ -717,7 +751,7 @@ void print_failed_test_result(unit_test_context_t *context, unit_test_t test, in
 
   can_continue = is_test_result_can_continue(result);
 
-  print_test_indent(context);
+  print_test_indent(context, 1);
   fprintf(context->out, "  %*.s   FAILURE - %s\n", 2 * context->group_depth, "", test.description);
 
   fprintf(context->err, "/----------------------------------------------------------------\n");
@@ -742,7 +776,7 @@ void print_failed_test_result(unit_test_context_t *context, unit_test_t test, in
 
 void print_skipped_test_result(unit_test_context_t *context, unit_test_t test, int id, unit_test_result_t result, unsigned int seed_start)
 {
-  print_test_indent(context);
+  print_test_indent(context, 1);
 
   /* fprintf(context->out, "  %*.s   skipped * context->group_depth, ""); */
   fprintf(context->out, "  %*.s   skipped: %s\n", 2 * context->group_depth, "", test.description);
