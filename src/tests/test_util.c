@@ -52,7 +52,9 @@ unit_test_t util_test =
 
 /* Array of util tests. */
 unit_test_t *util_tests[] =
-  { NULL
+  { &util_equalities_test
+
+  , NULL
   };
 
 unit_test_result_t test_util_run(unit_test_context_t *context)
@@ -62,3 +64,45 @@ unit_test_result_t test_util_run(unit_test_context_t *context)
 
 /* ---------------------------------------------------------------- */
 
+unit_test_t util_equalities_test =
+  {  util_equalities_test_run
+  , "util_equalities_test"
+  , "Aptly assorted equality tests for \"util\"."
+  };
+
+unit_test_result_t util_equalities_test_run(unit_test_context_t *context)
+{
+  unit_test_result_t result = assert_success(context);
+
+  ENCLOSE()
+  {
+    void *context;
+
+    ASSERT2( inteq, min_int( 3,  7),  3 );
+    ASSERT2( inteq, max_int( 3,  7),  7 );
+    ASSERT2( inteq, min_int(-3, -7), -3 );
+    ASSERT2( inteq, max_int(-3, -7), -7 );
+
+    ASSERT2( sizeeq, min_size(3,  7),  3 );
+    ASSERT2( sizeeq, max_size(3,  7),  7 );
+
+    ASSERT2( sizeeq, size_less_null(0), 0);
+    ASSERT2( sizeeq, size_less_null(1), 0);
+    ASSERT2( sizeeq, size_less_null(2), 1);
+
+    ASSERT2( inteq, proc_true(),  1);
+    ASSERT2( inteq, proc_false(), 0);
+
+    ASSERT2( inteq, proc_cond(1)(), 1);
+    ASSERT2( inteq, proc_cond(0)(), 1);
+
+    ASSERT2( objpeq, proc_context(&context), &context);
+
+    ASSERT2( inteq, proc_true_context(&context),  1);
+    ASSERT2( inteq, proc_false_context(&context), 0);
+
+    ASSERT2( inteq, is_big_endian(), !are_bytes_reversed());
+  }
+
+  return result;
+}
