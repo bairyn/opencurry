@@ -272,7 +272,7 @@ int set_null_terminator(char *buf, size_t len_before_terminator, size_t buf_size
 
 size_t strlcpy(char *dest, const char *src, size_t dest_size);
 size_t strlcpy_srcmax(char *dest, const char *src, size_t dest_size, size_t src_max_bytes);
-size_t strlcpy_with_max(char *dest, const char *src, size_t dest_size, size_t src_size, size_t max_bytes);
+size_t strlcpy_with_max(char *dest, const char *src, size_t dest_size, size_t src_size, size_t src_max_bytes);
 
 size_t strnlen(const char *src, size_t size);
 size_t strllen(const char *src, size_t size);
