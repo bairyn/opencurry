@@ -711,24 +711,84 @@ void process_first_test_failure(unit_test_context_t *context, unit_test_t test, 
   context->err_buf_first_err_len = context->err_buf_len;
 }
 
-void print_test_indent(unit_test_context_t *context, int alert)
+/*
+ * Prints context->group_depth * "| ".
+ *
+ * When no_pending_text, omits final whitespace character.
+ *
+ * When alert, omit the first 2 '|' characters, and always prints first 3
+ * characters as "***".
+ */
+void print_test_indent(unit_test_context_t *context, int alert, int no_pending_text)
 {
   int i;
 
-  if (!alert)
+  if (!no_pending_text)
   {
-    for (i = 0; i < context->group_depth; ++i)
+    if (!alert)
     {
-      fprintf(context->out, "| ");
+      /* Case 1: basic. */
+
+      /* group_depth times print "| " */
+
+      for (i = 0; i < context->group_depth; ++i)
+      {
+        fprintf(context->out, "| ");
+      }
+    }
+
+    else
+    {
+      /* Case 2: alert. */
+
+      /* 1) group_depth times print "| "    */
+      /*                                    */
+      /* 2) Overwrite beginning with "*** " */
+
+      fprintf(context->out, "*** ");
+
+      for (i = 2; i < context->group_depth; ++i)
+      {
+        fprintf(context->out, "| ");
+      }
     }
   }
+
   else
   {
-    fprintf(context->out, "*** ");
-
-    for (i = 2; i < context->group_depth; ++i)
+    if (!alert)
     {
-      fprintf(context->out, "| ");
+      /* Case 3: no trailing whitespace. */
+
+      /* 1) group_depth times print "| "    */
+      /*                                    */
+      /* 2) Remove trailing whitespace.     */
+
+      for (i = 0; i < context->group_depth; ++i)
+      {
+        if (i < 1)
+          fprintf(context->out, "|");
+        else
+          fprintf(context->out, " |");
+      }
+    }
+
+    else
+    {
+      /* Case 4: alert, no trailing whitespace. */
+
+      /* 1) group_depth times print "| "    */
+      /*                                    */
+      /* 2) Overwrite beginning with "*** " */
+      /*                                    */
+      /* 3) Remove trailing whitespace.     */
+
+      fprintf(context->out, "***");
+
+      for (i = 2; i < context->group_depth; ++i)
+      {
+        fprintf(context->out, " |");
+      }
     }
   }
 }
@@ -743,7 +803,7 @@ void print_test_prefix(unit_test_context_t *context, unit_test_t test, int id)
     return;
   }
 
-  print_test_indent(context, 0);
+  print_test_indent(context, TEST_INDENT_NO_ALERT, TEST_INDENT_PENDING_TEXT);
 
   fprintf(context->out, "- %d: %s:\n", id, test.name);
 }
@@ -782,7 +842,7 @@ void print_test_result(unit_test_context_t *context, unit_test_t test, int id, u
 
 void print_passed_test_result(unit_test_context_t *context, unit_test_t test, int id, unit_test_result_t result, unsigned int seed_start)
 {
-  print_test_indent(context, 0);
+  print_test_indent(context, TEST_INDENT_NO_ALERT, TEST_INDENT_PENDING_TEXT);
 
   /* fprintf(context->out, "  %*.s   =)\n", 2 * context->group_depth, ""); */
   fprintf(context->out, "  %*.s   =): pass: %s\n", 2 * context->group_depth, "", test.description);
@@ -797,7 +857,7 @@ void print_failed_test_result(unit_test_context_t *context, unit_test_t test, in
 
   can_continue = is_test_result_can_continue(result);
 
-  print_test_indent(context, 1);
+  print_test_indent(context, TEST_INDENT_ALERT, TEST_INDENT_PENDING_TEXT);
   fprintf(context->out, "  %*.s   FAILURE - %s\n", 2 * context->group_depth, "", test.description);
 
   fprintf(context->err, "/----------------------------------------------------------------\n");
@@ -822,7 +882,7 @@ void print_failed_test_result(unit_test_context_t *context, unit_test_t test, in
 
 void print_skipped_test_result(unit_test_context_t *context, unit_test_t test, int id, unit_test_result_t result, unsigned int seed_start)
 {
-  print_test_indent(context, 1);
+  print_test_indent(context, TEST_INDENT_ALERT, TEST_INDENT_PENDING_TEXT);
 
   /* fprintf(context->out, "  %*.s   SKIPPED * context->group_depth, ""); */
   fprintf(context->out, "  %*.s   SKIPPED: %s\n", 2 * context->group_depth, "", test.description);
