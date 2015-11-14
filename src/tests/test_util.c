@@ -54,6 +54,7 @@ unit_test_t util_test =
 unit_test_t *util_tests[] =
   { &util_equalities_num_test
   , &util_equalities_nullterm_test
+  , &util_equalities_basic_str_test
   , &util_equalities_str_test
 
   , NULL
@@ -305,13 +306,13 @@ unit_test_result_t util_equalities_nullterm_test_run(unit_test_context_t *contex
 
 /* ---------------------------------------------------------------- */
 
-unit_test_t util_equalities_str_test =
-  {  util_equalities_str_test_run
-  , "util_equalities_str_test"
-  , "Aptly assorted equality tests for \"util\"'s string utilities."
+unit_test_t util_equalities_basic_str_test =
+  {  util_equalities_basic_str_test_run
+  , "util_equalities_basic_str_test"
+  , "Aptly assorted equality tests for \"util\"'s basic string utilities."
   };
 
-unit_test_result_t util_equalities_str_test_run(unit_test_context_t *context)
+unit_test_result_t util_equalities_basic_str_test_run(unit_test_context_t *context)
 {
   unit_test_result_t result = assert_success(context);
 
@@ -475,6 +476,34 @@ unit_test_result_t util_equalities_str_test_run(unit_test_context_t *context)
     MASSERT2( sizeeq, "1 8strl_constrain_index", strl_constrain_index(32, 1, 35), 30 );
     MASSERT2( sizeeq, "1 9strl_constrain_index", strl_constrain_index(32, 1, 36), 30 );
     MASSERT2( sizeeq, "1 Astrl_constrain_index", strl_constrain_index(32, 1, 64), 30 );
+
+    /* ---------------------------------------------------------------- */
+
+    MASSERT2( inteq,  "strl_len_constrain_index strlcpy", strlcpy(dest, love, sizeof(dest)), 4 );
+  }
+
+  return result;
+}
+
+/* ---------------------------------------------------------------- */
+
+unit_test_t util_equalities_str_test =
+  {  util_equalities_str_test_run
+  , "util_equalities_str_test"
+  , "Aptly assorted equality tests for \"util\"'s string utilities."
+  };
+
+unit_test_result_t util_equalities_str_test_run(unit_test_context_t *context)
+{
+  unit_test_result_t result = assert_success(context);
+
+  ENCLOSE()
+  {
+#ifdef TODO /* TODO */
+#error "test_util: More unit tests!  Tests for strinsert_fixedwidth onwards."
+#else /* #ifdef TODO /-* TODO *-/ */
+    return UNIT_TEST_SKIPPED_CONTINUE;
+#endif /* #ifdef TODO /-* TODO *-/ */
   }
 
   return result;

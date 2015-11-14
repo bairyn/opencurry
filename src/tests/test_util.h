@@ -58,6 +58,9 @@ unit_test_result_t util_equalities_num_test_run(unit_test_context_t *context);
 extern unit_test_t util_equalities_nullterm_test;
 unit_test_result_t util_equalities_nullterm_test_run(unit_test_context_t *context);
 
+extern unit_test_t util_equalities_basic_str_test;
+unit_test_result_t util_equalities_basic_str_test_run(unit_test_context_t *context);
+
 extern unit_test_t util_equalities_str_test;
 unit_test_result_t util_equalities_str_test_run(unit_test_context_t *context);
 
