@@ -146,6 +146,44 @@ int is_big_endian(void)
 
 /* ---------------------------------------------------------------- */
 
+/*
+ * Subtract from a "size_t", resulting in "0" if the amount to subtract by is
+ * greater than the value, without overflowing.
+ */
+size_t size_minus(size_t from, size_t subtract_by)
+{
+  if (subtract_by >= from)
+    return 0;
+  else
+    return from - subtract_by;
+}
+
+/* Return the quantity by which the two sizes differ.
+ */
+size_t size_distance(size_t from, size_t to)
+{
+  if (to >= from)
+    return to - from;
+  else
+    return from - to;
+}
+
+/*
+ * Return "total_size" - 1, unless "total_size" is 0, in which case 0 is
+ * returned.
+ *
+ * Makes room for a terminator or other character.
+ */
+size_t terminator_size(size_t total_size)
+{
+  if (total_size <= 0)
+    return 0;
+  else
+    return total_size - 1;
+}
+
+/* ---------------------------------------------------------------- */
+
 /* Returns <= -1 on error, such as when "buf_size" is too small to set a null
  * terminator (this happens when "buf_size" is 0).
  *
@@ -775,42 +813,6 @@ int snprintf_insert(char *str, size_t size, const char *format, ...)
 void report_bug(const char *msg)
 {
   fprintf(stderr, "**BUG: %s\n", msg);
-}
-
-/*
- * Return "total_size" - 1, unless "total_size" is 0, in which case 0 is
- * returned.
- *
- * Makes room for a terminator or other character.
- */
-size_t terminator_size(size_t total_size)
-{
-  if (total_size == 0)
-    return 0;
-  else
-    return total_size - 1;
-}
-
-/*
- * Subtract from a "size_t", resulting in "0" if the amount to subtract by is
- * greater than the value, without overflowing.
- */
-size_t size_minus(size_t from, size_t subtract_by)
-{
-  if (subtract_by >= from)
-    return 0;
-  else
-    return from - subtract_by;
-}
-
-/* Return the quantity by which the two sizes differ.
- */
-size_t size_distance(size_t from, size_t to)
-{
-  if (to >= from)
-    return to - from;
-  else
-    return from - to;
 }
 
 /* If the buf is at max capacity, write a NULL byte if it doesn't end in one,

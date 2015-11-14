@@ -264,7 +264,14 @@ int proc_false_context(void *context);
 int are_bytes_reversed(void);
 int is_big_endian(void);
 
+/* ---------------------------------------------------------------- */
+
 void *if_then_else(int condition, void *when_true, void *when_false);
+
+size_t size_minus(size_t from, size_t subtract_by);
+size_t size_distance(size_t from, size_t to);
+
+size_t terminator_size(size_t total_size);
 
 /* ---------------------------------------------------------------- */
 
@@ -877,11 +884,6 @@ int snprintf_insert(char *str, size_t size, size_t offset, const char *format, .
 
 /* Should be called only from locations that shouldn't be reached. */
 void report_bug(const char *msg);
-
-size_t size_minus(size_t from, size_t subtract_by);
-size_t size_distance(size_t from, size_t to);
-
-size_t terminator_size(size_t total_size);
 
 void ensure_ascii_null_terminated(char *buf, size_t buf_size);
 
