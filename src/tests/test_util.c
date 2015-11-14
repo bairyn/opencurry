@@ -52,7 +52,9 @@ unit_test_t util_test =
 
 /* Array of util tests. */
 unit_test_t *util_tests[] =
-  { &util_equalities_test
+  { &util_equalities_num_test
+  , &util_equalities_nullterm_test
+  , &util_equalities_str_test
 
   , NULL
   };
@@ -64,118 +66,161 @@ unit_test_result_t test_util_run(unit_test_context_t *context)
 
 /* ---------------------------------------------------------------- */
 
-unit_test_t util_equalities_test =
-  {  util_equalities_test_run
-  , "util_equalities_test"
-  , "Aptly assorted equality tests for \"util\"."
+unit_test_t util_equalities_num_test =
+  {  util_equalities_num_test_run
+  , "util_equalities_num_test"
+  , "Aptly assorted equality tests for numeric \"util\" utilities."
   };
 
-unit_test_result_t util_equalities_test_run(unit_test_context_t *context)
+unit_test_result_t util_equalities_num_test_run(unit_test_context_t *context)
 {
   unit_test_result_t result = assert_success(context);
 
   ENCLOSE()
   {
-    {
-      void *object;
+    void *object;
 
-      ASSERT2( inteq, min_int( 3,  7),  3 );
-      ASSERT2( inteq, max_int( 3,  7),  7 );
-      ASSERT2( inteq, min_int(-3, -7), -7 );
-      ASSERT2( inteq, max_int(-3, -7), -3 );
+    ASSERT2( inteq, min_int( 3,  7),  3 );
+    ASSERT2( inteq, max_int( 3,  7),  7 );
+    ASSERT2( inteq, min_int(-3, -7), -7 );
+    ASSERT2( inteq, max_int(-3, -7), -3 );
 
-      ASSERT2( sizeeq, min_size(3,  7),  3 );
-      ASSERT2( sizeeq, max_size(3,  7),  7 );
+    ASSERT2( sizeeq, min_size(3,  7),  3 );
+    ASSERT2( sizeeq, max_size(3,  7),  7 );
 
-      ASSERT2( sizeeq, size_less_null(0), 0 );
-      ASSERT2( sizeeq, size_less_null(1), 0 );
-      ASSERT2( sizeeq, size_less_null(2), 1 );
+    ASSERT2( sizeeq, size_less_null(0), 0 );
+    ASSERT2( sizeeq, size_less_null(1), 0 );
+    ASSERT2( sizeeq, size_less_null(2), 1 );
 
-      ASSERT2( inteq, proc_true(),  1 );
-      ASSERT2( inteq, proc_false(), 0 );
+    ASSERT2( inteq, proc_true(),  1 );
+    ASSERT2( inteq, proc_false(), 0 );
 
-      ASSERT2( inteq, proc_cond(0)(), 0 );
-      ASSERT2( inteq, proc_cond(1)(), 1 );
+    ASSERT2( inteq, proc_cond(0)(), 0 );
+    ASSERT2( inteq, proc_cond(1)(), 1 );
 
-      ASSERT2( objpeq, proc_context(&object), &object );
+    ASSERT2( objpeq, proc_context(&object), &object );
 
-      ASSERT2( inteq, proc_true_context(&object),  1 );
-      ASSERT2( inteq, proc_false_context(&object), 0 );
+    ASSERT2( inteq, proc_true_context(&object),  1 );
+    ASSERT2( inteq, proc_false_context(&object), 0 );
 
-      ASSERT2( inteq, is_big_endian(), !are_bytes_reversed() );
-    }
+    ASSERT2( inteq, is_big_endian(), !are_bytes_reversed() );
+  }
 
-    {
-      char buf_empty[4] = "";
-      char buf_full [4] = "123";
-      char buf_max  [4] = { 'l', 'o', 'v', 'e' };
+  return result;
+}
 
-      ASSERT3( streqn,     buf_empty, "",            sizeof(buf_empty) );
-      ASSERT3( streqn,     buf_full,  "123",         sizeof(buf_full)  );
-      ASSERT3( streqn,     buf_max,   "love",        sizeof(buf_max)   );
-      ASSERT3( streqn,     buf_max,   "lovely love", sizeof(buf_max)   );
-      ASSERT3( not_streqn, buf_max,   "123",         sizeof(buf_max)   );
+/* ---------------------------------------------------------------- */
 
-      ASSERT3( streqn, buf_empty, "",     sizeof(buf_empty) );
-      ASSERT3( streqn, buf_full,  "123",  sizeof(buf_full)  );
-      ASSERT3( streqn, buf_max,   "love", sizeof(buf_max)   );
+unit_test_t util_equalities_nullterm_test =
+  {  util_equalities_nullterm_test_run
+  , "util_equalities_nullterm_test"
+  , "set_null_terminator equality tests."
+  };
 
-      ASSERT2( inteq, set_null_terminator(buf_empty, 0, sizeof(buf_empty)), 0);
-      ASSERT2( inteq, set_null_terminator(buf_full,  3, sizeof(buf_full)),  0);
-      ASSERT2( inteq, set_null_terminator(buf_max,   4, sizeof(buf_max)),   1);
+unit_test_result_t util_equalities_nullterm_test_run(unit_test_context_t *context)
+{
+  unit_test_result_t result = assert_success(context);
 
-      ASSERT3( streqn, buf_empty, "",     sizeof(buf_empty) );
-      ASSERT3( streqn, buf_full,  "123",  sizeof(buf_full)  );
-      ASSERT3( streqn, buf_max,   "lov ", sizeof(buf_max)   );
+  ENCLOSE()
+  {
+    char buf_empty[4] = "";
+    char buf_full [4] = "123";
+    char buf_max  [4] = { 'l', 'o', 'v', 'e' };
 
-      ASSERT2( inteq, set_null_terminator(buf_empty, 0, sizeof(buf_empty)), 0);
-      ASSERT2( inteq, set_null_terminator(buf_full,  3, sizeof(buf_full)),  0);
-      ASSERT2( inteq, set_null_terminator(buf_max,   4, sizeof(buf_max)),   0);
+    ASSERT3( streqn,     buf_empty, "",            sizeof(buf_empty) );
+    ASSERT3( streqn,     buf_full,  "123",         sizeof(buf_full)  );
+    ASSERT3( streqn,     buf_max,   "love",        sizeof(buf_max)   );
+    ASSERT3( streqn,     buf_max,   "lovely love", sizeof(buf_max)   );
+    ASSERT3( not_streqn, buf_max,   "123",         sizeof(buf_max)   );
 
-      ASSERT3( streqn, buf_empty, "",     sizeof(buf_empty) );
-      ASSERT3( streqn, buf_full,  "123",  sizeof(buf_full)  );
-      ASSERT3( streqn, buf_max,   "lov ", sizeof(buf_max)   );
+    ASSERT3( streqn, buf_empty, "",     sizeof(buf_empty) );
+    ASSERT3( streqn, buf_full,  "123",  sizeof(buf_full)  );
+    ASSERT3( streqn, buf_max,   "love", sizeof(buf_max)   );
 
-      ASSERT2( inteq, set_null_terminator(buf_empty, 2, 2), 1);
-      ASSERT2( inteq, set_null_terminator(buf_full,  2, 2), 1);
-      ASSERT2( inteq, set_null_terminator(buf_max,   2, 2), 1);
+    ASSERT2( inteq, set_null_terminator(buf_empty, 0, sizeof(buf_empty)), 0);
+    ASSERT2( inteq, set_null_terminator(buf_full,  3, sizeof(buf_full)),  0);
+    ASSERT2( inteq, set_null_terminator(buf_max,   4, sizeof(buf_max)),   1);
 
-      ASSERT3( streqn, buf_empty, "",     sizeof(buf_empty) );
-      ASSERT3( streqn, buf_full,  "12",   sizeof(buf_full)  );
-      ASSERT3( streqn, buf_max,   "lo " , sizeof(buf_max)   );
+    ASSERT3( streqn, buf_empty, "",    sizeof(buf_empty) );
+    ASSERT3( streqn, buf_full,  "123", sizeof(buf_full)  );
+    ASSERT3( streqn, buf_max,   "lov", sizeof(buf_max)   );
 
-      ASSERT2( inteq, set_null_terminator(buf_empty, 2, 3), 0);
-      ASSERT2( inteq, set_null_terminator(buf_full,  2, 3), 0);
-      ASSERT2( inteq, set_null_terminator(buf_max,   2, 3), 0);
+    ASSERT2( inteq, set_null_terminator(buf_empty, 0, sizeof(buf_empty)), 0);
+    ASSERT2( inteq, set_null_terminator(buf_full,  3, sizeof(buf_full)),  0);
+    ASSERT2( inteq, set_null_terminator(buf_max,   4, sizeof(buf_max)),   1);
 
-      ASSERT3( streqn, buf_empty, "",     sizeof(buf_empty) );
-      ASSERT3( streqn, buf_full,  "12",   sizeof(buf_full)  );
-      ASSERT3( streqn, buf_max,   "lo " , sizeof(buf_max)   );
+    ASSERT3( streqn, buf_empty, "",    sizeof(buf_empty) );
+    ASSERT3( streqn, buf_full,  "123", sizeof(buf_full)  );
+    ASSERT3( streqn, buf_max,   "lov", sizeof(buf_max)   );
 
-      ASSERT2( inteq, set_null_terminator(buf_empty, 0, 9), 0);
-      ASSERT2( inteq, set_null_terminator(buf_full,  0, 9), 0);
-      ASSERT2( inteq, set_null_terminator(buf_max,   0, 9), 0);
+    ASSERT2( inteq, set_null_terminator(buf_empty, 2, 3), 0);
+    ASSERT2( inteq, set_null_terminator(buf_full,  2, 3), 0);
+    ASSERT2( inteq, set_null_terminator(buf_max,   2, 3), 0);
 
-      ASSERT3( streqn, buf_empty, "",   sizeof(buf_empty) );
-      ASSERT3( streqn, buf_full,  "",   sizeof(buf_full)  );
-      ASSERT3( streqn, buf_max,   " " , sizeof(buf_max)   );
+    ASSERT3( streqn, buf_empty, "",   sizeof(buf_empty) );
+    ASSERT3( streqn, buf_full,  "12", sizeof(buf_full)  );
+    ASSERT3( streqn, buf_max,   "lo", sizeof(buf_max)   );
 
-      ASSERT2( inteq, set_null_terminator(buf_empty, 0, 0), -1);
-      ASSERT2( inteq, set_null_terminator(buf_full,  0, 0), -1);
-      ASSERT2( inteq, set_null_terminator(buf_max,   0, 0), -1);
+    ASSERT2( inteq, set_null_terminator(buf_empty, 2, 2), 1);
+    ASSERT2( inteq, set_null_terminator(buf_full,  2, 2), 1);
+    ASSERT2( inteq, set_null_terminator(buf_max,   2, 2), 1);
 
-      ASSERT3( streqn, buf_empty, "",   sizeof(buf_empty) );
-      ASSERT3( streqn, buf_full,  "",   sizeof(buf_full)  );
-      ASSERT3( streqn, buf_max,   " " , sizeof(buf_max)   );
+    ASSERT3( streqn, buf_empty, "",  sizeof(buf_empty) );
+    ASSERT3( streqn, buf_full,  "1", sizeof(buf_full)  );
+    ASSERT3( streqn, buf_max,   "l", sizeof(buf_max)   );
 
-      ASSERT2( inteq, set_null_terminator(NULL, 0, 0), -2);
-      ASSERT2( inteq, set_null_terminator(NULL, 0, 0), -2);
-      ASSERT2( inteq, set_null_terminator(NULL, 0, 0), -2);
+    ASSERT2( inteq, set_null_terminator(buf_empty, 0, 9), 0);
+    ASSERT2( inteq, set_null_terminator(buf_full,  0, 9), 0);
+    ASSERT2( inteq, set_null_terminator(buf_max,   0, 9), 0);
 
-      ASSERT3( streqn, buf_empty, "",   sizeof(buf_empty) );
-      ASSERT3( streqn, buf_full,  "",   sizeof(buf_full)  );
-      ASSERT3( streqn, buf_max,   " " , sizeof(buf_max)   );
-    }
+    ASSERT3( streqn, buf_empty, "", sizeof(buf_empty) );
+    ASSERT3( streqn, buf_full,  "", sizeof(buf_full)  );
+    ASSERT3( streqn, buf_max,   "", sizeof(buf_max)   );
+
+    ASSERT2( inteq, set_null_terminator(buf_empty, 0, 0), -1);
+    ASSERT2( inteq, set_null_terminator(buf_full,  0, 0), -1);
+    ASSERT2( inteq, set_null_terminator(buf_max,   0, 0), -1);
+
+    ASSERT3( streqn, buf_empty, "", sizeof(buf_empty) );
+    ASSERT3( streqn, buf_full,  "", sizeof(buf_full)  );
+    ASSERT3( streqn, buf_max,   "", sizeof(buf_max)   );
+
+    ASSERT2( inteq, set_null_terminator(NULL, 0, 0), -2);
+    ASSERT2( inteq, set_null_terminator(NULL, 0, 0), -2);
+    ASSERT2( inteq, set_null_terminator(NULL, 0, 0), -2);
+
+    ASSERT3( streqn, buf_empty, "", sizeof(buf_empty) );
+    ASSERT3( streqn, buf_full,  "", sizeof(buf_full)  );
+    ASSERT3( streqn, buf_max,   "", sizeof(buf_max)   );
+  }
+
+  return result;
+}
+
+/* ---------------------------------------------------------------- */
+
+unit_test_t util_equalities_str_test =
+  {  util_equalities_str_test_run
+  , "util_equalities_str_test"
+  , "Aptly assorted equality tests for \"util\"'s string utilities."
+  };
+
+unit_test_result_t util_equalities_str_test_run(unit_test_context_t *context)
+{
+  unit_test_result_t result = assert_success(context);
+
+  ENCLOSE()
+  {
+    char dest[1024];
+    /* char smalldest[8]; */
+    const char love[] = "love";
+    /* const char peace[] = "peace"; */
+
+    MASSERT2( inteq,  "strlcpy", strlcpy(dest, love, 5), 4);
+    MASSERT3( streqn, "strlcpy", dest, "love", sizeof(dest) );
+
+    MASSERT2( inteq,  "strlcpy", strlcpy(dest, love, 4), 3);
+    MASSERT3( streqn, "strlcpy", dest, "lov",  sizeof(dest) );
   }
 
   return result;

@@ -196,6 +196,7 @@ int set_null_terminator(char *buf, size_t len_before_terminator, size_t buf_size
     return truncated;
 }
 
+/* Like strncpy, except writes a NULL terminator at max capacity. */
 /* Returns number of bytes written, excluding the NULL terminator. */
 size_t strlcpy(char *dest, const char *src, size_t dest_size)
 {
