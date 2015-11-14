@@ -1191,6 +1191,22 @@ size_t assert_objpeq_msg(unit_test_context_t *context, char *msg_out, size_t msg
   return assert_msg_append_details(context, (size_t) l, msg_out, msg_out_size, tag);
 }
 
+size_t assert_funpeq_msg(unit_test_context_t *context, char *msg_out, size_t msg_out_size, const char *tag, tests_funp_t check, tests_funp_t model)
+{
+  int    l;
+
+  l = snprintf
+    ( (char *) msg_out, (size_t) terminator_size(msg_out_size)
+    , "Assertion '%s' failed - function pointers must be equal, but differ:\n  should be:   %p\n  actually is: %p\n"
+    , (const char *) tag
+    , (void *) *((void **) &model)
+    , (void *) *((void **) &check)
+    );
+  if (l < 0) return assert_msg_check_snprintf(context, l, msg_out, msg_out_size, tag, &context->is_snprintf_err);
+
+  return assert_msg_append_details(context, (size_t) l, msg_out, msg_out_size, tag);
+}
+
 size_t assert_streqz_msg(unit_test_context_t *context, char *msg_out, size_t msg_out_size, const char *tag, const char *check, const char *model)
 {
   int    l;
@@ -1525,6 +1541,22 @@ size_t assert_not_objpeq_msg(unit_test_context_t *context, char *msg_out, size_t
     , (const char *) tag
     , (void *) model
     , (void *) check
+    );
+  if (l < 0) return assert_msg_check_snprintf(context, l, msg_out, msg_out_size, tag, &context->is_snprintf_err);
+
+  return assert_msg_append_details(context, (size_t) l, msg_out, msg_out_size, tag);
+}
+
+size_t assert_not_funpeq_msg(unit_test_context_t *context, char *msg_out, size_t msg_out_size, const char *tag, tests_funp_t check, tests_funp_t model)
+{
+  int    l;
+
+  l = snprintf
+    ( (char *) msg_out, (size_t) terminator_size(msg_out_size)
+    , "Inverse assertion '%s' failed - function pointers must differ, but they are the same:\n  should differ from:  %p\n  but still is:        %p\n"
+    , (const char *) tag
+    , (void *) *((void **) &model)
+    , (void *) *((void **) &check)
     );
   if (l < 0) return assert_msg_check_snprintf(context, l, msg_out, msg_out_size, tag, &context->is_snprintf_err);
 
@@ -2006,6 +2038,40 @@ unit_test_result_t assert_objpeq_continue(unit_test_context_t *context, const ch
   }
 }
 
+unit_test_result_t assert_funpeq(unit_test_context_t *context, const char *err_msg, const char *tag, tests_funp_t check, tests_funp_t model)
+{
+  if (check == model)
+  {
+    return UNIT_TEST_PASS;
+  }
+  else
+  {
+    if (err_msg)
+      strncpy(context->err_buf, err_msg, context->err_buf_halfsize);
+    else
+      context->err_buf_len = assert_funpeq_msg(context, context->err_buf, context->err_buf_halfsize, tag, check, model);
+
+    return UNIT_TEST_FAIL;
+  }
+}
+
+unit_test_result_t assert_funpeq_continue(unit_test_context_t *context, const char *err_msg, const char *tag, tests_funp_t check, tests_funp_t model)
+{
+  if (check == model)
+  {
+    return UNIT_TEST_PASS;
+  }
+  else
+  {
+    if (err_msg)
+      strncpy(context->err_buf, err_msg, context->err_buf_halfsize);
+    else
+      context->err_buf_len = assert_funpeq_msg(context, context->err_buf, context->err_buf_halfsize, tag, check, model);
+
+    return UNIT_TEST_FAIL_CONTINUE;
+  }
+}
+
 unit_test_result_t assert_streqz(unit_test_context_t *context, const char *err_msg, const char *tag, const char *check, const char *model)
 {
   if (strcmp(check, model) == 0)
@@ -2275,6 +2341,40 @@ unit_test_result_t assert_not_objpeq_continue(unit_test_context_t *context, cons
       strncpy(context->err_buf, err_msg, context->err_buf_halfsize);
     else
       context->err_buf_len = assert_not_objpeq_msg(context, context->err_buf, context->err_buf_halfsize, tag, check, model);
+
+    return UNIT_TEST_FAIL_CONTINUE;
+  }
+}
+
+unit_test_result_t assert_not_funpeq(unit_test_context_t *context, const char *err_msg, const char *tag, tests_funp_t check, tests_funp_t model)
+{
+  if (!(check == model))
+  {
+    return UNIT_TEST_PASS;
+  }
+  else
+  {
+    if (err_msg)
+      strncpy(context->err_buf, err_msg, context->err_buf_halfsize);
+    else
+      context->err_buf_len = assert_not_funpeq_msg(context, context->err_buf, context->err_buf_halfsize, tag, check, model);
+
+    return UNIT_TEST_FAIL;
+  }
+}
+
+unit_test_result_t assert_not_funpeq_continue(unit_test_context_t *context, const char *err_msg, const char *tag, tests_funp_t check, tests_funp_t model)
+{
+  if (!(check == model))
+  {
+    return UNIT_TEST_PASS;
+  }
+  else
+  {
+    if (err_msg)
+      strncpy(context->err_buf, err_msg, context->err_buf_halfsize);
+    else
+      context->err_buf_len = assert_not_funpeq_msg(context, context->err_buf, context->err_buf_halfsize, tag, check, model);
 
     return UNIT_TEST_FAIL_CONTINUE;
   }

@@ -251,6 +251,8 @@ unit_test_result_t run_tests(unit_test_context_t *context, unit_test_t **tests);
 /* ---------------------------------------------------------------- */
 /* Default error messages for assertion failures. */
 
+typedef void *(*tests_funp_t)(void *, ...);
+
 #define DEFAULT_TAG_SIZE 4096  /* (2 << 12) */
 
 #define ASSERT_MSG_WIDTH 80
@@ -277,6 +279,7 @@ size_t assert_ulongeq_msg       (unit_test_context_t *context, char *msg_out, si
 size_t assert_sizeeq_msg        (unit_test_context_t *context, char *msg_out, size_t msg_out_size, const char *tag, size_t         check,     size_t         model);
 
 size_t assert_objpeq_msg        (unit_test_context_t *context, char *msg_out, size_t msg_out_size, const char *tag, const void    *check,     const void    *model);
+size_t assert_funpeq_msg        (unit_test_context_t *context, char *msg_out, size_t msg_out_size, const char *tag, tests_funp_t   check,     tests_funp_t   model);
 
 size_t assert_streqz_msg        (unit_test_context_t *context, char *msg_out, size_t msg_out_size, const char *tag, const char    *check,     const char    *model);
 size_t assert_streqn_msg        (unit_test_context_t *context, char *msg_out, size_t msg_out_size, const char *tag, const char    *check,     const char    *model, size_t max_len);
@@ -292,6 +295,7 @@ size_t assert_not_ulongeq_msg   (unit_test_context_t *context, char *msg_out, si
 size_t assert_not_sizeeq_msg    (unit_test_context_t *context, char *msg_out, size_t msg_out_size, const char *tag, size_t         check,     size_t         model);
 
 size_t assert_not_objpeq_msg    (unit_test_context_t *context, char *msg_out, size_t msg_out_size, const char *tag, const void    *check,     const void    *model);
+size_t assert_not_funpeq_msg    (unit_test_context_t *context, char *msg_out, size_t msg_out_size, const char *tag, tests_funp_t   check,     tests_funp_t   model);
 
 size_t assert_not_streqz_msg    (unit_test_context_t *context, char *msg_out, size_t msg_out_size, const char *tag, const char    *check,     const char    *model);
 size_t assert_not_streqn_msg    (unit_test_context_t *context, char *msg_out, size_t msg_out_size, const char *tag, const char    *check,     const char    *model, size_t max_len);
@@ -319,6 +323,8 @@ unit_test_result_t assert_sizeeq_continue     (unit_test_context_t *context, con
 
 unit_test_result_t assert_objpeq              (unit_test_context_t *context, const char *err_msg, const char *tag, const void   *check,     const void    *model);
 unit_test_result_t assert_objpeq_continue     (unit_test_context_t *context, const char *err_msg, const char *tag, const void   *check,     const void    *model);
+unit_test_result_t assert_funpeq              (unit_test_context_t *context, const char *err_msg, const char *tag, tests_funp_t  check,     tests_funp_t   model);
+unit_test_result_t assert_funpeq_continue     (unit_test_context_t *context, const char *err_msg, const char *tag, tests_funp_t  check,     tests_funp_t   model);
 
 unit_test_result_t assert_streqz              (unit_test_context_t *context, const char *err_msg, const char *tag, const char   *check,     const char    *model);
 unit_test_result_t assert_streqz_continue     (unit_test_context_t *context, const char *err_msg, const char *tag, const char   *check,     const char    *model);
@@ -343,6 +349,8 @@ unit_test_result_t assert_not_sizeeq_continue (unit_test_context_t *context, con
 
 unit_test_result_t assert_not_objpeq          (unit_test_context_t *context, const char *err_msg, const char *tag, const void   *check,     const void    *model);
 unit_test_result_t assert_not_objpeq_continue (unit_test_context_t *context, const char *err_msg, const char *tag, const void   *check,     const void    *model);
+unit_test_result_t assert_not_funpeq          (unit_test_context_t *context, const char *err_msg, const char *tag, tests_funp_t  check,     tests_funp_t   model);
+unit_test_result_t assert_not_funpeq_continue (unit_test_context_t *context, const char *err_msg, const char *tag, tests_funp_t  check,     tests_funp_t   model);
 
 unit_test_result_t assert_not_streqz          (unit_test_context_t *context, const char *err_msg, const char *tag, const char   *check,     const char    *model);
 unit_test_result_t assert_not_streqz_continue (unit_test_context_t *context, const char *err_msg, const char *tag, const char   *check,     const char    *model);
