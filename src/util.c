@@ -347,24 +347,50 @@ int strn_has_null_terminator(const char *src, size_t size)
   return strnlen(src, size) < size;
 }
 
-/* Return an index that is within the bounds of the given buffer size.
+/*
+ * Given "size", return an in-bounds "index" (or an out-of-bounds index of 0
+ * when size is 0, or size is 1 and reserve_final_byte is enabled).
  *
- * If the buffer size is 0, returns out-of-bounds index 0.
+ * If "index" is in-bounds, return it; else return the closest in-bounds index
+ * (i.e., the maximum index).
  *
- * Set "reserve_final_byte" to constrain the index to one less than the size,
- * ensuring the "index" doesn't refer to the final byte.  This can be used to
- * ensure that there is room for a NULL terminator in the context of strings.
+ * Return a new index value within [0, size), such that 0 <= new_index < size.
  *
- * Returns effectively
- * "min_size(index, size)" or "min_size(index, size_less_null(size))"
- * depending on the value of "reserve_final_byte".
+ * E.g. if "size" is 8, returns an index [0, 7].
+ *
+ * Example:
+ *   size  = 8:
+ *   Return index constrained to [0, 7].
+ *   > if (index <= 7)
+ *   >   return index;
+ *   > else
+ *   >   return 7;
+ *
+ * If "reserve_final_byte" is enabled, the final index is considered
+ * out-of-bounds, so the maximum in-bounds index is one less.
+ *
+ * Example:
+ *   size  = 8:
+ *   reserve_final_byte: 1
+ *   Return index constrained to [0, 6].
+ *   > if (index <= 6)
+ *   >   return index;
+ *   > else
+ *   >   return 6;
+ *
+ * (In an interval, brackets, "[]", are inclusive, and parentheses, "()" are
+ * exclusive.)
  */
 size_t strl_constrain_index(size_t size, int reserve_final_byte, size_t index)
 {
+  size_t max_index;
+
   if (!reserve_final_byte)
-    return size_minus(min_size(size_less_null(size), index), 1);
+    max_index = size_minus(               size,  1);
   else
-    return size_minus(min_size(size, index), 1);
+    max_index = size_minus(size_less_null(size), 1);
+
+  return min_size(max_index, index);
 }
 
 /*
