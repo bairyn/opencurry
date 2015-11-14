@@ -1,5 +1,5 @@
 /*
- * opencurry: tests/resources.h
+ * opencurry: tests/tests_resources.c
  *
  * Copyright (c) 2015, Byron James Johnson
  * All rights reserved.
@@ -30,14 +30,6 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-/*
- * tests/resources.h
- * ------
- */
-
-
-#ifndef TESTS_RESOURCES_H
-#define TESTS_RESOURCES_H
 /* stddef.h:
  *   - size_t
  */
@@ -45,17 +37,24 @@
 
 #include "../base.h"
 #include "testing.h"
+#include "tests_resources.h"
 
-#include "../resources.h"
-
+/* ---------------------------------------------------------------- */
 /* resource/tests/static_string_test.txt.res */
-extern char  _binary_resource_tests_static_string_test_txt_res_start[];
-extern char  _binary_resource_tests_static_string_test_txt_res_end[];
-size_t       get_binary_resource_tests_static_string_test_txt_res_size(void);
 
-const char  *res_tests_static_string_start(void);
-size_t       res_tests_static_string_size(void);
-const char  *res_tests_static_string_end(void);
-void         res_tests_static_string(const char **start, unsigned int *size, const char **end);
+size_t get_binary_resource_tests_static_string_test_txt_res_size(void)
+{
+  return (size_t)(((char *)(_binary_resource_tests_static_string_test_txt_res_end)) - ((char *)(_binary_resource_tests_static_string_test_txt_res_start)));
+}
 
-#endif /* ifndef TESTS_RESOURCES_H */
+
+const char  *res_tests_static_string_start(void) { return _binary_resource_tests_static_string_test_txt_res_start; }
+size_t       res_tests_static_string_size(void)  { return get_binary_resource_tests_static_string_test_txt_res_size(); }
+const char  *res_tests_static_string_end(void)   { return _binary_resource_tests_static_string_test_txt_res_end; }
+
+void res_tests_static_string_test(const char **start, size_t *size, const char **end)
+{
+  if(start) *start  = res_tests_static_string_start();
+  if(size)  *size   = res_tests_static_string_size();
+  if(end)   *end    = res_tests_static_string_end();
+}

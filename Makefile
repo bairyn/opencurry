@@ -125,7 +125,7 @@ CLI_OBJS :=                                 \
 	$(OBJ_DIR)/main.o
 TEST_CLI_OBJS :=                            \
 	$(SHARED_OBJS)                            \
-	$(OBJ_DIR)/tests/resources.o              \
+	$(OBJ_DIR)/tests/tests_resources.o        \
 	$(OBJ_DIR)/tests/testing.o                \
 	                                          \
 	$(OBJ_DIR)/tests/ansi_c_ast_base.o        \
