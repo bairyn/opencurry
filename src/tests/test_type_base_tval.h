@@ -57,7 +57,7 @@ unit_test_result_t tval_typeof_variant_equalities_test_run(unit_test_context_t *
 extern unit_test_t tval_typeof_equivalences_test;
 unit_test_result_t tval_typeof_equivalences_test_run(unit_test_context_t *context);
 
-extern unit_test_t tval_typdeof_equivalences_test;
-unit_test_result_t tval_typdeof_equivalences_test_run(unit_test_context_t *context);
+extern unit_test_t tval_typedof_equivalences_test;
+unit_test_result_t tval_typedof_equivalences_test_run(unit_test_context_t *context);
 
 #endif /* ifndef TESTS_TEST_TYPE_BASE_TVAL_H */

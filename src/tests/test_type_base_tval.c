@@ -43,6 +43,8 @@
 #include "../type_base.h"
 #endif /* #ifndef TODO */
 
+#include "../util.h"
+
 int test_type_base_tval_cli(int argc, char **argv)
 {
   return run_test_suite(type_base_tval_test);
@@ -115,24 +117,24 @@ unit_test_result_t tval_typeof_equivalences_test_run(unit_test_context_t *contex
 
     MASSERT1
       ( true,  "typeof(type_type())     equivalent to   type_type()"
-      , is_type_equivalent(typeof(type_type_def), type_type())
+      , IS_TRUE(is_type_equivalent(typeof(type_type_def), type_type()))
       );
 
     MASSERT1
       ( true,  "typeof(&malloc_manager) equivalent to   memory_manager_type()"
-      , is_type_equivalent(typeof(manager),       memory_manager_type())
+      , IS_TRUE(is_type_equivalent(typeof(manager),       memory_manager_type()))
       );
 
     /* ---------------------------------------------------------------- */
 
     MASSERT1
       ( false, "typeof(type_type())     different from memory_manager_type()"
-      , is_type_equivalent(typeof(type_type_def), memory_manager_type())
+      , IS_TRUE(is_type_equivalent(typeof(type_type_def), memory_manager_type()))
       );
 
     MASSERT1
       ( false, "typeof(&malloc_manager) different from type_type()"
-      , is_type_equivalent(typeof(manager),       type_type())
+      , IS_TRUE(is_type_equivalent(typeof(manager),       type_type()))
       );
 
     /* ---------------------------------------------------------------- */
@@ -140,24 +142,24 @@ unit_test_result_t tval_typeof_equivalences_test_run(unit_test_context_t *contex
 
     MASSERT1
       ( true,  "typeof(typeof(type_type()))     equivalent to   type_type()"
-      , is_type_equivalent(typeof(typeof(type_type_def)), type_type())
+      , IS_TRUE(is_type_equivalent(typeof(typeof(type_type_def)), type_type()))
       );
 
     MASSERT1
       ( true,  "typeof(typeof(&malloc_manager)) equivalent to   type_type()"
-      , is_type_equivalent(typeof(typeof(manager)),       type_type())
+      , IS_TRUE(is_type_equivalent(typeof(typeof(manager)),       type_type()))
       );
 
     /* ---------------------------------------------------------------- */
 
     MASSERT1
       ( false, "typeof(typeof(type_type()))     different from memory_manager_type()"
-      , is_type_equivalent(typeof(typeof(type_type_def)), memory_manager_type())
+      , IS_TRUE(is_type_equivalent(typeof(typeof(type_type_def)), memory_manager_type()))
       );
 
     MASSERT1
       ( false, "typeof(typeof(&malloc_manager)) different from memory_manager_type()"
-      , is_type_equivalent(typeof(typeof(manager)),       memory_manager_type())
+      , IS_TRUE(is_type_equivalent(typeof(typeof(manager)),       memory_manager_type()))
       );
   }
 
@@ -178,30 +180,31 @@ unit_test_result_t tval_typedof_equivalences_test_run(unit_test_context_t *conte
 
   ENCLOSE()
   {
+#ifdef TODO /* TODO: needs "type_container" implemented first. */
     const type_t           *type_type_def = type_type();
     const memory_manager_t *manager       = &malloc_manager;
 
     /* ---------------------------------------------------------------- */
     /* ---------------------------------------------------------------- */
 
-    MASSERT1
+    MASSERT2
       ( funpeq,     "typedof(type_type())     equal to        type_type"
       , (tests_funp_t) typedof(type_type_def), (tests_funp_t) type_type
       );
 
-    MASSERT1
+    MASSERT2
       ( funpeq,     "typedof(&malloc_manager) equal to        memory_manager_type"
       , (tests_funp_t) typedof(manager),       (tests_funp_t) memory_manager_type
       );
 
     /* ---------------------------------------------------------------- */
 
-    MASSERT1
+    MASSERT2
       ( not_funpeq, "typedof(type_type())     different from memory_manager_type"
       , (tests_funp_t) typedof(type_type_def), (tests_funp_t) memory_manager_type
       );
 
-    MASSERT1
+    MASSERT2
       ( not_funpeq, "typedof(&malloc_manager) different from type_type"
       , (tests_funp_t) typedof(manager),       (tests_funp_t) type_type
       );
@@ -209,27 +212,28 @@ unit_test_result_t tval_typedof_equivalences_test_run(unit_test_context_t *conte
     /* ---------------------------------------------------------------- */
     /* ---------------------------------------------------------------- */
 
-    MASSERT1
+    MASSERT2
       ( funpeq,     "typedof(typedof(type_type()))     equal to        type_type"
-      , (tests_funp_t) typedof(typedof(type_type_def)), (tests_funp_t) type_type()
+      , (tests_funp_t) typedof(typedof(type_type_def)), (tests_funp_t) type_type
       );
 
-    MASSERT1
+    MASSERT2
       ( funpeq,     "typedof(typedof(&malloc_manager)) equal to        type_type"
-      , (tests_funp_t) typedof(typedof(manager)),       (tests_funp_t) type_type()
+      , (tests_funp_t) typedof(typedof(manager)),       (tests_funp_t) type_type
       );
 
     /* ---------------------------------------------------------------- */
 
-    MASSERT1
+    MASSERT2
       ( not_funpeq, "typedof(typedof(type_type()))     different from memory_manager_type"
       , (tests_funp_t) typedof(typedof(type_type_def)), (tests_funp_t) memory_manager_type
       );
 
-    MASSERT1
+    MASSERT2
       ( not_funpeq, "typedof(typedof(&malloc_manager)) different from memory_manager_type"
       , (tests_funp_t) typedof(typedof(manager)),       (tests_funp_t) memory_manager_type
       );
+#endif /* #ifdef TODO /-* TODO: needs "type_container" implemented first. *-/ */
   }
 
   return result;
