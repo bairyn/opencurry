@@ -136,7 +136,7 @@ static int is_big_endian_lazy_eval(void);
 static int (*is_big_endian_lazy)(void) = is_big_endian_lazy_eval;
 static int is_big_endian_lazy_eval(void)
 {
-  return (is_big_endian_lazy = proc_cond(are_bytes_reversed()))();
+  return (is_big_endian_lazy = proc_cond(!are_bytes_reversed()))();
 }
 
 int is_big_endian(void)
