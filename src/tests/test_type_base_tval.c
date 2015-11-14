@@ -62,8 +62,12 @@ unit_test_t type_base_tval_test =
 /* Array of type_base_tval tests. */
 unit_test_t *type_base_tval_tests[] =
   { &tval_typeof_variant_equalities_test
+
   , &tval_typeof_equivalences_test
   , &tval_typedof_equivalences_test
+
+  , &tval_typeof_edge_cases_test
+  , &tval_typedof_edge_cases_test
 
   , NULL
   };
@@ -232,6 +236,96 @@ unit_test_result_t tval_typedof_equivalences_test_run(unit_test_context_t *conte
     MASSERT2
       ( not_funpeq, "typedof(typedof(&malloc_manager)) different from memory_manager_type"
       , (tests_funp_t) typedof(typedof(manager)),       (tests_funp_t) memory_manager_type
+      );
+#endif /* #ifdef TODO /-* TODO: needs "type_container" implemented first. *-/ */
+  }
+
+  return result;
+}
+
+/* ---------------------------------------------------------------- */
+
+unit_test_t tval_typeof_edge_cases_test =
+  {  tval_typeof_edge_cases_test_run
+  , "tval_typeof_edge_cases_test"
+  , "typeof() calls should return expected values."
+  };
+
+unit_test_result_t tval_typeof_edge_cases_test_run(unit_test_context_t *context)
+{
+  unit_test_result_t result = assert_success(context);
+
+  ENCLOSE()
+  {
+    typed_t nulltype = NULL;
+
+    /* ---------------------------------------------------------------- */
+
+    MASSERT2
+      ( objpeq, "typeof(NULL) equal to NULL"
+      , (const void *) typeof(NULL),      (const void *) NULL
+      );
+
+    MASSERT2
+      ( objpeq, "typeof({ NULL }) equal to NULL"
+      , (const void *) typeof(&nulltype), (const void *) NULL
+      );
+
+    /* ---------------------------------------------------------------- */
+
+    MASSERT2
+      ( objpeq, "typeof(typeof(NULL)) equal to NULL"
+      , (const void *) typeof(typeof(NULL)),      (const void *) NULL
+      );
+
+    MASSERT2
+      ( objpeq, "typeof(typeof({ NULL })) equal to NULL"
+      , (const void *) typeof(typeof(&nulltype)), (const void *) NULL
+      );
+  }
+
+  return result;
+}
+
+/* ---------------------------------------------------------------- */
+
+unit_test_t tval_typedof_edge_cases_test =
+  {  tval_typedof_edge_cases_test_run
+  , "tval_typedof_edge_cases_test"
+  , "typedof() calls should return expected values."
+  };
+
+unit_test_result_t tval_typedof_edge_cases_test_run(unit_test_context_t *context)
+{
+  unit_test_result_t result = assert_success(context);
+
+  ENCLOSE()
+  {
+#ifdef TODO /* TODO: needs "type_container" implemented first. */
+    typed_t nulltype = NULL;
+
+    /* ---------------------------------------------------------------- */
+
+    MASSERT2
+      ( funpeq, "typedof(NULL) equal to NULL"
+      , (tests_funp_t) typedof(NULL),      (tests_funp_t) NULL
+      );
+
+    MASSERT2
+      ( funpeq, "typedof({ NULL }) equal to NULL"
+      , (tests_funp_t) typedof(&nulltype), (tests_funp_t) NULL
+      );
+
+    /* ---------------------------------------------------------------- */
+
+    MASSERT2
+      ( funpeq, "typedof(typeof(NULL)) equal to NULL"
+      , (tests_funp_t) typedof(typedof(NULL)),      (tests_funp_t) NULL
+      );
+
+    MASSERT2
+      ( funpeq, "typedof(typeof({ NULL })) equal to NULL"
+      , (tests_funp_t) typedof(typedof(&nulltype)), (tests_funp_t) NULL
       );
 #endif /* #ifdef TODO /-* TODO: needs "type_container" implemented first. *-/ */
   }
