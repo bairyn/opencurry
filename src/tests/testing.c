@@ -466,31 +466,38 @@ void print_test_suite_result(unit_test_context_t *context, unit_test_result_t re
 
   FILE *out;
 
-  if      (is_test_result_success(result))
+  if
+    (  is_test_result_success(result)
+    && context->num_skip == 0
+    && context->num_fail == 0
+    )
+  {
+    out = context->out;
+
+    fprintf
+      ( out
+      , "pass: %d/%d tests and test groups.\n"
+      
+      , (int) (context->num_pass)
+      , (int) (context->num_pass + context->num_skip)
+      );
+  }
+  else if
+    (  is_test_result_success(result)
+    || is_test_result_skip   (result)
+    )
   {
     out = context->out;
 
     fprintf
       ( out
       , "pass: %d/%d test groups.\n"
+        "*** skipped: %d/%d tests and test groups.\n"
       
       , (int) (context->num_pass)
       , (int) (context->num_pass + context->num_skip)
-      );
-  }
-  else if (is_test_result_skip   (result))
-  {
-    out = context->out;
-
-    fprintf
-      ( out
-      , "*** skipped: %d/%d test groups.\n"
-        "pass: %d/%d test groups.\n"
 
       , (int) (context->num_skip)
-      , (int) (context->num_pass + context->num_skip)
-      
-      , (int) (context->num_pass)
       , (int) (context->num_pass + context->num_skip)
       );
   }
@@ -507,6 +514,7 @@ void print_test_suite_result(unit_test_context_t *context, unit_test_result_t re
       fprintf
         ( out
         , "*** Error: %d tests failed:\n  last failed test #: %d\n  number of tests run: %d\n  can continue testing after last failure?: %s\n\nLast error message%s:\n\n%s%s"
+
         , (int) (context->num_fail)
         , (int) (context->last_fail)
         , (int) (context->next_test_id - context->num_skip)
@@ -552,7 +560,7 @@ int is_test_result_success(unit_test_result_t result)
 
 int is_test_result_failure(unit_test_result_t result)
 {
-  return result == UNIT_TEST_FAIL || UNIT_TEST_FAIL_CONTINUE;
+  return result == UNIT_TEST_FAIL || result == UNIT_TEST_FAIL_CONTINUE;
 }
 
 int is_test_result_skip(unit_test_result_t result)
@@ -607,6 +615,18 @@ unit_test_result_t run_test(unit_test_context_t *context, unit_test_t test)
   /* Print the result. */
   print_test_result(context, test, id, result, seed_start);
   reset_err_buf(context);
+
+  /* ---------------------------------------------------------------- */
+
+  /* If a unit test is skipped, reset the result. */
+
+  if (!is_test_result_success(result) && !is_test_result_failure(result))
+  {
+    if (is_test_result_skip(result))
+    {
+      result = UNIT_TEST_PASS;
+    }
+  }
 
   return result;
 }
@@ -778,8 +798,8 @@ void print_skipped_test_result(unit_test_context_t *context, unit_test_t test, i
 {
   print_test_indent(context, 1);
 
-  /* fprintf(context->out, "  %*.s   skipped * context->group_depth, ""); */
-  fprintf(context->out, "  %*.s   skipped: %s\n", 2 * context->group_depth, "", test.description);
+  /* fprintf(context->out, "  %*.s   SKIPPED * context->group_depth, ""); */
+  fprintf(context->out, "  %*.s   SKIPPED: %s\n", 2 * context->group_depth, "", test.description);
 }
 
 void ensure_buf_limits(unit_test_context_t *context, char *buf)
