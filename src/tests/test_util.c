@@ -311,6 +311,28 @@ unit_test_result_t util_equalities_str_test_run(unit_test_context_t *context)
     MASSERT2( inteq,  "18strlcpy_with_max", strlcpy_with_max(dest, love, 8, 4, 4), 4 );
     MASSERT2( inteq,  "19strlcpy_with_max", strlcpy_with_max(dest, love, 0, 4, 4), 0 );
     MASSERT3( streqn, "20strlcpy_with_max", dest, "love", sizeof(dest) );
+
+    /* ---------------------------------------------------------------- */
+
+    MASSERT2( inteq,  "str?len strlcpy", strlcpy(dest, love, sizeof(dest)), 4 );
+
+    MASSERT2( inteq,  "0strnlen", strnlen(dest, 7), 4 );
+    MASSERT2( inteq,  "1strnlen", strnlen(dest, 6), 4 );
+    MASSERT2( inteq,  "2strnlen", strnlen(dest, 5), 4 );
+    MASSERT2( inteq,  "3strnlen", strnlen(dest, 4), 4 );
+    MASSERT2( inteq,  "4strnlen", strnlen(dest, 3), 3 );
+    MASSERT2( inteq,  "5strnlen", strnlen(dest, 2), 2 );
+    MASSERT2( inteq,  "6strnlen", strnlen(dest, 1), 1 );
+    MASSERT2( inteq,  "7strnlen", strnlen(dest, 0), 0 );
+
+    MASSERT2( inteq,  "0strllen", strllen(dest, 7), 4 );
+    MASSERT2( inteq,  "1strllen", strllen(dest, 6), 4 );
+    MASSERT2( inteq,  "2strllen", strllen(dest, 5), 4 );
+    MASSERT2( inteq,  "3strllen", strllen(dest, 4), 3 );
+    MASSERT2( inteq,  "4strllen", strllen(dest, 3), 2 );
+    MASSERT2( inteq,  "5strllen", strllen(dest, 2), 1 );
+    MASSERT2( inteq,  "6strllen", strllen(dest, 1), 0 );
+    MASSERT2( inteq,  "7strllen", strllen(dest, 0), 0 );
   }
 
   return result;
