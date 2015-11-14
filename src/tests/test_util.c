@@ -490,7 +490,7 @@ unit_test_result_t util_equalities_basic_str_test_run(unit_test_context_t *conte
 unit_test_t util_equalities_str_test =
   {  util_equalities_str_test_run
   , "util_equalities_str_test"
-  , "Aptly assorted equality tests for \"util\"'s string utilities."
+  , "Aptly assorted equality tests for \"util\"'s string utility procedures."
   };
 
 unit_test_result_t util_equalities_str_test_run(unit_test_context_t *context)
