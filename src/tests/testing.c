@@ -620,11 +620,14 @@ unit_test_result_t run_test(unit_test_context_t *context, unit_test_t test)
 
   /* If a unit test is skipped, reset the result. */
 
-  if (!is_test_result_success(result) && !is_test_result_failure(result))
+  if (is_test_result_can_continue(result))
   {
-    if (is_test_result_skip(result))
+    if (!is_test_result_success(result) && !is_test_result_failure(result))
     {
-      result = UNIT_TEST_PASS;
+      if (is_test_result_skip(result))
+      {
+        result = UNIT_TEST_PASS;
+      }
     }
   }
 
