@@ -76,12 +76,12 @@ unit_test_result_t util_equalities_test_run(unit_test_context_t *context)
 
   ENCLOSE()
   {
-    void *context;
+    void *object;
 
     ASSERT2( inteq, min_int( 3,  7),  3 );
     ASSERT2( inteq, max_int( 3,  7),  7 );
-    ASSERT2( inteq, min_int(-3, -7), -3 );
-    ASSERT2( inteq, max_int(-3, -7), -7 );
+    ASSERT2( inteq, min_int(-3, -7), -7 );
+    ASSERT2( inteq, max_int(-3, -7), -3 );
 
     ASSERT2( sizeeq, min_size(3,  7),  3 );
     ASSERT2( sizeeq, max_size(3,  7),  7 );
@@ -93,13 +93,13 @@ unit_test_result_t util_equalities_test_run(unit_test_context_t *context)
     ASSERT2( inteq, proc_true(),  1 );
     ASSERT2( inteq, proc_false(), 0 );
 
+    ASSERT2( inteq, proc_cond(0)(), 0 );
     ASSERT2( inteq, proc_cond(1)(), 1 );
-    ASSERT2( inteq, proc_cond(0)(), 1 );
 
-    ASSERT2( objpeq, proc_context(&context), &context );
+    ASSERT2( objpeq, proc_context(&object), &object );
 
-    ASSERT2( inteq, proc_true_context(&context),  1 );
-    ASSERT2( inteq, proc_false_context(&context), 0 );
+    ASSERT2( inteq, proc_true_context(&object),  1 );
+    ASSERT2( inteq, proc_false_context(&object), 0 );
 
     ASSERT2( inteq, is_big_endian(), !are_bytes_reversed() );
   }
