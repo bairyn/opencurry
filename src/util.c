@@ -250,7 +250,7 @@ size_t strlcpy_srcmax(char *dest, const char *src, size_t dest_size, size_t src_
 /* strlcpy with 2 limits on number of bytes to copy from "src". */
 size_t strlcpy_with_max(char *dest, const char *src, size_t dest_size, size_t src_size, size_t src_max_bytes)
 {
-  return strlcpy_srcmax(dest, src, dest_size, min_size(src_size, max_bytes));
+  return strlcpy_srcmax(dest, src, dest_size, min_size(src_size, src_max_bytes));
 }
 
 /* Get the length of the string limited by "size".
