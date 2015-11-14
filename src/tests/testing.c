@@ -1001,12 +1001,14 @@ unit_test_result_t run_tests_num(unit_test_context_t *context, unit_test_t **tes
   {
     int individual_result;
 
+#if 0
     if (i >= 1)
     {
       /* Add extra line. */
       print_test_indent(context, TEST_INDENT_NO_ALERT, TEST_INDENT_NO_PENDING_TEXT);
       fprintf(context->out, "\n");
     }
+#endif
 
     individual_result = run_test(context, *tests[i]);
 
