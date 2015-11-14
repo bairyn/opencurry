@@ -206,7 +206,7 @@ size_t strlcpy(char *dest, const char *src, size_t dest_size)
     return 0;
 
   len = 0;
-  for (; dest_size >= 1; ++dest, ++src, --dest_size)
+  for (; dest_size >= 2; ++dest, ++src, --dest_size)
   {
     if (!*src)
       break;
