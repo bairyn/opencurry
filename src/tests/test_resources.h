@@ -40,7 +40,7 @@
 #include "../base.h"
 #include "testing.h"
 
-#include "resources.h"
+#include "tests_resources.h"
 
 #include "../resources.h"
 

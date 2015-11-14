@@ -44,7 +44,7 @@
 #include "testing.h"
 #include "test_resources.h"
 
-#include "resources.h"
+#include "tests_resources.h"
 
 #include "../resources.h"
 
