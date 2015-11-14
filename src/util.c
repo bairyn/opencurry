@@ -231,8 +231,6 @@ size_t strlcpy_srcmax(char *dest, const char *src, size_t dest_size, size_t src_
    */
   if (dest_size     <= 0)
     return 0;
-  if (src_max_bytes <= 0)
-    return 0;
 
   len = 0;
   for (; dest_size >= 2 && src_max_bytes >= 1; ++dest, ++src, --dest_size, --src_max_bytes)
