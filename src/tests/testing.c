@@ -805,7 +805,11 @@ void print_test_prefix(unit_test_context_t *context, unit_test_t test, int id)
 
   print_test_indent(context, TEST_INDENT_NO_ALERT, TEST_INDENT_PENDING_TEXT);
 
-  fprintf(context->out, "- %d: %s:\n", id, test.name);
+  #if IS_FALSE(TEST_RESULT_PASS_PRINT_SAME_LINE)
+    fprintf(context->out, "- %d: %s:\n", id, test.name);
+  #else
+    fprintf(context->out, "- %d: %s:",   id, test.name);
+  #endif
 }
 
 void print_test_result(unit_test_context_t *context, unit_test_t test, int id, unit_test_result_t result, unsigned int seed_start)
@@ -842,10 +846,32 @@ void print_test_result(unit_test_context_t *context, unit_test_t test, int id, u
 
 void print_passed_test_result(unit_test_context_t *context, unit_test_t test, int id, unit_test_result_t result, unsigned int seed_start)
 {
-  print_test_indent(context, TEST_INDENT_NO_ALERT, TEST_INDENT_PENDING_TEXT);
+  int ran_test_group;
 
-  /* fprintf(context->out, "  %*.s   =)\n", 2 * context->group_depth, ""); */
-  fprintf(context->out, "  %*.s   =): pass: %s\n", 2 * context->group_depth, "", test.description);
+  ran_test_group = context->next_test_id != (id + 1);
+
+  /* #if IS_FALSE(TEST_RESULT_PASS_PRINT_SAME_LINE) */
+  if
+    (  IS_FALSE(TEST_RESULT_PASS_PRINT_SAME_LINE)
+    || ran_test_group
+    )
+  {
+    print_test_indent(context, TEST_INDENT_NO_ALERT, TEST_INDENT_PENDING_TEXT);
+
+    #if IS_FALSE(TEST_RESULT_PASS_PRINT_DESCRIPTION)
+      fprintf(context->out, "  %*.s   =)\n", 2 * context->group_depth, "");
+    #else
+      fprintf(context->out, "  %*.s   =): pass: %s\n", 2 * context->group_depth, "", test.description);
+    #endif
+  }
+  else
+  {
+    #if IS_FALSE(TEST_RESULT_PASS_PRINT_DESCRIPTION)
+      fprintf(context->out, " =)\n");
+    #else
+      fprintf(context->out, " =): pass: %s\n", test.description);
+    #endif
+  }
 }
 
 void print_failed_test_result(unit_test_context_t *context, unit_test_t test, int id, unit_test_result_t result, unsigned int seed_start)
@@ -856,6 +882,10 @@ void print_failed_test_result(unit_test_context_t *context, unit_test_t test, in
   context->err_buf[context->err_buf_halfsize - 1] = 0;
 
   can_continue = is_test_result_can_continue(result);
+
+  #if IS_TRUE(TEST_RESULT_PASS_PRINT_SAME_LINE)
+    fprintf(context->out, "\n");
+  #endif
 
   print_test_indent(context, TEST_INDENT_ALERT, TEST_INDENT_PENDING_TEXT);
   fprintf(context->out, "  %*.s   FAILURE - %s\n", 2 * context->group_depth, "", test.description);
@@ -882,10 +912,17 @@ void print_failed_test_result(unit_test_context_t *context, unit_test_t test, in
 
 void print_skipped_test_result(unit_test_context_t *context, unit_test_t test, int id, unit_test_result_t result, unsigned int seed_start)
 {
+  #if IS_TRUE(TEST_RESULT_PASS_PRINT_SAME_LINE)
+    fprintf(context->out, "\n");
+  #endif
+
   print_test_indent(context, TEST_INDENT_ALERT, TEST_INDENT_PENDING_TEXT);
 
-  /* fprintf(context->out, "  %*.s   SKIPPED * context->group_depth, ""); */
-  fprintf(context->out, "  %*.s   SKIPPED: %s\n", 2 * context->group_depth, "", test.description);
+  #if IS_FALSE(TEST_RESULT_SKIP_PRINT_DESCRIPTION)
+    fprintf(context->out, "  %*.s   SKIPPED\n", 2 * context->group_depth, "");
+  #else
+    fprintf(context->out, "  %*.s   SKIPPED: %s\n", 2 * context->group_depth, "", test.description);
+  #endif
 }
 
 void ensure_buf_limits(unit_test_context_t *context, char *buf)
@@ -1001,7 +1038,14 @@ unit_test_result_t run_tests_num(unit_test_context_t *context, unit_test_t **tes
   {
     int individual_result;
 
-#if 0
+#if IS_TRUE(TEST_RESULT_PASS_PRINT_SAME_LINE)
+    if (i == 0)
+    {
+      fprintf(context->out, "\n");
+    }
+#endif
+
+#if IS_TRUE(TEST_RESULT_GROUP_PRINT_INTERSPERSED_LINE)
     if (i >= 1)
     {
       /* Add extra line. */

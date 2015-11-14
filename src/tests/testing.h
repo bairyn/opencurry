@@ -226,6 +226,13 @@ int is_test_result_skip(unit_test_result_t result);
 int is_test_result_can_continue(unit_test_result_t result);
 int is_test_result_aborting(unit_test_result_t result);
 
+#define TEST_RESULT_PASS_PRINT_SAME_LINE          ENABLE()
+#define TEST_RESULT_PASS_PRINT_DESCRIPTION        DISABLE() || IS_FALSE(TEST_RESULT_PASS_PRINT_SAME_LINE)
+
+#define TEST_RESULT_SKIP_PRINT_DESCRIPTION        ENABLE()
+
+#define TEST_RESULT_GROUP_PRINT_INTERSPERSED_LINE DISABLE()
+
 unit_test_result_t run_test(unit_test_context_t *context, unit_test_t test);
 
   /* (Internal API procedures, unlikely to be useful to users.) */
