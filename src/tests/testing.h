@@ -415,8 +415,15 @@ unit_test_result_t assert_not_memeq_continue  (unit_test_context_t *context, con
  * >   return result;
  * > }
  */
-#define BREAKABLE(result)              \
+#define BREAKABLE_ABORTING(result)     \
   if (is_test_result_aborting(result)) \
+    break;                             \
+  else                                 \
+    do {} while(0)
+
+/* Break on any non-successful result, whether or not testing can continue. */
+#define BREAKABLE(result)              \
+  if (!is_test_result_success(result)) \
     break;                             \
   else                                 \
     do {} while(0)
