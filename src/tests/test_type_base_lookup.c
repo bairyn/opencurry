@@ -36,6 +36,8 @@
 
 #include "../type_base_lookup.h"
 
+#include "../type_base_memory_manager.h"
+
 int test_type_base_lookup_cli(int argc, char **argv)
 {
   return run_test_suite(type_base_lookup_test);

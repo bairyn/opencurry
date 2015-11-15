@@ -114,7 +114,47 @@ extern const lookup_t lookup_defaults;
 /* lookup_t methods.                                                */
 /* ---------------------------------------------------------------- */
 
-void lookup_init_empty(lookup_t *lookup, size_t value_size);
+void      lookup_init_empty(lookup_t       *lookup, size_t value_size);
+
+size_t    lookup_num       (const lookup_t *lookup);
+lookup_t *lookup_expand
+  ( lookup_t *lookup
+  , size_t    num
+
+  , void *(*calloc)(void *context, size_t nmemb, size_t size)
+  , void   *calloc_context
+
+  , void *(*realloc)(void *context, void *area, size_t size)
+  , void   *realloc_context
+  );
+
+#ifdef TODO /* TODO */
+void      lookup_defragment(lookup_t *lookup);
+lookup_t *lookup_shrink
+  ( lookup_t *lookup
+  , size_t    num
+
+  , void *(*realloc)(void *context, void *area, size_t size)
+  , void   *realloc_context
+
+  , void  (*free)(void *context, void *area)
+  , void   *free_context
+  );
+
+lookup_t *lookup_resize
+  ( lookup_t *lookup
+  , size_t    num
+
+  , void *(*calloc)(void *context, size_t nmemb, size_t size)
+  , void   *calloc_context
+
+  , void *(*realloc)(void *context, void *area, size_t size)
+  , void   *realloc_context
+
+  , void  (*free)(void *context, void *area)
+  , void   *free_context
+  );
+#endif /* #ifdef TODO /-* TODO *-/ */
 
 /* ---------------------------------------------------------------- */
 /* Post-dependencies.                                               */

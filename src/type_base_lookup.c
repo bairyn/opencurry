@@ -227,6 +227,9 @@ const lookup_t lookup_defaults =
 /* lookup_t methods.                                                */
 /* ---------------------------------------------------------------- */
 
+/*
+ * Initialize a lookup value with zero element slots.
+ */
 void lookup_init_empty(lookup_t *lookup, size_t value_size)
 {
 #if ERROR_CHECKING 
@@ -243,3 +246,174 @@ void lookup_init_empty(lookup_t *lookup, size_t value_size)
 
   lookup->order      = NULL;
 }
+
+/* Get the number of element slots. */
+size_t lookup_num(const lookup_t *lookup)
+{
+  return lookup->num;
+}
+
+/* Allocate more memory for additional element slots. */
+/*                                                    */
+/* Does nothing with a "num" argument smaller than    */
+/* the lookup value's element-based size.             */
+lookup_t *lookup_expand
+  ( lookup_t *lookup
+  , size_t    num
+
+  , void *(*calloc)(void *context, size_t nmemb, size_t size)
+  , void   *calloc_context
+
+  , void *(*realloc)(void *context, void *area, size_t size)
+  , void   *realloc_context
+  )
+{
+  size_t old_num;
+
+#if ERROR_CHECKING 
+  if (!lookup)
+    return NULL;
+#endif /* #if ERROR_CHECKING  */
+
+  old_num = lookup_num(lookup);
+  if (num <= old_num)
+    return lookup;
+
+  if (old_num <= 0)
+  {
+#if ERROR_CHECKING 
+    if (!calloc)
+      return NULL;
+    if (lookup->values)
+      return NULL;
+    if (lookup->order)
+      return NULL;
+#endif /* #if ERROR_CHECKING  */
+
+    lookup->values = calloc(calloc_context, num, lookup->value_size);
+    if (!lookup->values)
+    {
+      lookup->order = NULL;
+      lookup->num   = 0;
+
+      return NULL;
+    }
+
+    lookup->order  = calloc(calloc_context, num, sizeof(bnode_t));
+    if (!lookup->order)
+    {
+      lookup->values = NULL;
+      lookup->num    = 0;
+
+      return NULL;
+    }
+
+    lookup->num = num;
+
+    return lookup;
+  }
+  else
+  {
+#if ERROR_CHECKING 
+    if (!realloc)
+      return NULL;
+    if (!lookup->values)
+      return NULL;
+    if (!lookup->order)
+      return NULL;
+#endif /* #if ERROR_CHECKING  */
+
+    lookup->values = realloc(realloc_context, lookup->values, num * lookup->value_size);
+    if (!lookup->values)
+    {
+      lookup->order = NULL;
+      lookup->num   = 0;
+
+      return NULL;
+    }
+
+    lookup->order  = realloc(realloc_context, lookup->order,  num * sizeof(bnode_t));
+    if (!lookup->order)
+    {
+      lookup->values = NULL;
+      lookup->num    = 0;
+
+      return NULL;
+    }
+
+    lookup->num = num;
+
+    return lookup;
+  }
+}
+
+#ifdef TODO /* TODO */
+/* Move elements to remove gaps of free element slots. */
+void lookup_defragment(lookup_t *lookup);
+
+/* Reallocate less memory for fewer element slots. */
+/*                                                 */
+/* "num" is bounded by the last used element slot. */
+/* This does not defragment.                       */
+/*                                                 */
+/* Does nothing with a "num" argument larger than  */
+/* the lookup value's element-based size.          */
+lookup_t *lookup_shrink
+  ( lookup_t *lookup
+  , size_t    num
+
+  , void *(*realloc)(void *context, void *area, size_t size)
+  , void   *realloc_context
+
+  , void  (*free)(void *context, void *area)
+  , void   *free_context
+  );
+
+/* Reallocate more or less memory for free element slots. */
+/*                                                        */
+/* When shrinking, defragmentation is performed.          */
+/*                                                        */
+/* When shrinking, the new number is bounded by           */
+/* the number of elements in use, so no data loss for     */
+/* existing elements will occur.                          */
+lookup_t *lookup_resize
+  ( lookup_t *lookup
+  , size_t    num
+
+  , void *(*calloc)(void *context, size_t nmemb, size_t size)
+  , void   *calloc_context
+
+  , void *(*realloc)(void *context, void *area, size_t size)
+  , void   *realloc_context
+
+  , void  (*free)(void *context, void *area)
+  , void   *free_context
+  )
+{
+  size_t old_num;
+
+#if ERROR_CHECKING 
+  if (!lookup)
+    return NULL;
+#endif /* #if ERROR_CHECKING  */
+
+  old_num = lookup_num(lookup);
+
+  if (num < old_num)
+  {
+    lookup_defragment(lookup);
+
+    return lookup_shrink
+      (lookup, num, realloc, realloc_context, free,    free_context);
+  }
+  else if (num > old_num)
+  {
+    return lookup_expand
+      (lookup, num, calloc,  calloc_context,  realloc, realloc_context);
+  }
+  else
+  {
+    return lookup;
+  }
+}
+#endif /* #ifdef TODO /-* TODO *-/ */
