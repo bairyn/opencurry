@@ -100,6 +100,7 @@ SHARED_OBJS :=                                     \
 	$(OBJ_DIR)/ptrs.o                                \
 	$(OBJ_DIR)/type_base_prim.o                      \
 	$(OBJ_DIR)/type_base_typed.o                     \
+	$(OBJ_DIR)/lookup.o                              \
 	$(OBJ_DIR)/type_base_tval.o                      \
 	$(OBJ_DIR)/type_base_memory_manager.o            \
 	$(OBJ_DIR)/type_base_memory_tracker.o            \
@@ -143,6 +144,7 @@ TEST_CLI_OBJS :=                                   \
 	$(OBJ_DIR)/tests/test_ptrs.o                     \
 	$(OBJ_DIR)/tests/test_type_base_prim.o           \
 	$(OBJ_DIR)/tests/test_type_base_typed.o          \
+	$(OBJ_DIR)/tests/test_lookup.o                   \
 	$(OBJ_DIR)/tests/test_type_base_tval.o           \
 	$(OBJ_DIR)/tests/test_type_base_memory_manager.o \
 	$(OBJ_DIR)/tests/test_type_base_memory_tracker.o \
