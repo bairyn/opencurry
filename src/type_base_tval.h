@@ -263,10 +263,7 @@
 
 typedef void tval;
 
-/* TODO: also: type_t *self method */
-#ifdef TODO /* TODO: needs "type_container" implemented first. */
 typed_t        typedof        (const tval *val);
-#endif /* #ifdef TODO */
 const type_t  *typeof         (const tval *val);
 const type_t  *typeof_indirect(const tval *val);
 typed_t        tval_get_typed (const tval *val);

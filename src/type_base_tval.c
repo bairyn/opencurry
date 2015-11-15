@@ -49,7 +49,6 @@
  *
  * If "val" or its type is NULL, this returns NULL.
  */
-#ifdef TODO /* TODO: needs "type_container" implemented first. */
 typed_t typedof(const tval *val)
 {
   const type_t *type_def;
@@ -63,7 +62,6 @@ typed_t typedof(const tval *val)
 
   return type_container(type_def);
 }
-#endif /* #ifdef TODO */
 
 /*
  * Obtain the type of a value.

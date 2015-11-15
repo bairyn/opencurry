@@ -184,7 +184,6 @@ unit_test_result_t tval_typedof_equivalences_test_run(unit_test_context_t *conte
 
   ENCLOSE()
   {
-#ifdef TODO /* TODO: needs "type_container" implemented first. */
     const type_t           *type_type_def = type_type();
     const memory_manager_t *manager       = &malloc_manager;
 
@@ -237,7 +236,6 @@ unit_test_result_t tval_typedof_equivalences_test_run(unit_test_context_t *conte
       ( not_funpeq, "typedof(typedof(&malloc_manager)) different from memory_manager_type"
       , (tests_funp_t) typedof(typedof(manager)),       (tests_funp_t) memory_manager_type
       );
-#endif /* #ifdef TODO /-* TODO: needs "type_container" implemented first. *-/ */
   }
 
   return result;
@@ -301,7 +299,6 @@ unit_test_result_t tval_typedof_edge_cases_test_run(unit_test_context_t *context
 
   ENCLOSE()
   {
-#ifdef TODO /* TODO: needs "type_container" implemented first. */
     typed_t nulltype = NULL;
 
     /* ---------------------------------------------------------------- */
@@ -327,7 +324,6 @@ unit_test_result_t tval_typedof_edge_cases_test_run(unit_test_context_t *context
       ( funpeq, "typedof(typeof({ NULL })) equal to NULL"
       , (tests_funp_t) typedof(typedof(&nulltype)), (tests_funp_t) NULL
       );
-#endif /* #ifdef TODO /-* TODO: needs "type_container" implemented first. *-/ */
   }
 
   return result;
