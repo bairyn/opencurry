@@ -417,11 +417,11 @@ size_t strlcpy_cycle(char *dest, const char *src, size_t dest_size, size_t num_b
  * (In an interval, brackets, "[]", are inclusive, and parentheses, "()" are
  * exclusive.)
  */
-size_t strl_constrain_index(size_t size, int reserve_final_byte, size_t index)
+size_t index_bounds(size_t size, int is_final_byte_out_of_bounds, size_t index)
 {
   size_t max_index;
 
-  if (!reserve_final_byte)
+  if (!is_final_byte_out_of_bounds)
     max_index = size_minus(               size,  1);
   else
     max_index = size_minus(size_less_null(size), 1);
@@ -430,40 +430,22 @@ size_t strl_constrain_index(size_t size, int reserve_final_byte, size_t index)
 }
 
 /*
- * Return an index to a character in a string that does not exceed its size and
- * that does not refer to a character beyond its NULL terminator if it is
- * NULL-terminated.
- *
- * If the buffer size is 0, returns out-of-bounds index 0.
- *
- * Set "reserve_final_byte" to ensure "index" does not refer to the final byte
- * in the buffer, i.e. "size-1", (when the buffer size is not 0 or 1).
- *
- * Set "reserve_terminator" to ensure "index" does not refer to the string's
- * NULL terminator unless the first byte is the null terminator, in which case
- * this returns 0.
+ * Behaves like "index_bounds" with 2 bounds: the string length and "size" (for
+ * str).
  */
-size_t strl_len_constrain_index(const char *str, size_t size, int reserve_terminator, int reserve_final_byte, size_t index)
+size_t strn_index_bounds(const char *str, size_t size, int is_terminator_out_of_bounds, size_t index)
 {
-  if (!reserve_terminator)
-  {
-    return strl_constrain_index(strnlen(str, size), reserve_final_byte, index);
-  }
-  else
-  {
-    /* We can't enable reserve_final_byte, because "strllen" already
-     * necessarily reserves the final byte.  If we did, then the index would
-     * be constrained against a character before a NULL terminator.
-     */
-    return strl_constrain_index(strllen(str, size), 0,                  index);
-  }
+  index = index_bounds(strnlen(str, size) + 1, is_terminator_out_of_bounds, index);
+  index = index_bounds(size,                   is_terminator_out_of_bounds, index);
+
+  return index;
 }
 
-/* Like "strl_len_constrain_index", but assume "str" is NULL terminated.
+/* Like "strn_index_bounds", but assume "str" is NULL terminated.
  */
-size_t str_len_constrain_index(const char *str, int reserve_terminator, size_t index)
+size_t str_index_bounds(const char *str, int is_terminator_out_of_bounds, size_t index)
 {
-  return strl_constrain_index(strlen(str), reserve_terminator, index);
+  return index_bounds(strlen(str) + 1, is_terminator_out_of_bounds, index);
 }
 
 /*
@@ -558,10 +540,10 @@ size_t meminsert
     dest_insert_offset = size_minus(dest_num, dest_insert_offset);
   }
 
-  src_num             = strl_constrain_index(src_size,            0, src_num);
-  dest_num            = strl_constrain_index(dest_size,           0, dest_num);
+  src_num             = index_bounds(src_size,            0, src_num);
+  dest_num            = index_bounds(dest_size,           0, dest_num);
 
-  dest_insert_offset  = strl_constrain_index(dest_size,           0, dest_insert_offset);
+  dest_insert_offset  = index_bounds(dest_size,           0, dest_insert_offset);
 
   if (dest_insert_offset > 0)
   {
@@ -590,10 +572,10 @@ size_t meminsert
 
   dest_num            = size_minus(dest_num, dest_replace_num);
 
-  new_dest_num        = strl_constrain_index(dest_size,           0, src_num + dest_num);
+  new_dest_num        = index_bounds(dest_size,           0, src_num + dest_num);
 
   dest_remainder_size = size_minus(dest_size, max_size(src_num, dest_replace_num));
-  dest_remainder_num  = strl_constrain_index(dest_remainder_size, 0, dest_num);
+  dest_remainder_num  = index_bounds(dest_remainder_size, 0, dest_num);
 
   /* Calculate the number of truncated bytes from the original "dest" buffer. */
   if (out_num_truncated_orig_dest)
@@ -830,7 +812,7 @@ const char *indentation_spaces(size_t steps, size_t step_size)
   if (!step_size)
     step_size = default_indentation_step_spaces;
 
-  spaces = strl_constrain_index(indentation_spaces_buf_len, 0, step_size * steps);
+  spaces = index_bounds(indentation_spaces_buf_len, 0, step_size * steps);
 
   return last_bytes(indentation_spaces_buf, spaces);
 }
@@ -842,7 +824,7 @@ const char *indentation_tabs(size_t steps, size_t step_size)
   if (!step_size)
     step_size = default_indentation_step_tabs;
 
-  tabs = strl_constrain_index(indentation_tabs_buf_len, 0, step_size * steps);
+  tabs = index_bounds(indentation_tabs_buf_len, 0, step_size * steps);
 
   return last_bytes(indentation_spaces_buf, tabs);
 }

@@ -557,33 +557,66 @@ unit_test_result_t util_equalities_basic_str_test_run(unit_test_context_t *conte
 
     /* ---------------------------------------------------------------- */
 
-    MASSERT2( sizeeq, "0 0strl_constrain_index", strl_constrain_index(32, 0, 8),  8  );
-    MASSERT2( sizeeq, "0 1strl_constrain_index", strl_constrain_index(32, 0, 29), 29 );
-    MASSERT2( sizeeq, "0 2strl_constrain_index", strl_constrain_index(32, 0, 30), 30 );
-    MASSERT2( sizeeq, "0 3strl_constrain_index", strl_constrain_index(32, 0, 31), 31 );
-    MASSERT2( sizeeq, "0 4strl_constrain_index", strl_constrain_index(32, 0, 32), 31 );
-    MASSERT2( sizeeq, "0 5strl_constrain_index", strl_constrain_index(32, 0, 32), 31 );
-    MASSERT2( sizeeq, "0 6strl_constrain_index", strl_constrain_index(32, 0, 33), 31 );
-    MASSERT2( sizeeq, "0 7strl_constrain_index", strl_constrain_index(32, 0, 34), 31 );
-    MASSERT2( sizeeq, "0 8strl_constrain_index", strl_constrain_index(32, 0, 35), 31 );
-    MASSERT2( sizeeq, "0 9strl_constrain_index", strl_constrain_index(32, 0, 36), 31 );
-    MASSERT2( sizeeq, "0 Astrl_constrain_index", strl_constrain_index(32, 0, 64), 31 );
+    MASSERT2( sizeeq, "0 0index_bounds", index_bounds(32, 0, 8),  8  );
+    MASSERT2( sizeeq, "0 1index_bounds", index_bounds(32, 0, 29), 29 );
+    MASSERT2( sizeeq, "0 2index_bounds", index_bounds(32, 0, 30), 30 );
+    MASSERT2( sizeeq, "0 3index_bounds", index_bounds(32, 0, 31), 31 );
+    MASSERT2( sizeeq, "0 4index_bounds", index_bounds(32, 0, 32), 31 );
+    MASSERT2( sizeeq, "0 5index_bounds", index_bounds(32, 0, 32), 31 );
+    MASSERT2( sizeeq, "0 6index_bounds", index_bounds(32, 0, 33), 31 );
+    MASSERT2( sizeeq, "0 7index_bounds", index_bounds(32, 0, 34), 31 );
+    MASSERT2( sizeeq, "0 8index_bounds", index_bounds(32, 0, 35), 31 );
+    MASSERT2( sizeeq, "0 9index_bounds", index_bounds(32, 0, 36), 31 );
+    MASSERT2( sizeeq, "0 Aindex_bounds", index_bounds(32, 0, 64), 31 );
 
-    MASSERT2( sizeeq, "1 0strl_constrain_index", strl_constrain_index(32, 1, 8),  8  );
-    MASSERT2( sizeeq, "1 1strl_constrain_index", strl_constrain_index(32, 1, 29), 29 );
-    MASSERT2( sizeeq, "1 2strl_constrain_index", strl_constrain_index(32, 1, 30), 30 );
-    MASSERT2( sizeeq, "1 3strl_constrain_index", strl_constrain_index(32, 1, 31), 30 );
-    MASSERT2( sizeeq, "1 4strl_constrain_index", strl_constrain_index(32, 1, 32), 30 );
-    MASSERT2( sizeeq, "1 5strl_constrain_index", strl_constrain_index(32, 1, 32), 30 );
-    MASSERT2( sizeeq, "1 6strl_constrain_index", strl_constrain_index(32, 1, 33), 30 );
-    MASSERT2( sizeeq, "1 7strl_constrain_index", strl_constrain_index(32, 1, 34), 30 );
-    MASSERT2( sizeeq, "1 8strl_constrain_index", strl_constrain_index(32, 1, 35), 30 );
-    MASSERT2( sizeeq, "1 9strl_constrain_index", strl_constrain_index(32, 1, 36), 30 );
-    MASSERT2( sizeeq, "1 Astrl_constrain_index", strl_constrain_index(32, 1, 64), 30 );
+    MASSERT2( sizeeq, "1 0index_bounds", index_bounds(32, 1, 8),  8  );
+    MASSERT2( sizeeq, "1 1index_bounds", index_bounds(32, 1, 29), 29 );
+    MASSERT2( sizeeq, "1 2index_bounds", index_bounds(32, 1, 30), 30 );
+    MASSERT2( sizeeq, "1 3index_bounds", index_bounds(32, 1, 31), 30 );
+    MASSERT2( sizeeq, "1 4index_bounds", index_bounds(32, 1, 32), 30 );
+    MASSERT2( sizeeq, "1 5index_bounds", index_bounds(32, 1, 32), 30 );
+    MASSERT2( sizeeq, "1 6index_bounds", index_bounds(32, 1, 33), 30 );
+    MASSERT2( sizeeq, "1 7index_bounds", index_bounds(32, 1, 34), 30 );
+    MASSERT2( sizeeq, "1 8index_bounds", index_bounds(32, 1, 35), 30 );
+    MASSERT2( sizeeq, "1 9index_bounds", index_bounds(32, 1, 36), 30 );
+    MASSERT2( sizeeq, "1 Aindex_bounds", index_bounds(32, 1, 64), 30 );
 
     /* ---------------------------------------------------------------- */
 
-    MASSERT2( sizeeq, "strl_len_constrain_index strlcpy", strlcpy(dest, love, sizeof(dest)), 4 );
+    MASSERT2( sizeeq, "strn_index_bounds strlcpy", strlcpy(dest, love, sizeof(dest)), 4 );
+
+    ASSERT2( sizeeq, strn_index_bounds(dest, sizeof(dest), 0, 8), 4 );
+    ASSERT2( sizeeq, strn_index_bounds(dest, sizeof(dest), 0, 7), 4 );
+    ASSERT2( sizeeq, strn_index_bounds(dest, sizeof(dest), 0, 4), 4 );
+    ASSERT2( sizeeq, strn_index_bounds(dest, sizeof(dest), 0, 3), 3 );
+    ASSERT2( sizeeq, strn_index_bounds(dest, sizeof(dest), 0, 2), 2 );
+    ASSERT2( sizeeq, strn_index_bounds(dest, sizeof(dest), 0, 1), 1 );
+    ASSERT2( sizeeq, strn_index_bounds(dest, sizeof(dest), 0, 0), 0 );
+
+    ASSERT2( sizeeq, strn_index_bounds(dest, sizeof(dest), 1, 8), 3 );
+    ASSERT2( sizeeq, strn_index_bounds(dest, sizeof(dest), 1, 7), 3 );
+    ASSERT2( sizeeq, strn_index_bounds(dest, sizeof(dest), 1, 4), 3 );
+    ASSERT2( sizeeq, strn_index_bounds(dest, sizeof(dest), 1, 3), 3 );
+    ASSERT2( sizeeq, strn_index_bounds(dest, sizeof(dest), 1, 2), 2 );
+    ASSERT2( sizeeq, strn_index_bounds(dest, sizeof(dest), 1, 1), 1 );
+    ASSERT2( sizeeq, strn_index_bounds(dest, sizeof(dest), 1, 0), 0 );
+
+
+    ASSERT2( sizeeq, strn_index_bounds(dest, 5, 0, 8), 4 );
+    ASSERT2( sizeeq, strn_index_bounds(dest, 5, 0, 7), 4 );
+    ASSERT2( sizeeq, strn_index_bounds(dest, 5, 0, 4), 4 );
+    ASSERT2( sizeeq, strn_index_bounds(dest, 5, 0, 3), 3 );
+    ASSERT2( sizeeq, strn_index_bounds(dest, 5, 0, 2), 2 );
+    ASSERT2( sizeeq, strn_index_bounds(dest, 5, 0, 1), 1 );
+    ASSERT2( sizeeq, strn_index_bounds(dest, 5, 0, 0), 0 );
+
+    ASSERT2( sizeeq, strn_index_bounds(dest, 5, 1, 8), 3 );
+    ASSERT2( sizeeq, strn_index_bounds(dest, 5, 1, 7), 3 );
+    ASSERT2( sizeeq, strn_index_bounds(dest, 5, 1, 4), 3 );
+    ASSERT2( sizeeq, strn_index_bounds(dest, 5, 1, 3), 3 );
+    ASSERT2( sizeeq, strn_index_bounds(dest, 5, 1, 2), 2 );
+    ASSERT2( sizeeq, strn_index_bounds(dest, 5, 1, 1), 1 );
+    ASSERT2( sizeeq, strn_index_bounds(dest, 5, 1, 0), 0 );
   }
 
   return result;
