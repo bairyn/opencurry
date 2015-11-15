@@ -40,6 +40,12 @@
 #include "type_base_type.h"
 #include "type_base_typed.h"
 
+#ifdef TODO
+#error "TODO: #include primitive c data types"
+#else  /* #ifdef TODO */
+#include "type_base.h"
+#endif /* #ifdef TODO */
+
 /* ---------------------------------------------------------------- */
 /* typed_t                                                          */
 /* ---------------------------------------------------------------- */
@@ -49,9 +55,12 @@
 const type_t *typed_type(void)
   { return &typed_type_def; }
 
-static const char          *typed_type_name       (const type_t *self);
-static size_t               typed_type_size       (const type_t *self, const tval *val);
-static const tval          *typed_type_has_default(const type_t *self);
+static const char          *typed_type_name         (const type_t *self);
+static size_t               typed_type_size         (const type_t *self, const tval *val);
+static const type_t        *typed_type_is_supertype ( const type_t *self
+                                                    , const type_t *is_supertype
+                                                    );
+static const tval          *typed_type_has_default  (const type_t *self);
 
 const type_t typed_type_def =
   { type_type
@@ -73,7 +82,7 @@ const type_t typed_type_def =
   , /* @is_struct             */ type_is_not_struct
   , /* is_mutable             */ NULL
   , /* is_subtype             */ NULL
-  , /* is_supertype           */ NULL
+  , /* is_supertype           */ typed_type_is_supertype
 
   , /* cons_type              */ NULL
   , /* init                   */ NULL
@@ -94,13 +103,24 @@ const type_t typed_type_def =
   , /* parity                 */ ""
   };
 
-static const char          *typed_type_name       (const type_t *self)
+static const char          *typed_type_name         (const type_t *self)
   { return "typed_t"; }
 
-static size_t               typed_type_size       (const type_t *self, const tval *val)
+static size_t               typed_type_size         (const type_t *self, const tval *val)
   { return sizeof(typed_t); }
 
-static const tval          *typed_type_has_default(const type_t *self)
+static const type_t        *typed_type_is_supertype ( const type_t *self
+                                                    , const type_t *is_supertype
+                                                    )
+{
+  const type_t *result;
+  if ((result = type_is_supertype(funp_type(), is_supertype)))
+    return result;
+
+  return default_type_is_supertype(self, is_supertype);
+}
+
+static const tval          *typed_type_has_default  (const type_t *self)
   { return &typed_default; }
 
 /* ---------------------------------------------------------------- */
