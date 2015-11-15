@@ -34,9 +34,11 @@
 #include "testing.h"
 #include "test_type_base_lookup.h"
 
+#include "../type_base_prim.h"
 #include "../type_base_lookup.h"
 
 #include "../type_base_memory_manager.h"
+#include "../type_base_type.h"
 
 int test_type_base_lookup_cli(int argc, char **argv)
 {
@@ -54,7 +56,9 @@ unit_test_t type_base_lookup_test =
 
 /* Array of type_base_lookup tests. */
 unit_test_t *type_base_lookup_tests[] =
-  { NULL
+  { &lookup_memory_management_test
+
+  , NULL
   };
 
 unit_test_result_t test_type_base_lookup_run(unit_test_context_t *context)
@@ -64,3 +68,27 @@ unit_test_result_t test_type_base_lookup_run(unit_test_context_t *context)
 
 /* ---------------------------------------------------------------- */
 
+unit_test_t lookup_memory_management_test =
+  {  lookup_memory_management_test_run
+  , "lookup_memory_management_test"
+  , "Testing memory management with lookup values."
+  };
+
+unit_test_result_t lookup_memory_management_test_run(unit_test_context_t *context)
+{
+  unit_test_result_t result = assert_success(context);
+
+  ENCLOSE()
+  {
+    typedef type_t value_type;
+
+    lookup_t lookup_val;
+    lookup_t *lookup = &lookup_val;
+
+    lookup_init_empty(lookup, sizeof(value_type));
+
+    MASSERT2( inteq, "empty", lookup_num(lookup), 0);
+  }
+
+  return result;
+}
