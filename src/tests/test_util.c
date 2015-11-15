@@ -325,121 +325,121 @@ unit_test_result_t util_equalities_basic_str_test_run(unit_test_context_t *conte
 
     /* ---------------------------------------------------------------- */
 
-    MASSERT2( inteq,  "0strlcpy", strlcpy(dest,  love, 5), 4 );
+    MASSERT2( sizeeq, "0strlcpy", strlcpy(dest,  love, 5), 4 );
     MASSERT3( streqn, "1strlcpy", dest, "love",  sizeof(dest) );
 
-    MASSERT2( inteq,  "2strlcpy", strlcpy(dest,  love, 4), 3);
+    MASSERT2( sizeeq, "2strlcpy", strlcpy(dest,  love, 4), 3);
     MASSERT3( streqn, "3strlcpy", dest, "lov",   sizeof(dest) );
 
-    MASSERT2( inteq,  "4strlcpy", strlcpy(dest,  love, 1), 0);
+    MASSERT2( sizeeq, "4strlcpy", strlcpy(dest,  love, 1), 0);
     MASSERT3( streqn, "5strlcpy", dest, "",      sizeof(dest) );
 
 
-    MASSERT2( inteq,  "6strlcpy", strlcpy(dest,  peace, sizeof(dest)), 5 );
-    MASSERT2( inteq,  "7strlcpy", strlcpy(dest,  love,  0),            0 );
+    MASSERT2( sizeeq, "6strlcpy", strlcpy(dest,  peace, sizeof(dest)), 5 );
+    MASSERT2( sizeeq, "7strlcpy", strlcpy(dest,  love,  0),            0 );
     MASSERT3( streqn, "8strlcpy", dest, "peace", sizeof(dest) );
 
     /* ---------------------------------------------------------------- */
 
-    MASSERT2( inteq,  "00strlcpy_srcmax", strlcpy_srcmax(smalldest, peace, 8, 5), 5 );
+    MASSERT2( sizeeq, "00strlcpy_srcmax", strlcpy_srcmax(smalldest, peace, 8, 5), 5 );
     MASSERT3( streqn, "01strlcpy_srcmax", smalldest, "peace", sizeof(smalldest) );
 
-    MASSERT2( inteq,  "02strlcpy_srcmax", strlcpy_srcmax(smalldest, peace, 8, 4), 4 );
+    MASSERT2( sizeeq, "02strlcpy_srcmax", strlcpy_srcmax(smalldest, peace, 8, 4), 4 );
     MASSERT3( streqn, "03strlcpy_srcmax", smalldest, "peac",  sizeof(smalldest) );
 
 
-    MASSERT2( inteq,  "04strlcpy_srcmax", strlcpy_srcmax(smalldest, peace, 5, 5), 4 );
+    MASSERT2( sizeeq, "04strlcpy_srcmax", strlcpy_srcmax(smalldest, peace, 5, 5), 4 );
     MASSERT3( streqn, "05strlcpy_srcmax", smalldest, "peac",  sizeof(smalldest) );
 
-    MASSERT2( inteq,  "06strlcpy_srcmax", strlcpy_srcmax(smalldest, peace, 5, 4), 4 );
+    MASSERT2( sizeeq, "06strlcpy_srcmax", strlcpy_srcmax(smalldest, peace, 5, 4), 4 );
     MASSERT3( streqn, "07strlcpy_srcmax", smalldest, "peac",  sizeof(smalldest) );
 
-    MASSERT2( inteq,  "08strlcpy_srcmax", strlcpy_srcmax(smalldest, peace, 5, 3), 3 );
+    MASSERT2( sizeeq, "08strlcpy_srcmax", strlcpy_srcmax(smalldest, peace, 5, 3), 3 );
     MASSERT3( streqn, "09strlcpy_srcmax", smalldest, "pea",   sizeof(smalldest) );
 
-    MASSERT2( inteq,  "10strlcpy_srcmax", strlcpy_srcmax(smalldest, peace, 5, 2), 2 );
+    MASSERT2( sizeeq, "10strlcpy_srcmax", strlcpy_srcmax(smalldest, peace, 5, 2), 2 );
     MASSERT3( streqn, "11strlcpy_srcmax", smalldest, "pe",    sizeof(smalldest) );
 
 
-    MASSERT2( inteq,  "12strlcpy_srcmax", strlcpy_srcmax(smalldest, peace, 4, 5), 3 );
+    MASSERT2( sizeeq, "12strlcpy_srcmax", strlcpy_srcmax(smalldest, peace, 4, 5), 3 );
     MASSERT3( streqn, "13strlcpy_srcmax", smalldest, "pea",   sizeof(smalldest) );
 
-    MASSERT2( inteq,  "14strlcpy_srcmax", strlcpy_srcmax(smalldest, peace, 4, 4), 3 );
+    MASSERT2( sizeeq, "14strlcpy_srcmax", strlcpy_srcmax(smalldest, peace, 4, 4), 3 );
     MASSERT3( streqn, "15strlcpy_srcmax", smalldest, "pea",   sizeof(smalldest) );
 
-    MASSERT2( inteq,  "16strlcpy_srcmax", strlcpy_srcmax(smalldest, peace, 4, 3), 3 );
+    MASSERT2( sizeeq, "16strlcpy_srcmax", strlcpy_srcmax(smalldest, peace, 4, 3), 3 );
     MASSERT3( streqn, "17strlcpy_srcmax", smalldest, "pea",   sizeof(smalldest) );
 
-    MASSERT2( inteq,  "18strlcpy_srcmax", strlcpy_srcmax(smalldest, peace, 4, 2), 2 );
+    MASSERT2( sizeeq, "18strlcpy_srcmax", strlcpy_srcmax(smalldest, peace, 4, 2), 2 );
     MASSERT3( streqn, "19strlcpy_srcmax", smalldest, "pe",    sizeof(smalldest) );
 
 
-    MASSERT2( inteq,  "20strlcpy_srcmax", strlcpy_srcmax(smalldest, peace, 8, 5), 5 );
-    MASSERT2( inteq,  "21strlcpy_srcmax", strlcpy_srcmax(smalldest, peace, 8, 0), 0 );
+    MASSERT2( sizeeq, "20strlcpy_srcmax", strlcpy_srcmax(smalldest, peace, 8, 5), 5 );
+    MASSERT2( sizeeq, "21strlcpy_srcmax", strlcpy_srcmax(smalldest, peace, 8, 0), 0 );
     MASSERT3( streqn, "22strlcpy_srcmax", smalldest, "",      sizeof(smalldest) );
 
 
-    MASSERT2( inteq,  "23strlcpy_srcmax", strlcpy_srcmax(smalldest, peace, 8, 5), 5 );
-    MASSERT2( inteq,  "24strlcpy_srcmax", strlcpy_srcmax(smalldest, peace, 0, 5), 0 );
+    MASSERT2( sizeeq, "23strlcpy_srcmax", strlcpy_srcmax(smalldest, peace, 8, 5), 5 );
+    MASSERT2( sizeeq, "24strlcpy_srcmax", strlcpy_srcmax(smalldest, peace, 0, 5), 0 );
     MASSERT3( streqn, "25strlcpy_srcmax", smalldest, "peace", sizeof(smalldest) );
 
     /* ---------------------------------------------------------------- */
 
-    MASSERT2( inteq,  "00strlcpy_with_max", strlcpy_with_max(dest, love, 8, 4, 4), 4 );
+    MASSERT2( sizeeq, "00strlcpy_with_max", strlcpy_with_max(dest, love, 8, 4, 4), 4 );
     MASSERT3( streqn, "01strlcpy_with_max", dest, "love", sizeof(dest) );
 
 
-    MASSERT2( inteq,  "02strlcpy_with_max", strlcpy_with_max(dest, love, 8, 4, 3), 3 );
+    MASSERT2( sizeeq, "02strlcpy_with_max", strlcpy_with_max(dest, love, 8, 4, 3), 3 );
     MASSERT3( streqn, "03strlcpy_with_max", dest, "lov",  sizeof(dest) );
 
-    MASSERT2( inteq,  "02strlcpy_with_max", strlcpy_with_max(dest, love, 8, 3, 4), 3 );
+    MASSERT2( sizeeq, "02strlcpy_with_max", strlcpy_with_max(dest, love, 8, 3, 4), 3 );
     MASSERT3( streqn, "03strlcpy_with_max", dest, "lov",  sizeof(dest) );
 
-    MASSERT2( inteq,  "04strlcpy_with_max", strlcpy_with_max(dest, love, 8, 3, 3), 3 );
+    MASSERT2( sizeeq, "04strlcpy_with_max", strlcpy_with_max(dest, love, 8, 3, 3), 3 );
     MASSERT3( streqn, "05strlcpy_with_max", dest, "lov",  sizeof(dest) );
 
 
-    MASSERT2( inteq,  "06strlcpy_with_max", strlcpy_with_max(dest, love, 8, 4, 4), 4 );
-    MASSERT2( inteq,  "07strlcpy_with_max", strlcpy_with_max(dest, love, 8, 0, 4), 0 );
+    MASSERT2( sizeeq, "06strlcpy_with_max", strlcpy_with_max(dest, love, 8, 4, 4), 4 );
+    MASSERT2( sizeeq, "07strlcpy_with_max", strlcpy_with_max(dest, love, 8, 0, 4), 0 );
     MASSERT3( streqn, "08strlcpy_with_max", dest, "",     sizeof(dest) );
 
-    MASSERT2( inteq,  "09strlcpy_with_max", strlcpy_with_max(dest, love, 8, 4, 4), 4 );
-    MASSERT2( inteq,  "10strlcpy_with_max", strlcpy_with_max(dest, love, 8, 4, 0), 0 );
+    MASSERT2( sizeeq, "09strlcpy_with_max", strlcpy_with_max(dest, love, 8, 4, 4), 4 );
+    MASSERT2( sizeeq, "10strlcpy_with_max", strlcpy_with_max(dest, love, 8, 4, 0), 0 );
     MASSERT3( streqn, "11strlcpy_with_max", dest, "",     sizeof(dest) );
 
-    MASSERT2( inteq,  "12strlcpy_with_max", strlcpy_with_max(dest, love, 8, 4, 4), 4 );
-    MASSERT2( inteq,  "13strlcpy_with_max", strlcpy_with_max(dest, love, 8, 0, 0), 0 );
+    MASSERT2( sizeeq, "12strlcpy_with_max", strlcpy_with_max(dest, love, 8, 4, 4), 4 );
+    MASSERT2( sizeeq, "13strlcpy_with_max", strlcpy_with_max(dest, love, 8, 0, 0), 0 );
     MASSERT3( streqn, "14strlcpy_with_max", dest, "",     sizeof(dest) );
 
-    MASSERT2( inteq,  "15strlcpy_with_max", strlcpy_with_max(dest, love, 8, 4, 4), 4 );
-    MASSERT2( inteq,  "16strlcpy_with_max", strlcpy_with_max(dest, love, 1, 4, 4), 0 );
+    MASSERT2( sizeeq, "15strlcpy_with_max", strlcpy_with_max(dest, love, 8, 4, 4), 4 );
+    MASSERT2( sizeeq, "16strlcpy_with_max", strlcpy_with_max(dest, love, 1, 4, 4), 0 );
     MASSERT3( streqn, "17strlcpy_with_max", dest, "",     sizeof(dest) );
 
-    MASSERT2( inteq,  "18strlcpy_with_max", strlcpy_with_max(dest, love, 8, 4, 4), 4 );
-    MASSERT2( inteq,  "19strlcpy_with_max", strlcpy_with_max(dest, love, 0, 4, 4), 0 );
+    MASSERT2( sizeeq, "18strlcpy_with_max", strlcpy_with_max(dest, love, 8, 4, 4), 4 );
+    MASSERT2( sizeeq, "19strlcpy_with_max", strlcpy_with_max(dest, love, 0, 4, 4), 0 );
     MASSERT3( streqn, "20strlcpy_with_max", dest, "love", sizeof(dest) );
 
     /* ---------------------------------------------------------------- */
 
-    MASSERT2( inteq,  "str?len strlcpy", strlcpy(dest, love, sizeof(dest)), 4 );
+    MASSERT2( sizeeq,  "str?len strlcpy", strlcpy(dest, love, sizeof(dest)), 4 );
 
-    MASSERT2( inteq,  "0strnlen", strnlen(dest, 7), 4 );
-    MASSERT2( inteq,  "1strnlen", strnlen(dest, 6), 4 );
-    MASSERT2( inteq,  "2strnlen", strnlen(dest, 5), 4 );
-    MASSERT2( inteq,  "3strnlen", strnlen(dest, 4), 4 );
-    MASSERT2( inteq,  "4strnlen", strnlen(dest, 3), 3 );
-    MASSERT2( inteq,  "5strnlen", strnlen(dest, 2), 2 );
-    MASSERT2( inteq,  "6strnlen", strnlen(dest, 1), 1 );
-    MASSERT2( inteq,  "7strnlen", strnlen(dest, 0), 0 );
+    MASSERT2( sizeeq,  "0strnlen", strnlen(dest, 7), 4 );
+    MASSERT2( sizeeq,  "1strnlen", strnlen(dest, 6), 4 );
+    MASSERT2( sizeeq,  "2strnlen", strnlen(dest, 5), 4 );
+    MASSERT2( sizeeq,  "3strnlen", strnlen(dest, 4), 4 );
+    MASSERT2( sizeeq,  "4strnlen", strnlen(dest, 3), 3 );
+    MASSERT2( sizeeq,  "5strnlen", strnlen(dest, 2), 2 );
+    MASSERT2( sizeeq,  "6strnlen", strnlen(dest, 1), 1 );
+    MASSERT2( sizeeq,  "7strnlen", strnlen(dest, 0), 0 );
 
-    MASSERT2( inteq,  "0strllen", strllen(dest, 7), 4 );
-    MASSERT2( inteq,  "1strllen", strllen(dest, 6), 4 );
-    MASSERT2( inteq,  "2strllen", strllen(dest, 5), 4 );
-    MASSERT2( inteq,  "3strllen", strllen(dest, 4), 3 );
-    MASSERT2( inteq,  "4strllen", strllen(dest, 3), 2 );
-    MASSERT2( inteq,  "5strllen", strllen(dest, 2), 1 );
-    MASSERT2( inteq,  "6strllen", strllen(dest, 1), 0 );
-    MASSERT2( inteq,  "7strllen", strllen(dest, 0), 0 );
+    MASSERT2( sizeeq,  "0strllen", strllen(dest, 7), 4 );
+    MASSERT2( sizeeq,  "1strllen", strllen(dest, 6), 4 );
+    MASSERT2( sizeeq,  "2strllen", strllen(dest, 5), 4 );
+    MASSERT2( sizeeq,  "3strllen", strllen(dest, 4), 3 );
+    MASSERT2( sizeeq,  "4strllen", strllen(dest, 3), 2 );
+    MASSERT2( sizeeq,  "5strllen", strllen(dest, 2), 1 );
+    MASSERT2( sizeeq,  "6strllen", strllen(dest, 1), 0 );
+    MASSERT2( sizeeq,  "7strllen", strllen(dest, 0), 0 );
 
     /* ---------------------------------------------------------------- */
 
