@@ -19,10 +19,12 @@ MKDIR_P          := mkdir -p
 #------------------------------------------------------------------------------
 # Flags.
 
+PARALLEL               := -pthread
+
 CFLAGS_USR             :=
 CPPFLAGS_USR           :=
 
-CFLAGS_STRICT          := -std=c89 -pedantic -pedantic-errors -pthread -Wall  -Werror
+CFLAGS_STRICT          := -std=c89 -pedantic -pedantic-errors $(PARALLEL) -Wall  -Werror
 CPPFLAGS_STRICT        :=
 
 CFLAGS_PTHREAD         := -pthread
