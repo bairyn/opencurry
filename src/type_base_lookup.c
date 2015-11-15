@@ -232,7 +232,7 @@ const lookup_t lookup_defaults =
  */
 void lookup_init_empty(lookup_t *lookup, size_t value_size)
 {
-#if ERROR_CHECKING 
+#if ERROR_CHECKING
   if (!lookup)
     return;
 #endif /* #if ERROR_CHECKING  */
@@ -255,7 +255,7 @@ void lookup_deinit
   , void   *free_context
   )
 {
-#if ERROR_CHECKING 
+#if ERROR_CHECKING
   if (!lookup)
     return;
 #endif /* #if ERROR_CHECKING  */
@@ -263,7 +263,7 @@ void lookup_deinit
   if (lookup->num <= 0)
     return;
 
-#if ERROR_CHECKING 
+#if ERROR_CHECKING
   if (!lookup->values)
     return;
   if (!lookup->order)
@@ -301,7 +301,7 @@ lookup_t *lookup_expand
 {
   size_t old_num;
 
-#if ERROR_CHECKING 
+#if ERROR_CHECKING
   if (!lookup)
     return NULL;
 #endif /* #if ERROR_CHECKING  */
@@ -312,7 +312,7 @@ lookup_t *lookup_expand
 
   if (old_num <= 0)
   {
-#if ERROR_CHECKING 
+#if ERROR_CHECKING
     if (!calloc)
       return NULL;
     if (lookup->values)
@@ -345,7 +345,7 @@ lookup_t *lookup_expand
   }
   else
   {
-#if ERROR_CHECKING 
+#if ERROR_CHECKING
     if (!realloc)
       return NULL;
     if (!lookup->values)
@@ -423,7 +423,7 @@ lookup_t *lookup_resize
 {
   size_t old_num;
 
-#if ERROR_CHECKING 
+#if ERROR_CHECKING
   if (!lookup)
     return NULL;
 #endif /* #if ERROR_CHECKING  */
