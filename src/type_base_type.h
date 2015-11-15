@@ -1093,6 +1093,10 @@ extern const type_t type_defaults;
  * Fundamental "type_t" accessors.
  */
 
+const memory_tracker_t *type_get_memory         (const type_t *type);
+const type_t           *type_get_self_is_mutable(const type_t *type);
+typed_t                 type_get_indirect       (const type_t *type);
+
 const type_t        *type_self       (const type_t *type);
 typed_t              type_container  (const type_t *type);
 const type_t        *type_typed      (const type_t *type);

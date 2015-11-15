@@ -2370,6 +2370,31 @@ int                  default_type_cmp        ( const type_t *self
  * Fundamental "type_t" accessors.
  */
 
+const memory_tracker_t *type_get_memory         (const type_t *type)
+{
+  if (!type)
+    return NULL;
+
+  return &type->memory;
+}
+
+const type_t           *type_get_self_is_mutable(const type_t *type)
+{
+  if (!type)
+    return NULL;
+
+  return type->self_is_mutable;
+}
+
+typed_t                 type_get_indirect       (const type_t *type)
+{
+  if (!type)
+    return NULL;
+
+  return type->indirect;
+}
+
+
 const type_t        *type_self       (const type_t *type)
 {
   if (!type || !type->self)
