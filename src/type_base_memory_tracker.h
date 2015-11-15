@@ -45,6 +45,8 @@
 
 #include "base.h"
 
+#include "bits.h"
+
 /* ---------------------------------------------------------------- */
 /* Dependencies.                                                    */
 /* ---------------------------------------------------------------- */
@@ -57,6 +59,177 @@
 /* ---------------------------------------------------------------- */
 /* Value allocation management.                                     */
 /* ---------------------------------------------------------------- */
+
+/* ---------------------------------------------------------------- */
+/* Individual allocations.                                          */
+/* ---------------------------------------------------------------- */
+
+#ifdef TODO /* TODO */
+
+enum allocation_type_e
+{
+  a_t_byte   = 0,
+  a_t_tval   = 1,
+  a_t_manual = 2,
+
+  a_t_end,
+
+  /* 1: 0-1 */
+  /* 2: 0-3 */
+  /* 3: 0-7 */
+  a_t_bits     = 2,
+  a_t_end_mask = ONE_BIT_REPEAT(a_t_bits)
+};
+typedef enum allocation_type_e allocation_type_t;
+
+/* ---------------------------------------------------------------- */
+
+#define DEPENDENCIES_HEADER_NUM() \
+  ( sizeof(allocation_dependencies_header_t) / sizeof(size_t) )
+typedef struct allocation_dependencies_header_s allocation_dependencies_header_t;
+struct allocation_dependencies_header_s
+{
+  /* Number of in the array elements for each type of allocation in this chunk.
+   */
+  size_t num_per_type;
+
+  /* Index + 1 of next free element, 0 when this chunk is full. */
+  size_t next_byte_1id;
+  size_t next_tval_1id;
+  size_t next__1id;
+};
+
+#define DEPENDENCIES_NUM(base)                   \
+  ( IS_NONZERO(base) * DEPENDENCIES_HEADER_NUM() \
+  + 3                * (base)                    \
+  )
+typedef struct allocation_dependencies_s allocation_dependencies_t;
+struct allocation_dependencies_s
+{
+  size_t *dependencies;
+  size_t  dependencies_num_base;
+};
+
+size_t dependencies_header_num(void);
+size_t dependencies_body_num  (size_t base);
+size_t dependencies_num       (size_t base);
+
+/* ---------------------------------------------------------------- */
+
+typedef struct byte_allocation_s byte_allocation_t;
+struct byte_allocation_s
+{
+  allocation_dependencies_t dependencies;
+
+  void *area;
+};
+
+typedef struct tval_allocation_s tval_allocation_t;
+struct tval_allocation_s
+{
+  allocation_dependencies_t dependencies;
+
+  tval *val;
+};
+
+typedef struct manual_allocation_s manual_allocation_t;
+struct manual_allocation_s
+{
+  allocation_dependencies_t dependencies;
+
+  void (*cleanup)(void *context);
+  void *context;
+};
+
+typedef struct allocation_s allocation_t;
+struct allocation_s
+{
+  union allocation_u
+  {
+    byte_allocation_t   byte;
+    tval_allocation_t   tval;
+    manual_allocation_t tval;
+  } allocation;
+
+  allocation_type_t allocation_type;
+};
+
+typedef struct allocation_s allocation_t;
+struct allocation_s
+{
+  union allocation_u
+  {
+    byte_allocation_t   byte;
+    tval_allocation_t   tval;
+    manual_allocation_t tval;
+  } allocation;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+const type_t *memory_tracker_type(void);
+extern const type_t memory_tracker_type_def;
+typedef struct memory_tracker_s memory_tracker_t;
+struct memory_tracker_s
+{
+  typed_t type;
+
+  /* ---------------------------------------------------------------- */
+
+  memory_manager_t memory_manager;
+
+  /* ---------------------------------------------------------------- */
+
+  /* Meta tracking. */
+
+  /* Whether this tracker resides in dynamically         */
+  /* allocated memory.                                   */
+  /*                                                     */
+  /* When this memory tracker is freed, this is freed    */
+  /* last.                                               */
+  void *dynamic_container;
+
+  /* ---------------------------------------------------------------- */
+
+  /* TODO: inter-type dependencies */
+  void   **raw_allocations;
+  size_t  *raw_allocation_dependencies;
+
+  tval   **tval_allocations;
+  size_t  *tval_allocation_dependencies;
+
+  void *(**manual_cleanups)(void *context);
+  void   **manual_cleanup_contexts;
+  size_t  *manual_cleanup_dependencies;
+
+#ifdef TODO
+  /* Meta tracking. */
+
+  /* Whether this tracker resides in dynamically         */
+  /* allocated memory.                                   */
+  /*                                                     */
+  /* When this memory tracker is freed, this is freed    */
+  /* last.                                               */
+  void *dynamic_container;
+
+  tval **dynamic_dependents;
+#endif /* #ifdef TODO */
+};
+
+#endif /* #ifdef TODO /-* TODO *-/ */
 
 /*
  * memory_tracker_t:
@@ -82,20 +255,6 @@ struct memory_tracker_s
   typed_t type;
 
   memory_manager_t memory_manager;
-
-#ifdef TODO
-  /* Meta tracking. */
-
-  /* Whether this tracker resides in dynamically         */
-  /* allocated memory.                                   */
-  /*                                                     */
-  /* When this memory tracker is freed, this is freed    */
-  /* last.                                               */
-  void *dynamic_container;
-
-  tval **dynamic_dependents;
-#endif /* #ifdef TODO */
-
 
   /* If this memory tracker exists in dynamically        */
   /* allocated memory, this refers to it; otherwise this */

@@ -33,10 +33,99 @@
 /*
  * lookup.h
  * ------
+ *
+ * Self-balancing binary search arrays.
  */
+
+/* TODO: rename to type_base_lookup */
 
 #ifndef LOOKUP_H
 #define LOOKUP_H
+/* stddef.h:
+ *   - NULL
+ *   - size_t
+ */
+#include <stddef.h>
+
 #include "base.h"
+
+#define TYPE_BASE_LOOKUP_ERROR_CHECKING 1
+
+/* ---------------------------------------------------------------- */
+/* Dependencies.                                                    */
+/* ---------------------------------------------------------------- */
+
+#include "type_base_prim.h"
+#include "type_base_typed.h"
+
+/* ---------------------------------------------------------------- */
+/* lookup_t and children.                                           */
+/* ---------------------------------------------------------------- */
+
+const type_t *bnode_type(void);
+extern const type_t bnode_type_def;
+typedef struct bnode_s bnode_t;
+struct bnode_s
+{
+  /* Indices are + 1, 0 when NULL. */
+
+  size_t value;
+
+  size_t left;
+  size_t right;
+};
+
+/* NULL value and child references. */
+#define BNODE_DEFAULTS \
+  {                    \
+    /* value */ 0      \
+                       \
+  , /* left  */ 0      \
+  , /* right */ 0      \
+  }
+extern const bnode_t bnode_defaults;
+
+/* A self-balancing binary search tree. */
+const type_t *lookup_type(void);
+extern const type_t lookup_type_def;
+typedef struct lookup_s lookup_t;
+struct lookup_s
+{
+  typed_t type;
+
+  /* Size of each array in terms of element sizes. */
+  size_t   num;
+
+  void    *values;
+  size_t   value_size;
+
+  bnode_t *order;
+};
+
+#define LOOKUP_DEFAULTS   \
+  { lookup_type           \
+                          \
+  , /* num        */ 0    \
+                          \
+  , /* values     */ NULL \
+  , /* value_size */ 0    \
+                          \
+  , /* order      */ NULL \
+  }
+extern const lookup_t lookup_defaults;
+
+/* ---------------------------------------------------------------- */
+/* lookup_t methods.                                                */
+/* ---------------------------------------------------------------- */
+
+void lookup_init_empty(lookup_t *lookup, size_t value_size);
+
+/* ---------------------------------------------------------------- */
+/* Post-dependencies.                                               */
+/* ---------------------------------------------------------------- */
+
+#ifdef TODO
+#include "type_base_type.h"
+#endif /* #ifdef TODO */
 
 #endif /* ifndef LOOKUP_H */

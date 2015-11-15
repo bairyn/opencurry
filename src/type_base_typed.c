@@ -38,14 +38,15 @@
 
 #include "base.h"
 #include "type_base_prim.h"
-#include "type_base_type.h"
 #include "type_base_typed.h"
 
+#include "type_base_tval.h"
 #ifdef TODO
 #error "TODO: #include primitive c data types"
 #else  /* #ifdef TODO */
 #include "type_base.h"
 #endif /* #ifdef TODO */
+#include "type_base_type.h"
 
 /* ---------------------------------------------------------------- */
 /* typed_t                                                          */

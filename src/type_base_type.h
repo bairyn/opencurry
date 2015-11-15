@@ -48,6 +48,10 @@
 #include "type_base.h"
 #endif /* #ifndef TODO /-* TODO *-/ */
 
+/* TODO: macros to abstract decls and defs, optionally static, for name, size,
+ * info, etc.
+ */
+
 /* ---------------------------------------------------------------- */
 /* type_t                                                           */
 /* ---------------------------------------------------------------- */
