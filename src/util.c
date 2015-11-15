@@ -370,7 +370,7 @@ size_t strlcpy_cycle(char *dest, const char *src, size_t dest_size, size_t num_b
   }
 
   src_pos = src;
-  for (len = 0; dest_size >= 2; ++len, --dest_size)
+  for (len = 0; dest_size >= 2 && num_bytes >= 1; ++len, --dest_size, --num_bytes)
   {
     if (!*src_pos)
       src_pos = src;
