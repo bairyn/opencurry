@@ -831,7 +831,7 @@ void print_test_result(unit_test_context_t *context, unit_test_t test, int id, u
     context->aborting = 1;
   }
 
-#if IS_FALSE(TEST_RESULT_PRINT_GROUP_RESULT)
+#if IS_FALSE(TEST_RESULT_PRINT_GROUP_PASS_RESULT)
   ENCLOSE()
   {
     int ran_test_group;
@@ -839,7 +839,10 @@ void print_test_result(unit_test_context_t *context, unit_test_t test, int id, u
     ran_test_group = context->next_test_id > (id + 1);
 
     if (ran_test_group)
-      return;
+    {
+      if (is_test_result_success(result))
+        return;
+    }
   }
 #endif
 

@@ -235,7 +235,7 @@ int is_test_result_aborting(unit_test_result_t result);
 
 #define TEST_RESULT_GROUP_REPEAT_ID               ENABLE()
 
-#define TEST_RESULT_PRINT_GROUP_RESULT            DISABLE()
+#define TEST_RESULT_PRINT_GROUP_PASS_RESULT       DISABLE()
 
 unit_test_result_t run_test(unit_test_context_t *context, unit_test_t test);
 
