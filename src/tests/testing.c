@@ -831,6 +831,18 @@ void print_test_result(unit_test_context_t *context, unit_test_t test, int id, u
     context->aborting = 1;
   }
 
+#if IS_FALSE(TEST_RESULT_PRINT_GROUP_RESULT)
+  ENCLOSE()
+  {
+    int ran_test_group;
+
+    ran_test_group = context->next_test_id > (id + 1);
+
+    if (ran_test_group)
+      return;
+  }
+#endif
+
   if      (is_test_result_success(result))
   {
     print_passed_test_result (context, test, id, result, seed_start);
@@ -849,7 +861,7 @@ void print_passed_test_result(unit_test_context_t *context, unit_test_t test, in
 {
   int ran_test_group;
 
-  ran_test_group = context->next_test_id != (id + 1);
+  ran_test_group = context->next_test_id > (id + 1);
 
   /* #if IS_FALSE(TEST_RESULT_PASS_PRINT_SAME_LINE) */
   if
