@@ -60,6 +60,10 @@ const type_t typed_type_def =
 
   , /* memory                 */ MEMORY_TRACKER_DEFAULTS
   , /* is_self_mutable        */ NULL
+  , /* @indirect              */ typed_type
+
+  , /* self                   */ NULL
+  , /* container              */ NULL
 
   , /* typed                  */ type_is_untyped
 

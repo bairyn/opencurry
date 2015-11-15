@@ -73,6 +73,20 @@ struct type_s
   type_t *self_is_mutable;
 
   /* ---------------------------------------------------------------- */
+
+  typed_t indirect;
+
+  /* ---------------------------------------------------------------- */
+  /* Basic object info.                                               */
+  /* ---------------------------------------------------------------- */
+
+  /* This should return "self".                                       */
+  const type_t        *(*self)       (const type_t *self);
+
+  /* This should return a "typed_t" that returns the same type.       */
+  typed_t              (*container)  (const type_t *self);
+
+  /* ---------------------------------------------------------------- */
   /* Basic type info.                                                 */
   /* ---------------------------------------------------------------- */
 
@@ -695,7 +709,14 @@ struct type_s
  * Various "type_t" methods and method helpers.
  */
 
-/* "typed" */
+/* self */
+const type_t *type_has_self(const type_t *self);
+
+/* container */
+typed_t type_has_indirect(const type_t *self);
+typed_t type_has_container(const type_t *self, typed_t container);
+
+/* typed */
 const type_t *type_is_typed_from_struct(const type_t *self);
 
 const type_t *type_is_typed(const type_t *self);
@@ -969,6 +990,8 @@ int type_has_standard_cmp(const type_t *self, const tval *check, const tval *bas
  * "type_t" defaults.
  */
 
+const type_t        *default_type_self       (const type_t *self);
+typed_t              default_type_container  (const type_t *self);
 const type_t        *default_type_typed      (const type_t *self);
 /* const char          *default_type_name       (const type_t *self); */
 const char          *default_type_info       ( const type_t *type
@@ -1029,6 +1052,10 @@ int                  default_type_cmp        ( const type_t *self
                                                                      \
   , /* memory                 */ MEMORY_TRACKER_DEFAULTS             \
   , /* is_self_mutable        */ NULL                                \
+  , /* @indirect              */ NULL                                \
+                                                                     \
+  , /* self                   */ default_type_self                   \
+  , /* container              */ default_type_container              \
                                                                      \
   , /* typed                  */ default_type_typed                  \
                                                                      \
@@ -1066,6 +1093,8 @@ extern const type_t type_defaults;
  * Fundamental "type_t" accessors.
  */
 
+const type_t        *type_self       (const type_t *type);
+typed_t              type_container  (const type_t *type);
 const type_t        *type_typed      (const type_t *type);
 const char          *type_name       (const type_t *type);
 const char          *type_info       ( const type_t *type

@@ -1187,6 +1187,10 @@ int template_cons_free_struct_memfree_type
                                                                                                  \
     , /* memory                 */ MEMORY_TRACKER_DEFAULTS                                       \
     , /* is_self_mutable        */ NULL                                                          \
+    , /* @indirect              */ CAT(name, _type)                                              \
+                                                                                                 \
+    , /* self                   */ NULL                                                          \
+    , /* container              */ NULL                                                          \
                                                                                                  \
     , /* typed                  */ type_is_untyped                                               \
                                                                                                  \

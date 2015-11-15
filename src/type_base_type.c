@@ -66,6 +66,10 @@ const type_t type_type_def =
 
   , /* memory                 */ MEMORY_TRACKER_DEFAULTS
   , /* is_self_mutable        */ NULL
+  , /* @indirect              */ type_type
+
+  , /* self                   */ NULL
+  , /* container              */ NULL
 
   , /* typed                  */ type_is_typed
 
@@ -115,6 +119,14 @@ static const struct_info_t *type_type_is_struct  (const type_t *self)
 
     /* type_t *self_is_mutable; */
     STRUCT_INFO_RADD(objp_type(), self_is_mutable);
+
+    /* typed_t indirect; */
+    STRUCT_INFO_RADD(typed_type(), indirect);
+
+    /* const type_t        *(*self)       (const type_t *self); */
+    /* typed_t              (*container)  (const type_t *self); */
+    STRUCT_INFO_RADD(funp_type(), self);
+    STRUCT_INFO_RADD(funp_type(), container);
 
     /* const type_t        *(*typed)      (const type_t *self); */
     STRUCT_INFO_RADD(funp_type(), typed);
@@ -222,6 +234,23 @@ static const void          *type_type_cuser      (const type_t *self, const tval
 /* ---------------------------------------------------------------- */
 /* type_t: Various methods and method helpers.                      */
 /* ---------------------------------------------------------------- */
+
+/* self */
+const type_t *type_has_self(const type_t *self)
+{
+  return self;
+}
+
+/* container */
+typed_t type_has_indirect(const type_t *self)
+{
+  return self->indirect;
+}
+
+typed_t type_has_container(const type_t *self, typed_t container)
+{
+  return container;
+}
 
 /* typed */
 
@@ -2082,6 +2111,10 @@ int type_has_standard_cmp(const type_t *self, const tval *check, const tval *bas
  * > 
  * >   , /-* memory                 *-/ MEMORY_TRACKER_DEFAULTS
  * >   , /-* is_self_mutable        *-/ NULL
+ * >   , /-* @indirect              *-/ intpair_type
+ * > 
+ * >   , /-* self                   *-/ NULL
+ * >   , /-* container              *-/ NULL
  * > 
  * >   , /-* typed                  *-/ NULL
  * > 
@@ -2128,11 +2161,16 @@ int type_has_standard_cmp(const type_t *self, const tval *check, const tval *bas
  * ----------------------------------------------------------------
  */
 
-/* TODO: now that you've written common methods and method helpers, you're working on "type_defaults". */
 /*
  * Default fields for types.
  *
- * A minimum of 3 fields is required for each type:
+ * A minimum of 4 fields is required for each type:
+ *  - Either "indirect" or "container"
+ *      A "typed_t" that returns this type.
+ *
+ *      "indirect" is a direct "typed_t" value, and "container" returns
+ *      typed_t.
+ *
  *  - name      (returns const char *):
  *      The name of the type.
  *
@@ -2190,6 +2228,16 @@ int type_has_standard_cmp(const type_t *self, const tval *check, const tval *bas
 
 const type_t type_defaults =
   TYPE_DEFAULTS;
+
+const type_t        *default_type_self       (const type_t *self)
+{
+  return type_has_self(self);
+}
+
+typed_t              default_type_container  (const type_t *self)
+{
+  return type_has_indirect(self);
+}
 
 const type_t        *default_type_typed      (const type_t *self)
   { return type_is_typed_from_struct(self); }
@@ -2321,6 +2369,22 @@ int                  default_type_cmp        ( const type_t *self
 /*
  * Fundamental "type_t" accessors.
  */
+
+const type_t        *type_self       (const type_t *type)
+{
+  if (!type || !type->self)
+    return type_defaults.self(type);
+  else
+    return type->self(type);
+}
+
+typed_t              type_container  (const type_t *type)
+{
+  if (!type || !type->container)
+    return type_defaults.container(type);
+  else
+    return type->container(type);
+}
 
 const type_t        *type_typed      (const type_t *type)
 {

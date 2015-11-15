@@ -149,6 +149,8 @@ const type_t *memory_manager_type(void)
  *
  * (But they can still be accessed through "memory_manager_type"'s fields.)
  */
+/* static const type_t        *memory_manager_type_self       (const type_t *self);                  */
+/* static typed_t              memory_manager_type_container  (const type_t *self);                  */
 /* static const type_t        *memory_manager_type_typed      (const type_t *self);                  */
 static const char          *memory_manager_type_name       (const type_t *self);
 /* static const char          *memory_manager_type_info       ( const type_t *self                   */
@@ -251,6 +253,10 @@ const type_t memory_manager_type_def =
 
   , /* memory                 */ MEMORY_TRACKER_DEFAULTS
   , /* is_self_mutable        */ NULL
+  , /* @indirect              */ memory_manager_type
+
+  , /* self                   */ NULL /* memory_manager_type_self                    */
+  , /* container              */ NULL /* memory_manager_type_container               */
 
   , /* typed                  */ type_is_typed /* memory_manager_type_typed          */
 
@@ -616,6 +622,10 @@ const type_t memory_tracker_type_def =
 
   , /* memory                 */ MEMORY_TRACKER_DEFAULTS
   , /* is_self_mutable        */ NULL
+  , /* @indirect              */ memory_tracker_type
+
+  , /* self                   */ NULL
+  , /* container              */ NULL
 
   , /* typed                  */ NULL
 
@@ -808,6 +818,10 @@ const type_t ref_traversal_type_def =
 
   , /* memory                 */ MEMORY_TRACKER_DEFAULTS
   , /* is_self_mutable        */ NULL
+  , /* @indirect              */ ref_traversal_type
+
+  , /* self                   */ NULL
+  , /* container              */ NULL
 
   , /* typed                  */ NULL
 
@@ -930,6 +944,10 @@ const type_t field_info_type_def =
 
   , /* memory                 */ MEMORY_TRACKER_DEFAULTS
   , /* is_self_mutable        */ NULL
+  , /* @indirect              */ field_info_type
+
+  , /* self                   */ NULL
+  , /* container              */ NULL
 
   , /* typed                  */ NULL
 
@@ -1415,6 +1433,10 @@ const type_t struct_info_type_def =
 
   , /* memory                 */ MEMORY_TRACKER_DEFAULTS
   , /* is_self_mutable        */ NULL
+  , /* @indirect              */ struct_info_type
+
+  , /* self                   */ NULL
+  , /* container              */ NULL
 
   , /* typed                  */ NULL
 
@@ -2488,6 +2510,10 @@ const type_t template_cons_type_def =
 
   , /* memory                 */ MEMORY_TRACKER_DEFAULTS
   , /* is_self_mutable        */ NULL
+  , /* @indirect              */ template_cons_type
+
+  , /* self                   */ NULL
+  , /* container              */ NULL
 
   , /* typed                  */ NULL
 
@@ -3016,6 +3042,10 @@ const type_t universal_type_def =
 
   , /* memory                 */ MEMORY_TRACKER_DEFAULTS
   , /* is_self_mutable        */ NULL
+  , /* @indirect              */ template_cons_type
+
+  , /* self                   */ NULL
+  , /* container              */ NULL
 
   , /* typed                  */ type_is_untyped
 
@@ -3071,6 +3101,10 @@ const type_t void_type_def =
 
   , /* memory                 */ MEMORY_TRACKER_DEFAULTS
   , /* is_self_mutable        */ NULL
+  , /* @indirect              */ void_type
+
+  , /* self                   */ NULL
+  , /* container              */ NULL
 
   , /* typed                  */ type_is_untyped
 
@@ -3169,6 +3203,10 @@ const type_t array_type_def =
 
   , /* memory                 */ MEMORY_TRACKER_DEFAULTS
   , /* is_self_mutable        */ NULL
+  , /* @indirect              */ array_type
+
+  , /* self                   */ NULL
+  , /* container              */ NULL
 
   , /* typed                  */ type_is_untyped
 
@@ -3231,6 +3269,10 @@ const type_t div_type_def =
 
   , /* memory                 */ MEMORY_TRACKER_DEFAULTS
   , /* is_self_mutable        */ NULL
+  , /* @indirect              */ div_type
+
+  , /* self                   */ NULL
+  , /* container              */ NULL
 
   , /* typed                  */ type_is_untyped
 
@@ -3303,6 +3345,10 @@ const type_t ldiv_type_def =
 
   , /* memory                 */ MEMORY_TRACKER_DEFAULTS
   , /* is_self_mutable        */ NULL
+  , /* @indirect              */ ldiv_type
+
+  , /* self                   */ NULL
+  , /* container              */ NULL
 
   , /* typed                  */ type_is_untyped
 
