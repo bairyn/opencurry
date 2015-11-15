@@ -30,6 +30,12 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+/*
+ * NB: this contains unit tests for both:
+ *   - resources.c
+ *   - tests/tests_resources.c
+ */
+
 /* stddef.h:
  *   - NULL
  */
