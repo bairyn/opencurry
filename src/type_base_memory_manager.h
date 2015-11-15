@@ -51,7 +51,6 @@
 
 #include "type_base_prim.h"
 #include "type_base_typed.h"
-#include "lookup.h"
 
 /* ---------------------------------------------------------------- */
 /* Memory managers.                                                 */
