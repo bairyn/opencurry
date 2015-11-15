@@ -44,6 +44,9 @@ ifneq ($(DEBUG),1)
 
 	CFLAGS_DEBUG_OPTIM   := -O2 -s
 	CPPFLAGS_DEBUG_OPTIM :=
+
+	CFLAGS_DEBUG_FLAGS   :=
+	CPPFLAGS_DEBUG_FLAGS := -DERROR_CHECKING=1
 else
 	# Debugging enabled.
 	CFLAGS_DEBUG_BASE    := -g
@@ -54,14 +57,19 @@ else
 
 	CFLAGS_DEBUG_OPTIM   := -Og
 	CPPFLAGS_DEBUG_OPTIM :=
+
+	CFLAGS_DEBUG_FLAGS   :=
+	CPPFLAGS_DEBUG_FLAGS := -DERROR_CHECKING=1
 endif
 
 CFLAGS_DEBUG_FLAGS     := $(CFLAGS_DEBUG_BASE)    \
                           $(CFLAGS_DEBUG_INFO)    \
-                          $(CFLAGS_DEBUG_OPTIM)
+                          $(CFLAGS_DEBUG_OPTIM)   \
+                          $(CFLAGS_DEBUG_FLAGS)
 CPPFLAGS_DEBUG_FLAGS   := $(CPPFLAGS_DEBUG_BASE)  \
                           $(CPPFLAGS_DEBUG_INFO)  \
-                          $(CPPFLAGS_DEBUG_OPTIM)
+                          $(CPPFLAGS_DEBUG_OPTIM) \
+                          $(CPPFLAGS_DEBUG_FLAGS)
 
 ALL_CFLAGS             := $(CFLAGS)               \
 	                        $(CFLAGS_STRICT)        \

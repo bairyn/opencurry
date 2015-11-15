@@ -41,4 +41,8 @@
 #define BASE_H
 #include "base.h"
 
+#ifndef ERROR_CHECKING
+#define ERROR_CHECKING 1
+#endif /* #ifndef ERROR_CHECKING */
+
 #endif /* ifndef BASE_H */

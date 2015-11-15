@@ -229,10 +229,10 @@ const lookup_t lookup_defaults =
 
 void lookup_init_empty(lookup_t *lookup, size_t value_size)
 {
-#if TYPE_BASE_LOOKUP_ERROR_CHECKING 
+#if ERROR_CHECKING 
   if (!lookup)
     return;
-#endif /* #if TYPE_BASE_LOOKUP_ERROR_CHECKING  */
+#endif /* #if ERROR_CHECKING  */
 
   lookup->type       = lookup_type;
 
