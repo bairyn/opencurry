@@ -114,8 +114,7 @@ extern const lookup_t lookup_defaults;
 /* lookup_t methods.                                                */
 /* ---------------------------------------------------------------- */
 
-void      lookup_init_empty(lookup_t       *lookup, size_t value_size);
-
+void      lookup_init_empty(lookup_t *lookup, size_t value_size);
 void      lookup_deinit
   ( lookup_t *lookup
 
@@ -123,7 +122,8 @@ void      lookup_deinit
   , void   *free_context
   );
 
-size_t    lookup_num       (const lookup_t *lookup);
+size_t    lookup_num(const lookup_t *lookup);
+
 lookup_t *lookup_expand
   ( lookup_t *lookup
   , size_t    num

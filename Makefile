@@ -26,11 +26,11 @@ CFLAGS_STRICT          := -std=c89 -pedantic -pedantic-errors -Wall  -Werror
 CPPFLAGS_STRICT        :=
 
 ifneq ($(POSIX_PARALLEL),0)
-	CFLAGS_PARALLEL        := -pthread
-	CPPFLAGS_PARALLEL      := -DPOSIX_PARALLEL=1
+	CFLAGS_PARALLEL      := -pthread
+	CPPFLAGS_PARALLEL    := -DPOSIX_PARALLEL=1
 else
-	CFLAGS_PARALLEL        :=
-	CPPFLAGS_PARALLEL      := -DPOSIX_PARALLEL=0
+	CFLAGS_PARALLEL      :=
+	CPPFLAGS_PARALLEL    := -DPOSIX_PARALLEL=0
 endif
 
 CFLAGS_BUILD_INFO      :=
