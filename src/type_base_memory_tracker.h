@@ -312,7 +312,7 @@ struct memory_tracker_s
   }
 
 /* A default memory tracker appropriate for top-level declarations. */
-/* Uses "default_manager" with a NULL buffer-array pointer.         */
+/* Uses "default_memory_manager" with a NULL buffer-array pointer.  */
 /* 0 dynamically allocated buffer slots.                            */
 extern const memory_tracker_t memory_tracker_defaults;
 
