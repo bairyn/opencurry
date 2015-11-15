@@ -541,6 +541,7 @@ void *memory_manager_calloc(const memory_manager_t *memory_manager, size_t nmemb
   }
 }
 
+/* FIXME: uh... the memory contents should be preserved! */
 void *memory_manager_realloc(const memory_manager_t *memory_manager, void *ptr, size_t size)
 {
   if (!memory_manager)
