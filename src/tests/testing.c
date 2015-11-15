@@ -858,10 +858,23 @@ void print_passed_test_result(unit_test_context_t *context, unit_test_t test, in
   {
     print_test_indent(context, TEST_INDENT_NO_ALERT, TEST_INDENT_PENDING_TEXT);
 
-    #if IS_FALSE(TEST_RESULT_PASS_PRINT_DESCRIPTION)
-      fprintf(context->out, "  %*.s   =)\n", 2 * context->group_depth, "");
+    #if IS_FALSE(TEST_RESULT_GROUP_REPEAT_ID)
+    {
+      #if IS_FALSE(TEST_RESULT_PASS_PRINT_DESCRIPTION)
+        fprintf(context->out, "  %*.s   =)\n", 2 * context->group_depth, "");
+      #else
+        fprintf(context->out, "  %*.s   =): pass: %s\n", 2 * context->group_depth, "", test.description);
+      #endif
+    }
+
     #else
-      fprintf(context->out, "  %*.s   =): pass: %s\n", 2 * context->group_depth, "", test.description);
+    {
+      #if IS_FALSE(TEST_RESULT_PASS_PRINT_DESCRIPTION)
+        fprintf(context->out, "  %*.s   =) #%d\n", 2 * context->group_depth, "", (int) id);
+      #else
+        fprintf(context->out, "  %*.s   =) #%d: pass: %s\n", 2 * context->group_depth, "", (int) id, test.description);
+      #endif
+    }
     #endif
   }
   else

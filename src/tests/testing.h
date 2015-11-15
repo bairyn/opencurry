@@ -233,6 +233,8 @@ int is_test_result_aborting(unit_test_result_t result);
 
 #define TEST_RESULT_GROUP_PRINT_INTERSPERSED_LINE DISABLE()
 
+#define TEST_RESULT_GROUP_REPEAT_ID               ENABLE()
+
 unit_test_result_t run_test(unit_test_context_t *context, unit_test_t test);
 
   /* (Internal API procedures, unlikely to be useful to users.) */
