@@ -484,63 +484,76 @@ unit_test_result_t util_equalities_basic_str_test_run(unit_test_context_t *conte
     MASSERT3( nstreq, "19strlcp_cycle eq", sizeof(dest), dest, "l" );
 
     MASSERT2( sizeeq, "20strlcp_cycle",    strlcpy_cycle(dest, love, sizeof(dest), 4),  4 );
-    MASSERT2( sizeeq, "21strlcp_cycle",    strlcpy_cycle(dest, love, 2,            4),  0 );
+    MASSERT2( sizeeq, "21strlcp_cycle",    strlcpy_cycle(dest, love, 1,            4),  0 );
     MASSERT3( nstreq, "22strlcp_cycle eq", sizeof(dest), dest, "" );
 
     MASSERT2( sizeeq, "23strlcp_cycle",    strlcpy_cycle(dest, love, sizeof(dest), 4),  4 );
-    MASSERT2( sizeeq, "24strlcp_cycle",    strlcpy_cycle(dest, love, 1,            4),  0 );
-    MASSERT3( nstreq, "25strlcp_cycle eq", sizeof(dest), dest, "" );
+    MASSERT2( sizeeq, "24strlcp_cycle",    strlcpy_cycle(dest, love, 0,            4),  0 );
+    MASSERT3( nstreq, "25strlcp_cycle eq", sizeof(dest), dest, "love" );
+
 
     MASSERT2( sizeeq, "26strlcp_cycle",    strlcpy_cycle(dest, love, sizeof(dest), 4),  4 );
-    MASSERT2( sizeeq, "27strlcp_cycle",    strlcpy_cycle(dest, love, 0,            4),  0 );
-    MASSERT3( nstreq, "28strlcp_cycle eq", sizeof(dest), dest, "love" );
-
+    MASSERT2( sizeeq, "27strlcp_cycle",    strlcpy_cycle(dest, "",   5,            4),  0 );
+    MASSERT3( nstreq, "28strlcp_cycle eq", sizeof(dest), dest, "" );
 
     MASSERT2( sizeeq, "29strlcp_cycle",    strlcpy_cycle(dest, love, sizeof(dest), 4),  4 );
-    MASSERT2( sizeeq, "30strlcp_cycle",    strlcpy_cycle(dest, "",   5,            4),  0 );
+    MASSERT2( sizeeq, "30strlcp_cycle",    strlcpy_cycle(dest, "",   2,            4),  0 );
     MASSERT3( nstreq, "31strlcp_cycle eq", sizeof(dest), dest, "" );
 
     MASSERT2( sizeeq, "32strlcp_cycle",    strlcpy_cycle(dest, love, sizeof(dest), 4),  4 );
-    MASSERT2( sizeeq, "33strlcp_cycle",    strlcpy_cycle(dest, "",   2,            4),  0 );
+    MASSERT2( sizeeq, "33strlcp_cycle",    strlcpy_cycle(dest, "",   1,            4),  0 );
     MASSERT3( nstreq, "34strlcp_cycle eq", sizeof(dest), dest, "" );
 
     MASSERT2( sizeeq, "35strlcp_cycle",    strlcpy_cycle(dest, love, sizeof(dest), 4),  4 );
-    MASSERT2( sizeeq, "36strlcp_cycle",    strlcpy_cycle(dest, "",   1,            4),  0 );
-    MASSERT3( nstreq, "37strlcp_cycle eq", sizeof(dest), dest, "" );
+    MASSERT2( sizeeq, "36strlcp_cycle",    strlcpy_cycle(dest, "",   0,            4),  0 );
+    MASSERT3( nstreq, "37strlcp_cycle eq", sizeof(dest), dest, "love" );
+
 
     MASSERT2( sizeeq, "38strlcp_cycle",    strlcpy_cycle(dest, love, sizeof(dest), 4),  4 );
-    MASSERT2( sizeeq, "39strlcp_cycle",    strlcpy_cycle(dest, "",   0,            4),  0 );
-    MASSERT3( nstreq, "40strlcp_cycle eq", sizeof(dest), dest, "love" );
-
+    MASSERT2( sizeeq, "39strlcp_cycle",    strlcpy_cycle(dest, love, 3,            8),  2 );
+    MASSERT3( nstreq, "40strlcp_cycle eq", sizeof(dest), dest, "lo" );
 
     MASSERT2( sizeeq, "41strlcp_cycle",    strlcpy_cycle(dest, love, sizeof(dest), 4),  4 );
-    MASSERT2( sizeeq, "42strlcp_cycle",    strlcpy_cycle(dest, love, 3,            8),  3 );
-    MASSERT3( nstreq, "43strlcp_cycle eq", sizeof(dest), dest, "lov" );
+    MASSERT2( sizeeq, "42strlcp_cycle",    strlcpy_cycle(dest, love, 5,            8),  4 );
+    MASSERT3( nstreq, "43strlcp_cycle eq", sizeof(dest), dest, "love" );
 
     MASSERT2( sizeeq, "44strlcp_cycle",    strlcpy_cycle(dest, love, sizeof(dest), 4),  4 );
-    MASSERT2( sizeeq, "45strlcp_cycle",    strlcpy_cycle(dest, love, 5,            8),  5 );
-    MASSERT3( nstreq, "46strlcp_cycle eq", sizeof(dest), dest, "lovel" );
+    MASSERT2( sizeeq, "45strlcp_cycle",    strlcpy_cycle(dest, love, 0,            8),  0 );
+    MASSERT3( nstreq, "46strlcp_cycle eq", sizeof(dest), dest, "love" );
+
 
     MASSERT2( sizeeq, "47strlcp_cycle",    strlcpy_cycle(dest, love, sizeof(dest), 4),  4 );
-    MASSERT2( sizeeq, "48strlcp_cycle",    strlcpy_cycle(dest, love, 0,            8),  0 );
-    MASSERT3( nstreq, "49strlcp_cycle eq", sizeof(dest), dest, "" );
-
+    MASSERT2( sizeeq, "38strlcp_cycle",    strlcpy_cycle(dest, love, 3,            10), 2 );
+    MASSERT3( nstreq, "49strlcp_cycle eq", sizeof(dest), dest, "lo" );
 
     MASSERT2( sizeeq, "50strlcp_cycle",    strlcpy_cycle(dest, love, sizeof(dest), 4),  4 );
-    MASSERT2( sizeeq, "51strlcp_cycle",    strlcpy_cycle(dest, love, 1,            1),  0 );
-    MASSERT3( nstreq, "52strlcp_cycle eq", sizeof(dest), dest, "" );
+    MASSERT2( sizeeq, "51strlcp_cycle",    strlcpy_cycle(dest, love, 5,            10), 4 );
+    MASSERT3( nstreq, "53strlcp_cycle eq", sizeof(dest), dest, "love" );
 
-    MASSERT2( sizeeq, "53strlcp_cycle",    strlcpy_cycle(dest, love, sizeof(dest), 4),  4 );
-    MASSERT2( sizeeq, "54strlcp_cycle",    strlcpy_cycle(dest, love, 1,            0),  0 );
-    MASSERT3( nstreq, "55strlcp_cycle eq", sizeof(dest), dest, "" );
+    MASSERT2( sizeeq, "54strlcp_cycle",    strlcpy_cycle(dest, love, sizeof(dest), 4),  4 );
+    MASSERT2( sizeeq, "55strlcp_cycle",    strlcpy_cycle(dest, love, 9,            10), 8 );
+    MASSERT3( nstreq, "56strlcp_cycle eq", sizeof(dest), dest, "lovelove" );
 
-    MASSERT2( sizeeq, "56strlcp_cycle",    strlcpy_cycle(dest, love, sizeof(dest), 4),  4 );
-    MASSERT2( sizeeq, "57strlcp_cycle",    strlcpy_cycle(dest, love, 0,            1),  0 );
-    MASSERT3( nstreq, "58strlcp_cycle eq", sizeof(dest), dest, "love" );
+    MASSERT2( sizeeq, "57strlcp_cycle",    strlcpy_cycle(dest, love, sizeof(dest), 4),  4 );
+    MASSERT2( sizeeq, "58strlcp_cycle",    strlcpy_cycle(dest, love, 0,            10), 0 );
+    MASSERT3( nstreq, "59strlcp_cycle eq", sizeof(dest), dest, "love" );
 
-    MASSERT2( sizeeq, "59strlcp_cycle",    strlcpy_cycle(dest, love, sizeof(dest), 4),  4 );
-    MASSERT2( sizeeq, "60strlcp_cycle",    strlcpy_cycle(dest, love, 0,            0),  0 );
-    MASSERT3( nstreq, "61strlcp_cycle eq", sizeof(dest), dest, "love" );
+
+    MASSERT2( sizeeq, "60strlcp_cycle",    strlcpy_cycle(dest, love, sizeof(dest), 4),  4 );
+    MASSERT2( sizeeq, "61strlcp_cycle",    strlcpy_cycle(dest, love, 1,            1),  0 );
+    MASSERT3( nstreq, "62strlcp_cycle eq", sizeof(dest), dest, "" );
+
+    MASSERT2( sizeeq, "63strlcp_cycle",    strlcpy_cycle(dest, love, sizeof(dest), 4),  4 );
+    MASSERT2( sizeeq, "64strlcp_cycle",    strlcpy_cycle(dest, love, 1,            0),  0 );
+    MASSERT3( nstreq, "65strlcp_cycle eq", sizeof(dest), dest, "" );
+
+    MASSERT2( sizeeq, "66strlcp_cycle",    strlcpy_cycle(dest, love, sizeof(dest), 4),  4 );
+    MASSERT2( sizeeq, "67strlcp_cycle",    strlcpy_cycle(dest, love, 0,            1),  0 );
+    MASSERT3( nstreq, "68strlcp_cycle eq", sizeof(dest), dest, "love" );
+
+    MASSERT2( sizeeq, "69strlcp_cycle",    strlcpy_cycle(dest, love, sizeof(dest), 4),  4 );
+    MASSERT2( sizeeq, "70strlcp_cycle",    strlcpy_cycle(dest, love, 0,            0),  0 );
+    MASSERT3( nstreq, "71strlcp_cycle eq", sizeof(dest), dest, "love" );
 
     /* ---------------------------------------------------------------- */
 
