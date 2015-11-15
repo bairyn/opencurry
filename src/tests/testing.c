@@ -905,12 +905,34 @@ void print_passed_test_result(unit_test_context_t *context, unit_test_t test, in
 
 void print_failed_test_result(unit_test_context_t *context, unit_test_t test, int id, unit_test_result_t result, unsigned int seed_start)
 {
+  int ran_test_group;
+  int print_details;
+
   int can_continue;
+
+  ran_test_group = context->next_test_id > (id + 1);
+
+  can_continue = is_test_result_can_continue(result);
+
+  print_details = 1;
+  if (ran_test_group && can_continue)
+  {
+    if
+      (  context->num_fail    >= 1
+      && context->err_buf_len == 0
+      )
+      print_details = 0;
+  }
+
+  /* ---------------------------------------------------------------- */
+
+  #if IS_FALSE(TEST_RESULT_PRINT_GROUP_FAIL_RESULT)
+    if (!print_details)
+      return;
+  #endif
 
   ensure_buf_limits(context, context->err_buf);
   context->err_buf[context->err_buf_halfsize - 1] = 0;
-
-  can_continue = is_test_result_can_continue(result);
 
   #if IS_TRUE(TEST_RESULT_PASS_PRINT_SAME_LINE)
     fprintf(context->out, "\n");
@@ -918,6 +940,9 @@ void print_failed_test_result(unit_test_context_t *context, unit_test_t test, in
 
   print_test_indent(context, TEST_INDENT_ALERT, TEST_INDENT_PENDING_TEXT);
   fprintf(context->out, "  %*.s   FAILURE - %s\n", 2 * context->group_depth, "", test.description);
+
+  if (!print_details)
+    return;
 
   fprintf(context->err, "/----------------------------------------------------------------\n");
   fprintf(context->err, "FAILURE:\n");
