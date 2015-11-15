@@ -47,6 +47,8 @@ int test_type_base_lookup_cli(int argc, char **argv)
 
 /* ---------------------------------------------------------------- */
 
+static void init_memory_methods(void);
+
 /* type_base_lookup tests. */
 unit_test_t type_base_lookup_test =
   {  test_type_base_lookup_run
@@ -57,22 +59,19 @@ unit_test_t type_base_lookup_test =
 /* Array of type_base_lookup tests. */
 unit_test_t *type_base_lookup_tests[] =
   { &lookup_memory_management_test
+  , &lookup_insert_test
 
   , NULL
   };
 
 unit_test_result_t test_type_base_lookup_run(unit_test_context_t *context)
 {
+  init_memory_methods();
+
   return run_tests(context, type_base_lookup_tests);
 }
 
 /* ---------------------------------------------------------------- */
-
-unit_test_t lookup_memory_management_test =
-  {  lookup_memory_management_test_run
-  , "lookup_memory_management_test"
-  , "Testing memory management with lookup values."
-  };
 
 static void *(*calloc)(void *context, size_t nmemb, size_t size);
 static void   *calloc_context;
@@ -108,6 +107,27 @@ static void init_memory_methods(void)
 
 #define LOOKUP_DEINIT(lookup) \
   lookup_deinit(lookup, free, free_context)
+
+/* ---------------------------------------------------------------- */
+
+static int cmp_int_fun(void *context, int *check, int *baseline)
+{
+  return *check - *baseline;
+}
+
+static const compare_t cmp_int         = (compare_t) &cmp_int_fun;
+static void * const    cmp_int_context = NULL;
+
+#define LOOKUP_INSERT_CONTROLLED(lookup, val, add_when_exists, out_already_exists) \
+  lookup_insert_controlled(lookup, val, add_when_exists, cmp_int, cmp_int_context, out_already_exists)
+
+/* ---------------------------------------------------------------- */
+
+unit_test_t lookup_memory_management_test =
+  {  lookup_memory_management_test_run
+  , "lookup_memory_management_test"
+  , "Testing memory management with lookup values."
+  };
 
 unit_test_result_t lookup_memory_management_test_run(unit_test_context_t *context)
 {
@@ -154,6 +174,39 @@ unit_test_result_t lookup_memory_management_test_run(unit_test_context_t *contex
 
     MASSERT2( objpeq, "3", LOOKUP_EXPAND(lookup, 3), &lookup_val);
     MASSERT2( inteq,  "3", lookup_num(lookup), 3);
+  }
+
+  LOOKUP_DEINIT(lookup);
+
+  return result;
+}
+
+/* ---------------------------------------------------------------- */
+
+unit_test_t lookup_insert_test =
+  {  lookup_insert_test_run
+  , "lookup_insert_test"
+  , "Testing lookup insertion."
+  };
+
+unit_test_result_t lookup_insert_test_run(unit_test_context_t *context)
+{
+  unit_test_result_t result = assert_success(context);
+
+  typedef int value_type;
+
+  lookup_t lookup_val;
+  lookup_t *lookup = &lookup_val;
+
+  init_memory_methods();
+
+  lookup_init_empty(lookup, sizeof(value_type));
+
+  ENCLOSE()
+  {
+    MASSERT2( inteq, "empty", lookup_num(lookup), 0);
+
+    /* TODO */
   }
 
   LOOKUP_DEINIT(lookup);

@@ -96,6 +96,8 @@ struct lookup_s
   size_t   value_size;
 
   bnode_t *order;
+
+  size_t   len;
 };
 
 #define LOOKUP_DEFAULTS   \
@@ -111,6 +113,13 @@ struct lookup_s
 extern const lookup_t lookup_defaults;
 
 /* ---------------------------------------------------------------- */
+/* bnode_t methods.                                                 */
+/* ---------------------------------------------------------------- */
+
+void bnode_init(bnode_t *bnode);
+void bnode_init_array(bnode_t *bnode, size_t num);
+
+/* ---------------------------------------------------------------- */
 /* lookup_t methods.                                                */
 /* ---------------------------------------------------------------- */
 
@@ -123,6 +132,7 @@ void      lookup_deinit
   );
 
 size_t    lookup_num(const lookup_t *lookup);
+size_t    lookup_len(const lookup_t *lookup);
 
 lookup_t *lookup_expand
   ( lookup_t *lookup
@@ -162,6 +172,23 @@ lookup_t *lookup_resize
   , void   *free_context
   );
 #endif /* #ifdef TODO /-* TODO *-/ */
+
+/* ---------------------------------------------------------------- */
+
+typedef int (*compare_t)(void *context, void *check, void *baseline);
+
+lookup_t *lookup_insert_controlled
+  ( lookup_t  *lookup
+  , void      *val
+  , int        add_when_exists
+
+  , compare_t  cmp
+  , void      *cmp_context
+
+  , int       *out_already_exists
+  );
+
+/* ---------------------------------------------------------------- */
 
 /* ---------------------------------------------------------------- */
 /* Post-dependencies.                                               */

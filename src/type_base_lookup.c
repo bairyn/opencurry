@@ -36,6 +36,11 @@
  */
 #include <stddef.h>
 
+/* string.h:
+ *   - memset
+ */
+#include <string.h>
+
 #include "base.h"
 #include "type_base_prim.h"
 #include "type_base_lookup.h"
@@ -48,6 +53,8 @@
 #include "type_base.h"
 #endif /* #ifdef TODO */
 #include "type_base_type.h"
+
+#include "util.h"
 
 /* ---------------------------------------------------------------- */
 /* lookup_t and children.                                           */
@@ -198,7 +205,7 @@ static const struct_info_t *lookup_type_is_struct  (const type_t *self)
   {
     STRUCT_INFO_BEGIN(lookup);
 
-    /* typed_t type */
+    /* typed_t type; */
     STRUCT_INFO_RADD(typed_type(), type);
 
     /* size_t   num; */
@@ -212,6 +219,9 @@ static const struct_info_t *lookup_type_is_struct  (const type_t *self)
     /* bnode_t *order; */
     STRUCT_INFO_RADD(objp_type(),  order);
 
+    /* size_t   len; */
+    STRUCT_INFO_RADD(size_type(),  len);
+
     STRUCT_INFO_DONE();
   }
 
@@ -222,6 +232,31 @@ static const tval          *lookup_type_has_default(const type_t *self)
 
 const lookup_t lookup_defaults =
   LOOKUP_DEFAULTS;
+
+/* ---------------------------------------------------------------- */
+/* bnode_t methods.                                                 */
+/* ---------------------------------------------------------------- */
+
+void bnode_init(bnode_t *bnode)
+{
+#if ERROR_CHECKING
+  if (!bnode)
+    return;
+#endif /* #if ERROR_CHECKING  */
+
+  bnode->value = 0;
+
+  bnode->left  = 0;
+  bnode->right = 0;
+}
+
+void bnode_init_array(bnode_t *bnode, size_t num)
+{
+  if (!bnode)
+    return;
+
+  memset(bnode, 0x00, num * sizeof(bnode_t));
+}
 
 /* ---------------------------------------------------------------- */
 /* lookup_t methods.                                                */
@@ -245,6 +280,8 @@ void lookup_init_empty(lookup_t *lookup, size_t value_size)
   lookup->value_size = value_size;
 
   lookup->order      = NULL;
+
+  lookup->len        = 0;
 }
 
 /* Free memory allocated inside the lookup value. */
@@ -284,6 +321,12 @@ size_t lookup_num(const lookup_t *lookup)
   return lookup->num;
 }
 
+/* Get the number of used element slots. */
+size_t lookup_len(const lookup_t *lookup)
+{
+  return lookup->len;
+}
+
 /* Allocate more memory for additional element slots. */
 /*                                                    */
 /* Does nothing with a "num" argument smaller than    */
@@ -299,8 +342,6 @@ lookup_t *lookup_expand
   , void   *realloc_context
   )
 {
-  size_t i;
-
   size_t old_num;
 
 #if ERROR_CHECKING
@@ -341,13 +382,11 @@ lookup_t *lookup_expand
       return NULL;
     }
 
+    /* ---------------------------------------------------------------- */
+
     lookup->num = num;
 
-    for (i = 0; i < num; ++i)
-    {
-      lookup->values[i] = NULL;
-      lookup->order [i] = 0;
-    }
+    bnode_init_array(lookup->order, num);
 
     return lookup;
   }
@@ -382,11 +421,7 @@ lookup_t *lookup_expand
 
     lookup->num = num;
 
-    for (i = old_num; i < num; ++i)
-    {
-      lookup->values[i] = NULL;
-      lookup->order [i] = 0;
-    }
+    bnode_init_array(lookup->order + old_num, size_minus(num, old_num));
 
     return lookup;
   }
@@ -461,4 +496,18 @@ lookup_t *lookup_resize
     return lookup;
   }
 }
+
+/* ---------------------------------------------------------------- */
+
+lookup_t *lookup_insert_controlled
+  ( lookup_t  *lookup
+  , void      *val
+  , int        add_when_exists
+
+  , compare_t  cmp
+  , void      *cmp_context
+
+  , int       *out_already_exists
+  );
+
 #endif /* #ifdef TODO /-* TODO *-/ */
