@@ -315,6 +315,12 @@ void lookup_deinit
   lookup->num = 0;
 }
 
+/* Does lookup not have any used values? */
+int lookup_empty(const lookup_t *lookup)
+{
+  return lookup_len(lookup) <= 0;
+}
+
 /* Get the number of element slots. */
 size_t lookup_num(const lookup_t *lookup)
 {
@@ -508,6 +514,9 @@ lookup_t *lookup_insert_controlled
   , void      *cmp_context
 
   , int       *out_already_exists
-  );
+  , int       *out_no_space
+  )
+{
+}
 
 #endif /* #ifdef TODO /-* TODO *-/ */

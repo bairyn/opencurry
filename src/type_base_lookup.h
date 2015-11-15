@@ -63,10 +63,10 @@ extern const type_t bnode_type_def;
 typedef struct bnode_s bnode_t;
 struct bnode_s
 {
-  /* Indices are + 1, 0 when NULL. */
-
+  /* Last bit encodes node color: 0: black; 1: red. */
   size_t value;
 
+  /* Indices are + 1, 0 when NULL. */
   size_t left;
   size_t right;
 };
@@ -131,8 +131,10 @@ void      lookup_deinit
   , void   *free_context
   );
 
-size_t    lookup_num(const lookup_t *lookup);
-size_t    lookup_len(const lookup_t *lookup);
+size_t    lookup_num  (const lookup_t *lookup);
+
+int       lookup_empty(const lookup_t *lookup);
+size_t    lookup_len  (const lookup_t *lookup);
 
 lookup_t *lookup_expand
   ( lookup_t *lookup
@@ -186,6 +188,7 @@ lookup_t *lookup_insert_controlled
   , void      *cmp_context
 
   , int       *out_already_exists
+  , int       *out_no_space
   );
 
 /* ---------------------------------------------------------------- */

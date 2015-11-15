@@ -118,8 +118,8 @@ static int cmp_int_fun(void *context, int *check, int *baseline)
 static const compare_t cmp_int         = (compare_t) &cmp_int_fun;
 static void * const    cmp_int_context = NULL;
 
-#define LOOKUP_INSERT_CONTROLLED(lookup, val, add_when_exists, out_already_exists) \
-  lookup_insert_controlled(lookup, val, add_when_exists, cmp_int, cmp_int_context, out_already_exists)
+#define LOOKUP_INSERT_CONTROLLED(lookup, val, add_when_exists, out_already_exists, out_no_space) \
+  lookup_insert_controlled(lookup, val, add_when_exists, cmp_int, cmp_int_context, out_already_exists, out_no_space)
 
 /* ---------------------------------------------------------------- */
 
@@ -144,36 +144,60 @@ unit_test_result_t lookup_memory_management_test_run(unit_test_context_t *contex
 
   ENCLOSE()
   {
-    MASSERT2( inteq, "empty", lookup_num(lookup), 0);
+    MASSERT2( inteq, "0null",  lookup_num(lookup), 0);
+    MASSERT1( true,   "#0",    lookup_empty(lookup));
 
-    MASSERT2( objpeq, "3", LOOKUP_EXPAND(lookup, 3), &lookup_val);
-    MASSERT2( inteq,  "3", lookup_num(lookup), 3);
+    MASSERT2( objpeq, "3",     LOOKUP_EXPAND(lookup, 3), &lookup_val);
+    MASSERT2( inteq,  "3",     lookup_num(lookup), 3);
+    MASSERT1( true,   "#1",    lookup_empty(lookup));
 
-    MASSERT2( objpeq, "3'", LOOKUP_EXPAND(lookup, 3), &lookup_val);
-    MASSERT2( inteq,  "3'", lookup_num(lookup), 3);
+    MASSERT2( objpeq, "3'",    LOOKUP_EXPAND(lookup, 3), &lookup_val);
+    MASSERT2( inteq,  "3'",    lookup_num(lookup), 3);
+    MASSERT1( true,   "#2",    lookup_empty(lookup));
 
-    MASSERT2( objpeq, "1", LOOKUP_EXPAND(lookup, 1), &lookup_val);
-    MASSERT2( inteq,  "1", lookup_num(lookup), 3);
+    MASSERT2( objpeq, "1",     LOOKUP_EXPAND(lookup, 1), &lookup_val);
+    MASSERT2( inteq,  "1",     lookup_num(lookup), 3);
+    MASSERT1( true,   "#3",    lookup_empty(lookup));
 
-    MASSERT2( objpeq, "3''", LOOKUP_EXPAND(lookup, 3), &lookup_val);
-    MASSERT2( inteq,  "3''", lookup_num(lookup), 3);
+    MASSERT2( objpeq, "3''",   LOOKUP_EXPAND(lookup, 3), &lookup_val);
+    MASSERT2( inteq,  "3''",   lookup_num(lookup), 3);
+    MASSERT1( true,   "#4",    lookup_empty(lookup));
 
-    MASSERT2( objpeq, "0", LOOKUP_EXPAND(lookup, 0), &lookup_val);
-    MASSERT2( inteq,  "0", lookup_num(lookup), 3);
+    MASSERT2( objpeq, "0",     LOOKUP_EXPAND(lookup, 0), &lookup_val);
+    MASSERT2( inteq,  "0",     lookup_num(lookup), 3);
+    MASSERT1( true,   "#5",    lookup_empty(lookup));
 
-    MASSERT2( objpeq, "3'''", LOOKUP_EXPAND(lookup, 3), &lookup_val);
-    MASSERT2( inteq,  "3'''", lookup_num(lookup), 3);
+    MASSERT2( objpeq, "3'''",  LOOKUP_EXPAND(lookup, 3), &lookup_val);
+    MASSERT2( inteq,  "3'''",  lookup_num(lookup), 3);
+    MASSERT1( true,   "#6",    lookup_empty(lookup));
 
-    MASSERT2( objpeq, "7", LOOKUP_EXPAND(lookup, 7), &lookup_val);
-    MASSERT2( inteq,  "7", lookup_num(lookup), 7);
+    MASSERT2( objpeq, "7",     LOOKUP_EXPAND(lookup, 7), &lookup_val);
+    MASSERT2( inteq,  "7",     lookup_num(lookup), 7);
+    MASSERT1( true,  "#7",     lookup_empty(lookup));
+
 
     LOOKUP_DEINIT(lookup);
-    MASSERT2( inteq, "empty", lookup_num(lookup), 0);
-    lookup_init_empty(lookup, sizeof(value_type));
-    MASSERT2( inteq, "empty", lookup_num(lookup), 0);
+    MASSERT2( inteq, "1null",  lookup_num(lookup), 0);
+    MASSERT1( true,  "#8",     lookup_empty(lookup));
 
-    MASSERT2( objpeq, "3", LOOKUP_EXPAND(lookup, 3), &lookup_val);
-    MASSERT2( inteq,  "3", lookup_num(lookup), 3);
+    lookup_init_empty(lookup, sizeof(value_type));
+    MASSERT2( inteq, "2null",  lookup_num(lookup), 0);
+    MASSERT1( true,   "#9",    lookup_empty(lookup));
+
+
+    MASSERT2( objpeq, "3",     LOOKUP_EXPAND(lookup, 3), &lookup_val);
+    MASSERT2( inteq,  "3",     lookup_num(lookup), 3);
+    MASSERT1( true,   "#10",   lookup_empty(lookup));
+
+
+    lookup_init_empty(lookup, sizeof(value_type));
+    MASSERT2( inteq,  "3null", lookup_num(lookup), 0);
+    MASSERT1( true,   "#11",   lookup_empty(lookup));
+
+
+    MASSERT2( objpeq, "3",     LOOKUP_EXPAND(lookup, 3), &lookup_val);
+    MASSERT2( inteq,  "3",     lookup_num(lookup), 3);
+    MASSERT1( true,   "#12",   lookup_empty(lookup));
   }
 
   LOOKUP_DEINIT(lookup);
