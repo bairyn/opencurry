@@ -299,6 +299,8 @@ lookup_t *lookup_expand
   , void   *realloc_context
   )
 {
+  size_t i;
+
   size_t old_num;
 
 #if ERROR_CHECKING
@@ -341,6 +343,12 @@ lookup_t *lookup_expand
 
     lookup->num = num;
 
+    for (i = 0; i < num; ++i)
+    {
+      lookup->values[i] = NULL;
+      lookup->order [i] = 0;
+    }
+
     return lookup;
   }
   else
@@ -373,6 +381,12 @@ lookup_t *lookup_expand
     }
 
     lookup->num = num;
+
+    for (i = old_num; i < num; ++i)
+    {
+      lookup->values[i] = NULL;
+      lookup->order [i] = 0;
+    }
 
     return lookup;
   }
