@@ -617,6 +617,25 @@ unit_test_result_t util_equalities_basic_str_test_run(unit_test_context_t *conte
     ASSERT2( sizeeq, strn_index_bounds(dest, 5, 1, 2), 2 );
     ASSERT2( sizeeq, strn_index_bounds(dest, 5, 1, 1), 1 );
     ASSERT2( sizeeq, strn_index_bounds(dest, 5, 1, 0), 0 );
+
+
+    /* ---------------------------------------------------------------- */
+
+    ASSERT2( sizeeq, str_index_bounds(love, 0, 8), 4 );
+    ASSERT2( sizeeq, str_index_bounds(love, 0, 7), 4 );
+    ASSERT2( sizeeq, str_index_bounds(love, 0, 4), 4 );
+    ASSERT2( sizeeq, str_index_bounds(love, 0, 3), 3 );
+    ASSERT2( sizeeq, str_index_bounds(love, 0, 2), 2 );
+    ASSERT2( sizeeq, str_index_bounds(love, 0, 1), 1 );
+    ASSERT2( sizeeq, str_index_bounds(love, 0, 0), 0 );
+
+    ASSERT2( sizeeq, str_index_bounds(love, 1, 8), 3 );
+    ASSERT2( sizeeq, str_index_bounds(love, 1, 7), 3 );
+    ASSERT2( sizeeq, str_index_bounds(love, 1, 4), 3 );
+    ASSERT2( sizeeq, str_index_bounds(love, 1, 3), 3 );
+    ASSERT2( sizeeq, str_index_bounds(love, 1, 2), 2 );
+    ASSERT2( sizeeq, str_index_bounds(love, 1, 1), 1 );
+    ASSERT2( sizeeq, str_index_bounds(love, 1, 0), 0 );
   }
 
   return result;

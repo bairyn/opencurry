@@ -288,9 +288,9 @@ int strn_has_null_terminator(const char *src, size_t size);
 
 size_t strlcpy_cycle(char *dest, const char *src, size_t dest_size, size_t num_bytes);
 
-size_t index_bounds(size_t size, int reserve_final_byte, size_t index);
-size_t strn_index_bounds(const char *str, size_t size, int reserve_terminator, size_t index);
-size_t str_constrain_index(const char *str, int reserve_terminator, size_t index);
+size_t index_bounds(size_t size, int is_final_byte_out_of_bounds, size_t index);
+size_t strn_index_bounds(const char *str, size_t size, int is_terminator_out_of_bounds, size_t index);
+size_t str_index_bounds(const char *str, int is_terminator_out_of_bounds, size_t index);
 
 enum strpos_baseline_e
 {
