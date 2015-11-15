@@ -37,11 +37,15 @@
 
 #include "base.h"
 #include "type_base_prim.h"
+#include "type_base_type.h"
+
+#include "type_base_typed.h"
 #include "type_base_tval.h"
+#include "type_base_memory_manager.h"
+#include "type_base_memory_tracker.h"
 #ifndef TODO /* TODO */
 #include "type_base.h"
 #endif /* #ifndef TODO /-* TODO *-/ */
-#include "type_base_type.h"
 
 /* ---------------------------------------------------------------- */
 /* type_t                                                           */
