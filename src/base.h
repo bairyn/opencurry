@@ -41,6 +41,10 @@
 #define BASE_H
 #include "base.h"
 
+#ifndef POSIX_PARALLEL
+#define POSIX_PARALLEL 0
+#endif /* #ifndef POSIX_PARALLEL */
+
 /* Flag to check for programmer errors.             */
 /* This does not apply to errors of any other sort. */
 #ifndef ERROR_CHECKING

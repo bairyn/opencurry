@@ -19,16 +19,19 @@ MKDIR_P          := mkdir -p
 #------------------------------------------------------------------------------
 # Flags.
 
-PARALLEL               := -pthread
-
 CFLAGS_USR             :=
 CPPFLAGS_USR           :=
 
-CFLAGS_STRICT          := -std=c89 -pedantic -pedantic-errors $(PARALLEL) -Wall  -Werror
+CFLAGS_STRICT          := -std=c89 -pedantic -pedantic-errors -Wall  -Werror
 CPPFLAGS_STRICT        :=
 
-CFLAGS_PTHREAD         := -pthread
-CPPFLAGS_PTHREAD       :=
+ifneq ($(POSIX_PARALLEL),0)
+	CFLAGS_PARALLEL        := -pthread
+	CPPFLAGS_PARALLEL      := -DPOSIX_PARALLEL=1
+else
+	CFLAGS_PARALLEL        :=
+	CPPFLAGS_PARALLEL      := -DPOSIX_PARALLEL=0
+endif
 
 CFLAGS_BUILD_INFO      :=
 CPPFLAGS_BUILD_INFO    := -DNAME="$(NAME)" -DVERSION="$(VERSION)"
@@ -75,14 +78,14 @@ CPPFLAGS_DEBUG_FLAGS   := $(CPPFLAGS_DEBUG_BASE)  \
 
 ALL_CFLAGS             := $(CFLAGS)               \
 	                        $(CFLAGS_STRICT)        \
-	                        $(CFLAGS_PTHREAD)       \
+	                        $(CFLAGS_PARALLEL)      \
 	                        $(CFLAGS_BUILD_INFO)    \
 	                        $(CFLAGS_DEBUG_FLAGS)   \
 	                        $(CFLAGS_USR)
 
 ALL_CPPFLAGS           := $(CPPFLAGS)             \
 	                        $(CPPFLAGS_STRICT)      \
-	                        $(CPPFLAGS_PTHREAD)     \
+	                        $(CPPFLAGS_PARALLEL)    \
 	                        $(CPPFLAGS_BUILD_INFO)  \
 	                        $(CPPFLAGS_DEBUG_FLAGS) \
 	                        $(CPPFLAGS_USR)
