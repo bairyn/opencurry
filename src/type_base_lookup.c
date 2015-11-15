@@ -247,6 +247,37 @@ void lookup_init_empty(lookup_t *lookup, size_t value_size)
   lookup->order      = NULL;
 }
 
+/* Free memory allocated inside the lookup value. */
+void lookup_deinit
+  ( lookup_t *lookup
+
+  , void  (*free)(void *context, void *area)
+  , void   *free_context
+  )
+{
+#if ERROR_CHECKING 
+  if (!lookup)
+    return;
+#endif /* #if ERROR_CHECKING  */
+
+  if (lookup->num <= 0)
+    return;
+
+#if ERROR_CHECKING 
+  if (!lookup->values)
+    return;
+  if (!lookup->order)
+    return;
+  if (!free)
+    return;
+#endif /* #if ERROR_CHECKING  */
+
+  free(free_context, lookup->values);
+  free(free_context, lookup->order);
+
+  lookup->num = 0;
+}
+
 /* Get the number of element slots. */
 size_t lookup_num(const lookup_t *lookup)
 {

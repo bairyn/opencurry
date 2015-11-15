@@ -74,21 +74,89 @@ unit_test_t lookup_memory_management_test =
   , "Testing memory management with lookup values."
   };
 
+static void *(*calloc)(void *context, size_t nmemb, size_t size);
+static void   *calloc_context;
+
+static void *(*realloc)(void *context, void *area, size_t size);
+static void   *realloc_context;
+
+static void  (*free)(void *context, void *area);
+static void   *free_context;
+
+static void init_memory_methods(void)
+{
+  calloc  = (void *(*)(void *context, size_t nmemb, size_t size))
+    default_memory_manager->calloc;
+  realloc = (void *(*)(void *context, void *area, size_t size))
+    default_memory_manager->realloc;
+  free    = (void  (*)(void *context, void *area))
+    default_memory_manager->free;
+
+  calloc_context  = (void *) default_memory_manager;
+  realloc_context = (void *) default_memory_manager;
+  free_context    = (void *) default_memory_manager;
+}
+
+#define LOOKUP_EXPAND(lookup, num) \
+  lookup_expand(lookup, num, calloc, calloc_context, realloc, realloc_context)
+
+#define LOOKUP_SHRINK(lookup, num) \
+  lookup_shrink(lookup, num, realloc, realloc_context, free, free_context)
+
+#define LOOKUP_RESIZE(lookup, num) \
+  lookup_expand(lookup, num, calloc, calloc_context, realloc, realloc_context, free, free_context)
+
+#define LOOKUP_DEINIT(lookup) \
+  lookup_deinit(lookup, free, free_context)
+
 unit_test_result_t lookup_memory_management_test_run(unit_test_context_t *context)
 {
   unit_test_result_t result = assert_success(context);
 
+  typedef type_t value_type;
+
+  lookup_t lookup_val;
+  lookup_t *lookup = &lookup_val;
+
+  init_memory_methods();
+
+  lookup_init_empty(lookup, sizeof(value_type));
+
   ENCLOSE()
   {
-    typedef type_t value_type;
-
-    lookup_t lookup_val;
-    lookup_t *lookup = &lookup_val;
-
-    lookup_init_empty(lookup, sizeof(value_type));
-
     MASSERT2( inteq, "empty", lookup_num(lookup), 0);
+
+    MASSERT2( objpeq, "3", LOOKUP_EXPAND(lookup, 3), &lookup_val);
+    MASSERT2( inteq,  "3", lookup_num(lookup), 3);
+
+    MASSERT2( objpeq, "3'", LOOKUP_EXPAND(lookup, 3), &lookup_val);
+    MASSERT2( inteq,  "3'", lookup_num(lookup), 3);
+
+    MASSERT2( objpeq, "1", LOOKUP_EXPAND(lookup, 1), &lookup_val);
+    MASSERT2( inteq,  "1", lookup_num(lookup), 3);
+
+    MASSERT2( objpeq, "3''", LOOKUP_EXPAND(lookup, 3), &lookup_val);
+    MASSERT2( inteq,  "3''", lookup_num(lookup), 3);
+
+    MASSERT2( objpeq, "0", LOOKUP_EXPAND(lookup, 0), &lookup_val);
+    MASSERT2( inteq,  "0", lookup_num(lookup), 3);
+
+    MASSERT2( objpeq, "3'''", LOOKUP_EXPAND(lookup, 3), &lookup_val);
+    MASSERT2( inteq,  "3'''", lookup_num(lookup), 3);
+
+    MASSERT2( objpeq, "7", LOOKUP_EXPAND(lookup, 7), &lookup_val);
+    MASSERT2( inteq,  "7", lookup_num(lookup), 7);
+
+    LOOKUP_DEINIT(lookup);
+    MASSERT2( inteq, "empty", lookup_num(lookup), 0);
+    lookup_init_empty(lookup, sizeof(value_type));
+    MASSERT2( inteq, "empty", lookup_num(lookup), 0);
+
+    MASSERT2( objpeq, "3", LOOKUP_EXPAND(lookup, 3), &lookup_val);
+    MASSERT2( inteq,  "3", lookup_num(lookup), 3);
   }
+
+  LOOKUP_DEINIT(lookup);
 
   return result;
 }
