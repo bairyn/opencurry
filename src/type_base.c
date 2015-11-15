@@ -1277,7 +1277,7 @@ const field_info_t *struct_info_has_typed_field(const struct_info_t *struct_info
   if (!field_info)
     return NULL;
 
-  if (field_info->field_type != STRUCT_INFO_TYPED_FIELD_TYPE)
+  if (!type_is_subtype(STRUCT_INFO_TYPED_FIELD_TYPE, field_info->field_type))
     return  NULL;
 
   return field_info;
