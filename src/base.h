@@ -41,6 +41,8 @@
 #define BASE_H
 #include "base.h"
 
+/* Flag to check for programmer errors.             */
+/* This does not apply to errors of any other sort. */
 #ifndef ERROR_CHECKING
 #define ERROR_CHECKING 1
 #endif /* #ifndef ERROR_CHECKING */
