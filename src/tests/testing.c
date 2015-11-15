@@ -2333,6 +2333,16 @@ unit_test_result_t assert_streqn_continue(unit_test_context_t *context, const ch
   }
 }
 
+unit_test_result_t assert_nstreq(unit_test_context_t *context, const char *err_msg, const char *tag, size_t max_len, const char *check, const char *model)
+{
+  return assert_streqn(context, err_msg, tag, check, model, max_len);
+}
+
+unit_test_result_t assert_nstreq_continue(unit_test_context_t *context, const char *err_msg, const char *tag, size_t max_len, const char *check, const char *model)
+{
+  return assert_streqn_continue(context, err_msg, tag, check, model, max_len);
+}
+
 unit_test_result_t assert_memeq(unit_test_context_t *context, const char *err_msg, const char *tag, void *check, void *model, size_t n)
 {
   if (memcmp(check, model, n) == 0)
@@ -2673,6 +2683,16 @@ unit_test_result_t assert_not_streqn_continue(unit_test_context_t *context, cons
 
     return UNIT_TEST_FAIL_CONTINUE;
   }
+}
+
+unit_test_result_t assert_not_nstreq(unit_test_context_t *context, const char *err_msg, const char *tag, size_t max_len, const char *check, const char *model)
+{
+  return assert_not_streqn(context, err_msg, tag, check, model, max_len);
+}
+
+unit_test_result_t assert_not_nstreq_continue(unit_test_context_t *context, const char *err_msg, const char *tag, size_t max_len, const char *check, const char *model)
+{
+  return assert_not_streqn_continue(context, err_msg, tag, check, model, max_len);
 }
 
 unit_test_result_t assert_not_memeq(unit_test_context_t *context, const char *err_msg, const char *tag, void *check, void *model, size_t n)

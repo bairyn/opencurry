@@ -342,6 +342,8 @@ unit_test_result_t assert_streqz              (unit_test_context_t *context, con
 unit_test_result_t assert_streqz_continue     (unit_test_context_t *context, const char *err_msg, const char *tag, const char   *check,     const char    *model);
 unit_test_result_t assert_streqn              (unit_test_context_t *context, const char *err_msg, const char *tag, const char   *check,     const char    *model, size_t max_len);
 unit_test_result_t assert_streqn_continue     (unit_test_context_t *context, const char *err_msg, const char *tag, const char   *check,     const char    *model, size_t max_len);
+unit_test_result_t assert_nstreq              (unit_test_context_t *context, const char *err_msg, const char *tag, size_t max_len, const char   *check,     const char    *model);
+unit_test_result_t assert_nstreq_continue     (unit_test_context_t *context, const char *err_msg, const char *tag, size_t max_len, const char   *check,     const char    *model);
 
 unit_test_result_t assert_memeq               (unit_test_context_t *context, const char *err_msg, const char *tag, void         *check,     void          *model, size_t n);
 unit_test_result_t assert_memeq_continue      (unit_test_context_t *context, const char *err_msg, const char *tag, void         *check,     void          *model, size_t n);
@@ -368,6 +370,8 @@ unit_test_result_t assert_not_streqz          (unit_test_context_t *context, con
 unit_test_result_t assert_not_streqz_continue (unit_test_context_t *context, const char *err_msg, const char *tag, const char   *check,     const char    *model);
 unit_test_result_t assert_not_streqn          (unit_test_context_t *context, const char *err_msg, const char *tag, const char   *check,     const char    *model, size_t max_len);
 unit_test_result_t assert_not_streqn_continue (unit_test_context_t *context, const char *err_msg, const char *tag, const char   *check,     const char    *model, size_t max_len);
+unit_test_result_t assert_not_nstreq          (unit_test_context_t *context, const char *err_msg, const char *tag, size_t max_len, const char   *check,     const char    *model);
+unit_test_result_t assert_not_nstreq_continue (unit_test_context_t *context, const char *err_msg, const char *tag, size_t max_len, const char   *check,     const char    *model);
 
 unit_test_result_t assert_not_memeq           (unit_test_context_t *context, const char *err_msg, const char *tag, void         *check,     void          *model, size_t n);
 unit_test_result_t assert_not_memeq_continue  (unit_test_context_t *context, const char *err_msg, const char *tag, void         *check,     void          *model, size_t n);
