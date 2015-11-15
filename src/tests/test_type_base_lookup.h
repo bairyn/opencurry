@@ -1,5 +1,5 @@
 /*
- * opencurry: tests/test_lookup.c
+ * opencurry: tests/test_type_base_lookup.h
  *
  * Copyright (c) 2015, Byron James Johnson
  * All rights reserved.
@@ -30,35 +30,25 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+/*
+ * tests/test_type_base_lookup.h
+ * ------
+ */
+
+#ifndef TESTS_TEST_TYPE_BASE_LOOKUP_H
+#define TESTS_TEST_TYPE_BASE_LOOKUP_H
 #include "../base.h"
 #include "testing.h"
-#include "test_lookup.h"
 
-#include "../lookup.h"
+#include "../util.h"
 
-int test_lookup_cli(int argc, char **argv)
-{
-  return run_test_suite(lookup_test);
-}
+int test_type_base_lookup_cli(int argc, char **argv);
 
-/* ---------------------------------------------------------------- */
+extern unit_test_t type_base_lookup_test;
+extern unit_test_t *type_base_lookup_tests[];
 
-/* lookup tests. */
-unit_test_t lookup_test =
-  {  test_lookup_run
-  , "test_lookup"
-  , "lookup tests."
-  };
-
-/* Array of lookup tests. */
-unit_test_t *lookup_tests[] =
-  { NULL
-  };
-
-unit_test_result_t test_lookup_run(unit_test_context_t *context)
-{
-  return run_tests(context, lookup_tests);
-}
+unit_test_result_t test_type_base_lookup_run(unit_test_context_t *context);
 
 /* ---------------------------------------------------------------- */
 
+#endif /* ifndef TESTS_TEST_TYPE_BASE_LOOKUP_H */

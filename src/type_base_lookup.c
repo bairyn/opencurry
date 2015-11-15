@@ -1,5 +1,5 @@
 /*
- * opencurry: lookup.c
+ * opencurry: type_base_lookup.c
  *
  * Copyright (c) 2015, Byron James Johnson
  * All rights reserved.
@@ -38,7 +38,7 @@
 
 #include "base.h"
 #include "type_base_prim.h"
-#include "lookup.h"
+#include "type_base_lookup.h"
 
 #include "type_base_typed.h"
 #include "type_base_memory_tracker.h"

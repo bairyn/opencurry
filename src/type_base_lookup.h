@@ -1,5 +1,5 @@
 /*
- * opencurry: lookup.h
+ * opencurry: type_base_lookup.h
  *
  * Copyright (c) 2015, Byron James Johnson
  * All rights reserved.
@@ -31,16 +31,14 @@
  */
 
 /*
- * lookup.h
+ * type_base_lookup.h
  * ------
  *
  * Self-balancing binary search arrays.
  */
 
-/* TODO: rename to type_base_lookup */
-
-#ifndef LOOKUP_H
-#define LOOKUP_H
+#ifndef TYPE_BASE_LOOKUP_H
+#define TYPE_BASE_LOOKUP_H
 /* stddef.h:
  *   - NULL
  *   - size_t
@@ -128,4 +126,4 @@ void lookup_init_empty(lookup_t *lookup, size_t value_size);
 #include "type_base_type.h"
 #endif /* #ifdef TODO */
 
-#endif /* ifndef LOOKUP_H */
+#endif /* ifndef TYPE_BASE_LOOKUP_H */
