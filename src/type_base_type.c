@@ -484,7 +484,7 @@ tval *type_mutable_field(const type_t *self, const tval *val, const field_info_t
   return mutable;
 }
 
-tval *type_no_mutable   (const type_t *self, const tval *val)
+tval *type_immutable    (const type_t *self, const tval *val)
 {
   return NULL;
 }

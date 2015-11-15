@@ -850,7 +850,7 @@ tval *type_mutable_from_struct(const type_t *self, const tval *val);
 
 tval *type_mutable_field(const type_t *self, const tval *val, const field_info_t *self_reference);
 
-tval *type_no_mutable   (const type_t *self, const tval *val);
+tval *type_immutable    (const type_t *self, const tval *val);
 
 /* is_subtype */
 const type_t *type_has_no_nonextensible_subtypes(const type_t *self, const type_t *is_subtype);
