@@ -478,6 +478,7 @@ void print_test_suite_result(unit_test_context_t *context, unit_test_result_t re
       ( out
       , "\n"
         "pass: %d/%d tests and test groups.\n"
+        "=)\n"
 
       , (int) (context->num_pass)
       , (int) (context->num_pass + context->num_skip)
