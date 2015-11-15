@@ -30,6 +30,32 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+/* stddef.h:
+ *   - NULL
+ *   - size_t
+ */
+#include <stddef.h>
+
+/*
+ * stdio.h:
+ *  - fprintf
+ *  - stderr
+ */
+#include <stdio.h>
+
+/* stdlib.h:
+ *   , calloc
+ *   - free
+ *   - malloc
+ *   , realloc
+ */
+#include <stdlib.h>
+
+/* string.h:
+ *   - strlen
+ */
+#include <string.h>
+
 #include "base.h"
 #include "type_base_prim.h"
 #include "type_base_memory_manager.h"

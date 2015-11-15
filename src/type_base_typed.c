@@ -32,6 +32,7 @@
 
 /* stddef.h:
  *   - size_t
+ *   - NULL
  */
 #include <stddef.h>
 

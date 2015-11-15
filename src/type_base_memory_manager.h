@@ -37,6 +37,12 @@
 
 #ifndef TYPE_BASE_MEMORY_MANAGER_H
 #define TYPE_BASE_MEMORY_MANAGER_H
+/* stddef.h:
+ *   - NULL
+ *   - size_t
+ */
+#include <stddef.h>
+
 #include "base.h"
 
 /* ---------------------------------------------------------------- */
