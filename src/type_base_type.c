@@ -2690,6 +2690,8 @@ const type_t *is_proper_supertype(const type_t *super, const type_t *sub)
   return is_proper_subtype(sub, super);
 }
 
+/* ---------------------------------------------------------------- */
+
 /*
  * "type_t" accessors for typed "tval"s.
  *
