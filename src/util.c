@@ -347,6 +347,42 @@ int strn_has_null_terminator(const char *src, size_t size)
   return strnlen(src, size) < size;
 }
 
+/* Copy "num_bytes" from an infinitely repeated "src" string.
+ *
+ * Always writes NULL terminator when dest_size is non-zero.
+ *
+ * Returns number of bytes written, excluding the NULL terminator.
+ *
+ * If "src" is empty, write an empty, NULL-terminated string.
+ */
+size_t strlcpy_cycle(char *dest, const char *src, size_t dest_size, size_t num_bytes)
+{
+  size_t len;
+  const char *src_pos;
+
+  if (!dest || dest_size <= 0)
+    return 0;
+
+  if (!src || !*src)
+  {
+    *dest = 0;
+    return 0;
+  }
+
+  src_pos = src;
+  for (len = 0; dest_size >= 2; ++len, --dest_size)
+  {
+    if (!*src_pos)
+      src_pos = src;
+
+    *dest++ = *src_pos++;
+  }
+
+  *dest = 0;
+
+  return len;
+}
+
 /*
  * Given "size", return an in-bounds "index" (or an out-of-bounds index of 0
  * when size is 0, or size is 1 and reserve_final_byte is enabled).
