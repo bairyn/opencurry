@@ -57,6 +57,8 @@
 
 #include "type_base_tval.h"
 
+#include "type_base_compare.h"
+
 #include "type_base_lookup.h"
 
 #include "type_base_memory_manager.h"
@@ -1125,6 +1127,17 @@ extern const float_t   float_default;
 extern const double_t  double_default;
 extern const ldouble_t ldouble_default;
 
+/* Enumerations. */
+const type_t *enum_type;
+
+typedef int enum_t;
+
+extern const type_t enum_type_def;
+
+#define ENUM_DEFAULT \
+  0
+extern const enum_t enum_default;
+
 /* Derived types. */
 const type_t *array_type(void);
 
@@ -1138,6 +1151,10 @@ extern const size_t  array_default_size;
 extern const size_t  array_default_num;
 extern const size_t  array_default_len;
 #endif
+
+#ifdef TODO /* TODO */
+#error "TODO: parent union / struct type!"
+#endif /* #ifdef TODO /-* TODO *-/ */
 
 /* <math.h> */
 const type_t *div_type(void);

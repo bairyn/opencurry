@@ -2486,6 +2486,102 @@ const ldouble_t ldouble_default = (long double)    0.0L;
 
 /* ---------------------------------------------------------------- */
 
+/* Enumerations. */
+
+/* enum type */
+
+const type_t *enum_type(void)
+  { return &enum_type_def; }
+
+static const char   *enum_type_name        (const type_t *self);
+static size_t        enum_type_size        (const type_t *self, const tval *val);
+static const type_t *enum_type_is_subtype  ( const type_t *self
+                                               , const type_t *is_subtype
+                                               );
+static const type_t *enum_type_is_supertype( const type_t *self
+                                               , const type_t *is_supertype
+                                               );
+static const tval   *enum_type_has_default (const type_t *self);
+
+const type_t enum_type_def =
+  { type_type
+
+    /* @: Required.           */
+
+  , /* memory                 */ MEMORY_TRACKER_DEFAULTS
+  , /* is_self_mutable        */ NULL
+  , /* @indirect              */ enum_type
+
+  , /* self                   */ NULL
+  , /* container              */ NULL
+
+  , /* typed                  */ type_is_untyped
+
+  , /* @name                  */ enum_type_name
+  , /* info                   */ NULL
+  , /* @size                  */ enum_type_size
+  , /* @is_struct             */ type_is_not_struct
+  , /* is_mutable             */ NULL
+  , /* is_subtype             */ enum_type_is_subtype
+  , /* is_supertype           */ enum_type_is_supertype
+
+  , /* cons_type              */ NULL
+  , /* init                   */ NULL
+  , /* free                   */ NULL
+  , /* has_default            */ enum_type_has_default
+  , /* mem                    */ NULL
+  , /* mem_init               */ NULL
+  , /* mem_is_dyn             */ NULL
+  , /* mem_free               */ NULL
+  , /* default_memory_manager */ NULL
+
+  , /* dup                    */ NULL
+
+  , /* user                   */ NULL
+  , /* cuser                  */ NULL
+  , /* cmp                    */ NULL
+
+  , /* parity                 */ ""
+  };
+
+static const char   *enum_type_name        (const type_t *self)
+  { return "enum_t"; }
+
+static size_t        enum_type_size        (const type_t *self, const tval *val)
+  { return sizeof(enum_t); }
+
+static const type_t *enum_type_is_subtype  ( const type_t *self
+                                           , const type_t *is_subtype
+                                           )
+{
+  const type_t *result;
+  if ((result = type_is_subtype(int_type(), is_subtype)))
+    return result;
+
+  return default_type_is_subtype(self, is_subtype);
+}
+
+static const type_t *enum_type_is_supertype( const type_t *self
+                                           , const type_t *is_supertype
+                                           )
+{
+  const type_t *result;
+  if ((result = type_is_supertype(int_type(), is_supertype)))
+    return result;
+
+  return default_type_is_supertype(self, is_supertype);
+}
+
+static const tval   *enum_type_has_default (const type_t *self)
+  { return &enum_default; }
+
+/* ---------------------------------------------------------------- */
+
+const enum_t enum_default =
+  ENUM_DEFAULT;
+
+/* ---------------------------------------------------------------- */
+
 /* Derived types. */
 
 /* array type. */
