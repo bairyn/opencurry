@@ -73,6 +73,100 @@
 /* Orderings: comparison descriptions.                              */
 /* ---------------------------------------------------------------- */
 
+/* ordering type. */
+
+const type_t *ordering_type(void)
+  { return &ordering_type_def; }
+
+static const char   *ordering_type_name        (const type_t *self);
+static size_t        ordering_type_size        (const type_t *self, const tval *val);
+static const type_t *ordering_type_is_subtype  ( const type_t *self
+                                               , const type_t *is_subtype
+                                               );
+static const type_t *ordering_type_is_supertype( const type_t *self
+                                               , const type_t *is_supertype
+                                               );
+static const tval   *ordering_type_has_default (const type_t *self);
+
+const type_t ordering_type_def =
+  { type_type
+
+    /* @: Required.           */
+
+  , /* memory                 */ MEMORY_TRACKER_DEFAULTS
+  , /* is_self_mutable        */ NULL
+  , /* @indirect              */ ordering_type
+
+  , /* self                   */ NULL
+  , /* container              */ NULL
+
+  , /* typed                  */ type_is_untyped
+
+  , /* @name                  */ ordering_type_name
+  , /* info                   */ NULL
+  , /* @size                  */ ordering_type_size
+  , /* @is_struct             */ type_is_not_struct
+  , /* is_mutable             */ NULL
+  , /* is_subtype             */ ordering_type_is_subtype
+  , /* is_supertype           */ ordering_type_is_supertype
+
+  , /* cons_type              */ NULL
+  , /* init                   */ NULL
+  , /* free                   */ NULL
+  , /* has_default            */ ordering_type_has_default
+  , /* mem                    */ NULL
+  , /* mem_init               */ NULL
+  , /* mem_is_dyn             */ NULL
+  , /* mem_free               */ NULL
+  , /* default_memory_manager */ NULL
+
+  , /* dup                    */ NULL
+
+  , /* user                   */ NULL
+  , /* cuser                  */ NULL
+  , /* cmp                    */ NULL
+
+  , /* parity                 */ ""
+  };
+
+static const char   *ordering_type_name        (const type_t *self)
+  { return "ordering_t"; }
+
+static size_t        ordering_type_size        (const type_t *self, const tval *val)
+  { return sizeof(ordering_t); }
+
+static const type_t *ordering_type_is_subtype  ( const type_t *self
+                                               , const type_t *is_subtype
+                                               )
+{
+  const type_t *result;
+  if ((result = type_is_subtype(int_type(), is_subtype)))
+    return result;
+
+  return default_type_is_subtype(self, is_subtype);
+}
+
+static const type_t *ordering_type_is_supertype( const type_t *self
+                                               , const type_t *is_supertype
+                                               )
+{
+  const type_t *result;
+  if ((result = type_is_supertype(int_type(), is_supertype)))
+    return result;
+
+  return default_type_is_supertype(self, is_supertype);
+}
+
+static const tval   *ordering_type_has_default (const type_t *self)
+  { return &ordering_default; }
+
+/* ---------------------------------------------------------------- */
+
+const ordering_t ordering_default =
+  ORDERING_DEFAULT;
+
+/* ---------------------------------------------------------------- */
+
 int ordering_err_1   (void)
 {
   return ORDERING_ERR_1;
@@ -133,8 +227,166 @@ ordering_relation_t ordering_relation(int ordering)
 }
 
 /* ---------------------------------------------------------------- */
+
+/* ordering relation type. */
+
+const type_t *ordering_relation_type(void)
+  { return &ordering_relation_type_def; }
+
+static const char   *ordering_relation_type_name        (const type_t *self);
+static size_t        ordering_relation_type_size        (const type_t *self, const tval *val);
+static const type_t *ordering_relation_type_is_supertype( const type_t *self
+                                                        , const type_t *is_supertype
+                                                        );
+static const tval   *ordering_relation_type_has_default (const type_t *self);
+
+const type_t ordering_relation_type_def =
+  { type_type
+
+    /* @: Required.           */
+
+  , /* memory                 */ MEMORY_TRACKER_DEFAULTS
+  , /* is_self_mutable        */ NULL
+  , /* @indirect              */ ordering_relation_type
+
+  , /* self                   */ NULL
+  , /* container              */ NULL
+
+  , /* typed                  */ type_is_untyped
+
+  , /* @name                  */ ordering_relation_type_name
+  , /* info                   */ NULL
+  , /* @size                  */ ordering_relation_type_size
+  , /* @is_struct             */ type_is_not_struct
+  , /* is_mutable             */ NULL
+  , /* is_subtype             */ ordering_relation_type_is_subtype
+  , /* is_supertype           */ ordering_relation_type_is_supertype
+
+  , /* cons_type              */ NULL
+  , /* init                   */ NULL
+  , /* free                   */ NULL
+  , /* has_default            */ ordering_relation_type_has_default
+  , /* mem                    */ NULL
+  , /* mem_init               */ NULL
+  , /* mem_is_dyn             */ NULL
+  , /* mem_free               */ NULL
+  , /* default_memory_manager */ NULL
+
+  , /* dup                    */ NULL
+
+  , /* user                   */ NULL
+  , /* cuser                  */ NULL
+  , /* cmp                    */ NULL
+
+  , /* parity                 */ ""
+  };
+
+static const char   *ordering_relation_type_name        (const type_t *self)
+  { return "ordering_relation_t"; }
+
+static size_t        ordering_relation_type_size        (const type_t *self, const tval *val)
+  { return sizeof(ordering_relation_t); }
+
+static const type_t *ordering_relation_type_is_supertype( const type_t *self
+                                                        , const type_t *is_supertype
+                                                        )
+{
+  const type_t *result;
+  if ((result = type_is_supertype(enum_type(), is_supertype)))
+    return result;
+
+  return default_type_is_supertype(self, is_supertype);
+}
+
+static const tval   *ordering_relation_type_has_default (const type_t *self)
+  { return &ordering_relation_default; }
+
+/* ---------------------------------------------------------------- */
+
+const ordering_relation_t ordering_relation_default =
+  ORDERING_RELATION_DEFAULT;
+
+/* ---------------------------------------------------------------- */
 /* Comparers.                                                       */
 /* ---------------------------------------------------------------- */
+
+/* comparer type. */
+
+const type_t *comparer_type(void)
+  { return &comparer_type_def; }
+
+static const char          *comparer_type_name         (const type_t *self);
+static size_t               comparer_type_size         (const type_t *self, const tval *val);
+static const type_t        *comparer_type_is_supertype ( const type_t *self
+                                                       , const type_t *is_supertype
+                                                       );
+static const tval          *comparer_type_has_default  (const type_t *self);
+
+const type_t comparer_type_def =
+  { type_type
+
+    /* @: Required.           */
+
+  , /* memory                 */ MEMORY_TRACKER_DEFAULTS
+  , /* is_self_mutable        */ NULL
+  , /* @indirect              */ comparer_type
+
+  , /* self                   */ NULL
+  , /* container              */ NULL
+
+  , /* typed                  */ type_is_untyped
+
+  , /* @name                  */ comparer_type_name
+  , /* info                   */ NULL
+  , /* @size                  */ comparer_type_size
+  , /* @is_struct             */ type_is_not_struct
+  , /* is_mutable             */ NULL
+  , /* is_subtype             */ NULL
+  , /* is_supertype           */ comparer_type_is_supertype
+
+  , /* cons_type              */ NULL
+  , /* init                   */ NULL
+  , /* free                   */ NULL
+  , /* has_default            */ comparer_type_has_default
+  , /* mem                    */ NULL
+  , /* mem_init               */ NULL
+  , /* mem_is_dyn             */ NULL
+  , /* mem_free               */ NULL
+  , /* default_memory_manager */ NULL
+
+  , /* dup                    */ NULL
+
+  , /* user                   */ NULL
+  , /* cuser                  */ NULL
+  , /* cmp                    */ NULL
+
+  , /* parity                 */ ""
+  };
+
+static const char          *comparer_type_name         (const type_t *self)
+  { return "comparer_t"; }
+
+static size_t               comparer_type_size         (const type_t *self, const tval *val)
+  { return sizeof(comparer_t); }
+
+static const type_t        *comparer_type_is_supertype ( const type_t *self
+                                                       , const type_t *is_supertype
+                                                       )
+{
+  const type_t *result;
+  if ((result = type_is_supertype(funp_type(), is_supertype)))
+    return result;
+
+  return default_type_is_supertype(self, is_supertype);
+}
+
+static const tval          *comparer_type_has_default  (const type_t *self)
+  { return &comparer_default; }
+
+/* ---------------------------------------------------------------- */
+
+const comparer_t comparer_default =
+  COMPARER_DEFAULT;
 
 /* ---------------------------------------------------------------- */
 /* Various comparers.                                               */

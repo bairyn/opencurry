@@ -2721,6 +2721,18 @@ const type_t *is_proper_supertype(const type_t *super, const type_t *sub)
 
 /* ---------------------------------------------------------------- */
 
+int cmp_with_type_deep(const type_t *type, const tval *check, const tval *baseline, int deep)
+{
+  return type_cmp(type, check, baseline, deep, NULL);
+}
+
+int cmp_with_type     (const type_t *type, const tval *check, const tval *baseline);
+{
+  return cmp_with_type_deep(type, check, baseline, CMP_WITH_TYPE_DEFAULT_DEEP);
+}
+
+/* ---------------------------------------------------------------- */
+
 /*
  * "type_t" accessors for typed "tval"s.
  *

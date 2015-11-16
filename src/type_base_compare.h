@@ -61,7 +61,15 @@
 /* Orderings: comparison descriptions.                              */
 /* ---------------------------------------------------------------- */
 
+const type_t *ordering_type(void);
 typedef signed int ordering_t;
+extern const type_t ordering_type_def;
+
+#define ORDERING_DEFAULT  \
+  0
+extern const ordering_t ordering_default;
+
+/* ---------------------------------------------------------------- */
 
 #if 0
 #define ORDERING_ERR_1    ((int) -0x37ED)
@@ -98,7 +106,10 @@ int ordering_lt(void);
 int ordering_eq(void);
 int ordering_gt(void);
 
+/* ---------------------------------------------------------------- */
 
+const type_t *ordering_relation_type(void);
+extern const type_t ordering_relation_type_def;
 enum ordering_relation_e
 {
   ordering_lt    = ORDERING_LT,
@@ -111,6 +122,12 @@ enum ordering_relation_e
   ordering_stop
 };
 typedef enum ordering_relation_e ordering_relation_t;
+
+#define ORDERING_RELATION_DEFAULT  \
+  ordering_eq
+extern const ordering_relation_t ordering_relation_default;
+
+/* ---------------------------------------------------------------- */
 
 #define ORDERING_RELATION(ordering) \
   ( (IS_ORDERING_ERROR((ordering))) \
@@ -128,13 +145,22 @@ ordering_relation_t ordering_relation(int ordering);
 /* Comparers.                                                       */
 /* ---------------------------------------------------------------- */
 
+const type_t *comparer_type(void);
+extern const type_t comparer_type_def;
+
 typedef int (*comparer_t)(void *context, const void *check, const void *baseline);
+
+#define COMPARER_DEFAULT  \
+  compare_objp
+extern const comparer_t comparer_default;
+
+/* ---------------------------------------------------------------- */
 
 /* TODO: once type_fun is written, make this a subtype, in the .c file, of
  * "callback", which is pretty much the same but has just "funp_t" instead!
  */
-typedef struct cmp_callback_s cmp_callback_t;
-struct cmp_callback_s
+typedef struct compare_callback_s compare_callback_t;
+struct compare_callback_s
 {
   comparer_t  comparer;
   void       *comparer_context;

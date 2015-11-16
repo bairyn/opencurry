@@ -40,6 +40,8 @@
 #include "../type_base_memory_manager.h"
 #include "../type_base_type.h"
 
+/* TODO: tests for bnode_t too, in addition to lookup_t tests. */
+
 int test_type_base_lookup_cli(int argc, char **argv)
 {
   return run_test_suite(type_base_lookup_test);
@@ -110,16 +112,39 @@ static void init_memory_methods(void)
 
 /* ---------------------------------------------------------------- */
 
-static int cmp_int_fun(void *context, int *check, int *baseline)
+static int cmp_int_fun(void *context, const int *check, const int *baseline)
 {
   return *check - *baseline;
 }
 
-static const compare_t cmp_int         = (compare_t) &cmp_int_fun;
-static void * const    cmp_int_context = NULL;
+static const comparer_t cmp_int         = (comparer_t) &cmp_int_fun;
+static void * const     cmp_int_context = NULL;
 
-#define LOOKUP_INSERT_CONTROLLED(lookup, val, add_when_exists, out_already_exists, out_no_space) \
-  lookup_insert_controlled(lookup, val, add_when_exists, cmp_int, cmp_int_context, out_already_exists, out_no_space)
+#define LOOKUP_INSERT_CONTROLLED(lookup, val, add_when_exists, out_already_exists, out_max_capacity) \
+  lookup_insert_controlled(lookup, val, add_when_exists, cmp_int, cmp_int_context, out_already_exists, out_max_capacity)
+
+/* ---------------------------------------------------------------- */
+
+#ifdef TODO
+#define INIT() init(context, lookup)
+static unit_test_result_t init(unit_test_context_t *context, lookup_t *lookup)
+{
+  /* TODO */
+}
+
+#define EXPAND(capacity) expand(context, lookup, capacity)
+static unit_test_result_t expand(unit_test_context_t *context, lookup_t *lookup, size_t capacity)
+{
+  /* TODO */
+}
+
+#define INSERT_CONTROLLED(val, add_when_exists, out_already_exists, out_max_capacity) \
+  insert_controlled(context, lookup, val, add_when_exists, out_already_exists, out_max_capacity)
+static unit_test_result_t insert_controlled(unit_test_context_t *context, lookup_t *lookup, size_t capacity)
+{
+  /* TODO */
+}
+#endif /* #ifdef TODO */
 
 /* ---------------------------------------------------------------- */
 
@@ -228,7 +253,39 @@ unit_test_result_t lookup_insert_test_run(unit_test_context_t *context)
 
   ENCLOSE()
   {
-    MASSERT2( inteq, "empty", lookup_num(lookup), 0);
+    value_type value;
+
+    int already_exists = -1;
+    int max_capacity   = -1;
+
+    value_type *val = &value;
+    int *ae = &already_exists;
+    int *mc = &max_capacity;
+
+    MASSERT2( inteq, "0null",  lookup_num(lookup), 0);
+    MASSERT1( true,   "#0",    lookup_empty(lookup));
+
+    /* ---------------------------------------------------------------- */
+
+    /* 0-size lookup insertion. */
+
+    value = 42;
+    MASSERT2( objpeq, "0", LOOKUP_INSERT_CONTROLLED(lookup, val, 0, ae, mc), NULL);
+    MASSERT2( inteq,  "0", already_exists, 0);
+    MASSERT2( inteq,  "0", no_space,       1);
+
+    /* ---------------------------------------------------------------- */
+
+    /* 3-size lookup insertion. */
+
+    MASSERT2( objpeq, "3",     LOOKUP_EXPAND(lookup, 3), &lookup_val);
+    MASSERT2( inteq,  "3",     lookup_num(lookup), 3);
+    MASSERT1( true,   "#1",    lookup_empty(lookup));
+
+    value = 42;
+    MASSERT2( objpeq, "0", LOOKUP_INSERT_CONTROLLED(lookup, val, 0, ae, mc), &lookup_val);
+    MASSERT2( inteq,  "0", already_exists, 0);
+    MASSERT2( inteq,  "0", no_space,       0);
 
     /* TODO */
   }

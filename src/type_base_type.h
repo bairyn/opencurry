@@ -53,6 +53,13 @@
  */
 
 /* ---------------------------------------------------------------- */
+
+/* Infinite loop cycles are handled. */
+#define DEEP_RECURSE()                (1)
+#define DEEP_NORECURSE()              (0)
+#define DEEP_RECURSE_LIMIT(max_depth) (-(max_depth))
+
+/* ---------------------------------------------------------------- */
 /* type_t                                                           */
 /* ---------------------------------------------------------------- */
 
@@ -1172,6 +1179,11 @@ const type_t *is_proper_subtype(const type_t *sub, const type_t *super);
 const type_t *is_supertype(const type_t *super, const type_t *sub);
 const type_t *is_supertype_via(const type_t *super, const type_t *mid, const type_t *sub);
 const type_t *is_proper_supertype(const type_t *super, const type_t *sub);
+
+#define CMP_WITH_TYPE_DEFAULT_DEEP (DEEP_RECURSE())
+
+int cmp_with_type_deep(const type_t *type, const tval *check, const tval *baseline, int deep);
+int cmp_with_type     (const type_t *type, const tval *check, const tval *baseline);
 
 /* ---------------------------------------------------------------- */
 

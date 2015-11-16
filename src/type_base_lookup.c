@@ -32,11 +32,13 @@
 
 /* stddef.h:
  *   - NULL
+ *   - ptrdiff_t
  *   - size_t
  */
 #include <stddef.h>
 
 /* string.h:
+ *   - memmove
  *   - memset
  */
 #include <string.h>
@@ -46,6 +48,7 @@
 #include "type_base_lookup.h"
 
 #include "type_base_typed.h"
+#include "type_base_tval.h"
 #include "type_base_memory_tracker.h"
 #ifdef TODO
 #error "TODO: #include primitive c data types"
@@ -53,6 +56,8 @@
 #include "type_base.h"
 #endif /* #ifdef TODO */
 #include "type_base_type.h"
+
+#include "ptrs.h"
 
 #include "util.h"
 
@@ -208,8 +213,8 @@ static const struct_info_t *lookup_type_is_struct  (const type_t *self)
     /* typed_t type; */
     STRUCT_INFO_RADD(typed_type(), type);
 
-    /* size_t   num; */
-    STRUCT_INFO_RADD(size_type(),  num);
+    /* size_t   capacity; */
+    STRUCT_INFO_RADD(size_type(),  capacity);
 
     /* void    *values;     */
     /* size_t   value_size; */
@@ -259,6 +264,75 @@ void bnode_init_array(bnode_t *bnode, size_t num)
 }
 
 /* ---------------------------------------------------------------- */
+
+/* bnode_t field constructors. */
+
+/* Construct values for the "value" field. */
+
+size_t bnode_black_value(size_t index)
+{
+  return BNODE_BLACK_VALUE  (index);
+}
+
+size_t bnode_red_value  (size_t index)
+{
+  return BNODE_RED_VALUE    (index);
+}
+
+size_t bnode_colored_value(size_t index, size_t color)
+{
+  return BNODE_COLORED_VALUE(index, color);
+}
+
+/* Construct values for the "left" and "right" fields. */
+
+size_t bnode_leaf (void)
+{
+  return BNODE_LEAF         ();
+}
+
+size_t bnode_child(size_t index)
+{
+  return BNODE_CHILD        (index);
+}
+
+/* ---------------------------------------------------------------- */
+
+/* bnode_t field interpretors. */
+
+size_t bnode_get_color(size_t value)
+{
+  return BNODE_GET_COLOR(value);
+}
+
+int    bnode_is_black (size_t value)
+{
+  return BNODE_IS_BLACK (value);
+}
+
+int    bnode_is_red   (size_t value)
+{
+  return BNODE_IS_RED   (value);
+}
+
+
+size_t bnode_get_value(size_t value)
+{
+  return BNODE_GET_VALUE(value);
+}
+
+
+int    bnode_is_leaf  (size_t ref)
+{
+  return BNODE_IS_LEAF  (ref);
+}
+
+size_t bnode_get_child(size_t ref)
+{
+  return BNODE_GET_CHILD(ref);
+}
+
+/* ---------------------------------------------------------------- */
 /* lookup_t methods.                                                */
 /* ---------------------------------------------------------------- */
 
@@ -274,7 +348,7 @@ void lookup_init_empty(lookup_t *lookup, size_t value_size)
 
   lookup->type       = lookup_type;
 
-  lookup->num        = 0;
+  lookup->capacity   = 0;
 
   lookup->values     = NULL;
   lookup->value_size = value_size;
@@ -297,7 +371,7 @@ void lookup_deinit
     return;
 #endif /* #if ERROR_CHECKING  */
 
-  if (lookup->num <= 0)
+  if (lookup->capacity <= 0)
     return;
 
 #if ERROR_CHECKING
@@ -311,27 +385,82 @@ void lookup_deinit
 
   free(free_context, lookup->values);
   free(free_context, lookup->order);
+  lookup->values = 0;
+  lookup->order  = 0;
 
   lookup->num = 0;
+
+  lookup->len = 0;
 }
 
-/* Does lookup not have any used values? */
-int lookup_empty(const lookup_t *lookup)
+/* ---------------------------------------------------------------- */
+
+/* How many elements can this lookup tree contain? */
+size_t lookup_capacity(const lookup_t *lookup)
 {
-  return lookup_len(lookup) <= 0;
+#if ERROR_CHECKING
+  if (!lookup)
+    return 0;
+#endif /* #if ERROR_CHECKING  */
+
+  return LOOKUP_CAPACITY(lookup);
 }
 
-/* Get the number of element slots. */
-size_t lookup_num(const lookup_t *lookup)
+/* Does this lookup container have no memory allocated for elements? */
+int    lookup_null    (const lookup_t *lookup)
 {
-  return lookup->num;
+#if ERROR_CHECKING
+  if (!lookup)
+    return -1;
+#endif /* #if ERROR_CHECKING  */
+
+  return LOOKUP_CAPACITY(lookup) <= 0;
 }
 
-/* Get the number of used element slots. */
-size_t lookup_len(const lookup_t *lookup)
+/* ---------------------------------------------------------------- */
+
+/* How many elements does "lookup" contain? */
+size_t lookup_len     (const lookup_t *lookup)
 {
-  return lookup->len;
+#if ERROR_CHECKING
+  if (!lookup)
+    return 0;
+#endif /* #if ERROR_CHECKING  */
+
+  return LOOKUP_LEN(lookup);
 }
+
+/* Does "lookup" contain no elements? */
+int    lookup_empty   (const lookup_t *lookup)
+{
+#if ERROR_CHECKING
+  if (!lookup)
+    return -1;
+#endif /* #if ERROR_CHECKING  */
+
+  return LOOKUP_LEN(lookup) <= 0;
+}
+
+/* ---------------------------------------------------------------- */
+
+int    lookup_max_capacity(const lookup_t *lookup)
+{
+#if ERROR_CHECKING
+  if (!lookup)
+    return -1;
+#endif /* #if ERROR_CHECKING  */
+
+  return LOOKUP_LEN(lookup) >= LOOKUP_CAPACITY(lookup);
+}
+
+/* ---------------------------------------------------------------- */
+
+size_t lookup_value_size(const lookup_t *lookup)
+{
+  return LOOKUP_VALUE_SIZE(lookup);
+}
+
+/* ---------------------------------------------------------------- */
 
 /* Allocate more memory for additional element slots. */
 /*                                                    */
@@ -339,7 +468,7 @@ size_t lookup_len(const lookup_t *lookup)
 /* the lookup value's element-based size.             */
 lookup_t *lookup_expand
   ( lookup_t *lookup
-  , size_t    num
+  , size_t    capacity
 
   , void *(*calloc)(void *context, size_t nmemb, size_t size)
   , void   *calloc_context
@@ -348,18 +477,18 @@ lookup_t *lookup_expand
   , void   *realloc_context
   )
 {
-  size_t old_num;
+  size_t old_capacity;
 
 #if ERROR_CHECKING
   if (!lookup)
     return NULL;
 #endif /* #if ERROR_CHECKING  */
 
-  old_num = lookup_num(lookup);
-  if (num <= old_num)
+  old_capacity = LOOKUP_CAPACITY(lookup);
+  if (capacity <= old_capacity)
     return lookup;
 
-  if (old_num <= 0)
+  if (old_capacity <= 0)
   {
 #if ERROR_CHECKING
     if (!calloc)
@@ -370,29 +499,29 @@ lookup_t *lookup_expand
       return NULL;
 #endif /* #if ERROR_CHECKING  */
 
-    lookup->values = calloc(calloc_context, num, lookup->value_size);
+    lookup->values = calloc(calloc_context, capacity, lookup->value_size);
     if (!lookup->values)
     {
-      lookup->order = NULL;
-      lookup->num   = 0;
+      lookup->order    = NULL;
+      lookup->capacity = 0;
 
       return NULL;
     }
 
-    lookup->order  = calloc(calloc_context, num, sizeof(bnode_t));
+    lookup->order  = calloc(calloc_context, capacity, sizeof(bnode_t));
     if (!lookup->order)
     {
-      lookup->values = NULL;
-      lookup->num    = 0;
+      lookup->values   = NULL;
+      lookup->capacity = 0;
 
       return NULL;
     }
 
     /* ---------------------------------------------------------------- */
 
-    lookup->num = num;
+    lookup->capacity = capacity;
 
-    bnode_init_array(lookup->order, num);
+    bnode_init_array(lookup->order, capacity);
 
     return lookup;
   }
@@ -407,27 +536,27 @@ lookup_t *lookup_expand
       return NULL;
 #endif /* #if ERROR_CHECKING  */
 
-    lookup->values = realloc(realloc_context, lookup->values, num * lookup->value_size);
+    lookup->values = realloc(realloc_context, lookup->values, capacity * lookup->value_size);
     if (!lookup->values)
     {
-      lookup->order = NULL;
-      lookup->num   = 0;
+      lookup->order    = NULL;
+      lookup->capacity = 0;
 
       return NULL;
     }
 
-    lookup->order  = realloc(realloc_context, lookup->order,  num * sizeof(bnode_t));
+    lookup->order  = realloc(realloc_context, lookup->order,  capacity * sizeof(bnode_t));
     if (!lookup->order)
     {
-      lookup->values = NULL;
-      lookup->num    = 0;
+      lookup->values   = NULL;
+      lookup->capacity = 0;
 
       return NULL;
     }
 
-    lookup->num = num;
+    lookup->capacity = capacity;
 
-    bnode_init_array(lookup->order + old_num, size_minus(num, old_num));
+    bnode_init_array(lookup->order + old_capacity, size_minus(capacity, old_capacity));
 
     return lookup;
   }
@@ -437,16 +566,16 @@ lookup_t *lookup_expand
 /* Move elements to remove gaps of free element slots. */
 void lookup_defragment(lookup_t *lookup);
 
-/* Reallocate less memory for fewer element slots. */
-/*                                                 */
-/* "num" is bounded by the last used element slot. */
-/* This does not defragment.                       */
-/*                                                 */
-/* Does nothing with a "num" argument larger than  */
-/* the lookup value's element-based size.          */
+/* Reallocate less memory for fewer element slots.      */
+/*                                                      */
+/* "capacity" is bounded by the last used element slot. */
+/* This does not defragment.                            */
+/*                                                      */
+/* Does nothing with a "num" argument larger than       */
+/* the lookup value's element-based size.               */
 lookup_t *lookup_shrink
   ( lookup_t *lookup
-  , size_t    num
+  , size_t    capacity
 
   , void *(*realloc)(void *context, void *area, size_t size)
   , void   *realloc_context
@@ -464,7 +593,7 @@ lookup_t *lookup_shrink
 /* existing elements will occur.                          */
 lookup_t *lookup_resize
   ( lookup_t *lookup
-  , size_t    num
+  , size_t    capacity
 
   , void *(*calloc)(void *context, size_t nmemb, size_t size)
   , void   *calloc_context
@@ -476,26 +605,26 @@ lookup_t *lookup_resize
   , void   *free_context
   )
 {
-  size_t old_num;
+  size_t old_capacity;
 
 #if ERROR_CHECKING
   if (!lookup)
     return NULL;
 #endif /* #if ERROR_CHECKING  */
 
-  old_num = lookup_num(lookup);
+  old_capacity = LOOKUP_CAPACITY(lookup);
 
-  if (num < old_num)
+  if (capacity < old_capacity)
   {
     lookup_defragment(lookup);
 
     return lookup_shrink
-      (lookup, num, realloc, realloc_context, free,    free_context);
+      (lookup, capacity, realloc, realloc_context, free,    free_context);
   }
-  else if (num > old_num)
+  else if (capacity > old_capacity)
   {
     return lookup_expand
-      (lookup, num, calloc,  calloc_context,  realloc, realloc_context);
+      (lookup, capacity, calloc,  calloc_context,  realloc, realloc_context);
   }
   else
   {
@@ -503,20 +632,133 @@ lookup_t *lookup_resize
   }
 }
 
+#endif /* #ifdef TODO /-* TODO *-/ */
+
 /* ---------------------------------------------------------------- */
 
-lookup_t *lookup_insert_controlled
-  ( lookup_t  *lookup
-  , void      *val
-  , int        add_when_exists
-
-  , compare_t  cmp
-  , void      *cmp_context
-
-  , int       *out_already_exists
-  , int       *out_no_space
-  )
+void    *lookup_index_value(lookup_t *lookup, size_t index)
 {
+  return LOOKUP_INDEX_VALUE(lookup, index);
 }
 
-#endif /* #ifdef TODO /-* TODO *-/ */
+bnode_t *lookup_index_order(lookup_t *lookup, size_t index)
+{
+  return LOOKUP_INDEX_ORDER(lookup, index);
+}
+
+/* ---------------------------------------------------------------- */
+
+/*
+ * TODO
+ *
+ * If the tree reaches maximum capacity, enable out_max_capacity.
+ *
+ * If there is no space to insert a value, enable out_max_capacity and return
+ * NULL.
+ */
+lookup_t *lookup_insert_controlled
+  ( lookup_t   *lookup
+  , const void *val
+  , int         add_when_exists
+
+  , compare_t   cmp
+  , void       *cmp_context
+
+  , int        *out_already_exists
+  , int        *out_max_capacity
+  )
+{
+  size_t   capacity;
+
+  size_t   value;
+  size_t   node;
+
+  void    *dest;
+  bnode_t *cur;
+
+#if ERROR_CHECKING
+  if (!lookup)
+    return NULL;
+#endif /* #if ERROR_CHECKING  */
+
+  /* Is a value provided? */
+  if (!val)
+  {
+    WRITE_OUTPUT(out_already_exists, 0);
+    WRITE_OUTPUT(out_max_capacity,   lookup_max_capacity(lookup));
+
+    return NULL;
+  }
+
+  /* Are we inserting the first element? */
+  if (lookup_empty(lookup))
+  {
+    capacity = lookup_capacity(lookup);
+
+    /* Do we have space? */
+    if (capacity <= 0)
+    {
+      WRITE_OUTPUT(out_already_exists, 0);
+      WRITE_OUTPUT(out_max_capacity,   1);
+      return NULL;
+    }
+
+    /* ---------------------------------------------------------------- */
+
+    /* Set indices. */
+    value = 0;
+    node  = 0;
+    dest = LOOKUP_INDEX_VALUE(lookup, value);
+    cur  = LOOKUP_INDEX_ORDER(lookup, value);
+
+    /* Write the value. */
+    memmove(dest, val, LOOKUP_VALUE_SIZE(lookup));
+
+    /* Write the node. */
+    cur->value = BNODE_BLACK_VALUE(value);
+    cur->left  = BNODE_LEAF();
+    cur->right = BNODE_LEAF();
+
+    /* Update len. */
+    ++lookup->len;
+
+    /* Write output. */
+    WRITE_OUTPUT(out_already_exists, 0);
+    WRITE_OUTPUT(out_max_capacity,   lookup_max_capacity(lookup));
+
+    /* Success. */
+    return lookup;
+  }
+  else
+  {
+#if ERROR_CHECKING
+    if (!cmp)
+      return NULL;
+#endif /* #if ERROR_CHECKING  */
+
+    /* Traverse our binary search tree: */
+    /*                                  */
+    /* Find the first equivalent node,  */
+    /* or the first in-order leaf.      */
+    value = 0;
+    node  = 0;
+    dest  = LOOKUP_INDEX_VALUE(lookup, value);
+    cur   = LOOKUP_INDEX_ORDER(lookup, value);
+    for (;;)
+    {
+      int ordering;
+
+      ordering = cmp(cmp_context, val, dest);
+
+      if ()
+      {
+      }
+    }
+  }
+
+  /* TODO */
+  *out_already_exists = 0;
+  *out_max_capacity   = 0;
+
+  return lookup;
+}

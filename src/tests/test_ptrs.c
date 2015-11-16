@@ -48,6 +48,9 @@ int test_ptrs_cli(int argc, char **argv)
   return run_test_suite(ptrs_test);
 }
 
+/* TODO: use sizeof to test large values, and to test size equality! */
+/* TODO: size equality should be checked somehow in "ptrs" anyway, I think. */
+
 /* ---------------------------------------------------------------- */
 
 /* ptrs tests. */

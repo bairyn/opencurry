@@ -41,11 +41,15 @@
 #define TYPE_BASE_LOOKUP_H
 /* stddef.h:
  *   - NULL
+ *   - ptrdiff_t
  *   - size_t
  */
 #include <stddef.h>
 
 #include "base.h"
+
+#include "ptrs.h"
+#include "bits.h"
 
 /* ---------------------------------------------------------------- */
 /* Dependencies.                                                    */
@@ -53,10 +57,15 @@
 
 #include "type_base_prim.h"
 #include "type_base_typed.h"
+#include "type_base_tval.h"
+#include "type_base_compare.h"
 
 /* ---------------------------------------------------------------- */
 /* lookup_t and children.                                           */
 /* ---------------------------------------------------------------- */
+
+#define BNODE_BLACK_BIT 0
+#define BNODE_RED_BIT   1
 
 const type_t *bnode_type(void);
 extern const type_t bnode_type_def;
@@ -81,6 +90,8 @@ struct bnode_s
   }
 extern const bnode_t bnode_defaults;
 
+/* ---------------------------------------------------------------- */
+
 /* A self-balancing binary search tree. */
 const type_t *lookup_type(void);
 extern const type_t lookup_type_def;
@@ -90,7 +101,7 @@ struct lookup_s
   typed_t type;
 
   /* Size of each array in terms of element sizes. */
-  size_t   num;
+  size_t   capacity;
 
   void    *values;
   size_t   value_size;
@@ -103,7 +114,7 @@ struct lookup_s
 #define LOOKUP_DEFAULTS   \
   { lookup_type           \
                           \
-  , /* num        */ 0    \
+  , /* capacity   */ 0    \
                           \
   , /* values     */ NULL \
   , /* value_size */ 0    \
@@ -120,25 +131,78 @@ void bnode_init(bnode_t *bnode);
 void bnode_init_array(bnode_t *bnode, size_t num);
 
 /* ---------------------------------------------------------------- */
+
+/* bnode_t field constructors. */
+
+/* Construct values for the "value" field. */
+#define BNODE_BLACK_VALUE( index)         ((index << 1) | (BNODE_BLACK_BIT))
+#define BNODE_RED_VALUE(   index)         ((index << 1) | (BNODE_RED_BIT)  )
+#define BNODE_COLORED_VALUE(index, color) ((index << 1) | (color)          )
+size_t bnode_black_value  (size_t index);
+size_t bnode_red_value    (size_t index);
+size_t bnode_colored_value(size_t index, size_t color);
+
+/* Construct values for the "left" and "right" fields. */
+#define BNODE_LEAF()       (0)
+#define BNODE_CHILD(index) ((index) + 1)
+size_t bnode_leaf (void);
+size_t bnode_child(size_t index);
+
+/* ---------------------------------------------------------------- */
+
+/* bnode_t field interpretors. */
+
+#define BNODE_GET_COLOR(value) ((value) & 1)
+#define BNODE_IS_BLACK(value) ((BNODE_GET_COLOR(value)) ^ (BNODE_RED_BIT))
+#define BNODE_IS_RED(  value) ((BNODE_GET_COLOR(value)) ^ (BNODE_BLACK_BIT))
+size_t bnode_get_color(size_t value);
+int    bnode_is_black (size_t value);
+int    bnode_is_red   (size_t value);
+
+#define BNODE_GET_VALUE(value) ((value) >> 1)
+size_t bnode_get_value(size_t value);
+
+#define BNODE_IS_LEAF(  ref) (!(ref))
+#define BNODE_GET_CHILD(ref) ((ref) - 1)
+int    bnode_is_leaf  (size_t ref);
+size_t bnode_get_child(size_t ref);
+
+/* ---------------------------------------------------------------- */
 /* lookup_t methods.                                                */
 /* ---------------------------------------------------------------- */
 
-void      lookup_init_empty(lookup_t *lookup, size_t value_size);
-void      lookup_deinit
+void lookup_init_empty(lookup_t *lookup, size_t value_size);
+void lookup_deinit
   ( lookup_t *lookup
 
   , void  (*free)(void *context, void *area)
   , void   *free_context
   );
 
-size_t    lookup_num  (const lookup_t *lookup);
+/* ---------------------------------------------------------------- */
 
-int       lookup_empty(const lookup_t *lookup);
-size_t    lookup_len  (const lookup_t *lookup);
+/* Capacity of the lookup tree. */
+#define LOOKUP_CAPACITY(lookup) ((lookup)->capacity)
+size_t lookup_capacity    (const lookup_t *lookup);
+int    lookup_null        (const lookup_t *lookup);
+
+/* Number of elements contained in the lookup tree. */
+#define LOOKUP_LEN(lookup) ((lookup)->len)
+size_t lookup_len         (const lookup_t *lookup);
+int    lookup_empty       (const lookup_t *lookup);
+
+int    lookup_max_capacity(const lookup_t *lookup);
+
+/* ---------------------------------------------------------------- */
+
+#define LOOKUP_VALUE_SIZE(lookup) ((lookup)->value_size)
+size_t lookup_value_size(const lookup_t *lookup);
+
+/* ---------------------------------------------------------------- */
 
 lookup_t *lookup_expand
   ( lookup_t *lookup
-  , size_t    num
+  , size_t    capacity
 
   , void *(*calloc)(void *context, size_t nmemb, size_t size)
   , void   *calloc_context
@@ -151,7 +215,7 @@ lookup_t *lookup_expand
 void      lookup_defragment(lookup_t *lookup);
 lookup_t *lookup_shrink
   ( lookup_t *lookup
-  , size_t    num
+  , size_t    capacity
 
   , void *(*realloc)(void *context, void *area, size_t size)
   , void   *realloc_context
@@ -162,7 +226,7 @@ lookup_t *lookup_shrink
 
 lookup_t *lookup_resize
   ( lookup_t *lookup
-  , size_t    num
+  , size_t    capacity
 
   , void *(*calloc)(void *context, size_t nmemb, size_t size)
   , void   *calloc_context
@@ -177,21 +241,24 @@ lookup_t *lookup_resize
 
 /* ---------------------------------------------------------------- */
 
-typedef int (*compare_t)(void *context, void *check, void *baseline);
-
-lookup_t *lookup_insert_controlled
-  ( lookup_t  *lookup
-  , void      *val
-  , int        add_when_exists
-
-  , compare_t  cmp
-  , void      *cmp_context
-
-  , int       *out_already_exists
-  , int       *out_no_space
-  );
+#define LOOKUP_INDEX_VALUE(lookup, index) ((void *) (((unsigned char *) ((lookup)->values)) + ((ptrdiff_t) ((lookup)->value_size * (index)))))
+#define LOOKUP_INDEX_ORDER(lookup, index) (&(lookup)->order[(index)])
+void    *lookup_index_value(lookup_t *lookup, size_t index);
+bnode_t *lookup_index_order(lookup_t *lookup, size_t index);
 
 /* ---------------------------------------------------------------- */
+
+lookup_t *lookup_insert_controlled
+  ( lookup_t   *lookup
+  , const void *val
+  , int         add_when_exists
+
+  , comparer_t  cmp
+  , void       *cmp_context
+
+  , int        *out_already_exists
+  , int        *out_max_capacity
+  );
 
 /* ---------------------------------------------------------------- */
 /* Post-dependencies.                                               */
