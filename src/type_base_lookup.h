@@ -249,15 +249,14 @@ bnode_t *lookup_index_order(lookup_t *lookup, size_t index);
 /* ---------------------------------------------------------------- */
 
 lookup_t *lookup_insert_controlled
-  ( lookup_t   *lookup
-  , const void *val
-  , int         add_when_exists
+  ( lookup_t           *lookup
+  , const void         *val
+  , int                 add_when_exists
 
-  , comparer_t  cmp
-  , void       *cmp_context
+  , callback_compare_t  cmp
 
-  , int        *out_already_exists
-  , int        *out_max_capacity
+  , int                *out_already_exists
+  , int                *out_max_capacity
   );
 
 /* ---------------------------------------------------------------- */

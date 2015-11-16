@@ -658,15 +658,14 @@ bnode_t *lookup_index_order(lookup_t *lookup, size_t index)
  * NULL.
  */
 lookup_t *lookup_insert_controlled
-  ( lookup_t   *lookup
-  , const void *val
-  , int         add_when_exists
+  ( lookup_t           *lookup
+  , const void         *val
+  , int                 add_when_exists
 
-  , compare_t   cmp
-  , void       *cmp_context
+  , callback_compare_t  cmp
 
-  , int        *out_already_exists
-  , int        *out_max_capacity
+  , int                *out_already_exists
+  , int                *out_max_capacity
   )
 {
   size_t   capacity;
@@ -733,10 +732,12 @@ lookup_t *lookup_insert_controlled
   else
   {
 #if ERROR_CHECKING
-    if (!cmp)
+    if (!cmp.comparer)
       return NULL;
 #endif /* #if ERROR_CHECKING  */
 
+node = 0;
+WRITE_OUTPUT(out_already_exists, node); /* TODO */
     /* Traverse our binary search tree: */
     /*                                  */
     /* Find the first equivalent node,  */
@@ -749,7 +750,7 @@ lookup_t *lookup_insert_controlled
     {
       int ordering;
 
-      ordering = cmp(cmp_context, val, dest);
+      ordering = call_callback_compare(cmp, val, dest);
 
       if (ordering)
       {
