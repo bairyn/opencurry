@@ -167,7 +167,7 @@ unsigned long one_bit_repeat_ulong(unsigned long num)
 
 int sign_int(int num)
 {
-  return SIGN_INT(num);
+  return SIGN(num);
 }
 
 int cmp_int(int check, int baseline)
