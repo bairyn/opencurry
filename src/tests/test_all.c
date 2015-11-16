@@ -55,6 +55,7 @@
 #include "test_type_base_lookup.h"
 #include "test_type_base_memory_manager.h"
 #include "test_type_base_memory_tracker.h"
+#include "test_type_base_cast.h"
 #include "test_type_base_type.h"
 #include "test_type_base.h"
 #include "test_type_util.h"
@@ -106,6 +107,7 @@ unit_test_t *all_tests[] =
   , &type_base_lookup_test
   , &type_base_memory_manager_test
   , &type_base_memory_tracker_test
+  , &type_base_cast_test
   , &type_base_type_test
   , &type_base_test
   , &type_util_test
