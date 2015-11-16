@@ -121,7 +121,7 @@ static int checked_is_ordering_lossy(unit_test_context_t *context, unit_test_res
 
   ENCLOSE()
   {
-    ASSERT2( inteq, (call = is_ordering_lossy(ordering)), IS_ORDERING_LOSSY(ordering) );
+    TASSERT2( inteq, "checked_is_ordering_lossy", (call = is_ordering_lossy(ordering)), IS_ORDERING_LOSSY(ordering) );
   }
 
   if (out_result)
@@ -137,9 +137,9 @@ static int checked_ordering_success(unit_test_context_t *context, unit_test_resu
 
   ENCLOSE()
   {
-    ASSERT2( inteq, (call = ordering_success(ordering)), ORDERING_SUCCESS(ordering) );
-    ASSERT2( inteq, IS_SUCCESS(call),                    1 );
-    ASSERT2( inteq, IS_ERROR  (call),                    0 );
+    TASSERT2( inteq, "checked_ordering_success", (call = ordering_success(ordering)), ORDERING_SUCCESS(ordering) );
+    ASSERT2 ( inteq,                             IS_SUCCESS(call),                    1 );
+    ASSERT2 ( inteq,                             IS_ERROR  (call),                    0 );
   }
 
   if (out_result)
@@ -157,7 +157,9 @@ static int checked_ordering_invert(unit_test_context_t *context, unit_test_resul
   {
     ASSERT2( inteq, (call = ordering_invert(ordering)), ORDERING_INVERT(ordering) );
     if (!IS_LOSSY(ordering))
+    {
       ASSERT2( inteq, ordering_invert(ordering_invert(ordering)), ordering );
+    }
     ASSERT2( inteq, IS_SUCCESS(call),                   IS_SUCCESS     (ordering) );
     ASSERT2( inteq, IS_ERROR  (call),                   IS_ERROR       (ordering) );
     ASSERT2( inteq, IS_LOSSY  (call),                   IS_LOSSY       (ordering) );
@@ -174,7 +176,7 @@ static int checked_ordering_invert(unit_test_context_t *context, unit_test_resul
   return call;
 }
 
-static order_relation_t checked_ordering_relation(unit_test_context_t *context, unit_test_result_t *out_result, int ordering)
+static ordering_relation_t checked_ordering_relation(unit_test_context_t *context, unit_test_result_t *out_result, int ordering)
 {
   int call = -1;
   unit_test_result_t result = assert_success(context);
@@ -190,7 +192,7 @@ static order_relation_t checked_ordering_relation(unit_test_context_t *context, 
   return call;
 }
 
-unit_test_result_t ordering_equalities_test(unit_test_context_t *context)
+unit_test_result_t ordering_equalities_test_run(unit_test_context_t *context)
 {
   unit_test_result_t result = assert_success(context);
 
@@ -286,98 +288,94 @@ unit_test_result_t ordering_equalities_test(unit_test_context_t *context)
     ASSERT2( inteq, ordering_rel_eq,                 SIGN(ordering_rel_eq) );
     ASSERT2( inteq, ordering_rel_gt,                 SIGN(ordering_rel_gt) );
 
-    ASSERT2( true, ordering_rel_lt <  0 );
-    ASSERT2( true, ordering_rel_eq == 0 );
-    ASSERT2( true, ordering_rel_gt >  0 );
+    ASSERT1( true, ordering_rel_lt <  0 );
+    ASSERT1( true, ordering_rel_eq == 0 );
+    ASSERT1( true, ordering_rel_gt >  0 );
 
     /* ---------------------------------------------------------------- */
 
-    ASSERT2( inteq, SUCCESFULL_CMP(-7, -7), ordering_rel_eq );
-    ASSERT2( inteq, SUCCESFULL_CMP(-7, -2), ordering_rel_lt );
-    ASSERT2( inteq, SUCCESFULL_CMP(-7,  0), ordering_rel_lt );
-    ASSERT2( inteq, SUCCESFULL_CMP(-7,  2), ordering_rel_lt );
-    ASSERT2( inteq, SUCCESFULL_CMP(-7,  7), ordering_rel_lt );
+    TASSERT2( inteq, "10", CMP_SUCCESS(-7, -7), ordering_rel_eq );
+    TASSERT2( inteq, "11", CMP_SUCCESS(-7, -2), ordering_rel_lt );
+    TASSERT2( inteq, "12", CMP_SUCCESS(-7,  0), ordering_rel_lt );
+    TASSERT2( inteq, "13", CMP_SUCCESS(-7,  2), ordering_rel_lt );
+    TASSERT2( inteq, "14", CMP_SUCCESS(-7,  7), ordering_rel_lt );
 
-    ASSERT2( inteq, SUCCESFULL_CMP(-2, -7), ordering_rel_gt );
-    ASSERT2( inteq, SUCCESFULL_CMP(-2, -2), ordering_rel_eq );
-    ASSERT2( inteq, SUCCESFULL_CMP(-2,  0), ordering_rel_lt );
-    ASSERT2( inteq, SUCCESFULL_CMP(-2,  2), ordering_rel_lt );
-    ASSERT2( inteq, SUCCESFULL_CMP(-2,  7), ordering_rel_lt );
+    TASSERT2( inteq, "15", CMP_SUCCESS(-2, -7), ordering_rel_gt );
+    TASSERT2( inteq, "16", CMP_SUCCESS(-2, -2), ordering_rel_eq );
+    TASSERT2( inteq, "17", CMP_SUCCESS(-2,  0), ordering_rel_lt );
+    TASSERT2( inteq, "18", CMP_SUCCESS(-2,  2), ordering_rel_lt );
+    TASSERT2( inteq, "19", CMP_SUCCESS(-2,  7), ordering_rel_lt );
 
-    ASSERT2( inteq, SUCCESFULL_CMP( 0, -7), ordering_rel_gt );
-    ASSERT2( inteq, SUCCESFULL_CMP( 0, -2), ordering_rel_gt );
-    ASSERT2( inteq, SUCCESFULL_CMP( 0,  0), ordering_rel_eq );
-    ASSERT2( inteq, SUCCESFULL_CMP( 0,  2), ordering_rel_lt );
-    ASSERT2( inteq, SUCCESFULL_CMP( 0,  7), ordering_rel_lt );
+    TASSERT2( inteq, "20", CMP_SUCCESS( 0, -7), ordering_rel_gt );
+    TASSERT2( inteq, "21", CMP_SUCCESS( 0, -2), ordering_rel_gt );
+    TASSERT2( inteq, "22", CMP_SUCCESS( 0,  0), ordering_rel_eq );
+    TASSERT2( inteq, "23", CMP_SUCCESS( 0,  2), ordering_rel_lt );
+    TASSERT2( inteq, "24", CMP_SUCCESS( 0,  7), ordering_rel_lt );
 
-    ASSERT2( inteq, SUCCESFULL_CMP( 2, -7), ordering_rel_gt );
-    ASSERT2( inteq, SUCCESFULL_CMP( 2, -2), ordering_rel_gt );
-    ASSERT2( inteq, SUCCESFULL_CMP( 2,  0), ordering_rel_gt );
-    ASSERT2( inteq, SUCCESFULL_CMP( 2,  2), ordering_rel_eq );
-    ASSERT2( inteq, SUCCESFULL_CMP( 2,  7), ordering_rel_lt );
+    TASSERT2( inteq, "25", CMP_SUCCESS( 2, -7), ordering_rel_gt );
+    TASSERT2( inteq, "26", CMP_SUCCESS( 2, -2), ordering_rel_gt );
+    TASSERT2( inteq, "27", CMP_SUCCESS( 2,  0), ordering_rel_gt );
+    TASSERT2( inteq, "28", CMP_SUCCESS( 2,  2), ordering_rel_eq );
+    TASSERT2( inteq, "29", CMP_SUCCESS( 2,  7), ordering_rel_lt );
 
-    ASSERT2( inteq, SUCCESFULL_CMP( 7, -7), ordering_rel_gt );
-    ASSERT2( inteq, SUCCESFULL_CMP( 7, -2), ordering_rel_gt );
-    ASSERT2( inteq, SUCCESFULL_CMP( 7,  0), ordering_rel_gt );
-    ASSERT2( inteq, SUCCESFULL_CMP( 7,  2), ordering_rel_gt );
-    ASSERT2( inteq, SUCCESFULL_CMP( 7,  7), ordering_rel_eq );
+    TASSERT2( inteq, "30", CMP_SUCCESS( 7, -7), ordering_rel_gt );
+    TASSERT2( inteq, "31", CMP_SUCCESS( 7, -2), ordering_rel_gt );
+    TASSERT2( inteq, "32", CMP_SUCCESS( 7,  0), ordering_rel_gt );
+    TASSERT2( inteq, "33", CMP_SUCCESS( 7,  2), ordering_rel_gt );
+    TASSERT2( inteq, "34", CMP_SUCCESS( 7,  7), ordering_rel_eq );
 
-    ASSERT2( inteq, SUCCESFULL_CMP(ordering_err_1(),      0), SIGN(ordering_err_1())      );
-    ASSERT2( inteq, SUCCESFULL_CMP(ordering_err_2(),      0), SIGN(ordering_err_2())      );
-    ASSERT2( inteq, SUCCESFULL_CMP(ordering_lossy_lt(),   0), SIGN(ordering_lossy_lt())   );
-    ASSERT2( inteq, SUCCESFULL_CMP(ordering_lossy_gt_1(), 0), SIGN(ordering_lossy_gt_1()) );
-    ASSERT2( inteq, SUCCESFULL_CMP(ordering_lossy_gt_2(), 0), SIGN(ordering_lossy_gt_2()) );
-    ASSERT2( inteq, SUCCESFULL_CMP(ordering_lossy_gt_3(), 0), SIGN(ordering_lossy_gt_3()) );
-
-    /* ---------------------------------------------------------------- */
-
-    ASSERT2( inteq, ORDERING(SUCCESFULL_CMP(-7, -7)), ordering_rel_eq );
-    ASSERT2( inteq, ORDERING(SUCCESFULL_CMP(-7, -2)), ordering_rel_lt );
-    ASSERT2( inteq, ORDERING(SUCCESFULL_CMP(-7,  0)), ordering_rel_lt );
-    ASSERT2( inteq, ORDERING(SUCCESFULL_CMP(-7,  2)), ordering_rel_lt );
-    ASSERT2( inteq, ORDERING(SUCCESFULL_CMP(-7,  7)), ordering_rel_lt );
-
-    ASSERT2( inteq, ORDERING(SUCCESFULL_CMP(-2, -7)), ordering_rel_gt );
-    ASSERT2( inteq, ORDERING(SUCCESFULL_CMP(-2, -2)), ordering_rel_eq );
-    ASSERT2( inteq, ORDERING(SUCCESFULL_CMP(-2,  0)), ordering_rel_lt );
-    ASSERT2( inteq, ORDERING(SUCCESFULL_CMP(-2,  2)), ordering_rel_lt );
-    ASSERT2( inteq, ORDERING(SUCCESFULL_CMP(-2,  7)), ordering_rel_lt );
-
-    ASSERT2( inteq, ORDERING(SUCCESFULL_CMP( 0, -7)), ordering_rel_gt );
-    ASSERT2( inteq, ORDERING(SUCCESFULL_CMP( 0, -2)), ordering_rel_gt );
-    ASSERT2( inteq, ORDERING(SUCCESFULL_CMP( 0,  0)), ordering_rel_eq );
-    ASSERT2( inteq, ORDERING(SUCCESFULL_CMP( 0,  2)), ordering_rel_lt );
-    ASSERT2( inteq, ORDERING(SUCCESFULL_CMP( 0,  7)), ordering_rel_lt );
-
-    ASSERT2( inteq, ORDERING(SUCCESFULL_CMP( 2, -7)), ordering_rel_gt );
-    ASSERT2( inteq, ORDERING(SUCCESFULL_CMP( 2, -2)), ordering_rel_gt );
-    ASSERT2( inteq, ORDERING(SUCCESFULL_CMP( 2,  0)), ordering_rel_gt );
-    ASSERT2( inteq, ORDERING(SUCCESFULL_CMP( 2,  2)), ordering_rel_eq );
-    ASSERT2( inteq, ORDERING(SUCCESFULL_CMP( 2,  7)), ordering_rel_lt );
-
-    ASSERT2( inteq, ORDERING(SUCCESFULL_CMP( 7, -7)), ordering_rel_gt );
-    ASSERT2( inteq, ORDERING(SUCCESFULL_CMP( 7, -2)), ordering_rel_gt );
-    ASSERT2( inteq, ORDERING(SUCCESFULL_CMP( 7,  0)), ordering_rel_gt );
-    ASSERT2( inteq, ORDERING(SUCCESFULL_CMP( 7,  2)), ordering_rel_gt );
-    ASSERT2( inteq, ORDERING(SUCCESFULL_CMP( 7,  7)), ordering_rel_eq );
-
-    ASSERT2( inteq, ORDERING(SUCCESFULL_CMP(ordering_err_1(),      0)), SIGN(ordering_err_1())      );
-    ASSERT2( inteq, ORDERING(SUCCESFULL_CMP(ordering_err_2(),      0)), SIGN(ordering_err_2())      );
-    ASSERT2( inteq, ORDERING(SUCCESFULL_CMP(ordering_lossy_lt(),   0)), SIGN(ordering_lossy_lt())   );
-    ASSERT2( inteq, ORDERING(SUCCESFULL_CMP(ordering_lossy_gt_1(), 0)), SIGN(ordering_lossy_gt_1()) );
-    ASSERT2( inteq, ORDERING(SUCCESFULL_CMP(ordering_lossy_gt_2(), 0)), SIGN(ordering_lossy_gt_2()) );
-    ASSERT2( inteq, ORDERING(SUCCESFULL_CMP(ordering_lossy_gt_3(), 0)), SIGN(ordering_lossy_gt_3()) );
-
-    ASSERT2( inteq, ORDERING(SUCCESFULL_CMP(ordering_err_1(),      0)), ORDERING(SIGN(ordering_err_1())      ));
-    ASSERT2( inteq, ORDERING(SUCCESFULL_CMP(ordering_err_2(),      0)), ORDERING(SIGN(ordering_err_2())      ));
-    ASSERT2( inteq, ORDERING(SUCCESFULL_CMP(ordering_lossy_lt(),   0)), ORDERING(SIGN(ordering_lossy_lt())   ));
-    ASSERT2( inteq, ORDERING(SUCCESFULL_CMP(ordering_lossy_gt_1(), 0)), ORDERING(SIGN(ordering_lossy_gt_1()) ));
-    ASSERT2( inteq, ORDERING(SUCCESFULL_CMP(ordering_lossy_gt_2(), 0)), ORDERING(SIGN(ordering_lossy_gt_2()) ));
-    ASSERT2( inteq, ORDERING(SUCCESFULL_CMP(ordering_lossy_gt_3(), 0)), ORDERING(SIGN(ordering_lossy_gt_3()) ));
+    TASSERT2( inteq, "35", CMP_SUCCESS(ordering_err_1(),      0), SIGN(ordering_err_1())      );
+    TASSERT2( inteq, "36", CMP_SUCCESS(ordering_err_2(),      0), SIGN(ordering_err_2())      );
+    TASSERT2( inteq, "37", CMP_SUCCESS(ordering_lossy_lt(),   0), SIGN(ordering_lossy_lt())   );
+    TASSERT2( inteq, "38", CMP_SUCCESS(ordering_lossy_gt_1(), 0), SIGN(ordering_lossy_gt_1()) );
+    TASSERT2( inteq, "39", CMP_SUCCESS(ordering_lossy_gt_2(), 0), SIGN(ordering_lossy_gt_2()) );
+    TASSERT2( inteq, "40", CMP_SUCCESS(ordering_lossy_gt_3(), 0), SIGN(ordering_lossy_gt_3()) );
 
     /* ---------------------------------------------------------------- */
 
-    ASSERT2( inteq, ORDERING(SUCCESFULL_CMP(-7, -7)), ordering_rel_eq );
+    TASSERT2( inteq, "41", ORDERING(CMP_SUCCESS(-7, -7)), ordering_rel_eq );
+    TASSERT2( inteq, "42", ORDERING(CMP_SUCCESS(-7, -2)), ordering_rel_lt );
+    TASSERT2( inteq, "43", ORDERING(CMP_SUCCESS(-7,  0)), ordering_rel_lt );
+    TASSERT2( inteq, "44", ORDERING(CMP_SUCCESS(-7,  2)), ordering_rel_lt );
+    TASSERT2( inteq, "45", ORDERING(CMP_SUCCESS(-7,  7)), ordering_rel_lt );
+
+    TASSERT2( inteq, "46", ORDERING(CMP_SUCCESS(-2, -7)), ordering_rel_gt );
+    TASSERT2( inteq, "47", ORDERING(CMP_SUCCESS(-2, -2)), ordering_rel_eq );
+    TASSERT2( inteq, "48", ORDERING(CMP_SUCCESS(-2,  0)), ordering_rel_lt );
+    TASSERT2( inteq, "49", ORDERING(CMP_SUCCESS(-2,  2)), ordering_rel_lt );
+    TASSERT2( inteq, "50", ORDERING(CMP_SUCCESS(-2,  7)), ordering_rel_lt );
+
+    TASSERT2( inteq, "51", ORDERING(CMP_SUCCESS( 0, -7)), ordering_rel_gt );
+    TASSERT2( inteq, "52", ORDERING(CMP_SUCCESS( 0, -2)), ordering_rel_gt );
+    TASSERT2( inteq, "53", ORDERING(CMP_SUCCESS( 0,  0)), ordering_rel_eq );
+    TASSERT2( inteq, "54", ORDERING(CMP_SUCCESS( 0,  2)), ordering_rel_lt );
+    TASSERT2( inteq, "55", ORDERING(CMP_SUCCESS( 0,  7)), ordering_rel_lt );
+
+    TASSERT2( inteq, "56", ORDERING(CMP_SUCCESS( 2, -7)), ordering_rel_gt );
+    TASSERT2( inteq, "57", ORDERING(CMP_SUCCESS( 2, -2)), ordering_rel_gt );
+    TASSERT2( inteq, "58", ORDERING(CMP_SUCCESS( 2,  0)), ordering_rel_gt );
+    TASSERT2( inteq, "59", ORDERING(CMP_SUCCESS( 2,  2)), ordering_rel_eq );
+    TASSERT2( inteq, "60", ORDERING(CMP_SUCCESS( 2,  7)), ordering_rel_lt );
+
+    TASSERT2( inteq, "61", ORDERING(CMP_SUCCESS( 7, -7)), ordering_rel_gt );
+    TASSERT2( inteq, "62", ORDERING(CMP_SUCCESS( 7, -2)), ordering_rel_gt );
+    TASSERT2( inteq, "63", ORDERING(CMP_SUCCESS( 7,  0)), ordering_rel_gt );
+    TASSERT2( inteq, "64", ORDERING(CMP_SUCCESS( 7,  2)), ordering_rel_gt );
+    TASSERT2( inteq, "65", ORDERING(CMP_SUCCESS( 7,  7)), ordering_rel_eq );
+
+    TASSERT2( inteq, "66", ORDERING(CMP_SUCCESS(ordering_err_1(),      0)), SIGN(ordering_err_1())      );
+    TASSERT2( inteq, "67", ORDERING(CMP_SUCCESS(ordering_err_2(),      0)), SIGN(ordering_err_2())      );
+    TASSERT2( inteq, "68", ORDERING(CMP_SUCCESS(ordering_lossy_lt(),   0)), SIGN(ordering_lossy_lt())   );
+    TASSERT2( inteq, "69", ORDERING(CMP_SUCCESS(ordering_lossy_gt_1(), 0)), SIGN(ordering_lossy_gt_1()) );
+    TASSERT2( inteq, "70", ORDERING(CMP_SUCCESS(ordering_lossy_gt_2(), 0)), SIGN(ordering_lossy_gt_2()) );
+    TASSERT2( inteq, "71", ORDERING(CMP_SUCCESS(ordering_lossy_gt_3(), 0)), SIGN(ordering_lossy_gt_3()) );
+
+    TASSERT2( inteq, "72", ORDERING(CMP_SUCCESS(ordering_err_1(),      0)), ORDERING(SIGN(ordering_err_1())      ));
+    TASSERT2( inteq, "73", ORDERING(CMP_SUCCESS(ordering_err_2(),      0)), ORDERING(SIGN(ordering_err_2())      ));
+    TASSERT2( inteq, "74", ORDERING(CMP_SUCCESS(ordering_lossy_lt(),   0)), ORDERING(SIGN(ordering_lossy_lt())   ));
+    TASSERT2( inteq, "75", ORDERING(CMP_SUCCESS(ordering_lossy_gt_1(), 0)), ORDERING(SIGN(ordering_lossy_gt_1()) ));
+    TASSERT2( inteq, "76", ORDERING(CMP_SUCCESS(ordering_lossy_gt_2(), 0)), ORDERING(SIGN(ordering_lossy_gt_2()) ));
+    TASSERT2( inteq, "77", ORDERING(CMP_SUCCESS(ordering_lossy_gt_3(), 0)), ORDERING(SIGN(ordering_lossy_gt_3()) ));
   }
 
   return result;
@@ -391,22 +389,25 @@ unit_test_t comparers_test =
   , "comparers return expected results on test input."
   };
 
-unit_test_result_t comparers_test(unit_test_context_t *context)
+unit_test_result_t comparers_test_run(unit_test_context_t *context)
 {
   unit_test_result_t result = assert_success(context);
 
   ENCLOSE()
   {
-    comparer_t  comparer;
-    void       *context;
+    #define COMPARE_ORD(callback_compare_suffix, check, baseline, ordering)                                                                  \
+    if (1)                                                                                                                                   \
+    {                                                                                                                                        \
+      ASSERT2( inteq, ORDERING(call_callback_compare(CAT(callback_compare_, callback_compare_suffix), check, baseline)), ordering );         \
+      ASSERT2( inteq, ORDERING(call_callback_compare(CAT(callback_compare_, callback_compare_suffix), baseline, check)), INVERT(ordering) ); \
+    } else do { } while(0)
 
-    #define CHECKED_COMPARE0(comparer_base_name, check, baseline, ordering)     \
-    if (1)                                                                      \
-    {                                                                           \
-      comparer = CAT(comparer_, comparer_base_name);                            \
-      context  = CAT(comparer_, CAT(comparer_base_name, context))();            \
-      ASSERT2( inteq, ORDERING(comparer(context, check, baseline)), ordering ); \
-      ASSERT2( inteq, ORDERING(comparer(context, baseline, check)), INVERT(ordering) ); \
+    #define COMPARE(   callback_compare_suffix, check, baseline, ordering)                                                         \
+    if (1)                                                                                                                         \
+    {                                                                                                                              \
+      COMPARE_ORD(callback_compare_suffix, check, baseline, ORDERING(ordering));                                                   \
+      ASSERT2( inteq, call_callback_compare(CAT(callback_compare_, callback_compare_suffix), check, baseline), ordering );         \
+      ASSERT2( inteq, call_callback_compare(CAT(callback_compare_, callback_compare_suffix), baseline, check), INVERT(ordering) ); \
     } else do { } while(0)
 
     /* ---------------------------------------------------------------- */
@@ -418,7 +419,7 @@ unit_test_result_t comparers_test(unit_test_context_t *context)
 
     a = 3;
     b = 7;
-    CHECKED_COMPARE0(int, &a, &b, ordering_rel_lt);
+    COMPARE(int(), &a, &b, -4);
     /* TODO */
   }
 
