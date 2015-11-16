@@ -204,19 +204,51 @@ unit_test_result_t bits_consistency_test_run(unit_test_context_t *context)
 
     /* ---------------------------------------------------------------- */
 
-    TASSERT2( inteq, "sign of 9",        (int) sign_int(9),        (int) SIGN_INT(9) );
-    TASSERT2( inteq, "sign of 1234567",  (int) sign_int(1234567),  (int) SIGN_INT(1234567) );
+    TASSERT2( inteq, "sign of 9",        (int) sign_int(9),        (int) SIGN(9) );
+    TASSERT2( inteq, "sign of 1234567",  (int) sign_int(1234567),  (int) SIGN(1234567) );
 
-    TASSERT2( inteq, "sign of -9",       (int) sign_int(-9),       (int) SIGN_INT(-9) );
-    TASSERT2( inteq, "sign of -1234567", (int) sign_int(-1234567), (int) SIGN_INT(-1234567) );
+    TASSERT2( inteq, "sign of -9",       (int) sign_int(-9),       (int) SIGN(-9) );
+    TASSERT2( inteq, "sign of -1234567", (int) sign_int(-1234567), (int) SIGN(-1234567) );
 
-    TASSERT2( inteq, "sign of 1",        (int) sign_int(1),        (int) SIGN_INT(1) );
-    TASSERT2( inteq, "sign of -1",       (int) sign_int(-1),       (int) SIGN_INT(-1) );
+    TASSERT2( inteq, "sign of 1",        (int) sign_int(1),        (int) SIGN(1) );
+    TASSERT2( inteq, "sign of -1",       (int) sign_int(-1),       (int) SIGN(-1) );
 
-    TASSERT2( inteq, "sign of 0",        (int) sign_int(0),        (int) SIGN_INT(0) );
-    TASSERT2( inteq, "sign of -0",       (int) sign_int(-0),       (int) SIGN_INT(-0) );
+    TASSERT2( inteq, "sign of 0",        (int) sign_int(0),        (int) SIGN(0) );
+    TASSERT2( inteq, "sign of -0",       (int) sign_int(-0),       (int) SIGN(-0) );
 
-    TASSERT2( inteq, "sign of 7",        (int) sign_int(7),        (int) SIGN_INT(7) );
+    TASSERT2( inteq, "sign of 7",        (int) sign_int(7),        (int) SIGN(7) );
+
+    /* ---------------------------------------------------------------- */
+
+    TASSERT2( inteq, "cmp  0 -7", (int) cmp_int( 0, -7), (int) CMP( 0, -7) );
+    TASSERT2( inteq, "cmp  0 -2", (int) cmp_int( 0, -2), (int) CMP( 0, -2) );
+    TASSERT2( inteq, "cmp  0  0", (int) cmp_int( 0,  0), (int) CMP( 0,  0) );
+    TASSERT2( inteq, "cmp  0  2", (int) cmp_int( 0,  2), (int) CMP( 0,  2) );
+    TASSERT2( inteq, "cmp  0  7", (int) cmp_int( 0,  7), (int) CMP( 0,  7) );
+
+    TASSERT2( inteq, "cmp -2 -7", (int) cmp_int(-2, -7), (int) CMP(-2, -7) );
+    TASSERT2( inteq, "cmp -2 -2", (int) cmp_int(-2, -2), (int) CMP(-2, -2) );
+    TASSERT2( inteq, "cmp -2  0", (int) cmp_int(-2,  0), (int) CMP(-2,  0) );
+    TASSERT2( inteq, "cmp -2  2", (int) cmp_int(-2,  2), (int) CMP(-2,  2) );
+    TASSERT2( inteq, "cmp -2  7", (int) cmp_int(-2,  7), (int) CMP(-2,  7) );
+
+    TASSERT2( inteq, "cmp  2 -7", (int) cmp_int( 2, -7), (int) CMP( 2, -7) );
+    TASSERT2( inteq, "cmp  2 -2", (int) cmp_int( 2, -2), (int) CMP( 2, -2) );
+    TASSERT2( inteq, "cmp  2  0", (int) cmp_int( 2,  0), (int) CMP( 2,  0) );
+    TASSERT2( inteq, "cmp  2  2", (int) cmp_int( 2,  2), (int) CMP( 2,  2) );
+    TASSERT2( inteq, "cmp  2  7", (int) cmp_int( 2,  7), (int) CMP( 2,  7) );
+
+    TASSERT2( inteq, "cmp -7 -7", (int) cmp_int( 7, -7), (int) CMP(-7, -7) );
+    TASSERT2( inteq, "cmp -7 -2", (int) cmp_int( 7, -2), (int) CMP(-7, -2) );
+    TASSERT2( inteq, "cmp -7  0", (int) cmp_int( 7,  0), (int) CMP(-7,  0) );
+    TASSERT2( inteq, "cmp -7  2", (int) cmp_int( 7,  2), (int) CMP(-7,  2) );
+    TASSERT2( inteq, "cmp -7  7", (int) cmp_int( 7,  7), (int) CMP(-7,  7) );
+
+    TASSERT2( inteq, "cmp  7 -7", (int) cmp_int( 7, -7), (int) CMP( 7, -7) );
+    TASSERT2( inteq, "cmp  7 -2", (int) cmp_int( 7, -2), (int) CMP( 7, -2) );
+    TASSERT2( inteq, "cmp  7  0", (int) cmp_int( 7,  0), (int) CMP( 7,  0) );
+    TASSERT2( inteq, "cmp  7  2", (int) cmp_int( 7,  2), (int) CMP( 7,  2) );
+    TASSERT2( inteq, "cmp  7  7", (int) cmp_int( 7,  7), (int) CMP( 7,  7) );
   }
 
   return result;
@@ -376,6 +408,38 @@ unit_test_result_t bits_equalities_test_run(unit_test_context_t *context)
     TASSERT2( inteq, "sign of -0",       (int) sign_int(-0),       (int) 0);
 
     TASSERT2( inteq, "sign of 7",        (int) sign_int(7),        (int) 1);
+
+    /* ---------------------------------------------------------------- */
+
+    TASSERT2( inteq, "cmp -7 -7", (int) cmp_int( 7, -7), (int)  0 );
+    TASSERT2( inteq, "cmp -7 -2", (int) cmp_int( 7, -2), (int) -1 );
+    TASSERT2( inteq, "cmp -7  0", (int) cmp_int( 7,  0), (int) -1 );
+    TASSERT2( inteq, "cmp -7  2", (int) cmp_int( 7,  2), (int) -1 );
+    TASSERT2( inteq, "cmp -7  7", (int) cmp_int( 7,  7), (int) -1 );
+
+    TASSERT2( inteq, "cmp -2 -7", (int) cmp_int(-2, -7), (int)  1 );
+    TASSERT2( inteq, "cmp -2 -2", (int) cmp_int(-2, -2), (int)  0 );
+    TASSERT2( inteq, "cmp -2  0", (int) cmp_int(-2,  0), (int) -1 );
+    TASSERT2( inteq, "cmp -2  2", (int) cmp_int(-2,  2), (int) -1 );
+    TASSERT2( inteq, "cmp -2  7", (int) cmp_int(-2,  7), (int) -1 );
+
+    TASSERT2( inteq, "cmp  0 -7", (int) cmp_int( 0, -7), (int)  1 );
+    TASSERT2( inteq, "cmp  0 -2", (int) cmp_int( 0, -2), (int)  1 );
+    TASSERT2( inteq, "cmp  0  0", (int) cmp_int( 0,  0), (int)  0 );
+    TASSERT2( inteq, "cmp  0  2", (int) cmp_int( 0,  2), (int) -1 );
+    TASSERT2( inteq, "cmp  0  7", (int) cmp_int( 0,  7), (int) -1 );
+
+    TASSERT2( inteq, "cmp  2 -7", (int) cmp_int( 2, -7), (int)  1 );
+    TASSERT2( inteq, "cmp  2 -2", (int) cmp_int( 2, -2), (int)  1 );
+    TASSERT2( inteq, "cmp  2  0", (int) cmp_int( 2,  0), (int)  1 );
+    TASSERT2( inteq, "cmp  2  2", (int) cmp_int( 2,  2), (int)  0 );
+    TASSERT2( inteq, "cmp  2  7", (int) cmp_int( 2,  7), (int) -1 );
+
+    TASSERT2( inteq, "cmp  7 -7", (int) cmp_int( 7, -7), (int) -1 );
+    TASSERT2( inteq, "cmp  7 -2", (int) cmp_int( 7, -2), (int) -1 );
+    TASSERT2( inteq, "cmp  7  0", (int) cmp_int( 7,  0), (int) -1 );
+    TASSERT2( inteq, "cmp  7  2", (int) cmp_int( 7,  2), (int) -1 );
+    TASSERT2( inteq, "cmp  7  7", (int) cmp_int( 7,  7), (int)  0 );
   }
 
   return result;

@@ -169,3 +169,18 @@ int sign_int(int num)
 {
   return SIGN_INT(num);
 }
+
+int cmp_int(int check, int baseline)
+{
+  return CMP(check, baseline);
+}
+
+int cmp_uint(unsigned int check, unsigned int baseline)
+{
+  return CMP(check, baseline);
+}
+
+int cmp_ulong(unsigned long check, unsigned long baseline)
+{
+  return CMP(check, baseline);
+}

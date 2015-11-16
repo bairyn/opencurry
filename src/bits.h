@@ -246,4 +246,19 @@ unsigned long one_bit_repeat_ulong(unsigned long num);
   )
 int sign_int(int num);
 
+/* Use "<=" and "<" to determine whether "check" is less than, equal to, or
+ * greater than "baseline", and return -1, 0, or 1, respectively.
+ */
+#define CMP(check, baseline) \
+  ( ((check) <= (baseline))  \
+  ? ( ((check) < (baseline)) \
+    ? (-1)                   \
+    : (0)                    \
+    )                        \
+  : (1)                      \
+  )
+int cmp_int(int check, int baseline);
+int cmp_uint(unsigned int check, unsigned int baseline);
+int cmp_ulong(unsigned long check, unsigned long baseline);
+
 #endif /* ifndef BITS_H */
