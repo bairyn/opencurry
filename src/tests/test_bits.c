@@ -201,6 +201,22 @@ unit_test_result_t bits_consistency_test_run(unit_test_context_t *context)
     TASSERT2( ulongeq, "62 repeating 1 bits", (ulong) one_bit_repeat_ulong(62LU), (ulong) ONE_BIT_REPEAT(62LU));
     TASSERT2( ulongeq, "63 repeating 1 bits", (ulong) one_bit_repeat_ulong(63LU), (ulong) ONE_BIT_REPEAT(63LU));
     TASSERT2( ulongeq, "64 repeating 1 bits", (ulong) one_bit_repeat_ulong(64LU), (ulong) ONE_BIT_REPEAT(64LU));
+
+    /* ---------------------------------------------------------------- */
+
+    TASSERT2( inteq, "sign of 9",        (int) sign_int(9),        (int) SIGN_INT(9) );
+    TASSERT2( inteq, "sign of 1234567",  (int) sign_int(1234567),  (int) SIGN_INT(1234567) );
+
+    TASSERT2( inteq, "sign of -9",       (int) sign_int(-9),       (int) SIGN_INT(-9) );
+    TASSERT2( inteq, "sign of -1234567", (int) sign_int(-1234567), (int) SIGN_INT(-1234567) );
+
+    TASSERT2( inteq, "sign of 1",        (int) sign_int(1),        (int) SIGN_INT(1) );
+    TASSERT2( inteq, "sign of -1",       (int) sign_int(-1),       (int) SIGN_INT(-1) );
+
+    TASSERT2( inteq, "sign of 0",        (int) sign_int(0),        (int) SIGN_INT(0) );
+    TASSERT2( inteq, "sign of -0",       (int) sign_int(-0),       (int) SIGN_INT(-0) );
+
+    TASSERT2( inteq, "sign of 7",        (int) sign_int(7),        (int) SIGN_INT(7) );
   }
 
   return result;
@@ -344,6 +360,22 @@ unit_test_result_t bits_equalities_test_run(unit_test_context_t *context)
     TASSERT2( ulongeq, "62 repeating 1 bits", (ulong) one_bit_repeat_ulong(62LU), (ulong) 0x3FFFFFFFFFFFACEFUL | (ulong) 0x0FABFFFF);
     TASSERT2( ulongeq, "63 repeating 1 bits", (ulong) one_bit_repeat_ulong(63LU), (ulong) 0x7FFFFFFFFFFFACEFUL | (ulong) 0x0FABFFFF);
     TASSERT2( ulongeq, "64 repeating 1 bits", (ulong) one_bit_repeat_ulong(64LU), (ulong) 0xFFFFFFFFFFFFACEFUL | (ulong) 0x0FABFFFF);
+
+    /* ---------------------------------------------------------------- */
+
+    TASSERT2( inteq, "sign of 9",        (int) sign_int(9),        (int) 1);
+    TASSERT2( inteq, "sign of 1234567",  (int) sign_int(1234567),  (int) 1);
+
+    TASSERT2( inteq, "sign of -9",       (int) sign_int(-9),       (int) -1);
+    TASSERT2( inteq, "sign of -1234567", (int) sign_int(-1234567), (int) -1);
+
+    TASSERT2( inteq, "sign of 1",        (int) sign_int(1),        (int) 1);
+    TASSERT2( inteq, "sign of -1",       (int) sign_int(-1),       (int) -1);
+
+    TASSERT2( inteq, "sign of 0",        (int) sign_int(0),        (int) 0);
+    TASSERT2( inteq, "sign of -0",       (int) sign_int(-0),       (int) 0);
+
+    TASSERT2( inteq, "sign of 7",        (int) sign_int(7),        (int) 1);
   }
 
   return result;

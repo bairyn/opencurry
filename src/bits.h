@@ -232,4 +232,18 @@ unsigned int bit_nat_pred_uint(unsigned int num);
 unsigned int one_bit_repeat_uint(unsigned int num);
 unsigned long one_bit_repeat_ulong(unsigned long num);
 
+/*
+ * Determine whether a value is negative, zero, or positive, and return,
+ * correspondingly, -1, 0, or 1.
+ */
+#define SIGN(num) \
+  ( ((num) <= 0)  \
+  ? ( ((num) < 0) \
+    ? (-1)        \
+    : (0)         \
+    )             \
+  : (1)           \
+  )
+int sign_int(int num);
+
 #endif /* ifndef BITS_H */

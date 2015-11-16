@@ -164,3 +164,8 @@ unsigned long one_bit_repeat_ulong(unsigned long num)
 {
   return ONE_BIT_REPEAT(num);
 }
+
+int sign_int(int num)
+{
+  return SIGN_INT(num);
+}
