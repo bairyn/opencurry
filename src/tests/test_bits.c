@@ -220,6 +220,38 @@ unit_test_result_t bits_consistency_test_run(unit_test_context_t *context)
 
     /* ---------------------------------------------------------------- */
 
+    TASSERT2( inteq, "cmp_case  0 -7: 8 -1 7", (int) cmp_case_int( 0, -7, 8, -1, 7), (int) CMP_CASE( 0, -7, 8, -1, 7) );
+    TASSERT2( inteq, "cmp_case  0 -2: 8 -1 7", (int) cmp_case_int( 0, -2, 8, -1, 7), (int) CMP_CASE( 0, -2, 8, -1, 7) );
+    TASSERT2( inteq, "cmp_case  0  0: 8 -1 7", (int) cmp_case_int( 0,  0, 8, -1, 7), (int) CMP_CASE( 0,  0, 8, -1, 7) );
+    TASSERT2( inteq, "cmp_case  0  2: 8 -1 7", (int) cmp_case_int( 0,  2, 8, -1, 7), (int) CMP_CASE( 0,  2, 8, -1, 7) );
+    TASSERT2( inteq, "cmp_case  0  7: 8 -1 7", (int) cmp_case_int( 0,  7, 8, -1, 7), (int) CMP_CASE( 0,  7, 8, -1, 7) );
+
+    TASSERT2( inteq, "cmp_case -2 -7: 8 -1 7", (int) cmp_case_int(-2, -7, 8, -1, 7), (int) CMP_CASE(-2, -7, 8, -1, 7) );
+    TASSERT2( inteq, "cmp_case -2 -2: 8 -1 7", (int) cmp_case_int(-2, -2, 8, -1, 7), (int) CMP_CASE(-2, -2, 8, -1, 7) );
+    TASSERT2( inteq, "cmp_case -2  0: 8 -1 7", (int) cmp_case_int(-2,  0, 8, -1, 7), (int) CMP_CASE(-2,  0, 8, -1, 7) );
+    TASSERT2( inteq, "cmp_case -2  2: 8 -1 7", (int) cmp_case_int(-2,  2, 8, -1, 7), (int) CMP_CASE(-2,  2, 8, -1, 7) );
+    TASSERT2( inteq, "cmp_case -2  7: 8 -1 7", (int) cmp_case_int(-2,  7, 8, -1, 7), (int) CMP_CASE(-2,  7, 8, -1, 7) );
+
+    TASSERT2( inteq, "cmp_case  2 -7: 8 -1 7", (int) cmp_case_int( 2, -7, 8, -1, 7), (int) CMP_CASE( 2, -7, 8, -1, 7) );
+    TASSERT2( inteq, "cmp_case  2 -2: 8 -1 7", (int) cmp_case_int( 2, -2, 8, -1, 7), (int) CMP_CASE( 2, -2, 8, -1, 7) );
+    TASSERT2( inteq, "cmp_case  2  0: 8 -1 7", (int) cmp_case_int( 2,  0, 8, -1, 7), (int) CMP_CASE( 2,  0, 8, -1, 7) );
+    TASSERT2( inteq, "cmp_case  2  2: 8 -1 7", (int) cmp_case_int( 2,  2, 8, -1, 7), (int) CMP_CASE( 2,  2, 8, -1, 7) );
+    TASSERT2( inteq, "cmp_case  2  7: 8 -1 7", (int) cmp_case_int( 2,  7, 8, -1, 7), (int) CMP_CASE( 2,  7, 8, -1, 7) );
+
+    TASSERT2( inteq, "cmp_case -7 -7: 8 -1 7", (int) cmp_case_int( 7, -7, 8, -1, 7), (int) CMP_CASE(-7, -7, 8, -1, 7) );
+    TASSERT2( inteq, "cmp_case -7 -2: 8 -1 7", (int) cmp_case_int( 7, -2, 8, -1, 7), (int) CMP_CASE(-7, -2, 8, -1, 7) );
+    TASSERT2( inteq, "cmp_case -7  0: 8 -1 7", (int) cmp_case_int( 7,  0, 8, -1, 7), (int) CMP_CASE(-7,  0, 8, -1, 7) );
+    TASSERT2( inteq, "cmp_case -7  2: 8 -1 7", (int) cmp_case_int( 7,  2, 8, -1, 7), (int) CMP_CASE(-7,  2, 8, -1, 7) );
+    TASSERT2( inteq, "cmp_case -7  7: 8 -1 7", (int) cmp_case_int( 7,  7, 8, -1, 7), (int) CMP_CASE(-7,  7, 8, -1, 7) );
+
+    TASSERT2( inteq, "cmp_case  7 -7: 8 -1 7", (int) cmp_case_int( 7, -7, 8, -1, 7), (int) CMP_CASE( 7, -7, 8, -1, 7) );
+    TASSERT2( inteq, "cmp_case  7 -2: 8 -1 7", (int) cmp_case_int( 7, -2, 8, -1, 7), (int) CMP_CASE( 7, -2, 8, -1, 7) );
+    TASSERT2( inteq, "cmp_case  7  0: 8 -1 7", (int) cmp_case_int( 7,  0, 8, -1, 7), (int) CMP_CASE( 7,  0, 8, -1, 7) );
+    TASSERT2( inteq, "cmp_case  7  2: 8 -1 7", (int) cmp_case_int( 7,  2, 8, -1, 7), (int) CMP_CASE( 7,  2, 8, -1, 7) );
+    TASSERT2( inteq, "cmp_case  7  7: 8 -1 7", (int) cmp_case_int( 7,  7, 8, -1, 7), (int) CMP_CASE( 7,  7, 8, -1, 7) );
+
+    /* ---------------------------------------------------------------- */
+
     TASSERT2( inteq, "cmp  0 -7", (int) cmp_int( 0, -7), (int) CMP( 0, -7) );
     TASSERT2( inteq, "cmp  0 -2", (int) cmp_int( 0, -2), (int) CMP( 0, -2) );
     TASSERT2( inteq, "cmp  0  0", (int) cmp_int( 0,  0), (int) CMP( 0,  0) );
@@ -408,6 +440,38 @@ unit_test_result_t bits_equalities_test_run(unit_test_context_t *context)
     TASSERT2( inteq, "sign of -0",       (int) sign_int(-0),       (int) 0);
 
     TASSERT2( inteq, "sign of 7",        (int) sign_int(7),        (int) 1);
+
+    /* ---------------------------------------------------------------- */
+
+    TASSERT2( inteq, "cmp_case  0 -7: 8 -1 7", (int) cmp_case_int( 0, -7, 8, -1, 7), (int) -1 );
+    TASSERT2( inteq, "cmp_case  0 -2: 8 -1 7", (int) cmp_case_int( 0, -2, 8, -1, 7), (int)  8 );
+    TASSERT2( inteq, "cmp_case  0  0: 8 -1 7", (int) cmp_case_int( 0,  0, 8, -1, 7), (int)  8 );
+    TASSERT2( inteq, "cmp_case  0  2: 8 -1 7", (int) cmp_case_int( 0,  2, 8, -1, 7), (int)  8 );
+    TASSERT2( inteq, "cmp_case  0  7: 8 -1 7", (int) cmp_case_int( 0,  7, 8, -1, 7), (int)  8 );
+
+    TASSERT2( inteq, "cmp_case -2 -7: 8 -1 7", (int) cmp_case_int(-2, -7, 8, -1, 7), (int)  7 );
+    TASSERT2( inteq, "cmp_case -2 -2: 8 -1 7", (int) cmp_case_int(-2, -2, 8, -1, 7), (int) -1 );
+    TASSERT2( inteq, "cmp_case -2  0: 8 -1 7", (int) cmp_case_int(-2,  0, 8, -1, 7), (int)  8 );
+    TASSERT2( inteq, "cmp_case -2  2: 8 -1 7", (int) cmp_case_int(-2,  2, 8, -1, 7), (int)  8 );
+    TASSERT2( inteq, "cmp_case -2  7: 8 -1 7", (int) cmp_case_int(-2,  7, 8, -1, 7), (int)  8 );
+
+    TASSERT2( inteq, "cmp_case  2 -7: 8 -1 7", (int) cmp_case_int( 2, -7, 8, -1, 7), (int)  7 );
+    TASSERT2( inteq, "cmp_case  2 -2: 8 -1 7", (int) cmp_case_int( 2, -2, 8, -1, 7), (int)  7 );
+    TASSERT2( inteq, "cmp_case  2  0: 8 -1 7", (int) cmp_case_int( 2,  0, 8, -1, 7), (int) -1 );
+    TASSERT2( inteq, "cmp_case  2  2: 8 -1 7", (int) cmp_case_int( 2,  2, 8, -1, 7), (int)  8 );
+    TASSERT2( inteq, "cmp_case  2  7: 8 -1 7", (int) cmp_case_int( 2,  7, 8, -1, 7), (int)  8 );
+
+    TASSERT2( inteq, "cmp_case -7 -7: 8 -1 7", (int) cmp_case_int( 7, -7, 8, -1, 7), (int)  7 );
+    TASSERT2( inteq, "cmp_case -7 -2: 8 -1 7", (int) cmp_case_int( 7, -2, 8, -1, 7), (int)  7 );
+    TASSERT2( inteq, "cmp_case -7  0: 8 -1 7", (int) cmp_case_int( 7,  0, 8, -1, 7), (int)  7 );
+    TASSERT2( inteq, "cmp_case -7  2: 8 -1 7", (int) cmp_case_int( 7,  2, 8, -1, 7), (int) -1 );
+    TASSERT2( inteq, "cmp_case -7  7: 8 -1 7", (int) cmp_case_int( 7,  7, 8, -1, 7), (int)  8 );
+
+    TASSERT2( inteq, "cmp_case  7 -7: 8 -1 7", (int) cmp_case_int( 7, -7, 8, -1, 7), (int)  8 );
+    TASSERT2( inteq, "cmp_case  7 -2: 8 -1 7", (int) cmp_case_int( 7, -2, 8, -1, 7), (int)  8 );
+    TASSERT2( inteq, "cmp_case  7  0: 8 -1 7", (int) cmp_case_int( 7,  0, 8, -1, 7), (int)  8 );
+    TASSERT2( inteq, "cmp_case  7  2: 8 -1 7", (int) cmp_case_int( 7,  2, 8, -1, 7), (int)  8 );
+    TASSERT2( inteq, "cmp_case  7  7: 8 -1 7", (int) cmp_case_int( 7,  7, 8, -1, 7), (int) -1 );
 
     /* ---------------------------------------------------------------- */
 

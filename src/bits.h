@@ -246,17 +246,24 @@ unsigned long one_bit_repeat_ulong(unsigned long num);
   )
 int sign_int(int num);
 
-/* Use "<=" and "<" to determine whether "check" is less than, equal to, or
+/* Evaluate to one 3 cases from application of "<=" and/or "<". */
+#define CMP_CASE(check, baseline, when_lt, when_eq, when_gt) \
+  ( ((check) <= (baseline))                                  \
+  ? ( ((check) < (baseline))                                 \
+    ? (when_lt)                                              \
+    : (when_eq)                                              \
+    )                                                        \
+  : (when_gt)                                                \
+  )
+int cmp_case_int(int check, int baseline, int when_lt, int when_eq, int when_gt);
+unsigned int cmp_case_uint(unsigned int check, unsigned int baseline, unsigned int when_lt, unsigned int when_eq, unsigned int when_gt);
+unsigned long int cmp_case_ulong(unsigned long check, unsigned long baseline, unsigned long when_lt, unsigned long when_eq, unsigned long when_gt);
+
+/* Use "<=" and/or "<" to determine whether "check" is less than, equal to, or
  * greater than "baseline", and return -1, 0, or 1, respectively.
  */
 #define CMP(check, baseline) \
-  ( ((check) <= (baseline))  \
-  ? ( ((check) < (baseline)) \
-    ? (-1)                   \
-    : (0)                    \
-    )                        \
-  : (1)                      \
-  )
+  (CMP_CASE((check), (baseline), (-1), (0), (1)))
 int cmp_int(int check, int baseline);
 int cmp_uint(unsigned int check, unsigned int baseline);
 int cmp_ulong(unsigned long check, unsigned long baseline);

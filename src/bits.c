@@ -170,6 +170,21 @@ int sign_int(int num)
   return SIGN(num);
 }
 
+int cmp_case_int(int check, int baseline, int when_lt, int when_eq, int when_gt)
+{
+  return CMP_CASE(check, baseline, when_lt, when_eq, when_gt);
+}
+
+unsigned int cmp_case_uint(unsigned int check, unsigned int baseline, unsigned int when_lt, unsigned int when_eq, unsigned int when_gt)
+{
+  return CMP_CASE(check, baseline, when_lt, when_eq, when_gt);
+}
+
+unsigned long int cmp_case_ulong(unsigned long check, unsigned long baseline, unsigned long when_lt, unsigned long when_eq, unsigned long when_gt)
+{
+  return CMP_CASE(check, baseline, when_lt, when_eq, when_gt);
+}
+
 int cmp_int(int check, int baseline)
 {
   return CMP(check, baseline);
