@@ -51,4 +51,10 @@ unit_test_result_t test_type_base_compare_run(unit_test_context_t *context);
 
 /* ---------------------------------------------------------------- */
 
+extern unit_test_t ordering_equalities_test;
+unit_test_result_t ordering_equalities_test_run(unit_test_context_t *context);
+
+extern unit_test_t comparers_test;
+unit_test_result_t comparers_test_run(unit_test_context_t *context);
+
 #endif /* ifndef TESTS_TEST_TYPE_BASE_COMPARE_H */

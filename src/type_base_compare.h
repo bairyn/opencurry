@@ -112,19 +112,19 @@ const type_t *ordering_relation_type(void);
 extern const type_t ordering_relation_type_def;
 enum ordering_relation_e
 {
-  ordering_lt    = ORDERING_LT,
-  ordering_eq    = ORDERING_EQ,
-  ordering_gt    = ORDERING_GT,
+  ordering_rel_lt    = ORDERING_LT,
+  ordering_rel_eq    = ORDERING_EQ,
+  ordering_rel_gt    = ORDERING_GT,
 
-  ordering_err_1 = ORDERING_ERR_1,
-  ordering_err_2 = ORDERING_ERR_2,
+  ordering_rel_err_1 = ORDERING_ERR_1,
+  ordering_rel_err_2 = ORDERING_ERR_2,
 
-  ordering_stop
+  ordering_rel_stop
 };
 typedef enum ordering_relation_e ordering_relation_t;
 
 #define ORDERING_RELATION_DEFAULT  \
-  ordering_eq
+  ordering_rel_eq
 extern const ordering_relation_t ordering_relation_default;
 
 /* ---------------------------------------------------------------- */
