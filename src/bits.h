@@ -232,20 +232,6 @@ unsigned int bit_nat_pred_uint(unsigned int num);
 unsigned int one_bit_repeat_uint(unsigned int num);
 unsigned long one_bit_repeat_ulong(unsigned long num);
 
-/*
- * Determine whether a value is negative, zero, or positive, and return,
- * correspondingly, -1, 0, or 1.
- */
-#define SIGN(num) \
-  ( ((num) <= 0)  \
-  ? ( ((num) < 0) \
-    ? (-1)        \
-    : (0)         \
-    )             \
-  : (1)           \
-  )
-int sign_int(int num);
-
 /* Evaluate to one 3 cases from application of "<=" and/or "<". */
 #define CMP_CASE(check, baseline, when_lt, when_eq, when_gt) \
   ( ((check) <= (baseline))                                  \
@@ -267,5 +253,23 @@ unsigned long int cmp_case_ulong(unsigned long check, unsigned long baseline, un
 int cmp_int(int check, int baseline);
 int cmp_uint(unsigned int check, unsigned int baseline);
 int cmp_ulong(unsigned long check, unsigned long baseline);
+
+/*
+ * Determine whether a value is negative, zero, or positive, and return the
+ * corresponding value.
+ */
+#define SIGN_CASE(num, when_negative, when_zero, when_positive) \
+  CMP_CASE((num), (0), (when_negative), (when_zero), (when_positive))
+int sign_case_int(int num, int when_negative, int when_zero, int when_positive);
+long sign_case_long(long num, long when_negative, long when_zero, long when_positive);
+
+/*
+ * Determine whether a value is negative, zero, or positive, and return,
+ * correspondingly, -1, 0, or 1.
+ */
+#define SIGN(num) \
+  CMP((num), (0))
+int sign_int(int num);
+long sign_long(long num);
 
 #endif /* ifndef BITS_H */

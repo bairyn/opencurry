@@ -204,22 +204,6 @@ unit_test_result_t bits_consistency_test_run(unit_test_context_t *context)
 
     /* ---------------------------------------------------------------- */
 
-    TASSERT2( inteq, "sign of 9",        (int) sign_int(9),        (int) SIGN(9) );
-    TASSERT2( inteq, "sign of 1234567",  (int) sign_int(1234567),  (int) SIGN(1234567) );
-
-    TASSERT2( inteq, "sign of -9",       (int) sign_int(-9),       (int) SIGN(-9) );
-    TASSERT2( inteq, "sign of -1234567", (int) sign_int(-1234567), (int) SIGN(-1234567) );
-
-    TASSERT2( inteq, "sign of 1",        (int) sign_int(1),        (int) SIGN(1) );
-    TASSERT2( inteq, "sign of -1",       (int) sign_int(-1),       (int) SIGN(-1) );
-
-    TASSERT2( inteq, "sign of 0",        (int) sign_int(0),        (int) SIGN(0) );
-    TASSERT2( inteq, "sign of -0",       (int) sign_int(-0),       (int) SIGN(-0) );
-
-    TASSERT2( inteq, "sign of 7",        (int) sign_int(7),        (int) SIGN(7) );
-
-    /* ---------------------------------------------------------------- */
-
     TASSERT2( inteq, "cmp_case  0 -7: 8 -1 7", (int) cmp_case_int( 0, -7, 8, -1, 7), (int) CMP_CASE( 0, -7, 8, -1, 7) );
     TASSERT2( inteq, "cmp_case  0 -2: 8 -1 7", (int) cmp_case_int( 0, -2, 8, -1, 7), (int) CMP_CASE( 0, -2, 8, -1, 7) );
     TASSERT2( inteq, "cmp_case  0  0: 8 -1 7", (int) cmp_case_int( 0,  0, 8, -1, 7), (int) CMP_CASE( 0,  0, 8, -1, 7) );
@@ -281,6 +265,38 @@ unit_test_result_t bits_consistency_test_run(unit_test_context_t *context)
     TASSERT2( inteq, "cmp  7  0", (int) cmp_int( 7,  0), (int) CMP( 7,  0) );
     TASSERT2( inteq, "cmp  7  2", (int) cmp_int( 7,  2), (int) CMP( 7,  2) );
     TASSERT2( inteq, "cmp  7  7", (int) cmp_int( 7,  7), (int) CMP( 7,  7) );
+
+    /* ---------------------------------------------------------------- */
+
+    TASSERT2( inteq, "sign of 9:        8 -1 7", (int) sign_case_int(9,        8, -1, 7), (int) SIGN_CASE(9,        8, -1, 7) );
+    TASSERT2( inteq, "sign of 1234567:  8 -1 7", (int) sign_case_int(1234567,  8, -1, 7), (int) SIGN_CASE(1234567,  8, -1, 7) );
+
+    TASSERT2( inteq, "sign of -9:       8 -1 7", (int) sign_case_int(-9,       8, -1, 7), (int) SIGN_CASE(-9,       8, -1, 7) );
+    TASSERT2( inteq, "sign of -1234567: 8 -1 7", (int) sign_case_int(-1234567, 8, -1, 7), (int) SIGN_CASE(-1234567, 8, -1, 7) );
+
+    TASSERT2( inteq, "sign of 1:        8 -1 7", (int) sign_case_int(1,        8, -1, 7), (int) SIGN_CASE(1,        8, -1, 7) );
+    TASSERT2( inteq, "sign of -1:       8 -1 7", (int) sign_case_int(-1,       8, -1, 7), (int) SIGN_CASE(-1,       8, -1, 7) );
+
+    TASSERT2( inteq, "sign of 0:        8 -1 7", (int) sign_case_int(0,        8, -1, 7), (int) SIGN_CASE(0,        8, -1, 7) );
+    TASSERT2( inteq, "sign of -0:       8 -1 7", (int) sign_case_int(-0,       8, -1, 7), (int) SIGN_CASE(-0,       8, -1, 7) );
+
+    TASSERT2( inteq, "sign of 7:        8 -1 7", (int) sign_case_int(7,        8, -1, 7), (int) SIGN_CASE(7,        8, -1, 7) );
+
+    /* ---------------------------------------------------------------- */
+
+    TASSERT2( inteq, "sign of 9",        (int) sign_int(9),        (int) SIGN(9) );
+    TASSERT2( inteq, "sign of 1234567",  (int) sign_int(1234567),  (int) SIGN(1234567) );
+
+    TASSERT2( inteq, "sign of -9",       (int) sign_int(-9),       (int) SIGN(-9) );
+    TASSERT2( inteq, "sign of -1234567", (int) sign_int(-1234567), (int) SIGN(-1234567) );
+
+    TASSERT2( inteq, "sign of 1",        (int) sign_int(1),        (int) SIGN(1) );
+    TASSERT2( inteq, "sign of -1",       (int) sign_int(-1),       (int) SIGN(-1) );
+
+    TASSERT2( inteq, "sign of 0",        (int) sign_int(0),        (int) SIGN(0) );
+    TASSERT2( inteq, "sign of -0",       (int) sign_int(-0),       (int) SIGN(-0) );
+
+    TASSERT2( inteq, "sign of 7",        (int) sign_int(7),        (int) SIGN(7) );
   }
 
   return result;
@@ -427,22 +443,6 @@ unit_test_result_t bits_equalities_test_run(unit_test_context_t *context)
 
     /* ---------------------------------------------------------------- */
 
-    TASSERT2( inteq, "sign of 9",        (int) sign_int(9),        (int) 1);
-    TASSERT2( inteq, "sign of 1234567",  (int) sign_int(1234567),  (int) 1);
-
-    TASSERT2( inteq, "sign of -9",       (int) sign_int(-9),       (int) -1);
-    TASSERT2( inteq, "sign of -1234567", (int) sign_int(-1234567), (int) -1);
-
-    TASSERT2( inteq, "sign of 1",        (int) sign_int(1),        (int) 1);
-    TASSERT2( inteq, "sign of -1",       (int) sign_int(-1),       (int) -1);
-
-    TASSERT2( inteq, "sign of 0",        (int) sign_int(0),        (int) 0);
-    TASSERT2( inteq, "sign of -0",       (int) sign_int(-0),       (int) 0);
-
-    TASSERT2( inteq, "sign of 7",        (int) sign_int(7),        (int) 1);
-
-    /* ---------------------------------------------------------------- */
-
     TASSERT2( inteq, "cmp_case  0 -7: 8 -1 7", (int) cmp_case_int( 0, -7, 8, -1, 7), (int) -1 );
     TASSERT2( inteq, "cmp_case  0 -2: 8 -1 7", (int) cmp_case_int( 0, -2, 8, -1, 7), (int)  8 );
     TASSERT2( inteq, "cmp_case  0  0: 8 -1 7", (int) cmp_case_int( 0,  0, 8, -1, 7), (int)  8 );
@@ -504,6 +504,38 @@ unit_test_result_t bits_equalities_test_run(unit_test_context_t *context)
     TASSERT2( inteq, "cmp  7  0", (int) cmp_int( 7,  0), (int) -1 );
     TASSERT2( inteq, "cmp  7  2", (int) cmp_int( 7,  2), (int) -1 );
     TASSERT2( inteq, "cmp  7  7", (int) cmp_int( 7,  7), (int)  0 );
+
+    /* ---------------------------------------------------------------- */
+
+    TASSERT2( inteq, "sign of 9:        8 -1 7", (int) sign_case_int(9,        8, -1, 7), (int)  7 );
+    TASSERT2( inteq, "sign of 1234567:  8 -1 7", (int) sign_case_int(1234567,  8, -1, 7), (int)  7 );
+
+    TASSERT2( inteq, "sign of -9:       8 -1 7", (int) sign_case_int(-9,       8, -1, 7), (int)  8 );
+    TASSERT2( inteq, "sign of -1234567: 8 -1 7", (int) sign_case_int(-1234567, 8, -1, 7), (int)  8 );
+
+    TASSERT2( inteq, "sign of 1:        8 -1 7", (int) sign_case_int(1,        8, -1, 7), (int)  7 );
+    TASSERT2( inteq, "sign of -1:       8 -1 7", (int) sign_case_int(-1,       8, -1, 7), (int)  8 );
+
+    TASSERT2( inteq, "sign of 0:        8 -1 7", (int) sign_case_int(0,        8, -1, 7), (int) -1 );
+    TASSERT2( inteq, "sign of -0:       8 -1 7", (int) sign_case_int(-0,       8, -1, 7), (int) -1 );
+
+    TASSERT2( inteq, "sign of 7:        8 -1 7", (int) sign_case_int(7,        8, -1, 7), (int)  7 );
+
+    /* ---------------------------------------------------------------- */
+
+    TASSERT2( inteq, "sign of 9",        (int) sign_int(9),        (int)  1 );
+    TASSERT2( inteq, "sign of 1234567",  (int) sign_int(1234567),  (int)  1 );
+
+    TASSERT2( inteq, "sign of -9",       (int) sign_int(-9),       (int) -1 );
+    TASSERT2( inteq, "sign of -1234567", (int) sign_int(-1234567), (int) -1 );
+
+    TASSERT2( inteq, "sign of 1",        (int) sign_int(1),        (int)  1 );
+    TASSERT2( inteq, "sign of -1",       (int) sign_int(-1),       (int) -1 );
+
+    TASSERT2( inteq, "sign of 0",        (int) sign_int(0),        (int)  0 );
+    TASSERT2( inteq, "sign of -0",       (int) sign_int(-0),       (int)  0 );
+
+    TASSERT2( inteq, "sign of 7",        (int) sign_int(7),        (int)  1 );
   }
 
   return result;

@@ -165,11 +165,6 @@ unsigned long one_bit_repeat_ulong(unsigned long num)
   return ONE_BIT_REPEAT(num);
 }
 
-int sign_int(int num)
-{
-  return SIGN(num);
-}
-
 int cmp_case_int(int check, int baseline, int when_lt, int when_eq, int when_gt)
 {
   return CMP_CASE(check, baseline, when_lt, when_eq, when_gt);
@@ -198,4 +193,24 @@ int cmp_uint(unsigned int check, unsigned int baseline)
 int cmp_ulong(unsigned long check, unsigned long baseline)
 {
   return CMP(check, baseline);
+}
+
+int sign_case_int(int num, int when_negative, int when_zero, int when_positive)
+{
+  return SIGN_CASE(num, when_negative, when_zero, when_positive);
+}
+
+long sign_case_long(long num, long when_negative, long when_zero, long when_positive)
+{
+  return SIGN_CASE(num, when_negative, when_zero, when_positive);
+}
+
+int sign_int(int num)
+{
+  return SIGN(num);
+}
+
+long sign_long(long num)
+{
+  return SIGN(num);
 }
