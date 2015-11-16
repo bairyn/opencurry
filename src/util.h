@@ -129,8 +129,24 @@ size_t max_size(size_t a, size_t b);
 #define STR(a)    XSTR(a)
 #define CAT(a, b) XCAT(a, b)
 
-#define CAT3(a, b, c) CAT(a, CAT(b, c))
-#define CAT4(a, b, c, d) CAT(a, CAT(b, CAT(c, d)))
+#define CAT0()
+#define CAT1( a)                                                 a
+#define CAT2( a, b)                                              CAT(a, b)
+#define CAT3( a, b, c)                                           CAT(a, CAT2 (b, c))
+#define CAT4( a, b, c, d)                                        CAT(a, CAT3 (b, c, d))
+#define CAT5( a, b, c, d, e)                                     CAT(a, CAT4 (b, c, d, e))
+#define CAT6( a, b, c, d, e, f)                                  CAT(a, CAT5 (b, c, d, e, f))
+#define CAT7( a, b, c, d, e, f, g)                               CAT(a, CAT6 (b, c, d, e, f, g))
+#define CAT8( a, b, c, d, e, f, g, h)                            CAT(a, CAT7 (b, c, d, e, f, g, h))
+#define CAT9( a, b, c, d, e, f, g, h, i)                         CAT(a, CAT8 (b, c, d, e, f, g, h, i))
+#define CAT10(a, b, c, d, e, f, g, h, i, j)                      CAT(a, CAT9 (b, c, d, e, f, g, h, i, j))
+#define CAT11(a, b, c, d, e, f, g, h, i, j, k)                   CAT(a, CAT10(b, c, d, e, f, g, h, i, j, k))
+#define CAT12(a, b, c, d, e, f, g, h, i, j, k, l)                CAT(a, CAT11(b, c, d, e, f, g, h, i, j, k, l))
+#define CAT13(a, b, c, d, e, f, g, h, i, j, k, l, m)             CAT(a, CAT12(b, c, d, e, f, g, h, i, j, k, l, m))
+#define CAT14(a, b, c, d, e, f, g, h, i, j, k, l, m, n)          CAT(a, CAT13(b, c, d, e, f, g, h, i, j, k, l, m, n))
+#define CAT15(a, b, c, d, e, f, g, h, i, j, k, l, m, n, o)       CAT(a, CAT14(b, c, d, e, f, g, h, i, j, k, l, m, n, o))
+#define CAT16(a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p)    CAT(a, CAT15(b, c, d, e, f, g, h, i, j, k, l, m, n, o, p))
+#define CAT17(a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q) CAT(a, CAT16(b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q))
 
 
 #define DUPLICATE(a) CAT(a, a)
