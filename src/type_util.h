@@ -39,29 +39,4 @@
 #define TYPE_UTIL_H
 #include "base.h"
 
-#include "ptrs.h"
-#include "type_base.h"
-
-/* ---------------------------------------------------------------- */
-/* General pointers.                                                */
-/* ---------------------------------------------------------------- */
-
-#ifdef TODO
-const type_t *genp_type(void);
-extern const type_t genp_type_def;
-typedef union genp_u genp_t;
-union genp_u
-{
-  objp_t     objp;
-  funp_t     funp;
-  funp_t    *funpr;
-  size_t     size;
-  ptrdiff_t  ptrdiff;
-};
-
-#define GENP_DEFAULT \
-  TODO
-extern const genp_t genp_default;
-#endif /* #ifdef TODO */
-
 #endif /* ifndef TYPE_UTIL_H */

@@ -177,9 +177,9 @@ int ordering_err_2   (void)
   return ORDERING_ERR_2;
 }
 
-int ordering_lt_lossy(void)
+int ordering_lossy_lt(void)
 {
-  return ORDERING_LT_LOSSY;
+  return ORDERING_LOSSY_LT;
 }
 
 
@@ -199,7 +199,7 @@ int is_ordering_lossy  (int ordering)
 }
 
 
-/* If the result corresponds to an error code, return ORDERING_LT_LOSSY. */
+/* If the result corresponds to an error code, return ORDERING_LOSSY_LT. */
 int ordering_success(int ordering)
 {
   return ORDERING_SUCCESS(ordering);
@@ -264,7 +264,7 @@ const type_t ordering_relation_type_def =
   , /* @size                  */ ordering_relation_type_size
   , /* @is_struct             */ type_is_not_struct
   , /* is_mutable             */ NULL
-  , /* is_subtype             */ ordering_relation_type_is_subtype
+  , /* is_subtype             */ NULL
   , /* is_supertype           */ ordering_relation_type_is_supertype
 
   , /* cons_type              */ NULL
@@ -394,6 +394,121 @@ const comparer_t comparer_default =
   COMPARER_DEFAULT;
 
 /* ---------------------------------------------------------------- */
+
+int call_comparer(comparer_t comparer, void *context, const void *check, const void *baseline)
+{
+#if ERROR_CHECKING
+  if (!comparer)
+    return ordering_err_2();
+#endif /* #if ERROR_CHECKING  */
+
+  return comparer(context, check, baseline);
+}
+
+/* ---------------------------------------------------------------- */
+/* ---------------------------------------------------------------- */
+
+/* callback_compare type. */
+
+const type_t *callback_compare_type(void)
+  { return &callback_compare_type_def; }
+
+static const char          *callback_compare_type_name       (const type_t *self);
+static size_t               callback_compare_type_size       (const type_t *self, const tval *val);
+static const struct_info_t *callback_compare_type_is_struct  (const type_t *self);
+static const tval          *callback_compare_type_has_default(const type_t *self);
+
+const type_t callback_compare_type_def =
+  { type_type
+
+    /* @: Required.           */
+
+  , /* memory                 */ MEMORY_TRACKER_DEFAULTS
+  , /* is_self_mutable        */ NULL
+  , /* @indirect              */ callback_compare_type
+
+  , /* self                   */ NULL
+  , /* container              */ NULL
+
+  , /* typed                  */ NULL
+
+  , /* @name                  */ callback_compare_type_name
+  , /* info                   */ NULL
+  , /* @size                  */ callback_compare_type_size
+  , /* @is_struct             */ callback_compare_type_is_struct
+  , /* is_mutable             */ NULL
+  , /* is_subtype             */ NULL
+  , /* is_supertype           */ NULL
+
+  , /* cons_type              */ NULL
+  , /* init                   */ NULL
+  , /* free                   */ NULL
+  , /* has_default            */ callback_compare_type_has_default
+  , /* mem                    */ NULL
+  , /* mem_init               */ NULL
+  , /* mem_is_dyn             */ NULL
+  , /* mem_free               */ NULL
+  , /* default_memory_manager */ NULL
+
+  , /* dup                    */ NULL
+
+  , /* user                   */ NULL
+  , /* cuser                  */ NULL
+  , /* cmp                    */ NULL
+
+  , /* parity                 */ ""
+  };
+
+static const char          *callback_compare_type_name       (const type_t *self)
+  { return "callback_compare_t"; }
+
+static size_t               callback_compare_type_size       (const type_t *self, const tval *val)
+  { return sizeof(callback_compare_t); }
+
+DEF_FIELD_DEFAULT_VALUE_FROM_TYPE(callback_compare)
+static const struct_info_t *callback_compare_type_is_struct  (const type_t *self)
+  {
+    STRUCT_INFO_BEGIN(callback_compare);
+
+    /* typed_t type */
+    STRUCT_INFO_RADD(typed_type(), type);
+
+    /* comparer_t  comparer;         */
+    /* void       *comparer_context; */
+    STRUCT_INFO_RADD(comparer_type(), comparer);
+    STRUCT_INFO_RADD(objp_type(),     comparer_context);
+
+    STRUCT_INFO_DONE();
+  }
+
+static const tval          *callback_compare_type_has_default(const type_t *self)
+  { return type_has_default_value(self, &callback_compare_defaults); }
+
+/* ---------------------------------------------------------------- */
+
+const callback_compare_t callback_compare_defaults =
+  CALLBACK_COMPARE_DEFAULTS;
+
+/* ---------------------------------------------------------------- */
+
+callback_compare_t callback_compare(comparer_t comparer, void *comparer_context)
+{
+  callback_compare_t callback_compare;
+
+  callback_compare.type = callback_compare_type;
+
+  callback_compare.comparer         = comparer;
+  callback_compare.comparer_context = comparer_context;
+
+  return callback_compare;
+}
+
+int call_callback_compare(callback_compare_t callback_compare, const void *check, const void *baseline)
+{
+  return call_comparer(callback_compare.comparer, callback_compare.comparer_context, check, baseline);
+}
+
+/* ---------------------------------------------------------------- */
 /* Various comparers.                                               */
 /* ---------------------------------------------------------------- */
 
@@ -480,7 +595,7 @@ int compare_char    (void *context, const          char         *check, const   
     return ordering_err_2();
 #endif /* #if ERROR_CHECKING  */
 
-  return ORDERING_CMP(*check, *baseline);
+  return CMP_SUCCESS(*check, *baseline);
 }
 
 int compare_schar   (void *context, const signed   char         *check, const signed   char         *baseline)
@@ -490,7 +605,7 @@ int compare_schar   (void *context, const signed   char         *check, const si
     return ordering_err_2();
 #endif /* #if ERROR_CHECKING  */
 
-  return ORDERING_CMP(*check, *baseline);
+  return CMP_SUCCESS(*check, *baseline);
 }
 
 int compare_uchar   (void *context, const unsigned char         *check, const unsigned char         *baseline)
@@ -500,7 +615,7 @@ int compare_uchar   (void *context, const unsigned char         *check, const un
     return ordering_err_2();
 #endif /* #if ERROR_CHECKING  */
 
-  return ORDERING_CMP(*check, *baseline);
+  return CMP_SUCCESS(*check, *baseline);
 }
 
 int compare_short   (void *context, const          short        *check, const          short        *baseline)
@@ -510,7 +625,7 @@ int compare_short   (void *context, const          short        *check, const   
     return ordering_err_2();
 #endif /* #if ERROR_CHECKING  */
 
-  return ORDERING_CMP(*check, *baseline);
+  return CMP_SUCCESS(*check, *baseline);
 }
 
 int compare_ushort  (void *context, const unsigned short        *check, const unsigned short        *baseline)
@@ -520,7 +635,7 @@ int compare_ushort  (void *context, const unsigned short        *check, const un
     return ordering_err_2();
 #endif /* #if ERROR_CHECKING  */
 
-  return ORDERING_CMP(*check, *baseline);
+  return CMP_SUCCESS(*check, *baseline);
 }
 
 int compare_int     (void *context, const          int          *check, const          int          *baseline)
@@ -530,7 +645,7 @@ int compare_int     (void *context, const          int          *check, const   
     return ordering_err_2();
 #endif /* #if ERROR_CHECKING  */
 
-  return ORDERING_CMP(*check, *baseline);
+  return CMP_SUCCESS(*check, *baseline);
 }
 
 int compare_uint    (void *context, const unsigned int          *check, const unsigned int          *baseline)
@@ -540,7 +655,7 @@ int compare_uint    (void *context, const unsigned int          *check, const un
     return ordering_err_2();
 #endif /* #if ERROR_CHECKING  */
 
-  return ORDERING_CMP(*check, *baseline);
+  return CMP_SUCCESS(*check, *baseline);
 }
 
 int compare_long    (void *context, const          long         *check, const          long         *baseline)
@@ -550,7 +665,7 @@ int compare_long    (void *context, const          long         *check, const   
     return ordering_err_2();
 #endif /* #if ERROR_CHECKING  */
 
-  return ORDERING_CMP(*check, *baseline);
+  return CMP_SUCCESS(*check, *baseline);
 }
 
 int compare_ulong   (void *context, const unsigned long         *check, const unsigned long         *baseline)
@@ -560,7 +675,7 @@ int compare_ulong   (void *context, const unsigned long         *check, const un
     return ordering_err_2();
 #endif /* #if ERROR_CHECKING  */
 
-  return ORDERING_CMP(*check, *baseline);
+  return CMP_SUCCESS(*check, *baseline);
 }
 
 int compare_float   (void *context, const          float        *check, const          float        *baseline)
@@ -570,7 +685,7 @@ int compare_float   (void *context, const          float        *check, const   
     return ordering_err_2();
 #endif /* #if ERROR_CHECKING  */
 
-  return ORDERING_CMP(*check, *baseline);
+  return CMP_SUCCESS(*check, *baseline);
 }
 
 int compare_double  (void *context, const          double       *check, const          double       *baseline)
@@ -580,7 +695,7 @@ int compare_double  (void *context, const          double       *check, const   
     return ordering_err_2();
 #endif /* #if ERROR_CHECKING  */
 
-  return ORDERING_CMP(*check, *baseline);
+  return CMP_SUCCESS(*check, *baseline);
 }
 
 int compare_ldouble (void *context, const long     double       *check, const long     double       *baseline)
@@ -590,7 +705,7 @@ int compare_ldouble (void *context, const long     double       *check, const lo
     return ordering_err_2();
 #endif /* #if ERROR_CHECKING  */
 
-  return ORDERING_CMP(*check, *baseline);
+  return CMP_SUCCESS(*check, *baseline);
 }
 
 
@@ -601,7 +716,7 @@ int compare_size    (void *context, const          size_t       *check, const   
     return ordering_err_2();
 #endif /* #if ERROR_CHECKING  */
 
-  return ORDERING_CMP(*check, *baseline);
+  return CMP_SUCCESS(*check, *baseline);
 }
 
 int compare_ptrdiff (void *context, const          ptrdiff_t    *check, const          ptrdiff_t    *baseline)
@@ -611,7 +726,7 @@ int compare_ptrdiff (void *context, const          ptrdiff_t    *check, const   
     return ordering_err_2();
 #endif /* #if ERROR_CHECKING  */
 
-  return ORDERING_CMP(*check, *baseline);
+  return CMP_SUCCESS(*check, *baseline);
 }
 
 
@@ -622,17 +737,22 @@ int compare_objp    (void *context, const          void        **check, const   
     return ordering_err_2();
 #endif /* #if ERROR_CHECKING  */
 
-  return ORDERING_CMP(*check, *baseline);
+  return CMP_SUCCESS(*check, *baseline);
 }
 
 int compare_funp    (void *context, const          funp_cast_t  *check, const          funp_cast_t  *baseline)
 {
+  objp_cast_t check_objp_cast, baseline_objp_cast;
+
 #if ERROR_CHECKING
   if (!check || !baseline)
     return ordering_err_2();
 #endif /* #if ERROR_CHECKING  */
 
-  return ORDERING_CMP(*check, *baseline);
+  check_objp_cast    = funp_to_objp(*check);
+  baseline_objp_cast = funp_to_objp(*baseline);
+
+  return CMP_SUCCESS(check_objp_cast, baseline_objp_cast);
 }
 
 
@@ -735,6 +855,13 @@ int compare_strzr   (void *context, const          char        **check, const   
 #endif /* #if ERROR_CHECKING  */
 
   return ORDERING_SUCCESS(strcmp(*check, *baseline));
+}
+
+
+/* Directly compare the pointers, the locations of the values in memory. */
+int compare_mempos  (void *context, const          void         *check, const          void         *baseline)
+{
+  return CMP_SUCCESS(check, baseline);
 }
 
 /* ---------------------------------------------------------------- */
@@ -876,6 +1003,12 @@ void *compare_strzr_context  (void)
   return NULL;
 }
 
+
+void *compare_mempos_context (void)
+{
+  return NULL;
+}
+
 /* ---------------------------------------------------------------- */
 
 const comparer_t comparer_with_type     = (comparer_t) &compare_with_type;
@@ -910,4 +1043,259 @@ const comparer_t comparer_strn          = (comparer_t) &compare_strn;
 const comparer_t comparer_strz          = (comparer_t) &compare_strz;
 
 const comparer_t comparer_strnr         = (comparer_t) &compare_strnr;
-const comparer_t comparer_strzr         = (comparer_t) &compare_strnz;
+const comparer_t comparer_strzr         = (comparer_t) &compare_strzr;
+
+const comparer_t comparer_mempos        = (comparer_t) &compare_mempos;
+
+/* ---------------------------------------------------------------- */
+
+callback_compare_t callback_compare_with_type    (const type_t *type)
+{
+  return
+    callback_compare
+      ( comparer_with_type
+      , compare_with_type_context(type)
+      );
+}
+
+callback_compare_t callback_compare_ref_with_type(const type_t *type)
+{
+  return
+    callback_compare
+      ( comparer_ref_with_type
+      , compare_ref_with_type_context(type)
+      );
+}
+
+
+callback_compare_t callback_compare_tval   (void)
+{
+  return
+    callback_compare
+      ( comparer_tval
+      , compare_tval_context()
+      );
+}
+
+callback_compare_t callback_compare_tvalr  (void)
+{
+  return
+    callback_compare
+      ( comparer_tvalr
+      , compare_tvalr_context()
+      );
+}
+
+
+callback_compare_t callback_compare_char   (void)
+{
+  return
+    callback_compare
+      ( comparer_char
+      , compare_char_context()
+      );
+}
+
+callback_compare_t callback_compare_schar  (void)
+{
+  return
+    callback_compare
+      ( comparer_schar
+      , compare_schar_context()
+      );
+}
+
+callback_compare_t callback_compare_uchar  (void)
+{
+  return
+    callback_compare
+      ( comparer_uchar
+      , compare_uchar_context()
+      );
+}
+
+callback_compare_t callback_compare_short  (void)
+{
+  return
+    callback_compare
+      ( comparer_short
+      , compare_short_context()
+      );
+}
+
+callback_compare_t callback_compare_ushort (void)
+{
+  return
+    callback_compare
+      ( comparer_ushort
+      , compare_ushort_context()
+      );
+}
+
+callback_compare_t callback_compare_int    (void)
+{
+  return
+    callback_compare
+      ( comparer_int
+      , compare_int_context()
+      );
+}
+
+callback_compare_t callback_compare_uint   (void)
+{
+  return
+    callback_compare
+      ( comparer_uint
+      , compare_uint_context()
+      );
+}
+
+callback_compare_t callback_compare_long   (void)
+{
+  return
+    callback_compare
+      ( comparer_long
+      , compare_long_context()
+      );
+}
+
+callback_compare_t callback_compare_ulong  (void)
+{
+  return
+    callback_compare
+      ( comparer_ulong
+      , compare_ulong_context()
+      );
+}
+
+callback_compare_t callback_compare_float  (void)
+{
+  return
+    callback_compare
+      ( comparer_float
+      , compare_float_context()
+      );
+}
+
+callback_compare_t callback_compare_double (void)
+{
+  return
+    callback_compare
+      ( comparer_double
+      , compare_double_context()
+      );
+}
+
+callback_compare_t callback_compare_ldouble(void)
+{
+  return
+    callback_compare
+      ( comparer_ldouble
+      , compare_ldouble_context()
+      );
+}
+
+
+callback_compare_t callback_compare_size   (void)
+{
+  return
+    callback_compare
+      ( comparer_size
+      , compare_size_context()
+      );
+}
+
+callback_compare_t callback_compare_ptrdiff(void)
+{
+  return
+    callback_compare
+      ( comparer_ptrdiff
+      , compare_ptrdiff_context()
+      );
+}
+
+
+callback_compare_t callback_compare_objp   (void)
+{
+  return
+    callback_compare
+      ( comparer_objp
+      , compare_objp_context()
+      );
+}
+
+callback_compare_t callback_compare_funp   (void)
+{
+  return
+    callback_compare
+      ( comparer_funp
+      , compare_funp_context()
+      );
+}
+
+
+callback_compare_t callback_compare_mem    (size_t n)
+{
+  return
+    callback_compare
+      ( comparer_mem
+      , compare_mem_context(n)
+      );
+}
+
+callback_compare_t callback_compare_memr   (size_t n)
+{
+  return
+    callback_compare
+      ( comparer_memr
+      , compare_memr_context(n)
+      );
+}
+
+
+callback_compare_t callback_compare_strn   (size_t n)
+{
+  return
+    callback_compare
+      ( comparer_strn
+      , compare_strn_context(n)
+      );
+}
+
+callback_compare_t callback_compare_strz   (void)
+{
+  return
+    callback_compare
+      ( comparer_strz
+      , compare_strz_context()
+      );
+}
+
+
+callback_compare_t callback_compare_strnr  (size_t n)
+{
+  return
+    callback_compare
+      ( comparer_strnr
+      , compare_strnr_context(n)
+      );
+}
+
+callback_compare_t callback_compare_strzr  (void)
+{
+  return
+    callback_compare
+      ( comparer_strzr
+      , compare_strzr_context()
+      );
+}
+
+
+callback_compare_t callback_compare_mempos (void)
+{
+  return
+    callback_compare
+      ( comparer_mempos
+      , compare_mempos_context()
+      );
+}

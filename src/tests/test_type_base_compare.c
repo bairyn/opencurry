@@ -198,10 +198,10 @@ unit_test_result_t ordering_equalities_test(unit_test_context_t *context)
   {
     ASSERT2( inteq, ordering_err_1(),      ORDERING_ERR_1 );
     ASSERT2( inteq, ordering_err_2(),      ORDERING_ERR_2 );
-    ASSERT2( inteq, ordering_lt_lossy(),   ORDERING_LT_LOSSY );
-    ASSERT2( inteq, ordering_gt_lossy_1(), ORDERING_GT_LOSSY_1 );
-    ASSERT2( inteq, ordering_gt_lossy_2(), ORDERING_GT_LOSSY_2 );
-    ASSERT2( inteq, ordering_gt_lossy_3(), ORDERING_GT_LOSSY_3 );
+    ASSERT2( inteq, ordering_lossy_lt(),   ORDERING_LOSSY_LT );
+    ASSERT2( inteq, ordering_lossy_gt_1(), ORDERING_LOSSY_GT_1 );
+    ASSERT2( inteq, ordering_lossy_gt_2(), ORDERING_LOSSY_GT_2 );
+    ASSERT2( inteq, ordering_lossy_gt_3(), ORDERING_LOSSY_GT_3 );
 
     ASSERT2( inteq, IS_SUCCESS(0),                     1 );
     ASSERT2( inteq, IS_SUCCESS(1),                     1 );
@@ -210,10 +210,10 @@ unit_test_result_t ordering_equalities_test(unit_test_context_t *context)
     ASSERT2( inteq, IS_SUCCESS(-16),                   1 );
     ASSERT2( inteq, IS_SUCCESS(ordering_err_1()),      0 );
     ASSERT2( inteq, IS_SUCCESS(ordering_err_2()),      0 );
-    ASSERT2( inteq, IS_SUCCESS(ordering_lt_lossy()),   1 );
-    ASSERT2( inteq, IS_SUCCESS(ordering_gt_lossy_1()), 1 );
-    ASSERT2( inteq, IS_SUCCESS(ordering_gt_lossy_2()), 1 );
-    ASSERT2( inteq, IS_SUCCESS(ordering_gt_lossy_3()), 1 );
+    ASSERT2( inteq, IS_SUCCESS(ordering_lossy_lt()),   1 );
+    ASSERT2( inteq, IS_SUCCESS(ordering_lossy_gt_1()), 1 );
+    ASSERT2( inteq, IS_SUCCESS(ordering_lossy_gt_2()), 1 );
+    ASSERT2( inteq, IS_SUCCESS(ordering_lossy_gt_3()), 1 );
 
     ASSERT2( inteq, IS_ERROR(0),                       0 );
     ASSERT2( inteq, IS_ERROR(1),                       0 );
@@ -222,10 +222,10 @@ unit_test_result_t ordering_equalities_test(unit_test_context_t *context)
     ASSERT2( inteq, IS_ERROR(-16),                     0 );
     ASSERT2( inteq, IS_ERROR(ordering_err_1()),        1 );
     ASSERT2( inteq, IS_ERROR(ordering_err_2()),        1 );
-    ASSERT2( inteq, IS_ERROR(ordering_lt_lossy()),     0 );
-    ASSERT2( inteq, IS_ERROR(ordering_gt_lossy_1()),   0 );
-    ASSERT2( inteq, IS_ERROR(ordering_gt_lossy_2()),   0 );
-    ASSERT2( inteq, IS_ERROR(ordering_gt_lossy_3()),   0 );
+    ASSERT2( inteq, IS_ERROR(ordering_lossy_lt()),     0 );
+    ASSERT2( inteq, IS_ERROR(ordering_lossy_gt_1()),   0 );
+    ASSERT2( inteq, IS_ERROR(ordering_lossy_gt_2()),   0 );
+    ASSERT2( inteq, IS_ERROR(ordering_lossy_gt_3()),   0 );
 
     ASSERT2( inteq, IS_LOSSY(0),                       0 );
     ASSERT2( inteq, IS_LOSSY(1),                       0 );
@@ -234,22 +234,22 @@ unit_test_result_t ordering_equalities_test(unit_test_context_t *context)
     ASSERT2( inteq, IS_LOSSY(-16),                     0 );
     ASSERT2( inteq, IS_LOSSY(ordering_err_1()),        0 );
     ASSERT2( inteq, IS_LOSSY(ordering_err_2()),        0 );
-    ASSERT2( inteq, IS_LOSSY(ordering_lt_lossy()),     1 );
-    ASSERT2( inteq, IS_LOSSY(ordering_gt_lossy_1()),   1 );
-    ASSERT2( inteq, IS_LOSSY(ordering_gt_lossy_2()),   1 );
-    ASSERT2( inteq, IS_LOSSY(ordering_gt_lossy_3()),   1 );
+    ASSERT2( inteq, IS_LOSSY(ordering_lossy_lt()),     1 );
+    ASSERT2( inteq, IS_LOSSY(ordering_lossy_gt_1()),   1 );
+    ASSERT2( inteq, IS_LOSSY(ordering_lossy_gt_2()),   1 );
+    ASSERT2( inteq, IS_LOSSY(ordering_lossy_gt_3()),   1 );
 
     ASSERT2( inteq, SUCCESS(0),                         0 );
     ASSERT2( inteq, SUCCESS(1),                         1 );
     ASSERT2( inteq, SUCCESS(-1),                       -1 );
     ASSERT2( inteq, SUCCESS(8),                         8 );
     ASSERT2( inteq, SUCCESS(-16),                      -16 );
-    ASSERT2( inteq, SUCCESS(ordering_err_1()),          ordering_lt_lossy()   );
-    ASSERT2( inteq, SUCCESS(ordering_err_2()),          ordering_lt_lossy()   );
-    ASSERT2( inteq, SUCCESS(ordering_lt_lossy()),       ordering_lt_lossy()   );
-    ASSERT2( inteq, SUCCESS(ordering_gt_lossy_1()),     ordering_gt_lossy_1() );
-    ASSERT2( inteq, SUCCESS(ordering_gt_lossy_2()),     ordering_gt_lossy_2() );
-    ASSERT2( inteq, SUCCESS(ordering_gt_lossy_3()),     ordering_gt_lossy_3() );
+    ASSERT2( inteq, SUCCESS(ordering_err_1()),          ordering_lossy_lt()   );
+    ASSERT2( inteq, SUCCESS(ordering_err_2()),          ordering_lossy_lt()   );
+    ASSERT2( inteq, SUCCESS(ordering_lossy_lt()),       ordering_lossy_lt()   );
+    ASSERT2( inteq, SUCCESS(ordering_lossy_gt_1()),     ordering_lossy_gt_1() );
+    ASSERT2( inteq, SUCCESS(ordering_lossy_gt_2()),     ordering_lossy_gt_2() );
+    ASSERT2( inteq, SUCCESS(ordering_lossy_gt_3()),     ordering_lossy_gt_3() );
 
     ASSERT2( inteq, ordering_lt(), ORDERING_LT );
     ASSERT2( inteq, ordering_eq(), ORDERING_EQ );
@@ -266,10 +266,10 @@ unit_test_result_t ordering_equalities_test(unit_test_context_t *context)
     ASSERT2( inteq, INVERT(-16),                    -16 );
     ASSERT2( inteq, INVERT(ordering_err_1()),        ordering_err_1() );
     ASSERT2( inteq, INVERT(ordering_err_2()),        ordering_err_2() );
-    ASSERT2( inteq, INVERT(ordering_lt_lossy()),     ordering_gt_lossy_1() );
-    ASSERT2( inteq, INVERT(ordering_gt_lossy_1()),   ordering_lt_lossy() );
-    ASSERT2( inteq, INVERT(ordering_gt_lossy_2()),   ordering_lt_lossy() );
-    ASSERT2( inteq, INVERT(ordering_gt_lossy_3()),   ordering_lt_lossy() );
+    ASSERT2( inteq, INVERT(ordering_lossy_lt()),     ordering_lossy_gt_1() );
+    ASSERT2( inteq, INVERT(ordering_lossy_gt_1()),   ordering_lossy_lt() );
+    ASSERT2( inteq, INVERT(ordering_lossy_gt_2()),   ordering_lossy_lt() );
+    ASSERT2( inteq, INVERT(ordering_lossy_gt_3()),   ordering_lossy_lt() );
 
     /* ---------------------------------------------------------------- */
 
@@ -280,7 +280,7 @@ unit_test_result_t ordering_equalities_test(unit_test_context_t *context)
     ASSERT2( inteq, ORDERING(-16),                   ordering_rel_lt );
     ASSERT2( inteq, ORDERING(ordering_err_1()),      ordering_rel_err_1 );
     ASSERT2( inteq, ORDERING(ordering_err_2()),      ordering_rel_err_2 );
-    ASSERT2( inteq, ORDERING(ordering_lt_lossy()),   ordering_rel_lt );
+    ASSERT2( inteq, ORDERING(ordering_lossy_lt()),   ordering_rel_lt );
 
     ASSERT2( inteq, ordering_rel_lt,                 SIGN(ordering_rel_lt) );
     ASSERT2( inteq, ordering_rel_eq,                 SIGN(ordering_rel_eq) );
@@ -289,6 +289,95 @@ unit_test_result_t ordering_equalities_test(unit_test_context_t *context)
     ASSERT2( true, ordering_rel_lt <  0 );
     ASSERT2( true, ordering_rel_eq == 0 );
     ASSERT2( true, ordering_rel_gt >  0 );
+
+    /* ---------------------------------------------------------------- */
+
+    ASSERT2( inteq, SUCCESFULL_CMP(-7, -7), ordering_rel_eq );
+    ASSERT2( inteq, SUCCESFULL_CMP(-7, -2), ordering_rel_lt );
+    ASSERT2( inteq, SUCCESFULL_CMP(-7,  0), ordering_rel_lt );
+    ASSERT2( inteq, SUCCESFULL_CMP(-7,  2), ordering_rel_lt );
+    ASSERT2( inteq, SUCCESFULL_CMP(-7,  7), ordering_rel_lt );
+
+    ASSERT2( inteq, SUCCESFULL_CMP(-2, -7), ordering_rel_gt );
+    ASSERT2( inteq, SUCCESFULL_CMP(-2, -2), ordering_rel_eq );
+    ASSERT2( inteq, SUCCESFULL_CMP(-2,  0), ordering_rel_lt );
+    ASSERT2( inteq, SUCCESFULL_CMP(-2,  2), ordering_rel_lt );
+    ASSERT2( inteq, SUCCESFULL_CMP(-2,  7), ordering_rel_lt );
+
+    ASSERT2( inteq, SUCCESFULL_CMP( 0, -7), ordering_rel_gt );
+    ASSERT2( inteq, SUCCESFULL_CMP( 0, -2), ordering_rel_gt );
+    ASSERT2( inteq, SUCCESFULL_CMP( 0,  0), ordering_rel_eq );
+    ASSERT2( inteq, SUCCESFULL_CMP( 0,  2), ordering_rel_lt );
+    ASSERT2( inteq, SUCCESFULL_CMP( 0,  7), ordering_rel_lt );
+
+    ASSERT2( inteq, SUCCESFULL_CMP( 2, -7), ordering_rel_gt );
+    ASSERT2( inteq, SUCCESFULL_CMP( 2, -2), ordering_rel_gt );
+    ASSERT2( inteq, SUCCESFULL_CMP( 2,  0), ordering_rel_gt );
+    ASSERT2( inteq, SUCCESFULL_CMP( 2,  2), ordering_rel_eq );
+    ASSERT2( inteq, SUCCESFULL_CMP( 2,  7), ordering_rel_lt );
+
+    ASSERT2( inteq, SUCCESFULL_CMP( 7, -7), ordering_rel_gt );
+    ASSERT2( inteq, SUCCESFULL_CMP( 7, -2), ordering_rel_gt );
+    ASSERT2( inteq, SUCCESFULL_CMP( 7,  0), ordering_rel_gt );
+    ASSERT2( inteq, SUCCESFULL_CMP( 7,  2), ordering_rel_gt );
+    ASSERT2( inteq, SUCCESFULL_CMP( 7,  7), ordering_rel_eq );
+
+    ASSERT2( inteq, SUCCESFULL_CMP(ordering_err_1(),      0), SIGN(ordering_err_1())      );
+    ASSERT2( inteq, SUCCESFULL_CMP(ordering_err_2(),      0), SIGN(ordering_err_2())      );
+    ASSERT2( inteq, SUCCESFULL_CMP(ordering_lossy_lt(),   0), SIGN(ordering_lossy_lt())   );
+    ASSERT2( inteq, SUCCESFULL_CMP(ordering_lossy_gt_1(), 0), SIGN(ordering_lossy_gt_1()) );
+    ASSERT2( inteq, SUCCESFULL_CMP(ordering_lossy_gt_2(), 0), SIGN(ordering_lossy_gt_2()) );
+    ASSERT2( inteq, SUCCESFULL_CMP(ordering_lossy_gt_3(), 0), SIGN(ordering_lossy_gt_3()) );
+
+    /* ---------------------------------------------------------------- */
+
+    ASSERT2( inteq, ORDERING(SUCCESFULL_CMP(-7, -7)), ordering_rel_eq );
+    ASSERT2( inteq, ORDERING(SUCCESFULL_CMP(-7, -2)), ordering_rel_lt );
+    ASSERT2( inteq, ORDERING(SUCCESFULL_CMP(-7,  0)), ordering_rel_lt );
+    ASSERT2( inteq, ORDERING(SUCCESFULL_CMP(-7,  2)), ordering_rel_lt );
+    ASSERT2( inteq, ORDERING(SUCCESFULL_CMP(-7,  7)), ordering_rel_lt );
+
+    ASSERT2( inteq, ORDERING(SUCCESFULL_CMP(-2, -7)), ordering_rel_gt );
+    ASSERT2( inteq, ORDERING(SUCCESFULL_CMP(-2, -2)), ordering_rel_eq );
+    ASSERT2( inteq, ORDERING(SUCCESFULL_CMP(-2,  0)), ordering_rel_lt );
+    ASSERT2( inteq, ORDERING(SUCCESFULL_CMP(-2,  2)), ordering_rel_lt );
+    ASSERT2( inteq, ORDERING(SUCCESFULL_CMP(-2,  7)), ordering_rel_lt );
+
+    ASSERT2( inteq, ORDERING(SUCCESFULL_CMP( 0, -7)), ordering_rel_gt );
+    ASSERT2( inteq, ORDERING(SUCCESFULL_CMP( 0, -2)), ordering_rel_gt );
+    ASSERT2( inteq, ORDERING(SUCCESFULL_CMP( 0,  0)), ordering_rel_eq );
+    ASSERT2( inteq, ORDERING(SUCCESFULL_CMP( 0,  2)), ordering_rel_lt );
+    ASSERT2( inteq, ORDERING(SUCCESFULL_CMP( 0,  7)), ordering_rel_lt );
+
+    ASSERT2( inteq, ORDERING(SUCCESFULL_CMP( 2, -7)), ordering_rel_gt );
+    ASSERT2( inteq, ORDERING(SUCCESFULL_CMP( 2, -2)), ordering_rel_gt );
+    ASSERT2( inteq, ORDERING(SUCCESFULL_CMP( 2,  0)), ordering_rel_gt );
+    ASSERT2( inteq, ORDERING(SUCCESFULL_CMP( 2,  2)), ordering_rel_eq );
+    ASSERT2( inteq, ORDERING(SUCCESFULL_CMP( 2,  7)), ordering_rel_lt );
+
+    ASSERT2( inteq, ORDERING(SUCCESFULL_CMP( 7, -7)), ordering_rel_gt );
+    ASSERT2( inteq, ORDERING(SUCCESFULL_CMP( 7, -2)), ordering_rel_gt );
+    ASSERT2( inteq, ORDERING(SUCCESFULL_CMP( 7,  0)), ordering_rel_gt );
+    ASSERT2( inteq, ORDERING(SUCCESFULL_CMP( 7,  2)), ordering_rel_gt );
+    ASSERT2( inteq, ORDERING(SUCCESFULL_CMP( 7,  7)), ordering_rel_eq );
+
+    ASSERT2( inteq, ORDERING(SUCCESFULL_CMP(ordering_err_1(),      0)), SIGN(ordering_err_1())      );
+    ASSERT2( inteq, ORDERING(SUCCESFULL_CMP(ordering_err_2(),      0)), SIGN(ordering_err_2())      );
+    ASSERT2( inteq, ORDERING(SUCCESFULL_CMP(ordering_lossy_lt(),   0)), SIGN(ordering_lossy_lt())   );
+    ASSERT2( inteq, ORDERING(SUCCESFULL_CMP(ordering_lossy_gt_1(), 0)), SIGN(ordering_lossy_gt_1()) );
+    ASSERT2( inteq, ORDERING(SUCCESFULL_CMP(ordering_lossy_gt_2(), 0)), SIGN(ordering_lossy_gt_2()) );
+    ASSERT2( inteq, ORDERING(SUCCESFULL_CMP(ordering_lossy_gt_3(), 0)), SIGN(ordering_lossy_gt_3()) );
+
+    ASSERT2( inteq, ORDERING(SUCCESFULL_CMP(ordering_err_1(),      0)), ORDERING(SIGN(ordering_err_1())      ));
+    ASSERT2( inteq, ORDERING(SUCCESFULL_CMP(ordering_err_2(),      0)), ORDERING(SIGN(ordering_err_2())      ));
+    ASSERT2( inteq, ORDERING(SUCCESFULL_CMP(ordering_lossy_lt(),   0)), ORDERING(SIGN(ordering_lossy_lt())   ));
+    ASSERT2( inteq, ORDERING(SUCCESFULL_CMP(ordering_lossy_gt_1(), 0)), ORDERING(SIGN(ordering_lossy_gt_1()) ));
+    ASSERT2( inteq, ORDERING(SUCCESFULL_CMP(ordering_lossy_gt_2(), 0)), ORDERING(SIGN(ordering_lossy_gt_2()) ));
+    ASSERT2( inteq, ORDERING(SUCCESFULL_CMP(ordering_lossy_gt_3(), 0)), ORDERING(SIGN(ordering_lossy_gt_3()) ));
+
+    /* ---------------------------------------------------------------- */
+
+    ASSERT2( inteq, ORDERING(SUCCESFULL_CMP(-7, -7)), ordering_rel_eq );
   }
 
   return result;

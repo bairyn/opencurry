@@ -49,6 +49,8 @@
 #include "ptrs.h"
 #include "bits.h"
 
+#include "util.h"
+
 /* ---------------------------------------------------------------- */
 /* Dependencies.                                                    */
 /* ---------------------------------------------------------------- */
@@ -74,28 +76,41 @@ extern const ordering_t ordering_default;
 #if 0
 #define ORDERING_ERR_1    ((int) -0x37ED)
 #define ORDERING_ERR_2    ((int) -0x37EE)
-#define ORDERING_LT_LOSSY ((int) -0x37EF)
+#define ORDERING_LOSSY_LT ((int) -0x37EF)
 #endif
 
-#define ORDERING_ERR_1    ((int) -(((int) 0x37ED) << (8 * (SIZE_LESS_NULL(SIZE_LESS_NULL(sizeof(int)))))))
-#define ORDERING_ERR_2    ((int) -(((int) 0x37EE) << (8 * (SIZE_LESS_NULL(SIZE_LESS_NULL(sizeof(int)))))))
-#define ORDERING_LT_LOSSY ((int) -(((int) 0x37EF) << (8 * (SIZE_LESS_NULL(SIZE_LESS_NULL(sizeof(int)))))))
-int ordering_err_1   (void);
-int ordering_err_2   (void);
-int ordering_lt_lossy(void);
+#define ORDERING_ERR_1      ((int) -(((int) 0x37ED) << (8 * (SIZE_LESS_NULL(SIZE_LESS_NULL(sizeof(int)))))))
+#define ORDERING_ERR_2      ((int) -(((int) 0x37EE) << (8 * (SIZE_LESS_NULL(SIZE_LESS_NULL(sizeof(int)))))))
+#define ORDERING_LOSSY_LT   ((int) -(((int) 0x37EF) << (8 * (SIZE_LESS_NULL(SIZE_LESS_NULL(sizeof(int)))))))
+#define ORDERING_LOSSY_GT_1 ((int) -(ORDERING_LOSSY_LT))
+#define ORDERING_LOSSY_GT_2 ((int) -(ORDERING_ERR_2))
+#define ORDERING_LOSSY_GT_3 ((int) -(ORDERING_ERR_1))
+int ordering_err_1     (void);
+int ordering_err_2     (void);
+int ordering_lossy_lt  (void);
+int ordering_lossy_gt_1(void);
+int ordering_lossy_gt_2(void);
+int ordering_lossy_gt_3(void);
 
-#define IS_ORDERING_SUCCESS(ordering) (((ordering) != (ORDERING_ERR_1   )) && ((ordering) != (ORDERING_ERR2)))
-#define IS_ORDERING_ERROR(  ordering) (((ordering) == (ORDERING_ERR_1   )) || ((ordering) == (ORDERING_ERR2)))
-#define IS_ORDERING_LOSSY(  ordering)  ((ordering) == (ORDERING_LT_LOSSY))
+#define IS_ORDERING_SUCCESS(ordering) (((ordering) != (ORDERING_ERR_1   )) && ((ordering) != (ORDERING_ERR_2)))
+#define IS_ORDERING_ERROR(  ordering) (((ordering) == (ORDERING_ERR_1   )) || ((ordering) == (ORDERING_ERR_2)))
+#define IS_ORDERING_LOSSY(  ordering) (((ordering) == (ORDERING_LOSSY_LT)) || ((ordering) == (ORDERING_LOSSY_GT_1)) || ((ordering) == (ORDERING_LOSSY_GT_2)) || ((ordering) == (ORDERING_LOSSY_GT_3)))
 int is_ordering_success(int ordering);
 int is_ordering_error  (int ordering);
 int is_ordering_lossy  (int ordering);
 
-/* If the result corresponds to an error code, return ORDERING_LT_LOSSY. */
-#define ORDERING_SUCCESS(ordering)   \
-  ( (IS_ORDERING_SUCCESS((ordering)) \
-  ? (ordering)                       \
-  : (ORDERING_LT_LOSSSY)             \
+/* If the result corresponds to an error code, compress it into a successful,
+ * lossy code. */
+#define ORDERING_SUCCESS(ordering)     \
+  ( (IS_ORDERING_SUCCESS((ordering)))  \
+  ? (ordering)                         \
+  : ( SIGN_CASE                        \
+        ( (ordering)                   \
+        , (ORDERING_LOSSY_LT)          \
+        , (0)                          \
+        , (ORDERING_LOSSY_GT_1)        \
+        )                              \
+    )                                  \
   )
 int ordering_success(int ordering);
 
@@ -139,14 +154,14 @@ extern const ordering_relation_t ordering_relation_default;
 #define ORDERING_RELATION(ordering) \
   ( (IS_ORDERING_ERROR((ordering))) \
   ? (ordering)                      \
-  : (SIGN((ordering))               \
+  : (SIGN((ordering)))              \
   )
 ordering_relation_t ordering_relation(int ordering);
 
 /* Obtain a successful ordering value based on direct application of the "<="
  * and "<" binary operators.
  */
-#define ORDERING_CMP(check, baseline) (ORDERING_SUCCESS((CMP(check, baseline))))
+#define CMP_SUCCESS(check, baseline) (ORDERING_SUCCESS((CMP(check, baseline))))
 
 /* ---------------------------------------------------------------- */
 /* Comparers.                                                       */
@@ -155,23 +170,50 @@ ordering_relation_t ordering_relation(int ordering);
 const type_t *comparer_type(void);
 extern const type_t comparer_type_def;
 
+/*
+ * comparer_t:
+ *
+ * A function that compares values given references to them.
+ */
 typedef int (*comparer_t)(void *context, const void *check, const void *baseline);
 
 #define COMPARER_DEFAULT  \
-  compare_objp
+  (comparer_t) compare_objp
 extern const comparer_t comparer_default;
+
+/* ---------------------------------------------------------------- */
+
+int call_comparer(comparer_t comparer, void *context, const void *check, const void *baseline);
 
 /* ---------------------------------------------------------------- */
 
 /* TODO: once type_fun is written, make this a subtype, in the .c file, of
  * "callback", which is pretty much the same but has just "funp_t" instead!
  */
-typedef struct compare_callback_s compare_callback_t;
-struct compare_callback_s
+const type_t *callback_compare_type(void);
+extern const type_t callback_compare_type_def;
+typedef struct callback_compare_s callback_compare_t;
+struct callback_compare_s
 {
+  typed_t type;
+
   comparer_t  comparer;
   void       *comparer_context;
 };
+
+#define CALLBACK_COMPARE_DEFAULTS                    \
+  { callback_compare_type                            \
+                                                     \
+  , /* comparer         */ (comparer_t) compare_objp \
+  , /* comparer_context */ NULL                      \
+  }
+extern const callback_compare_t callback_compare_defaults;
+
+/* ---------------------------------------------------------------- */
+
+callback_compare_t callback_compare(comparer_t comparer, void *comparer_context);
+
+int                call_callback_compare(callback_compare_t callback_compare, const void *check, const void *baseline);
 
 /* ---------------------------------------------------------------- */
 /* Various comparers.                                               */
@@ -201,6 +243,7 @@ int compare_ldouble (void *context, const long     double       *check, const lo
 int compare_size    (void *context, const          size_t       *check, const          size_t       *baseline);
 int compare_ptrdiff (void *context, const          ptrdiff_t    *check, const          ptrdiff_t    *baseline);
 
+/* Elements are pointers. */
 int compare_objp    (void *context, const          void        **check, const          void        **baseline);
 int compare_funp    (void *context, const          funp_cast_t  *check, const          funp_cast_t  *baseline);
 
@@ -216,6 +259,9 @@ int compare_strz    (void *context, const          char         *check, const   
 /* Elements are "const char *". */
 int compare_strnr   (void *context, const          char        **check, const          char        **baseline);
 int compare_strzr   (void *context, const          char        **check, const          char        **baseline);
+
+/* Directly compare the pointers, the locations of the values in memory. */
+int compare_mempos  (void *context, const          void         *check, const          void         *baseline);
 
 /* ---------------------------------------------------------------- */
 
@@ -253,6 +299,8 @@ void *compare_strz_context   (void);
 void *compare_strnr_context  (size_t n);
 void *compare_strzr_context  (void);
 
+void *compare_mempos_context (void);
+
 /* ---------------------------------------------------------------- */
 
 extern const comparer_t comparer_with_type;
@@ -288,6 +336,46 @@ extern const comparer_t comparer_strz;
 
 extern const comparer_t comparer_strnr;
 extern const comparer_t comparer_strzr;
+
+extern const comparer_t comparer_mempos;
+
+/* ---------------------------------------------------------------- */
+
+callback_compare_t callback_compare_with_type    (const type_t *type);
+callback_compare_t callback_compare_ref_with_type(const type_t *type);
+
+callback_compare_t callback_compare_tval   (void);
+callback_compare_t callback_compare_tvalr  (void);
+
+callback_compare_t callback_compare_char   (void);
+callback_compare_t callback_compare_schar  (void);
+callback_compare_t callback_compare_uchar  (void);
+callback_compare_t callback_compare_short  (void);
+callback_compare_t callback_compare_ushort (void);
+callback_compare_t callback_compare_int    (void);
+callback_compare_t callback_compare_uint   (void);
+callback_compare_t callback_compare_long   (void);
+callback_compare_t callback_compare_ulong  (void);
+callback_compare_t callback_compare_float  (void);
+callback_compare_t callback_compare_double (void);
+callback_compare_t callback_compare_ldouble(void);
+
+callback_compare_t callback_compare_size   (void);
+callback_compare_t callback_compare_ptrdiff(void);
+
+callback_compare_t callback_compare_objp   (void);
+callback_compare_t callback_compare_funp   (void);
+
+callback_compare_t callback_compare_mem    (size_t n);
+callback_compare_t callback_compare_memr   (size_t n);
+
+callback_compare_t callback_compare_strn   (size_t n);
+callback_compare_t callback_compare_strz   (void);
+
+callback_compare_t callback_compare_strnr  (size_t n);
+callback_compare_t callback_compare_strzr  (void);
+
+callback_compare_t callback_compare_mempos (void);
 
 /* ---------------------------------------------------------------- */
 /* Post-dependencies.                                               */
