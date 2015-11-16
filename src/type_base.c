@@ -2536,6 +2536,11 @@ static const tval          *genpm_type_has_default  (const type_t *self)
 
 /* ---------------------------------------------------------------- */
 
+const genpm_t genpm_default =
+  GENPM_DEFAULT;
+
+/* ---------------------------------------------------------------- */
+
 /* genpc type. */
 
 const type_t *genpc_type(void)
@@ -2608,6 +2613,11 @@ static const type_t        *genpc_type_is_supertype ( const type_t *self
 
 static const tval          *genpc_type_has_default  (const type_t *self)
   { return &genpc_default; }
+
+/* ---------------------------------------------------------------- */
+
+const genpc_t genpc_default =
+  GENPC_DEFAULT;
 
 /* ---------------------------------------------------------------- */
 
