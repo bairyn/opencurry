@@ -1130,12 +1130,16 @@ extern const ldouble_t ldouble_default;
 /* Enumerations. */
 const type_t *enum_type;
 
-typedef int enum_t;
+enum enum_e
+{
+  enum_zero = 0
+};
+typedef enum enum_e enum_t;
 
 extern const type_t enum_type_def;
 
 #define ENUM_DEFAULT \
-  0
+  enum_zero
 extern const enum_t enum_default;
 
 /* Derived types. */
