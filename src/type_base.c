@@ -2323,10 +2323,6 @@ int template_cons_free_struct_memfree_type
 /* ---------------------------------------------------------------- */
 
 /* Universal type. */
-const type_t *universal_type(void);
-
-extern const type_t universal_type_def;
-
 const type_t *universal_type(void)
   { return &universal_type_def; }
 
@@ -2342,7 +2338,7 @@ const type_t universal_type_def =
 
   , /* memory                 */ MEMORY_TRACKER_DEFAULTS
   , /* is_self_mutable        */ NULL
-  , /* @indirect              */ template_cons_type
+  , /* @indirect              */ universal_type
 
   , /* self                   */ NULL
   , /* container              */ NULL
@@ -2446,6 +2442,234 @@ PRIM_TYPE(funp, funp_t, type_has_default_value(self, &funp_default))
 
 const objp_t objp_default = (objp_t) NULL;
 const funp_t funp_default = (funp_t) NULL;
+
+/* genp type. */
+
+const type_t *genp_type(void)
+  { return &genp_type_def; }
+
+static const char          *genp_type_name         (const type_t *self);
+static size_t               genp_type_size         (const type_t *self, const tval *val);
+static const type_t        *genp_type_is_supertype ( const type_t *self
+                                                   , const type_t *is_supertype
+                                                   );
+static const tval          *genp_type_has_default  (const type_t *self);
+
+const type_t genp_type_def =
+  { type_type
+
+    /* @: Required.           */
+
+  , /* memory                 */ MEMORY_TRACKER_DEFAULTS
+  , /* is_self_mutable        */ NULL
+  , /* @indirect              */ genp_type
+
+  , /* self                   */ NULL
+  , /* container              */ NULL
+
+  , /* typed                  */ type_is_untyped
+
+  , /* @name                  */ genp_type_name
+  , /* info                   */ NULL
+  , /* @size                  */ genp_type_size
+  , /* @is_struct             */ type_is_not_struct
+  , /* is_mutable             */ NULL
+  , /* is_subtype             */ NULL
+  , /* is_supertype           */ genp_type_is_supertype
+
+  , /* cons_type              */ NULL
+  , /* init                   */ NULL
+  , /* free                   */ NULL
+  , /* has_default            */ genp_type_has_default
+  , /* mem                    */ NULL
+  , /* mem_init               */ NULL
+  , /* mem_is_dyn             */ NULL
+  , /* mem_free               */ NULL
+  , /* default_memory_manager */ NULL
+
+  , /* dup                    */ NULL
+
+  , /* user                   */ NULL
+  , /* cuser                  */ NULL
+  , /* cmp                    */ NULL
+
+  , /* parity                 */ ""
+  };
+
+static const char          *genp_type_name         (const type_t *self)
+  { return "genp_t"; }
+
+static size_t               genp_type_size         (const type_t *self, const tval *val)
+  { return sizeof(genp_t); }
+
+static const type_t        *genp_type_is_supertype ( const type_t *self
+                                                   , const type_t *is_supertype
+                                                   )
+{
+  const type_t *result;
+  if ((result = type_is_supertype(union_type(), is_supertype)))
+    return result;
+
+  return default_type_is_supertype(self, is_supertype);
+}
+
+static const tval          *genp_type_has_default  (const type_t *self)
+  { return &genp_default; }
+
+/* ---------------------------------------------------------------- */
+
+const genp_t genp_default =
+  GENP_DEFAULT;
+
+/* ---------------------------------------------------------------- */
+
+/* genpm type. */
+
+const type_t *genpm_type(void)
+  { return &genpm_type_def; }
+
+static const char          *genpm_type_name         (const type_t *self);
+static size_t               genpm_type_size         (const type_t *self, const tval *val);
+static const type_t        *genpm_type_is_supertype ( const type_t *self
+                                                    , const type_t *is_supertype
+                                                    );
+static const tval          *genpm_type_has_default  (const type_t *self);
+
+const type_t genpm_type_def =
+  { type_type
+
+    /* @: Required.           */
+
+  , /* memory                 */ MEMORY_TRACKER_DEFAULTS
+  , /* is_self_mutable        */ NULL
+  , /* @indirect              */ genpm_type
+
+  , /* self                   */ NULL
+  , /* container              */ NULL
+
+  , /* typed                  */ type_is_untyped
+
+  , /* @name                  */ genpm_type_name
+  , /* info                   */ NULL
+  , /* @size                  */ genpm_type_size
+  , /* @is_struct             */ type_is_not_struct
+  , /* is_mutable             */ NULL
+  , /* is_subtype             */ NULL
+  , /* is_supertype           */ genpm_type_is_supertype
+
+  , /* cons_type              */ NULL
+  , /* init                   */ NULL
+  , /* free                   */ NULL
+  , /* has_default            */ genpm_type_has_default
+  , /* mem                    */ NULL
+  , /* mem_init               */ NULL
+  , /* mem_is_dyn             */ NULL
+  , /* mem_free               */ NULL
+  , /* default_memory_manager */ NULL
+
+  , /* dup                    */ NULL
+
+  , /* user                   */ NULL
+  , /* cuser                  */ NULL
+  , /* cmp                    */ NULL
+
+  , /* parity                 */ ""
+  };
+
+static const char          *genpm_type_name         (const type_t *self)
+  { return "genpm_t"; }
+
+static size_t               genpm_type_size         (const type_t *self, const tval *val)
+  { return sizeof(genpm_t); }
+
+static const type_t        *genpm_type_is_supertype ( const type_t *self
+                                                    , const type_t *is_supertype
+                                                    )
+{
+  const type_t *result;
+  if ((result = type_is_supertype(union_type(), is_supertype)))
+    return result;
+
+  return default_type_is_supertype(self, is_supertype);
+}
+
+static const tval          *genpm_type_has_default  (const type_t *self)
+  { return &genpm_default; }
+
+/* ---------------------------------------------------------------- */
+
+/* genpc type. */
+
+const type_t *genpc_type(void)
+  { return &genpc_type_def; }
+
+static const char          *genpc_type_name         (const type_t *self);
+static size_t               genpc_type_size         (const type_t *self, const tval *val);
+static const type_t        *genpc_type_is_supertype ( const type_t *self
+                                                    , const type_t *is_supertype
+                                                    );
+static const tval          *genpc_type_has_default  (const type_t *self);
+
+const type_t genpc_type_def =
+  { type_type
+
+    /* @: Required.           */
+
+  , /* memory                 */ MEMORY_TRACKER_DEFAULTS
+  , /* is_self_mutable        */ NULL
+  , /* @indirect              */ genpc_type
+
+  , /* self                   */ NULL
+  , /* container              */ NULL
+
+  , /* typed                  */ type_is_untyped
+
+  , /* @name                  */ genpc_type_name
+  , /* info                   */ NULL
+  , /* @size                  */ genpc_type_size
+  , /* @is_struct             */ type_is_not_struct
+  , /* is_mutable             */ NULL
+  , /* is_subtype             */ NULL
+  , /* is_supertype           */ genpc_type_is_supertype
+
+  , /* cons_type              */ NULL
+  , /* init                   */ NULL
+  , /* free                   */ NULL
+  , /* has_default            */ genpc_type_has_default
+  , /* mem                    */ NULL
+  , /* mem_init               */ NULL
+  , /* mem_is_dyn             */ NULL
+  , /* mem_free               */ NULL
+  , /* default_memory_manager */ NULL
+
+  , /* dup                    */ NULL
+
+  , /* user                   */ NULL
+  , /* cuser                  */ NULL
+  , /* cmp                    */ NULL
+
+  , /* parity                 */ ""
+  };
+
+static const char          *genpc_type_name         (const type_t *self)
+  { return "genpc_t"; }
+
+static size_t               genpc_type_size         (const type_t *self, const tval *val)
+  { return sizeof(genpc_t); }
+
+static const type_t        *genpc_type_is_supertype ( const type_t *self
+                                                    , const type_t *is_supertype
+                                                    )
+{
+  const type_t *result;
+  if ((result = type_is_supertype(union_type(), is_supertype)))
+    return result;
+
+  return default_type_is_supertype(self, is_supertype);
+}
+
+static const tval          *genpc_type_has_default  (const type_t *self)
+  { return &genpc_default; }
 
 /* ---------------------------------------------------------------- */
 
@@ -2643,6 +2867,56 @@ const array_t array_default      = { 0 };
 const size_t  array_default_size = ARRAY_SIZE   (array_default);
 const size_t  array_default_num  = ARRAY_NUM    (array_default);
 const size_t  array_default_len  = ARRAY_LEN_ALL(array_default);
+
+/* Union type. */
+const type_t *union_type(void)
+  { return &union_type_def; }
+
+static const char *union_type_name(const type_t *self);
+
+const type_t union_type_def =
+  { type_type
+
+    /* @: Required.           */
+
+  , /* memory                 */ MEMORY_TRACKER_DEFAULTS
+  , /* is_self_mutable        */ NULL
+  , /* @indirect              */ union_type
+
+  , /* self                   */ NULL
+  , /* container              */ NULL
+
+  , /* typed                  */ type_is_untyped
+
+  , /* @name                  */ union_type_name
+  , /* info                   */ NULL
+  , /* @size                  */ type_has_unknown_size
+  , /* @is_struct             */ type_is_not_struct
+  , /* is_mutable             */ NULL
+  , /* is_subtype             */ NULL
+  , /* is_supertype           */ NULL
+
+  , /* cons_type              */ NULL
+  , /* init                   */ NULL
+  , /* free                   */ NULL
+  , /* has_default            */ NULL
+  , /* mem                    */ NULL
+  , /* mem_init               */ NULL
+  , /* mem_is_dyn             */ NULL
+  , /* mem_free               */ NULL
+  , /* default_memory_manager */ NULL
+
+  , /* dup                    */ NULL
+
+  , /* user                   */ NULL
+  , /* cuser                  */ NULL
+  , /* cmp                    */ NULL
+
+  , /* parity                 */ ""
+  };
+
+static const char *union_type_name(const type_t *self)
+  { return "union_t"; }
 
 /* ---------------------------------------------------------------- */
 

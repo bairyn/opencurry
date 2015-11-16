@@ -1055,6 +1055,206 @@ extern const type_t funp_type_def;
 extern const objp_t objp_default;
 extern const funp_t funp_default;
 
+
+const type_t *genp_type(void);
+extern const type_t genp_type_def;
+typedef union genp_u genp_t;
+union genp_u
+{
+  void        *ptr;
+  const void  *ptrc;
+
+  /* ---------------------------------------------------------------- */
+
+  size_t       size;
+  ptrdiff_t    ptrdiff;
+
+  /* ---------------------------------------------------------------- */
+
+  objp_t       objp;
+  funp_t       funp;
+  funp_t      *funpr;
+
+  /* ---------------------------------------------------------------- */
+
+  objpc_t      objpc;
+  funpc_t      funpc;
+  funpc_t     *funpcr;
+
+#if 0
+  objcp_t      objcp;
+  funcp_t      funcp;
+  funcp_t     *funcpr;
+
+  objcpc_t     objcpc;
+  funcpc_t     funcpc;
+  funcpc_t    *funcpcr;
+#endif
+
+
+  objpm_t      objpm;
+  funpm_t      funpm;
+  funpm_t     *funpmr;
+
+  objmp_t      objmp;
+  funmp_t      funmp;
+  funmp_t     *funmpr;
+
+  objmpm_t     objmpm;
+  funmpm_t     funmpm;
+  funmpm_t    *funmpmr;
+
+  objmpc_t     objmpc;
+  funmpc_t     funmpc;
+  funmpc_t    *funmpcr;
+
+#if 0
+  objcpm_t     objcpm;
+  funcpm_t     funcpm;
+  funcpm_t    *funcpmr;
+#endif
+
+  /* ---------------------------------------------------------------- */
+
+  objp_cast_t  objp_cast;
+  funp_cast_t  funp_cast;
+  funp_cast_t *funpr_cast;
+
+  /* ---------------------------------------------------------------- */
+
+  objpc_cast_t  objpc_cast;
+  funpc_cast_t  funpc_cast;
+  funpc_cast_t *funpcr_cast;
+
+
+  objpm_cast_t  objpm_cast;
+  funpm_cast_t  funpm_cast;
+  funpm_cast_t *funpmr_cast;
+};
+
+#define GENP_DEFAULT \
+  { NULL }
+extern const genp_t genp_default;
+
+
+const type_t *genpm_type(void);
+extern const type_t genpm_type_def;
+typedef union genpm_u genpm_t;
+union genpm_u
+{
+  void        *ptr;
+
+  /* ---------------------------------------------------------------- */
+
+  size_t       size;
+  ptrdiff_t    ptrdiff;
+
+  /* ---------------------------------------------------------------- */
+
+  objp_t       objp;
+  funp_t       funp;
+  funp_t      *funpr;
+
+  /* ---------------------------------------------------------------- */
+
+#if 0
+  objcp_t      objcp;
+  funcp_t      funcp;
+  funcp_t     *funcpr;
+#endif
+
+
+  objpm_t      objpm;
+  funpm_t      funpm;
+  funpm_t     *funpmr;
+
+  objmp_t      objmp;
+  funmp_t      funmp;
+  funmp_t     *funmpr;
+
+  objmpm_t     objmpm;
+  funmpm_t     funmpm;
+  funmpm_t    *funmpmr;
+
+#if 0
+  objcpm_t     objcpm;
+  funcpm_t     funcpm;
+  funcpm_t    *funcpmr;
+#endif
+
+  /* ---------------------------------------------------------------- */
+
+  objp_cast_t  objp_cast;
+  funp_cast_t  funp_cast;
+  funp_cast_t *funpr_cast;
+
+  /* ---------------------------------------------------------------- */
+
+  objpc_cast_t  objpc_cast;
+  funpc_cast_t  funpc_cast;
+  funpc_cast_t *funpcr_cast;
+
+
+  objpm_cast_t  objpm_cast;
+  funpm_cast_t  funpm_cast;
+  funpm_cast_t *funpmr_cast;
+};
+
+#define GENPM_DEFAULT \
+  { NULL }
+extern const genpm_t genpm_default;
+
+
+const type_t *genpc_type(void);
+extern const type_t genpc_type_def;
+typedef union genpc_u genpc_t;
+union genpc_u
+{
+  const void  *ptrc;
+
+  /* ---------------------------------------------------------------- */
+
+  size_t       size;
+  ptrdiff_t    ptrdiff;
+
+  /* ---------------------------------------------------------------- */
+
+  objpc_t      objpc;
+  funpc_t      funpc;
+  funpc_t     *funpcr;
+
+#if 0
+  objcp_t      objcp;
+  funcp_t      funcp;
+  funcp_t     *funcpr;
+
+  objcpc_t     objcpc;
+  funcpc_t     funcpc;
+  funcpc_t    *funcpcr;
+#endif
+
+
+  objmpc_t     objmpc;
+  funmpc_t     funmpc;
+  funmpc_t    *funmpcr;
+
+#if 0
+  objcpm_t     objcpm;
+  funcpm_t     funcpm;
+  funcpm_t    *funcpmr;
+#endif
+
+  /* ---------------------------------------------------------------- */
+
+  objpc_cast_t  objpc_cast;
+  funpc_cast_t  funpc_cast;
+  funpc_cast_t *funpcr_cast;
+};
+
+#define GENPC_DEFAULT \
+  { NULL }
+extern const genpc_t genpc_default;
+
 /* Scalar types. */
 const type_t *char_type(void);
 const type_t *schar_type(void);
@@ -1128,7 +1328,7 @@ extern const double_t  double_default;
 extern const ldouble_t ldouble_default;
 
 /* Enumerations. */
-const type_t *enum_type;
+const type_t *enum_type(void);
 
 enum enum_e
 {
@@ -1156,9 +1356,9 @@ extern const size_t  array_default_num;
 extern const size_t  array_default_len;
 #endif
 
-#ifdef TODO /* TODO */
-#error "TODO: parent union / struct type!"
-#endif /* #ifdef TODO /-* TODO *-/ */
+/* */
+const type_t *union_type(void);
+extern const type_t union_type_def;
 
 /* <math.h> */
 const type_t *div_type(void);
