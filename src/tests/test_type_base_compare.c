@@ -36,7 +36,9 @@
 
 #include "../type_base_compare.h"
 
-#include "bits.h"
+#include "../bits.h"
+
+#include "../util.h"
 
 int test_type_base_compare_cli(int argc, char **argv)
 {
@@ -74,10 +76,11 @@ unit_test_t ordering_equalities_test =
   };
 
 #define IS_SUCCESS(ordering) checked_is_ordering_success(context, &result, ordering)
-#define IS_ERROR(ordering) checked_is_ordering_error(context, &result, ordering)
-#define IS_LOSSY(ordering) checked_is_ordering_lossy(context, &result, ordering)
-#define SUCCESS(ordering) checked_ordering_success(context, &result, ordering)
-#define ORDERING(ordering) checked_ordering_relation(context, &result, ordering)
+#define IS_ERROR(ordering)   checked_is_ordering_error  (context, &result, ordering)
+#define IS_LOSSY(ordering)   checked_is_ordering_lossy  (context, &result, ordering)
+#define SUCCESS(ordering)    checked_ordering_success   (context, &result, ordering)
+#define INVERT(ordering)     checked_ordering_invert    (context, &result, ordering)
+#define ORDERING(ordering)   checked_ordering_relation  (context, &result, ordering)
 
 static int checked_is_ordering_success(unit_test_context_t *context, unit_test_result_t *out_result, int ordering)
 {
@@ -145,6 +148,32 @@ static int checked_ordering_success(unit_test_context_t *context, unit_test_resu
   return call;
 }
 
+static int checked_ordering_invert(unit_test_context_t *context, unit_test_result_t *out_result, int ordering)
+{
+  int call = -1;
+  unit_test_result_t result = assert_success(context);
+
+  ENCLOSE()
+  {
+    ASSERT2( inteq, (call = ordering_invert(ordering)), ORDERING_INVERT(ordering) );
+    if (!IS_LOSSY(ordering))
+      ASSERT2( inteq, ordering_invert(ordering_invert(ordering)), ordering );
+    ASSERT2( inteq, IS_SUCCESS(call),                   IS_SUCCESS     (ordering) );
+    ASSERT2( inteq, IS_ERROR  (call),                   IS_ERROR       (ordering) );
+    ASSERT2( inteq, IS_LOSSY  (call),                   IS_LOSSY       (ordering) );
+
+    if (IS_SUCCESS(ordering) && !IS_LOSSY(ordering))
+    {
+      ASSERT2( inteq, call, -ordering);
+    }
+  }
+
+  if (out_result)
+    *out_result |= result;
+
+  return call;
+}
+
 static order_relation_t checked_ordering_relation(unit_test_context_t *context, unit_test_result_t *out_result, int ordering)
 {
   int call = -1;
@@ -167,45 +196,60 @@ unit_test_result_t ordering_equalities_test(unit_test_context_t *context)
 
   ENCLOSE()
   {
-    ASSERT2( inteq, ordering_err_1(),    ORDERING_ERR_1 );
-    ASSERT2( inteq, ordering_err_2(),    ORDERING_ERR_2 );
-    ASSERT2( inteq, ordering_lt_lossy(), ORDERING_LT_LOSSY );
+    ASSERT2( inteq, ordering_err_1(),      ORDERING_ERR_1 );
+    ASSERT2( inteq, ordering_err_2(),      ORDERING_ERR_2 );
+    ASSERT2( inteq, ordering_lt_lossy(),   ORDERING_LT_LOSSY );
+    ASSERT2( inteq, ordering_gt_lossy_1(), ORDERING_GT_LOSSY_1 );
+    ASSERT2( inteq, ordering_gt_lossy_2(), ORDERING_GT_LOSSY_2 );
+    ASSERT2( inteq, ordering_gt_lossy_3(), ORDERING_GT_LOSSY_3 );
 
-    ASSERT2( inteq, IS_SUCCESS(0),                   1 );
-    ASSERT2( inteq, IS_SUCCESS(1),                   1 );
-    ASSERT2( inteq, IS_SUCCESS(-1),                  1 );
-    ASSERT2( inteq, IS_SUCCESS(8),                   1 );
-    ASSERT2( inteq, IS_SUCCESS(-16),                 1 );
-    ASSERT2( inteq, IS_SUCCESS(ordering_err_1()),    0 );
-    ASSERT2( inteq, IS_SUCCESS(ordering_err_2()),    0 );
-    ASSERT2( inteq, IS_SUCCESS(ordering_lt_lossy()), 1 );
+    ASSERT2( inteq, IS_SUCCESS(0),                     1 );
+    ASSERT2( inteq, IS_SUCCESS(1),                     1 );
+    ASSERT2( inteq, IS_SUCCESS(-1),                    1 );
+    ASSERT2( inteq, IS_SUCCESS(8),                     1 );
+    ASSERT2( inteq, IS_SUCCESS(-16),                   1 );
+    ASSERT2( inteq, IS_SUCCESS(ordering_err_1()),      0 );
+    ASSERT2( inteq, IS_SUCCESS(ordering_err_2()),      0 );
+    ASSERT2( inteq, IS_SUCCESS(ordering_lt_lossy()),   1 );
+    ASSERT2( inteq, IS_SUCCESS(ordering_gt_lossy_1()), 1 );
+    ASSERT2( inteq, IS_SUCCESS(ordering_gt_lossy_2()), 1 );
+    ASSERT2( inteq, IS_SUCCESS(ordering_gt_lossy_3()), 1 );
 
-    ASSERT2( inteq, IS_ERROR(0),                     0 );
-    ASSERT2( inteq, IS_ERROR(1),                     0 );
-    ASSERT2( inteq, IS_ERROR(-1),                    0 );
-    ASSERT2( inteq, IS_ERROR(8),                     0 );
-    ASSERT2( inteq, IS_ERROR(-16),                   0 );
-    ASSERT2( inteq, IS_ERROR(ordering_err_1()),      1 );
-    ASSERT2( inteq, IS_ERROR(ordering_err_2()),      1 );
-    ASSERT2( inteq, IS_ERROR(ordering_lt_lossy()),   0 );
+    ASSERT2( inteq, IS_ERROR(0),                       0 );
+    ASSERT2( inteq, IS_ERROR(1),                       0 );
+    ASSERT2( inteq, IS_ERROR(-1),                      0 );
+    ASSERT2( inteq, IS_ERROR(8),                       0 );
+    ASSERT2( inteq, IS_ERROR(-16),                     0 );
+    ASSERT2( inteq, IS_ERROR(ordering_err_1()),        1 );
+    ASSERT2( inteq, IS_ERROR(ordering_err_2()),        1 );
+    ASSERT2( inteq, IS_ERROR(ordering_lt_lossy()),     0 );
+    ASSERT2( inteq, IS_ERROR(ordering_gt_lossy_1()),   0 );
+    ASSERT2( inteq, IS_ERROR(ordering_gt_lossy_2()),   0 );
+    ASSERT2( inteq, IS_ERROR(ordering_gt_lossy_3()),   0 );
 
-    ASSERT2( inteq, IS_LOSSY(0),                     0 );
-    ASSERT2( inteq, IS_LOSSY(1),                     0 );
-    ASSERT2( inteq, IS_LOSSY(-1),                    0 );
-    ASSERT2( inteq, IS_LOSSY(8),                     0 );
-    ASSERT2( inteq, IS_LOSSY(-16),                   0 );
-    ASSERT2( inteq, IS_LOSSY(ordering_err_1()),      0 );
-    ASSERT2( inteq, IS_LOSSY(ordering_err_2()),      0 );
-    ASSERT2( inteq, IS_LOSSY(ordering_lt_lossy()),   1 );
+    ASSERT2( inteq, IS_LOSSY(0),                       0 );
+    ASSERT2( inteq, IS_LOSSY(1),                       0 );
+    ASSERT2( inteq, IS_LOSSY(-1),                      0 );
+    ASSERT2( inteq, IS_LOSSY(8),                       0 );
+    ASSERT2( inteq, IS_LOSSY(-16),                     0 );
+    ASSERT2( inteq, IS_LOSSY(ordering_err_1()),        0 );
+    ASSERT2( inteq, IS_LOSSY(ordering_err_2()),        0 );
+    ASSERT2( inteq, IS_LOSSY(ordering_lt_lossy()),     1 );
+    ASSERT2( inteq, IS_LOSSY(ordering_gt_lossy_1()),   1 );
+    ASSERT2( inteq, IS_LOSSY(ordering_gt_lossy_2()),   1 );
+    ASSERT2( inteq, IS_LOSSY(ordering_gt_lossy_3()),   1 );
 
-    ASSERT2( inteq, SUCCESS(0),                       0 );
-    ASSERT2( inteq, SUCCESS(1),                       1 );
-    ASSERT2( inteq, SUCCESS(-1),                     -1 );
-    ASSERT2( inteq, SUCCESS(8),                       8 );
-    ASSERT2( inteq, SUCCESS(-16),                    -16 );
-    ASSERT2( inteq, SUCCESS(ordering_err_1()),        ordering_lt_lossy() );
-    ASSERT2( inteq, SUCCESS(ordering_err_2()),        ordering_lt_lossy() );
-    ASSERT2( inteq, SUCCESS(ordering_lt_lossy()),     ordering_lt_lossy() );
+    ASSERT2( inteq, SUCCESS(0),                         0 );
+    ASSERT2( inteq, SUCCESS(1),                         1 );
+    ASSERT2( inteq, SUCCESS(-1),                       -1 );
+    ASSERT2( inteq, SUCCESS(8),                         8 );
+    ASSERT2( inteq, SUCCESS(-16),                      -16 );
+    ASSERT2( inteq, SUCCESS(ordering_err_1()),          ordering_lt_lossy()   );
+    ASSERT2( inteq, SUCCESS(ordering_err_2()),          ordering_lt_lossy()   );
+    ASSERT2( inteq, SUCCESS(ordering_lt_lossy()),       ordering_lt_lossy()   );
+    ASSERT2( inteq, SUCCESS(ordering_gt_lossy_1()),     ordering_gt_lossy_1() );
+    ASSERT2( inteq, SUCCESS(ordering_gt_lossy_2()),     ordering_gt_lossy_2() );
+    ASSERT2( inteq, SUCCESS(ordering_gt_lossy_3()),     ordering_gt_lossy_3() );
 
     ASSERT2( inteq, ordering_lt(), ORDERING_LT );
     ASSERT2( inteq, ordering_eq(), ORDERING_EQ );
@@ -214,6 +258,18 @@ unit_test_result_t ordering_equalities_test(unit_test_context_t *context)
     ASSERT2( inteq, sign_int(ordering_lt()), -1 );
     ASSERT2( inteq, sign_int(ordering_eq()),  0 );
     ASSERT2( inteq, sign_int(ordering_gt()),  1 );
+
+    ASSERT2( inteq, INVERT(0),                       0 );
+    ASSERT2( inteq, INVERT(1),                       1 );
+    ASSERT2( inteq, INVERT(-1),                     -1 );
+    ASSERT2( inteq, INVERT(8),                       8 );
+    ASSERT2( inteq, INVERT(-16),                    -16 );
+    ASSERT2( inteq, INVERT(ordering_err_1()),        ordering_err_1() );
+    ASSERT2( inteq, INVERT(ordering_err_2()),        ordering_err_2() );
+    ASSERT2( inteq, INVERT(ordering_lt_lossy()),     ordering_gt_lossy_1() );
+    ASSERT2( inteq, INVERT(ordering_gt_lossy_1()),   ordering_lt_lossy() );
+    ASSERT2( inteq, INVERT(ordering_gt_lossy_2()),   ordering_lt_lossy() );
+    ASSERT2( inteq, INVERT(ordering_gt_lossy_3()),   ordering_lt_lossy() );
 
     /* ---------------------------------------------------------------- */
 
@@ -252,6 +308,28 @@ unit_test_result_t comparers_test(unit_test_context_t *context)
 
   ENCLOSE()
   {
+    comparer_t  comparer;
+    void       *context;
+
+    #define CHECKED_COMPARE0(comparer_base_name, check, baseline, ordering)     \
+    if (1)                                                                      \
+    {                                                                           \
+      comparer = CAT(comparer_, comparer_base_name);                            \
+      context  = CAT(comparer_, CAT(comparer_base_name, context))();            \
+      ASSERT2( inteq, ORDERING(comparer(context, check, baseline)), ordering ); \
+      ASSERT2( inteq, ORDERING(comparer(context, baseline, check)), INVERT(ordering) ); \
+    } else do { } while(0)
+
+    /* ---------------------------------------------------------------- */
+
+    int a;
+    int b;
+
+    /* ---------------------------------------------------------------- */
+
+    a = 3;
+    b = 7;
+    CHECKED_COMPARE0(int, &a, &b, ordering_rel_lt);
     /* TODO */
   }
 

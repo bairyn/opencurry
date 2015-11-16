@@ -220,6 +220,11 @@ int ordering_gt(void)
   return ORDERING_GT;
 }
 
+int ordering_invert(int ordering)
+{
+  return ORDERING_INVERT(ordering);
+}
+
 
 ordering_relation_t ordering_relation(int ordering)
 {

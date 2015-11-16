@@ -106,6 +106,13 @@ int ordering_lt(void);
 int ordering_eq(void);
 int ordering_gt(void);
 
+#define ORDERING_INVERT(ordering)   \
+  ( (IS_ORDERING_ERROR((ordering))) \
+  ? (ordering)                      \
+  : (-(ordering))                   \
+  )
+int ordering_invert(int ordering);
+
 /* ---------------------------------------------------------------- */
 
 const type_t *ordering_relation_type(void);
