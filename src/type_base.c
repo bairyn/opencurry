@@ -2319,68 +2319,6 @@ int template_cons_free_struct_memfree_type
 }
 
 /* ---------------------------------------------------------------- */
-/* Universal type.                                                  */
-/* ---------------------------------------------------------------- */
-
-/* Universal type. */
-const type_t *universal_type(void)
-  { return &universal_type_def; }
-
-static const char   *universal_type_name      (const type_t *self);
-static const type_t *universal_type_is_subtype( const type_t *self
-                                              , const type_t *is_subtype
-                                              );
-
-const type_t universal_type_def =
-  { type_type
-
-    /* @: Required.           */
-
-  , /* memory                 */ MEMORY_TRACKER_DEFAULTS
-  , /* is_self_mutable        */ NULL
-  , /* @indirect              */ universal_type
-
-  , /* self                   */ NULL
-  , /* container              */ NULL
-
-  , /* typed                  */ type_is_untyped
-
-  , /* @name                  */ universal_type_name
-  , /* info                   */ NULL
-  , /* @size                  */ type_has_unknown_size
-  , /* @is_struct             */ type_is_not_struct
-  , /* is_mutable             */ NULL
-  , /* is_subtype             */ universal_type_is_subtype
-  , /* is_supertype           */ NULL
-
-  , /* cons_type              */ NULL
-  , /* init                   */ NULL
-  , /* free                   */ NULL
-  , /* has_default            */ NULL
-  , /* mem                    */ NULL
-  , /* mem_init               */ NULL
-  , /* mem_is_dyn             */ NULL
-  , /* mem_free               */ NULL
-  , /* default_memory_manager */ NULL
-
-  , /* dup                    */ NULL
-
-  , /* user                   */ NULL
-  , /* cuser                  */ NULL
-  , /* cmp                    */ NULL
-
-  , /* parity                 */ ""
-  };
-
-static const char   *universal_type_name      (const type_t *self)
-  { return "universal_t"; }
-
-static const type_t *universal_type_is_subtype( const type_t *self
-                                              , const type_t *is_subtype
-                                              )
-  { if (!self) return NULL; else return is_subtype; }
-
-/* ---------------------------------------------------------------- */
 /* Primitive C data types.                                          */
 /* ---------------------------------------------------------------- */
 

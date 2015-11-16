@@ -39,4 +39,26 @@
 #define TYPE_BASE_UNIVERSAL_H
 #include "base.h"
 
+/* ---------------------------------------------------------------- */
+/* Dependencies.                                                    */
+/* ---------------------------------------------------------------- */
+
+#include "type_base_prim.h"
+
+/* ---------------------------------------------------------------- */
+/* Universal type.                                                  */
+/* ---------------------------------------------------------------- */
+
+/* Universal type. */
+const type_t *universal_type(void);
+extern const type_t universal_type_def;
+
+/* ---------------------------------------------------------------- */
+/* Post-dependencies.                                               */
+/* ---------------------------------------------------------------- */
+
+#ifdef TODO
+#include "type_base_type.h"
+#endif /* #ifdef TODO */
+
 #endif /* ifndef TYPE_BASE_UNIVERSAL_H */

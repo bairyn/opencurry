@@ -952,6 +952,8 @@ int template_cons_free_struct_memfree_type
   , tval       *val
   );
 
+#include "type_base_universal.h"
+
 /* ---------------------------------------------------------------- */
 /* Primitive C data types.                                          */
 /* ---------------------------------------------------------------- */
