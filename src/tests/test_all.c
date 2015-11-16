@@ -51,6 +51,7 @@
 #include "test_type_base_prim.h"
 #include "test_type_base_typed.h"
 #include "test_type_base_tval.h"
+#include "test_type_base_compare.h"
 #include "test_type_base_lookup.h"
 #include "test_type_base_memory_manager.h"
 #include "test_type_base_memory_tracker.h"
@@ -101,6 +102,7 @@ unit_test_t *all_tests[] =
   , &type_base_prim_test
   , &type_base_typed_test
   , &type_base_tval_test
+  , &type_base_compare_test
   , &type_base_lookup_test
   , &type_base_memory_manager_test
   , &type_base_memory_tracker_test
