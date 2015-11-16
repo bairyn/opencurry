@@ -386,12 +386,12 @@ void lookup_deinit
 
   free(free_context, lookup->values);
   free(free_context, lookup->order);
-  lookup->values = 0;
-  lookup->order  = 0;
+  lookup->values   = NULL;
+  lookup->order    = NULL;
 
-  lookup->num = 0;
+  lookup->capacity = 0;
 
-  lookup->len = 0;
+  lookup->len      = 0;
 }
 
 /* ---------------------------------------------------------------- */
