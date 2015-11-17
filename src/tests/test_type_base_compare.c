@@ -294,35 +294,35 @@ unit_test_result_t ordering_equalities_test_run(unit_test_context_t *context)
 
     /* ---------------------------------------------------------------- */
 
-    LASSERT2( inteq, CMP_SUCCESS(-7, -7), ordering_rel_eq );
-    LASSERT2( inteq, CMP_SUCCESS(-7, -2), ordering_rel_lt );
-    LASSERT2( inteq, CMP_SUCCESS(-7,  0), ordering_rel_lt );
-    LASSERT2( inteq, CMP_SUCCESS(-7,  2), ordering_rel_lt );
-    LASSERT2( inteq, CMP_SUCCESS(-7,  7), ordering_rel_lt );
+    LASSERT2( inteq, CMP_SUCCESS(-7, -7),  0  );
+    LASSERT2( inteq, CMP_SUCCESS(-7, -2), -5  );
+    LASSERT2( inteq, CMP_SUCCESS(-7,  0), -7  );
+    LASSERT2( inteq, CMP_SUCCESS(-7,  2), -9  );
+    LASSERT2( inteq, CMP_SUCCESS(-7,  7), -14 );
 
-    LASSERT2( inteq, CMP_SUCCESS(-2, -7), ordering_rel_gt );
-    LASSERT2( inteq, CMP_SUCCESS(-2, -2), ordering_rel_eq );
-    LASSERT2( inteq, CMP_SUCCESS(-2,  0), ordering_rel_lt );
-    LASSERT2( inteq, CMP_SUCCESS(-2,  2), ordering_rel_lt );
-    LASSERT2( inteq, CMP_SUCCESS(-2,  7), ordering_rel_lt );
+    LASSERT2( inteq, CMP_SUCCESS(-2, -7),  5  );
+    LASSERT2( inteq, CMP_SUCCESS(-2, -2),  0  );
+    LASSERT2( inteq, CMP_SUCCESS(-2,  0), -2  );
+    LASSERT2( inteq, CMP_SUCCESS(-2,  2), -4  );
+    LASSERT2( inteq, CMP_SUCCESS(-2,  7), -9  );
 
-    LASSERT2( inteq, CMP_SUCCESS( 0, -7), ordering_rel_gt );
-    LASSERT2( inteq, CMP_SUCCESS( 0, -2), ordering_rel_gt );
-    LASSERT2( inteq, CMP_SUCCESS( 0,  0), ordering_rel_eq );
-    LASSERT2( inteq, CMP_SUCCESS( 0,  2), ordering_rel_lt );
-    LASSERT2( inteq, CMP_SUCCESS( 0,  7), ordering_rel_lt );
+    LASSERT2( inteq, CMP_SUCCESS( 0, -7),  7  );
+    LASSERT2( inteq, CMP_SUCCESS( 0, -2),  2  );
+    LASSERT2( inteq, CMP_SUCCESS( 0,  0),  0  );
+    LASSERT2( inteq, CMP_SUCCESS( 0,  2), -2  );
+    LASSERT2( inteq, CMP_SUCCESS( 0,  7), -7  );
 
-    LASSERT2( inteq, CMP_SUCCESS( 2, -7), ordering_rel_gt );
-    LASSERT2( inteq, CMP_SUCCESS( 2, -2), ordering_rel_gt );
-    LASSERT2( inteq, CMP_SUCCESS( 2,  0), ordering_rel_gt );
-    LASSERT2( inteq, CMP_SUCCESS( 2,  2), ordering_rel_eq );
-    LASSERT2( inteq, CMP_SUCCESS( 2,  7), ordering_rel_lt );
+    LASSERT2( inteq, CMP_SUCCESS( 2, -7),  9  );
+    LASSERT2( inteq, CMP_SUCCESS( 2, -2),  4  );
+    LASSERT2( inteq, CMP_SUCCESS( 2,  0),  2  );
+    LASSERT2( inteq, CMP_SUCCESS( 2,  2),  0  );
+    LASSERT2( inteq, CMP_SUCCESS( 2,  7), -5  );
 
-    LASSERT2( inteq, CMP_SUCCESS( 7, -7), ordering_rel_gt );
-    LASSERT2( inteq, CMP_SUCCESS( 7, -2), ordering_rel_gt );
-    LASSERT2( inteq, CMP_SUCCESS( 7,  0), ordering_rel_gt );
-    LASSERT2( inteq, CMP_SUCCESS( 7,  2), ordering_rel_gt );
-    LASSERT2( inteq, CMP_SUCCESS( 7,  7), ordering_rel_eq );
+    LASSERT2( inteq, CMP_SUCCESS( 7, -7),  14 );
+    LASSERT2( inteq, CMP_SUCCESS( 7, -2),  9  );
+    LASSERT2( inteq, CMP_SUCCESS( 7,  0),  7  );
+    LASSERT2( inteq, CMP_SUCCESS( 7,  2),  5  );
+    LASSERT2( inteq, CMP_SUCCESS( 7,  7),  0  );
 
     LASSERT2( inteq, CMP_SUCCESS(ordering_err_1(),      0), SIGN(ordering_err_1())      );
     LASSERT2( inteq, CMP_SUCCESS(ordering_err_2(),      0), SIGN(ordering_err_2())      );
