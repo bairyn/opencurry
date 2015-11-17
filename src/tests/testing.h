@@ -487,38 +487,41 @@ unit_test_result_t assert_not_memeq_continue  (unit_test_context_t *context, con
 /* LASSERT: The line number is the tag.
  */
 
+#define LINETAG() "line #" STR(__LINE__)
+#define LINETAG_SUF(suffix) "line #" STR(__LINE__) "_" suffix
+
 #define LASSERT0( assert_method) \
-  TASSERT0 (assert_method, "line #" STR(__LINE__))
+  TASSERT0 (assert_method, LINETAG())
 
 #define LASSERT1( assert_method, arg1) \
-  TASSERT1 (assert_method, "line #" STR(__LINE__), arg1)
+  TASSERT1 (assert_method, LINETAG(), arg1)
 
 #define LASSERT2( assert_method, arg1, arg2) \
-  TASSERT2 (assert_method, "line #" STR(__LINE__), arg1, arg2)
+  TASSERT2 (assert_method, LINETAG(), arg1, arg2)
 
 #define LASSERT3( assert_method, arg1, arg2, arg3) \
-  TASSERT3 (assert_method, "line #" STR(__LINE__), arg1, arg2, arg3)
+  TASSERT3 (assert_method, LINETAG(), arg1, arg2, arg3)
 
 #define LASSERT4( assert_method, arg1, arg2, arg3, arg4) \
-  TASSERT4 (assert_method, "line #" STR(__LINE__), arg1, arg2, arg3, arg4)
+  TASSERT4 (assert_method, LINETAG(), arg1, arg2, arg3, arg4)
 
 #define LASSERT5( assert_method, arg1, arg2, arg3, arg4, arg5) \
-  TASSERT5 (assert_method, "line #" STR(__LINE__), arg1, arg2, arg3, arg4, arg5)
+  TASSERT5 (assert_method, LINETAG(), arg1, arg2, arg3, arg4, arg5)
 
 #define LASSERT6( assert_method, arg1, arg2, arg3, arg4, arg5, arg6) \
-  TASSERT6 (assert_method, "line #" STR(__LINE__), arg1, arg2, arg3, arg4, arg5, arg6)
+  TASSERT6 (assert_method, LINETAG(), arg1, arg2, arg3, arg4, arg5, arg6)
 
 #define LASSERT7( assert_method, arg1, arg2, arg3, arg4, arg5, arg6, arg7) \
-  TASSERT7 (assert_method, "line #" STR(__LINE__), arg1, arg2, arg3, arg4, arg5, arg6, arg7)
+  TASSERT7 (assert_method, LINETAG(), arg1, arg2, arg3, arg4, arg5, arg6, arg7)
 
 #define LASSERT8( assert_method, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8) \
-  TASSERT8 (assert_method, "line #" STR(__LINE__), arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8)
+  TASSERT8 (assert_method, LINETAG(), arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8)
 
 #define LASSERT9( assert_method, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9) \
-  TASSERT9 (assert_method, "line #" STR(__LINE__), arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9)
+  TASSERT9 (assert_method, LINETAG(), arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9)
 
 #define LASSERT10(assert_method, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10) \
-  TASSERT10(assert_method, "line #" STR(__LINE__), arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10)
+  TASSERT10(assert_method, LINETAG(), arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10)
 
 /* n-ary assertions where the tag passed is a stringification of the assertion
  * method and select arguments.
