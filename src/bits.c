@@ -214,3 +214,19 @@ long sign_long(long num)
 {
   return SIGN(num);
 }
+
+
+int cmp_distance_int(int check, int baseline)
+{
+  return CMP_DISTANCE(check, baseline);
+}
+
+int cmp_distance_uint(unsigned int check, unsigned int baseline)
+{
+  return CMP_DISTANCE(check, baseline);
+}
+
+int cmp_distance_ulong(unsigned long check, unsigned long baseline)
+{
+  return CMP_DISTANCE(check, baseline);
+}

@@ -272,4 +272,22 @@ long sign_case_long(long num, long when_negative, long when_zero, long when_posi
 int sign_int(int num);
 long sign_long(long num);
 
+/*
+ * CMP with distance.
+ *
+ * CMP(check, baseline) * DISTANCE(check, baseline), except if the sign of the
+ * result differs from CMP(check, baseline), just return -1, 0, or 1 of the
+ * corresponding sign.
+ */
+#define CMP_DISTANCE(check, baseline)          \
+  ( (  ( SIGN(     (check) - (baseline)  ) )   \
+    == ( SIGN((CMP((check),  (baseline)))) )   \
+    )                                          \
+  ? (  (           (check) - (baseline)    ) ) \
+  : (  (      (CMP((check),  (baseline)))  ) ) \
+  )
+int cmp_distance_int(int check, int baseline);
+int cmp_distance_uint(unsigned int check, unsigned int baseline);
+int cmp_distance_ulong(unsigned long check, unsigned long baseline);
+
 #endif /* ifndef BITS_H */

@@ -268,6 +268,38 @@ unit_test_result_t bits_consistency_test_run(unit_test_context_t *context)
 
     /* ---------------------------------------------------------------- */
 
+    TASSERT2( inteq, "cmp_distance  0 -7", (int) cmp_distance_int( 0, -7), (int) CMP_DISTANCE( 0, -7) );
+    TASSERT2( inteq, "cmp_distance  0 -2", (int) cmp_distance_int( 0, -2), (int) CMP_DISTANCE( 0, -2) );
+    TASSERT2( inteq, "cmp_distance  0  0", (int) cmp_distance_int( 0,  0), (int) CMP_DISTANCE( 0,  0) );
+    TASSERT2( inteq, "cmp_distance  0  2", (int) cmp_distance_int( 0,  2), (int) CMP_DISTANCE( 0,  2) );
+    TASSERT2( inteq, "cmp_distance  0  7", (int) cmp_distance_int( 0,  7), (int) CMP_DISTANCE( 0,  7) );
+
+    TASSERT2( inteq, "cmp_distance -2 -7", (int) cmp_distance_int(-2, -7), (int) CMP_DISTANCE(-2, -7) );
+    TASSERT2( inteq, "cmp_distance -2 -2", (int) cmp_distance_int(-2, -2), (int) CMP_DISTANCE(-2, -2) );
+    TASSERT2( inteq, "cmp_distance -2  0", (int) cmp_distance_int(-2,  0), (int) CMP_DISTANCE(-2,  0) );
+    TASSERT2( inteq, "cmp_distance -2  2", (int) cmp_distance_int(-2,  2), (int) CMP_DISTANCE(-2,  2) );
+    TASSERT2( inteq, "cmp_distance -2  7", (int) cmp_distance_int(-2,  7), (int) CMP_DISTANCE(-2,  7) );
+
+    TASSERT2( inteq, "cmp_distance  2 -7", (int) cmp_distance_int( 2, -7), (int) CMP_DISTANCE( 2, -7) );
+    TASSERT2( inteq, "cmp_distance  2 -2", (int) cmp_distance_int( 2, -2), (int) CMP_DISTANCE( 2, -2) );
+    TASSERT2( inteq, "cmp_distance  2  0", (int) cmp_distance_int( 2,  0), (int) CMP_DISTANCE( 2,  0) );
+    TASSERT2( inteq, "cmp_distance  2  2", (int) cmp_distance_int( 2,  2), (int) CMP_DISTANCE( 2,  2) );
+    TASSERT2( inteq, "cmp_distance  2  7", (int) cmp_distance_int( 2,  7), (int) CMP_DISTANCE( 2,  7) );
+
+    TASSERT2( inteq, "cmp_distance -7 -7", (int) cmp_distance_int( 7, -7), (int) CMP_DISTANCE(-7, -7) );
+    TASSERT2( inteq, "cmp_distance -7 -2", (int) cmp_distance_int( 7, -2), (int) CMP_DISTANCE(-7, -2) );
+    TASSERT2( inteq, "cmp_distance -7  0", (int) cmp_distance_int( 7,  0), (int) CMP_DISTANCE(-7,  0) );
+    TASSERT2( inteq, "cmp_distance -7  2", (int) cmp_distance_int( 7,  2), (int) CMP_DISTANCE(-7,  2) );
+    TASSERT2( inteq, "cmp_distance -7  7", (int) cmp_distance_int( 7,  7), (int) CMP_DISTANCE(-7,  7) );
+
+    TASSERT2( inteq, "cmp_distance  7 -7", (int) cmp_distance_int( 7, -7), (int) CMP_DISTANCE( 7, -7) );
+    TASSERT2( inteq, "cmp_distance  7 -2", (int) cmp_distance_int( 7, -2), (int) CMP_DISTANCE( 7, -2) );
+    TASSERT2( inteq, "cmp_distance  7  0", (int) cmp_distance_int( 7,  0), (int) CMP_DISTANCE( 7,  0) );
+    TASSERT2( inteq, "cmp_distance  7  2", (int) cmp_distance_int( 7,  2), (int) CMP_DISTANCE( 7,  2) );
+    TASSERT2( inteq, "cmp_distance  7  7", (int) cmp_distance_int( 7,  7), (int) CMP_DISTANCE( 7,  7) );
+
+    /* ---------------------------------------------------------------- */
+
     TASSERT2( inteq, "sign of 9:        8 -1 7", (int) sign_case_int(9,        8, -1, 7), (int) SIGN_CASE(9,        8, -1, 7) );
     TASSERT2( inteq, "sign of 1234567:  8 -1 7", (int) sign_case_int(1234567,  8, -1, 7), (int) SIGN_CASE(1234567,  8, -1, 7) );
 
@@ -536,6 +568,38 @@ unit_test_result_t bits_equalities_test_run(unit_test_context_t *context)
     TASSERT2( inteq, "sign of -0",       (int) sign_int(-0),       (int)  0 );
 
     TASSERT2( inteq, "sign of 7",        (int) sign_int(7),        (int)  1 );
+
+    /* ---------------------------------------------------------------- */
+
+    TASSERT2( inteq, "cmp_distance -7 -7", (int) cmp_distance_int( 7, -7), (int)  0  );
+    TASSERT2( inteq, "cmp_distance -7 -2", (int) cmp_distance_int( 7, -2), (int) -5  );
+    TASSERT2( inteq, "cmp_distance -7  0", (int) cmp_distance_int( 7,  0), (int) -7  );
+    TASSERT2( inteq, "cmp_distance -7  2", (int) cmp_distance_int( 7,  2), (int) -9  );
+    TASSERT2( inteq, "cmp_distance -7  7", (int) cmp_distance_int( 7,  7), (int) -14 );
+
+    TASSERT2( inteq, "cmp_distance -2 -7", (int) cmp_distance_int(-2, -7), (int)  5  );
+    TASSERT2( inteq, "cmp_distance -2 -2", (int) cmp_distance_int(-2, -2), (int)  0  );
+    TASSERT2( inteq, "cmp_distance -2  0", (int) cmp_distance_int(-2,  0), (int) -2  );
+    TASSERT2( inteq, "cmp_distance -2  2", (int) cmp_distance_int(-2,  2), (int) -4  );
+    TASSERT2( inteq, "cmp_distance -2  7", (int) cmp_distance_int(-2,  7), (int) -9  );
+
+    TASSERT2( inteq, "cmp_distance  0 -7", (int) cmp_distance_int( 0, -7), (int)  7  );
+    TASSERT2( inteq, "cmp_distance  0 -2", (int) cmp_distance_int( 0, -2), (int)  2  );
+    TASSERT2( inteq, "cmp_distance  0  0", (int) cmp_distance_int( 0,  0), (int)  0  );
+    TASSERT2( inteq, "cmp_distance  0  2", (int) cmp_distance_int( 0,  2), (int) -2  );
+    TASSERT2( inteq, "cmp_distance  0  7", (int) cmp_distance_int( 0,  7), (int) -7  );
+
+    TASSERT2( inteq, "cmp_distance  2 -7", (int) cmp_distance_int( 2, -7), (int)  9  );
+    TASSERT2( inteq, "cmp_distance  2 -2", (int) cmp_distance_int( 2, -2), (int)  4  );
+    TASSERT2( inteq, "cmp_distance  2  0", (int) cmp_distance_int( 2,  0), (int)  2  );
+    TASSERT2( inteq, "cmp_distance  2  2", (int) cmp_distance_int( 2,  2), (int)  0  );
+    TASSERT2( inteq, "cmp_distance  2  7", (int) cmp_distance_int( 2,  7), (int) -5  );
+
+    TASSERT2( inteq, "cmp_distance  7 -7", (int) cmp_distance_int( 7, -7), (int)  14 );
+    TASSERT2( inteq, "cmp_distance  7 -2", (int) cmp_distance_int( 7, -2), (int)  9  );
+    TASSERT2( inteq, "cmp_distance  7  0", (int) cmp_distance_int( 7,  0), (int)  7  );
+    TASSERT2( inteq, "cmp_distance  7  2", (int) cmp_distance_int( 7,  2), (int)  5  );
+    TASSERT2( inteq, "cmp_distance  7  7", (int) cmp_distance_int( 7,  7), (int)  0  );
   }
 
   return result;
