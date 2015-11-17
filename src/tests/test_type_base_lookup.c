@@ -190,26 +190,26 @@ unit_test_result_t lookup_memory_management_test_run(unit_test_context_t *contex
 
 
     LOOKUP_DEINIT(lookup);
-    LASSERT2( inteq, lookup_capacity(lookup), 0);
+    LASSERT2( inteq, lookup_capacity(lookup), 0 );
     LASSERT1( true,  lookup_empty(lookup));
 
     lookup_init_empty(lookup, sizeof(value_type));
-    LASSERT2( inteq, lookup_capacity(lookup), 0);
+    LASSERT2( inteq, lookup_capacity(lookup), 0 );
     LASSERT1( true,  lookup_empty(lookup));
 
 
     LASSERT2( objpeq,LOOKUP_EXPAND(lookup, 3), &lookup_val);
-    LASSERT2( inteq, lookup_capacity(lookup), 3);
+    LASSERT2( inteq, lookup_capacity(lookup), 3 );
     LASSERT1( true,  lookup_empty(lookup));
 
 
     lookup_init_empty(lookup, sizeof(value_type));
-    LASSERT2( inteq, lookup_capacity(lookup), 0);
+    LASSERT2( inteq, lookup_capacity(lookup), 0 );
     LASSERT1( true,  lookup_empty(lookup));
 
 
     LASSERT2( objpeq,LOOKUP_EXPAND(lookup, 3), &lookup_val);
-    LASSERT2( inteq, lookup_capacity(lookup), 3);
+    LASSERT2( inteq, lookup_capacity(lookup), 3 );
     LASSERT1( true,  lookup_empty(lookup));
   }
 
@@ -273,7 +273,7 @@ unit_test_result_t lookup_insert_test_run(unit_test_context_t *context)
     /* 3-size lookup insertion. */
 
     LASSERT2( objpeq, LOOKUP_EXPAND(lookup, 3), &lookup_val);
-    LASSERT2( inteq,  lookup_capacity(lookup), 3);
+    LASSERT2( inteq,  lookup_capacity(lookup), 3 );
     LASSERT1( true,   lookup_empty(lookup));
 
     LASSERT2( inteq,  lookup_len(lookup), 0);
@@ -368,7 +368,7 @@ unit_test_result_t lookup_insert_test_run(unit_test_context_t *context)
     value = 42;
     LASSERT2( objpeq, lookup_insert_controlled(lookup, val,  1, cmp, ae), &lookup_val );
     LASSERT2( inteq,  already_exists, 1 );
-    LASSERT2( inteq,  lookup_len(lookup), 3);
+    LASSERT2( inteq,  lookup_len(lookup), 3 );
     LASSERT1( true,   lookup_max_capacity(lookup) );
 
     retrieve = 42;
@@ -380,13 +380,43 @@ unit_test_result_t lookup_insert_test_run(unit_test_context_t *context)
     value = 42;
     LASSERT2( objpeq, lookup_insert_controlled(lookup, val,  0, cmp, ae), &lookup_val );
     LASSERT2( inteq,  already_exists, 1 );
-    LASSERT2( inteq,  lookup_len(lookup), 3);
+    LASSERT2( inteq,  lookup_len(lookup), 3 );
     LASSERT1( true,   lookup_max_capacity(lookup) );
 
     retrieve = 42;
     LASSERT2( inteq,  val_or_m1(lookup_retrieve(lookup, ret, cmp)), 42 );
     retrieve = 43;
     LASSERT2( inteq,  val_or_m1(lookup_retrieve(lookup, ret, cmp)), 43 );
+
+
+    /* Exceeding capacity. */
+
+    value = 7;
+    LASSERT2( objpeq, lookup_insert_controlled(lookup, val,  0, cmp, ae), NULL );
+    LASSERT2( inteq,  already_exists, 0 );
+    LASSERT2( inteq,  lookup_len(lookup), 3 );
+    LASSERT1( true,   lookup_max_capacity(lookup) );
+
+    retrieve = 42;
+    LASSERT2( inteq,  val_or_m1(lookup_retrieve(lookup, ret, cmp)), 42 );
+    retrieve = 43;
+    LASSERT2( inteq,  val_or_m1(lookup_retrieve(lookup, ret, cmp)), 43 );
+    retrieve = 7;
+    LASSERT2( inteq,  val_or_m1(lookup_retrieve(lookup, ret, cmp)), -1 );
+
+
+    value = 7;
+    LASSERT2( objpeq, lookup_insert_controlled(lookup, val,  1, cmp, ae), NULL );
+    LASSERT2( inteq,  already_exists, 0 );
+    LASSERT2( inteq,  lookup_len(lookup), 3 );
+    LASSERT1( true,   lookup_max_capacity(lookup) );
+
+    retrieve = 42;
+    LASSERT2( inteq,  val_or_m1(lookup_retrieve(lookup, ret, cmp)), 42 );
+    retrieve = 43;
+    LASSERT2( inteq,  val_or_m1(lookup_retrieve(lookup, ret, cmp)), 43 );
+    retrieve = 7;
+    LASSERT2( inteq,  val_or_m1(lookup_retrieve(lookup, ret, cmp)), -1 );
   }
 
   LOOKUP_DEINIT(lookup);
