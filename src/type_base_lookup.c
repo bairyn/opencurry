@@ -219,11 +219,15 @@ static const struct_info_t *lookup_type_is_struct  (const type_t *self)
 
     /* void    *values;     */
     /* size_t   value_size; */
+    /* size_t   next_value; */
     STRUCT_INFO_RADD(objp_type(),  values);
     STRUCT_INFO_RADD(size_type(),  value_size);
+    STRUCT_INFO_RADD(size_type(),  next_value);
 
-    /* bnode_t *order; */
+    /* bnode_t *order;      */
+    /* size_t   next_order; */
     STRUCT_INFO_RADD(objp_type(),  order);
+    STRUCT_INFO_RADD(size_type(),  next_order);
 
     /* size_t   len; */
     STRUCT_INFO_RADD(size_type(),  len);
@@ -275,7 +279,7 @@ size_t bnode_black_value(size_t index)
   return BNODE_BLACK_VALUE  (index);
 }
 
-size_t bnode_red_value  (size_t index)
+size_t bnode_red_value(size_t index)
 {
   return BNODE_RED_VALUE    (index);
 }
@@ -287,14 +291,34 @@ size_t bnode_colored_value(size_t index, size_t color)
 
 /* Construct values for the "left" and "right" fields. */
 
-size_t bnode_leaf (void)
+size_t bnode_leaf(void)
 {
   return BNODE_LEAF         ();
 }
 
-size_t bnode_child(size_t index)
+size_t bnode_ref(size_t index)
 {
-  return BNODE_CHILD        (index);
+  return BNODE_REF          (index);
+}
+
+size_t bnode_set_order_in_use_bit(bnode_t *bnode, size_t bit)
+{
+#if ERROR_CHECKING
+  if (!bnode)
+    return 0;
+#endif /* #if ERROR_CHECKING  */
+
+  return (BNODE_SET_ORDER_IN_USE_BIT(bnode, bit));
+}
+
+size_t bnode_set_value_in_use_bit(bnode_t *bnode, size_t bit)
+{
+#if ERROR_CHECKING
+  if (!bnode)
+    return 0;
+#endif /* #if ERROR_CHECKING  */
+
+  return (BNODE_SET_VALUE_IN_USE_BIT(bnode, bit));
 }
 
 /* ---------------------------------------------------------------- */
@@ -306,12 +330,12 @@ size_t bnode_get_color(size_t value)
   return BNODE_GET_COLOR(value);
 }
 
-int    bnode_is_black (size_t value)
+int    bnode_is_black(size_t value)
 {
   return BNODE_IS_BLACK (value);
 }
 
-int    bnode_is_red   (size_t value)
+int    bnode_is_red(size_t value)
 {
   return BNODE_IS_RED   (value);
 }
@@ -323,14 +347,34 @@ size_t bnode_get_value(size_t value)
 }
 
 
-int    bnode_is_leaf  (size_t ref)
+int    bnode_is_leaf(size_t ref)
 {
   return BNODE_IS_LEAF  (ref);
 }
 
-size_t bnode_get_child(size_t ref)
+size_t bnode_get_ref(size_t ref)
 {
-  return BNODE_GET_CHILD(ref);
+  return BNODE_GET_REF(ref);
+}
+
+size_t bnode_get_order_in_use_bit(const bnode_t *bnode)
+{
+#if ERROR_CHECKING
+  if (!bnode)
+    return 0;
+#endif /* #if ERROR_CHECKING  */
+
+  return BNODE_GET_ORDER_IN_USE_BIT(bnode);
+}
+
+size_t bnode_get_value_in_use_bit(const bnode_t *bnode)
+{
+#if ERROR_CHECKING
+  if (!bnode)
+    return 0;
+#endif /* #if ERROR_CHECKING  */
+
+  return BNODE_GET_VALUE_IN_USE_BIT(bnode);
 }
 
 /* ---------------------------------------------------------------- */
@@ -353,8 +397,10 @@ void lookup_init_empty(lookup_t *lookup, size_t value_size)
 
   lookup->values     = NULL;
   lookup->value_size = value_size;
+  lookup->next_value = 0;
 
   lookup->order      = NULL;
+  lookup->next_order = 0;
 
   lookup->len        = 0;
 }
@@ -637,6 +683,23 @@ lookup_t *lookup_resize
 
 /* ---------------------------------------------------------------- */
 
+int lookup_is_recycling(const lookup_t *lookup)
+{
+  return LOOKUP_IS_RECYCLING(lookup);
+}
+
+int lookup_is_value_recycling(const lookup_t *lookup)
+{
+  return LOOKUP_IS_VALUE_RECYCLING(lookup);
+}
+
+int lookup_is_order_recycling(const lookup_t *lookup)
+{
+  return LOOKUP_IS_ORDER_RECYCLING(lookup);
+}
+
+/* ---------------------------------------------------------------- */
+
 void    *lookup_index_value(lookup_t *lookup, size_t index)
 {
   return LOOKUP_INDEX_VALUE(lookup, index);
@@ -645,6 +708,96 @@ void    *lookup_index_value(lookup_t *lookup, size_t index)
 bnode_t *lookup_index_order(lookup_t *lookup, size_t index)
 {
   return LOOKUP_INDEX_ORDER(lookup, index);
+}
+
+/* ---------------------------------------------------------------- */
+
+int lookup_is_value_free(const lookup_t *lookup, size_t value)
+{
+#if ERROR_CHECKING
+  if (!lookup)
+    return -1;
+#endif /* #if ERROR_CHECKING  */
+
+  return LOOKUP_IS_VALUE_FREE(lookup, value);
+}
+
+int lookup_is_order_free(const lookup_t *lookup, size_t order)
+{
+#if ERROR_CHECKING
+  if (!lookup)
+    return -1;
+#endif /* #if ERROR_CHECKING  */
+
+  return LOOKUP_IS_ORDER_FREE(lookup, order);
+}
+
+size_t lookup_next_value(lookup_t *lookup)
+{
+  size_t current_value;
+
+#if ERROR_CHECKING
+  if (!lookup)
+    return 0;
+#endif /* #if ERROR_CHECKING  */
+
+  current_value = lookup->next_value++;
+
+  if (current_value == lookup->len)
+  {
+    return current_value;
+  }
+  else
+  {
+    for (; lookup->next_value < lookup->capacity; ++lookup->next_value)
+      if (LOOKUP_IS_VALUE_FREE(lookup, lookup->next_value))
+        return current_value;
+
+    for (lookup->next_value = 0; lookup->next_value < current_value; ++lookup->next_value)
+      if (LOOKUP_IS_VALUE_FREE(lookup, lookup->next_value))
+        return current_value;
+
+    return 0;
+  }
+}
+
+size_t lookup_next_order(lookup_t *lookup)
+{
+  size_t current_order;
+
+#if ERROR_CHECKING
+  if (!lookup)
+    return 0;
+#endif /* #if ERROR_CHECKING  */
+
+  current_order = lookup->next_order++;
+
+  if (current_order == lookup->len)
+  {
+    return current_order;
+  }
+  else
+  {
+    for (; lookup->next_order < lookup->capacity; ++lookup->next_order)
+      if (LOOKUP_IS_ORDER_FREE(lookup, lookup->next_order))
+        return current_order;
+
+    for (lookup->next_order = 0; lookup->next_order < current_order; ++lookup->next_order)
+      if (LOOKUP_IS_ORDER_FREE(lookup, lookup->next_order))
+        return current_order;
+
+    return 0;
+  }
+}
+
+size_t lookup_set_is_value_free(lookup_t *lookup, size_t index, size_t bit)
+{
+  return (LOOKUP_SET_IS_VALUE_FREE(lookup, index, bit));
+}
+
+size_t lookup_set_is_order_free(lookup_t *lookup, size_t index, size_t bit)
+{
+  return (LOOKUP_SET_IS_ORDER_FREE(lookup, index, bit));
 }
 
 /* ---------------------------------------------------------------- */
@@ -665,7 +818,6 @@ lookup_t *lookup_insert_controlled
   , callback_compare_t  cmp
 
   , int                *out_already_exists
-  , int                *out_max_capacity
   )
 {
   size_t   capacity;
@@ -685,23 +837,19 @@ lookup_t *lookup_insert_controlled
   if (!val)
   {
     WRITE_OUTPUT(out_already_exists, 0);
-    WRITE_OUTPUT(out_max_capacity,   lookup_max_capacity(lookup));
-
     return NULL;
   }
+
+  capacity = lookup_capacity(lookup);
 
   /* Are we inserting the first element? */
   if (lookup_empty(lookup))
   {
-    capacity = lookup_capacity(lookup);
+    WRITE_OUTPUT(out_already_exists, 0);
 
     /* Do we have space? */
     if (capacity <= 0)
-    {
-      WRITE_OUTPUT(out_already_exists, 0);
-      WRITE_OUTPUT(out_max_capacity,   1);
       return NULL;
-    }
 
     /* ---------------------------------------------------------------- */
 
@@ -720,50 +868,89 @@ lookup_t *lookup_insert_controlled
     cur->right = BNODE_LEAF();
 
     /* Update len. */
+    lookup_next_value(lookup);
+    lookup_next_order(lookup);
     ++lookup->len;
 
-    /* Write output. */
-    WRITE_OUTPUT(out_already_exists, 0);
-    WRITE_OUTPUT(out_max_capacity,   lookup_max_capacity(lookup));
+    BNODE_SET_ORDER_IN_USE_BIT(cur, 1);
+    BNODE_SET_VALUE_IN_USE_BIT(cur, 1);
 
     /* Success. */
     return lookup;
   }
   else
   {
-#if ERROR_CHECKING
-    if (!cmp.comparer)
-      return NULL;
-#endif /* #if ERROR_CHECKING  */
+    size_t child;
 
-node = 0;
-WRITE_OUTPUT(out_already_exists, node); /* TODO */
-    /* Traverse our binary search tree: */
-    /*                                  */
-    /* Find the first equivalent node,  */
-    /* or the first in-order leaf.      */
-    value = 0;
-    node  = 0;
-    dest  = LOOKUP_INDEX_VALUE(lookup, value);
-    cur   = LOOKUP_INDEX_ORDER(lookup, value);
+    int ordering;
+
+    /* Traverse our binary search tree until we reach a leaf. */
+    node = 0;
     for (;;)
     {
-      int ordering;
+      cur   = LOOKUP_INDEX_ORDER(lookup, node);
+      dest  = LOOKUP_INDEX_VALUE(lookup, BNODE_GET_VALUE(cur->value));
 
       ordering = call_callback_compare(cmp, val, dest);
 
-      if (ordering)
-      {
+#if ERROR_CHECKING
+      if (IS_ORDERING_ERROR(ordering))
+        return NULL;
+#endif /* #if ERROR_CHECKING  */
+
+      if (ordering <= 0)
+        child = cur->left;
+      else
+        child = cur->right;
+
+      if (BNODE_IS_LEAF(child))
         break;
-      }
-
-      break;
+      else
+        node = BNODE_GET_REF(child);
     }
+
+    /* "node" refers to the index of the parent of the leaf.   */
+    /* "ordering" refers to the result of the last comparison. */
+
+    if (ordering == 0)
+    {
+      WRITE_OUTPUT(out_already_exists, 1);
+
+      if (!add_when_exists)
+        return lookup;
+    }
+    else
+    {
+      WRITE_OUTPUT(out_already_exists, 0);
+    }
+
+    if (lookup->len >= lookup->capacity + 1)
+    {
+      /* Out of space. */
+      return NULL;
+    }
+
+    /* Get the next free index. */
+    value = lookup_next_value(lookup);
+    child = lookup_next_order(lookup);
+    ++lookup->len;
+
+    if (ordering <= 0)
+      cur->left  = BNODE_REF(child);
+    else
+      cur->right = BNODE_REF(child);
+
+    cur   = LOOKUP_INDEX_ORDER(lookup, child);
+    dest  = LOOKUP_INDEX_VALUE(lookup, value);
+
+    BNODE_SET_ORDER_IN_USE_BIT(cur, 1);
+    BNODE_SET_VALUE_IN_USE_BIT(cur, 1);
+
+    /* Write the value. */
+    memmove(dest, val, LOOKUP_VALUE_SIZE(lookup));
+    cur->value = BNODE_BLACK_VALUE(value);
+
+    /* TODO: balance! */
+    return lookup;
   }
-
-  /* TODO */
-  *out_already_exists = 0;
-  *out_max_capacity   = 0;
-
-  return lookup;
 }
