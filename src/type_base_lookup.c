@@ -954,3 +954,57 @@ lookup_t *lookup_insert_controlled
     return lookup;
   }
 }
+
+void *lookup_retrieve
+  ( lookup_t           *lookup
+  , const void         *val
+
+  , callback_compare_t  cmp
+  )
+{
+  size_t   node;
+
+  void    *dest;
+  bnode_t *cur;
+
+#if ERROR_CHECKING
+  if (!lookup)
+    return NULL;
+#endif /* #if ERROR_CHECKING  */
+
+  if (!val)
+    return NULL;
+
+  if (lookup_empty(lookup))
+    return NULL;
+
+  node = 0;
+  for (;;)
+  {
+    int ordering;
+
+    cur   = LOOKUP_INDEX_ORDER(lookup, node);
+    dest  = LOOKUP_INDEX_VALUE(lookup, BNODE_GET_VALUE(cur->value));
+
+    ordering = call_callback_compare(cmp, val, dest);
+
+#if ERROR_CHECKING
+    if (IS_ORDERING_ERROR(ordering))
+      return NULL;
+#endif /* #if ERROR_CHECKING  */
+
+    if      (ordering < 0)
+      node = cur->left;
+    else if (ordering > 0)
+      node = cur->right;
+    else
+      return dest;
+
+    if (BNODE_IS_LEAF(node))
+      break;
+    else
+      node = BNODE_GET_REF(node);
+  }
+
+  return NULL;
+}

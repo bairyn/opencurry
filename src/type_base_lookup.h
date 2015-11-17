@@ -307,6 +307,15 @@ lookup_t *lookup_insert_controlled
   , int                *out_already_exists
   );
 
+void *lookup_retrieve
+  ( lookup_t           *lookup
+  , const void         *val
+
+  , callback_compare_t  cmp
+  );
+
+/* TODO: retrieve_multiple */
+
 /* ---------------------------------------------------------------- */
 /* Post-dependencies.                                               */
 /* ---------------------------------------------------------------- */
