@@ -924,7 +924,7 @@ lookup_t *lookup_insert_controlled
       WRITE_OUTPUT(out_already_exists, 0);
     }
 
-    if (lookup->len >= lookup->capacity + 1)
+    if (lookup->len >= lookup->capacity)
     {
       /* Out of space. */
       return NULL;
