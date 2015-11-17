@@ -182,6 +182,21 @@ int ordering_lossy_lt(void)
   return ORDERING_LOSSY_LT;
 }
 
+int ordering_lossy_gt_1(void)
+{
+  return ORDERING_LOSSY_GT_1;
+}
+
+int ordering_lossy_gt_2(void)
+{
+  return ORDERING_LOSSY_GT_2;
+}
+
+int ordering_lossy_gt_3(void)
+{
+  return ORDERING_LOSSY_GT_3;
+}
+
 
 int is_ordering_success(int ordering)
 {
