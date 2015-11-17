@@ -121,9 +121,11 @@ int ordering_lt(void);
 int ordering_eq(void);
 int ordering_gt(void);
 
-#define ORDERING_INVERT(ordering)   \
-  ( (IS_ORDERING_ERROR((ordering))) \
-  ? (ordering)                      \
+#define ORDERING_INVERT(ordering)                                                     \
+  ( (IS_ORDERING_ERROR((ordering)))                                                   \
+    ? (ordering)                                                                      \
+  : (IS_ORDERING_LOSSY((ordering)))                                                   \
+    ? (SIGN_CASE((ordering), ORDERING_LOSSY_GT_1, ORDERING_ERR_2, ORDERING_LOSSY_LT)) \
   : (-(ordering))                   \
   )
 int ordering_invert(int ordering);
