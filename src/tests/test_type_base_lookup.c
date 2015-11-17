@@ -113,29 +113,6 @@ static void init_memory_methods(void)
 
 /* ---------------------------------------------------------------- */
 
-#ifdef TODO
-#define INIT() init(context, lookup)
-static unit_test_result_t init(unit_test_context_t *context, lookup_t *lookup)
-{
-  /* TODO */
-}
-
-#define EXPAND(capacity) expand(context, lookup, capacity)
-static unit_test_result_t expand(unit_test_context_t *context, lookup_t *lookup, size_t capacity)
-{
-  /* TODO */
-}
-
-#define INSERT_CONTROLLED(val, add_when_exists, out_already_exists, out_max_capacity) \
-  insert_controlled(context, lookup, val, add_when_exists, out_already_exists, out_max_capacity)
-static unit_test_result_t insert_controlled(unit_test_context_t *context, lookup_t *lookup, size_t capacity)
-{
-  /* TODO */
-}
-#endif /* #ifdef TODO */
-
-/* ---------------------------------------------------------------- */
-
 unit_test_t lookup_memory_management_test =
   {  lookup_memory_management_test_run
   , "lookup_memory_management_test"
@@ -265,7 +242,7 @@ unit_test_result_t lookup_insert_test_run(unit_test_context_t *context)
     /* 0-size lookup insertion. */
 
     value = 42;
-    LASSERT2( objpeq, lookup_insert_controlled(lookup, val, 0, cmp, ae), NULL );
+    LASSERT2( objpeq, lookup_insert(lookup, val, 0, cmp, ae), NULL );
     LASSERT2( inteq,  already_exists, 0 );
 
     /* ---------------------------------------------------------------- */
@@ -284,7 +261,7 @@ unit_test_result_t lookup_insert_test_run(unit_test_context_t *context)
     /* Inserting same value. */
 
     value = 42;
-    LASSERT2( objpeq, lookup_insert_controlled(lookup, val,  0, cmp, ae), &lookup_val );
+    LASSERT2( objpeq, lookup_insert(lookup, val,  0, cmp, ae), &lookup_val );
     LASSERT2( inteq,  already_exists, 0 );
     LASSERT2( inteq,  lookup_len(lookup), 1);
 
@@ -295,7 +272,7 @@ unit_test_result_t lookup_insert_test_run(unit_test_context_t *context)
 
 
     value = 42;
-    LASSERT2( objpeq, lookup_insert_controlled(lookup, val,  0, cmp, ae), &lookup_val );
+    LASSERT2( objpeq, lookup_insert(lookup, val,  0, cmp, ae), &lookup_val );
     LASSERT2( inteq,  already_exists, 1 );
     LASSERT2( inteq,  lookup_len(lookup), 1);
 
@@ -306,7 +283,7 @@ unit_test_result_t lookup_insert_test_run(unit_test_context_t *context)
 
 
     value2 = 42;
-    LASSERT2( objpeq, lookup_insert_controlled(lookup, val2, 0, cmp, ae), &lookup_val );
+    LASSERT2( objpeq, lookup_insert(lookup, val2, 0, cmp, ae), &lookup_val );
     LASSERT2( inteq,  already_exists, 1 );
     LASSERT2( inteq,  lookup_len(lookup), 1);
 
@@ -317,7 +294,7 @@ unit_test_result_t lookup_insert_test_run(unit_test_context_t *context)
 
 
     value2 = 42;
-    LASSERT2( objpeq, lookup_insert_controlled(lookup, val2, 0, cmp, ae), &lookup_val );
+    LASSERT2( objpeq, lookup_insert(lookup, val2, 0, cmp, ae), &lookup_val );
     LASSERT2( inteq,  already_exists, 1 );
     LASSERT2( inteq,  lookup_len(lookup), 1);
 
@@ -330,7 +307,7 @@ unit_test_result_t lookup_insert_test_run(unit_test_context_t *context)
     /* Insert new value. */
 
     value = 43;
-    LASSERT2( objpeq, lookup_insert_controlled(lookup, val,  0, cmp, ae), &lookup_val );
+    LASSERT2( objpeq, lookup_insert(lookup, val,  0, cmp, ae), &lookup_val );
     LASSERT2( inteq,  already_exists, 0 );
     LASSERT2( inteq,  lookup_len(lookup), 2);
 
@@ -341,7 +318,7 @@ unit_test_result_t lookup_insert_test_run(unit_test_context_t *context)
 
 
     value = 43;
-    LASSERT2( objpeq, lookup_insert_controlled(lookup, val,  0, cmp, ae), &lookup_val );
+    LASSERT2( objpeq, lookup_insert(lookup, val,  0, cmp, ae), &lookup_val );
     LASSERT2( inteq,  already_exists, 1 );
     LASSERT2( inteq,  lookup_len(lookup), 2);
 
@@ -354,7 +331,7 @@ unit_test_result_t lookup_insert_test_run(unit_test_context_t *context)
     /* Inserting a multiple. */
 
     value = 42;
-    LASSERT2( objpeq, lookup_insert_controlled(lookup, val,  0, cmp, ae), &lookup_val );
+    LASSERT2( objpeq, lookup_insert(lookup, val,  0, cmp, ae), &lookup_val );
     LASSERT2( inteq,  already_exists, 1 );
     LASSERT2( inteq,  lookup_len(lookup), 2);
     LASSERT1( false,  lookup_max_capacity(lookup) );
@@ -366,7 +343,7 @@ unit_test_result_t lookup_insert_test_run(unit_test_context_t *context)
 
 
     value = 42;
-    LASSERT2( objpeq, lookup_insert_controlled(lookup, val,  1, cmp, ae), &lookup_val );
+    LASSERT2( objpeq, lookup_insert(lookup, val,  1, cmp, ae), &lookup_val );
     LASSERT2( inteq,  already_exists, 1 );
     LASSERT2( inteq,  lookup_len(lookup), 3 );
     LASSERT1( true,   lookup_max_capacity(lookup) );
@@ -378,7 +355,7 @@ unit_test_result_t lookup_insert_test_run(unit_test_context_t *context)
 
 
     value = 42;
-    LASSERT2( objpeq, lookup_insert_controlled(lookup, val,  0, cmp, ae), &lookup_val );
+    LASSERT2( objpeq, lookup_insert(lookup, val,  0, cmp, ae), &lookup_val );
     LASSERT2( inteq,  already_exists, 1 );
     LASSERT2( inteq,  lookup_len(lookup), 3 );
     LASSERT1( true,   lookup_max_capacity(lookup) );
@@ -392,7 +369,7 @@ unit_test_result_t lookup_insert_test_run(unit_test_context_t *context)
     /* Exceeding capacity. */
 
     value = 7;
-    LASSERT2( objpeq, lookup_insert_controlled(lookup, val,  0, cmp, ae), NULL );
+    LASSERT2( objpeq, lookup_insert(lookup, val,  0, cmp, ae), NULL );
     LASSERT2( inteq,  already_exists, 0 );
     LASSERT2( inteq,  lookup_len(lookup), 3 );
     LASSERT1( true,   lookup_max_capacity(lookup) );
@@ -406,7 +383,7 @@ unit_test_result_t lookup_insert_test_run(unit_test_context_t *context)
 
 
     value = 7;
-    LASSERT2( objpeq, lookup_insert_controlled(lookup, val,  1, cmp, ae), NULL );
+    LASSERT2( objpeq, lookup_insert(lookup, val,  1, cmp, ae), NULL );
     LASSERT2( inteq,  already_exists, 0 );
     LASSERT2( inteq,  lookup_len(lookup), 3 );
     LASSERT1( true,   lookup_max_capacity(lookup) );

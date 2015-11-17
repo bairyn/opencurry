@@ -321,6 +321,16 @@ size_t bnode_set_value_in_use_bit(bnode_t *bnode, size_t bit)
   return (BNODE_SET_VALUE_IN_USE_BIT(bnode, bit));
 }
 
+size_t *bnode_get_child(bnode_t *bnode, int ordering)
+{
+#if ERROR_CHECKING
+  if (!bnode)
+    return NULL;
+#endif /* #if ERROR_CHECKING  */
+
+  return BNODE_GET_CHILD(bnode, ordering);
+}
+
 /* ---------------------------------------------------------------- */
 
 /* bnode_t field interpretors. */
@@ -743,22 +753,15 @@ size_t lookup_next_value(lookup_t *lookup)
 
   current_value = lookup->next_value++;
 
-  if (current_value == lookup->len)
-  {
-    return current_value;
-  }
-  else
-  {
-    for (; lookup->next_value < lookup->capacity; ++lookup->next_value)
-      if (LOOKUP_IS_VALUE_FREE(lookup, lookup->next_value))
-        return current_value;
+  for (; lookup->next_value < lookup->capacity; ++lookup->next_value)
+    if (!LOOKUP_IS_VALUE_FREE(lookup, lookup->next_value))
+      return current_value;
 
-    for (lookup->next_value = 0; lookup->next_value < current_value; ++lookup->next_value)
-      if (LOOKUP_IS_VALUE_FREE(lookup, lookup->next_value))
-        return current_value;
+  for (lookup->next_value = 0; lookup->next_value < current_value; ++lookup->next_value)
+    if (!LOOKUP_IS_VALUE_FREE(lookup, lookup->next_value))
+      return current_value;
 
-    return 0;
-  }
+  return 0;
 }
 
 size_t lookup_next_order(lookup_t *lookup)
@@ -772,22 +775,15 @@ size_t lookup_next_order(lookup_t *lookup)
 
   current_order = lookup->next_order++;
 
-  if (current_order == lookup->len)
-  {
-    return current_order;
-  }
-  else
-  {
-    for (; lookup->next_order < lookup->capacity; ++lookup->next_order)
-      if (LOOKUP_IS_ORDER_FREE(lookup, lookup->next_order))
-        return current_order;
+  for (; lookup->next_order < lookup->capacity; ++lookup->next_order)
+    if (!LOOKUP_IS_ORDER_FREE(lookup, lookup->next_order))
+      return current_order;
 
-    for (lookup->next_order = 0; lookup->next_order < current_order; ++lookup->next_order)
-      if (LOOKUP_IS_ORDER_FREE(lookup, lookup->next_order))
-        return current_order;
+  for (lookup->next_order = 0; lookup->next_order < current_order; ++lookup->next_order)
+    if (!LOOKUP_IS_ORDER_FREE(lookup, lookup->next_order))
+      return current_order;
 
-    return 0;
-  }
+  return 0;
 }
 
 size_t lookup_set_is_value_free(lookup_t *lookup, size_t index, size_t bit)
@@ -810,7 +806,7 @@ size_t lookup_set_is_order_free(lookup_t *lookup, size_t index, size_t bit)
  * If there is no space to insert a value, enable out_max_capacity and return
  * NULL.
  */
-lookup_t *lookup_insert_controlled
+lookup_t *lookup_insert
   ( lookup_t           *lookup
   , const void         *val
   , int                 add_when_exists
@@ -931,24 +927,27 @@ lookup_t *lookup_insert_controlled
     }
 
     /* Get the next free index. */
+    /*
     value = lookup_next_value(lookup);
     child = lookup_next_order(lookup);
+    */
+    value = lookup->next_value++;
+    child = lookup->next_order++;
     ++lookup->len;
 
-    if (ordering <= 0)
-      cur->left  = BNODE_REF(child);
-    else
-      cur->right = BNODE_REF(child);
+    BNODE_SET_REF(cur, ordering, child);
 
     cur   = LOOKUP_INDEX_ORDER(lookup, child);
     dest  = LOOKUP_INDEX_VALUE(lookup, value);
 
-    BNODE_SET_ORDER_IN_USE_BIT(cur, 1);
-    BNODE_SET_VALUE_IN_USE_BIT(cur, 1);
-
     /* Write the value. */
     memmove(dest, val, LOOKUP_VALUE_SIZE(lookup));
     cur->value = BNODE_BLACK_VALUE(value);
+    cur->left  = BNODE_LEAF();
+    cur->right = BNODE_LEAF();
+
+    BNODE_SET_ORDER_IN_USE_BIT(cur, 1);
+    BNODE_SET_VALUE_IN_USE_BIT(cur, 1);
 
     /* TODO: balance! */
     return lookup;
@@ -1007,4 +1006,122 @@ void *lookup_retrieve
   }
 
   return NULL;
+}
+
+lookup_t *lookup_remove
+  ( lookup_t           *lookup
+  , const void         *val
+
+  , callback_compare_t  cmp
+
+  , int                *out_missing
+  )
+{
+  size_t   parent;
+  size_t   node;
+
+  void    *dest;
+  bnode_t *par;
+  bnode_t *cur;
+
+  int      par_ordering = 0;
+
+#if ERROR_CHECKING
+  if (!lookup)
+    return NULL;
+#endif /* #if ERROR_CHECKING  */
+
+  if (!val)
+  {
+    WRITE_OUTPUT(out_missing, 0);
+    return NULL;
+  }
+
+  if (lookup_empty(lookup))
+  {
+    WRITE_OUTPUT(out_missing, 1);
+    return NULL;
+  }
+
+  parent = 0;
+  node   = 0;
+  for (;;)
+  {
+    int      ordering;
+    size_t   child;
+
+    cur   = LOOKUP_INDEX_ORDER(lookup, node);
+    dest  = LOOKUP_INDEX_VALUE(lookup, BNODE_GET_VALUE(cur->value));
+
+    ordering = call_callback_compare(cmp, val, dest);
+
+#if ERROR_CHECKING
+    if (IS_ORDERING_ERROR(ordering))
+      return NULL;
+#endif /* #if ERROR_CHECKING  */
+
+    if      (ordering < 0)
+      child = cur->left;
+    else if (ordering > 0)
+      child = cur->right;
+    else
+      break;
+
+    parent       = node;
+    par_ordering = ordering;
+
+    if (BNODE_IS_LEAF(node))
+    {
+      WRITE_OUTPUT(out_missing, 1);
+      return lookup;
+    }
+    else
+    {
+      parent = node;
+      node   = BNODE_GET_REF(child);
+    }
+  }
+
+  WRITE_OUTPUT(out_missing, 0);
+  node = BNODE_GET_REF(node);
+
+  /* cur => node (we're removing "node") */
+  par = LOOKUP_INDEX_ORDER(lookup, parent);
+
+  /* First, mark the element as free in our container. */
+  LOOKUP_SET_IS_VALUE_FREE(lookup, BNODE_GET_VALUE(cur->value), 1);
+
+  /* Second, update the tree. */
+
+  /* Are we removing the root node? */
+  if (parent == node)
+  {
+    /* TODO */
+  }
+  else
+  {
+    if (BNODE_IS_LEAF(cur->left) && BNODE_IS_LEAF(cur->right))
+    {
+      BNODE_SET_LEAF(par, par_ordering);
+      LOOKUP_SET_IS_ORDER_FREE(lookup, node, 1);
+    }
+    else if (BNODE_IS_LEAF(cur->left))
+    {
+      BNODE_SET_REF(par, par_ordering, BNODE_GET_REF(cur->right));
+      LOOKUP_SET_IS_ORDER_FREE(lookup, node, 1);
+    }
+    else if (BNODE_IS_LEAF(cur->right))
+    {
+      BNODE_SET_REF(par, par_ordering, BNODE_GET_REF(cur->left));
+      LOOKUP_SET_IS_ORDER_FREE(lookup, node, 1);
+    }
+    else
+    {
+      /* TODO */
+    }
+  }
+
+  --lookup->len;
+
+  return lookup;
 }

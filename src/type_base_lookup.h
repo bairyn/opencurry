@@ -160,6 +160,17 @@ size_t bnode_ref (size_t index);
 size_t bnode_set_order_in_use_bit(bnode_t *bnode, size_t bit);
 size_t bnode_set_value_in_use_bit(bnode_t *bnode, size_t bit);
 
+#define BNODE_GET_CHILD(bnode, ordering) \
+  (SIGN_CASE(ordering, &(bnode)->left, &(bnode)->left, &(bnode)->right))
+size_t *bnode_get_child(bnode_t *bnode, int ordering);
+
+#define BNODE_SET_LEAF(bnode, ordering) \
+  *(BNODE_GET_CHILD((bnode), (ordering))) &= 1
+#define BNODE_SET_REF( bnode, ordering, index) \
+  *(BNODE_GET_CHILD((bnode), (ordering))) = ((BNODE_REF((index))) | ((*(BNODE_GET_CHILD((bnode), (ordering)))) & 1))
+size_t bnode_set_leaf(bnode_t *bnode, size_t bit);
+size_t bnode_set_ref (bnode_t *bnode, size_t bit);
+
 /* ---------------------------------------------------------------- */
 
 /* bnode_t field interpretors. */
@@ -267,8 +278,8 @@ lookup_t *lookup_resize
   (  LOOKUP_IS_VALUE_RECYCLING(lookup) \
   || LOOKUP_IS_ORDER_RECYCLING(lookup) \
   )
-#define LOOKUP_IS_VALUE_RECYCLING(lookup) (((lookup)->next_value) != (LOOKUP_LEN((lookup))))
-#define LOOKUP_IS_ORDER_RECYCLING(lookup) (((lookup)->next_order) != (LOOKUP_LEN((lookup))))
+#define LOOKUP_IS_VALUE_RECYCLING(lookup) (((lookup)->next_value) < (LOOKUP_LEN((lookup))))
+#define LOOKUP_IS_ORDER_RECYCLING(lookup) (((lookup)->next_order) < (LOOKUP_LEN((lookup))))
 int lookup_is_recycling      (const lookup_t *lookup);
 int lookup_is_value_recycling(const lookup_t *lookup);
 int lookup_is_order_recycling(const lookup_t *lookup);
@@ -290,14 +301,14 @@ int lookup_is_order_free(const lookup_t *lookup, size_t order);
 size_t lookup_next_value(lookup_t *lookup);
 size_t lookup_next_order(lookup_t *lookup);
 
-#define LOOKUP_SET_IS_VALUE_FREE(lookup, index, bit) BNODE_SET_VALUE_IN_USE_BIT( (LOOKUP_INDEX_ORDER((lookup), (index))), (bit) )
-#define LOOKUP_SET_IS_ORDER_FREE(lookup, index, bit) BNODE_SET_ORDER_IN_USE_BIT( (LOOKUP_INDEX_ORDER((lookup), (index))), (bit) )
+#define LOOKUP_SET_IS_VALUE_FREE(lookup, index, bit) BNODE_SET_VALUE_IN_USE_BIT( (LOOKUP_INDEX_ORDER((lookup), (index))), ((bit) ^ 1) )
+#define LOOKUP_SET_IS_ORDER_FREE(lookup, index, bit) BNODE_SET_ORDER_IN_USE_BIT( (LOOKUP_INDEX_ORDER((lookup), (index))), ((bit) ^ 1) )
 size_t lookup_set_is_value_free(lookup_t *lookup, size_t index, size_t bit);
 size_t lookup_set_is_order_free(lookup_t *lookup, size_t index, size_t bit);
 
 /* ---------------------------------------------------------------- */
 
-lookup_t *lookup_insert_controlled
+lookup_t *lookup_insert
   ( lookup_t           *lookup
   , const void         *val
   , int                 add_when_exists
@@ -315,6 +326,15 @@ void *lookup_retrieve
   );
 
 /* TODO: retrieve_multiple */
+
+lookup_t *lookup_remove
+  ( lookup_t           *lookup
+  , const void         *val
+
+  , callback_compare_t  cmp
+
+  , int                *out_missing
+  );
 
 /* ---------------------------------------------------------------- */
 /* Post-dependencies.                                               */
