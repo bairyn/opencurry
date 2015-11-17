@@ -324,12 +324,12 @@ unit_test_result_t ordering_equalities_test_run(unit_test_context_t *context)
     LASSERT2( inteq, CMP_SUCCESS( 7,  2),  5  );
     LASSERT2( inteq, CMP_SUCCESS( 7,  7),  0  );
 
-    LASSERT2( inteq, CMP_SUCCESS(ordering_err_1(),      0), SIGN(ordering_err_1())      );
-    LASSERT2( inteq, CMP_SUCCESS(ordering_err_2(),      0), SIGN(ordering_err_2())      );
-    LASSERT2( inteq, CMP_SUCCESS(ordering_lossy_lt(),   0), SIGN(ordering_lossy_lt())   );
-    LASSERT2( inteq, CMP_SUCCESS(ordering_lossy_gt_1(), 0), SIGN(ordering_lossy_gt_1()) );
-    LASSERT2( inteq, CMP_SUCCESS(ordering_lossy_gt_2(), 0), SIGN(ordering_lossy_gt_2()) );
-    LASSERT2( inteq, CMP_SUCCESS(ordering_lossy_gt_3(), 0), SIGN(ordering_lossy_gt_3()) );
+    LASSERT2( inteq, CMP_SUCCESS(ordering_err_1(),      0), ordering_lossy_lt()   );
+    LASSERT2( inteq, CMP_SUCCESS(ordering_err_2(),      0), ordering_lossy_lt()   );
+    LASSERT2( inteq, CMP_SUCCESS(ordering_lossy_lt(),   0), ordering_lossy_lt()   );
+    LASSERT2( inteq, CMP_SUCCESS(ordering_lossy_gt_1(), 0), ordering_lossy_gt_1() );
+    LASSERT2( inteq, CMP_SUCCESS(ordering_lossy_gt_2(), 0), ordering_lossy_gt_2() );
+    LASSERT2( inteq, CMP_SUCCESS(ordering_lossy_gt_3(), 0), ordering_lossy_gt_3() );
 
     /* ---------------------------------------------------------------- */
 

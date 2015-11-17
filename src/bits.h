@@ -279,12 +279,12 @@ long sign_long(long num);
  * result differs from CMP(check, baseline), just return -1, 0, or 1 of the
  * corresponding sign.
  */
-#define CMP_DISTANCE(check, baseline)          \
-  ( (  ( SIGN(     (check) - (baseline)  ) )   \
-    == ( SIGN((CMP((check),  (baseline)))) )   \
-    )                                          \
-  ? (  (           (check) - (baseline)    ) ) \
-  : (  (      (CMP((check),  (baseline)))  ) ) \
+#define CMP_DISTANCE(check, baseline)                                         \
+  ( (  ( SIGN(     ((signed long) (check)) - ((signed long) (baseline)) ) )   \
+    == ( SIGN((CMP(               (check),                  (baseline)))) )   \
+    )                                                                         \
+  ? (  (           ((signed long) (check)) - ((signed long) (baseline))   ) ) \
+  : (  (      (CMP(               (check),                  (baseline)))  ) ) \
   )
 int cmp_distance_int(int check, int baseline);
 int cmp_distance_uint(unsigned int check, unsigned int baseline);

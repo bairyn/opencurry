@@ -163,7 +163,7 @@ ordering_relation_t ordering_relation(int ordering);
 /* Obtain a successful ordering value based on direct application of the "<="
  * and "<" binary operators.
  */
-#define CMP_SUCCESS(check, baseline) (ORDERING_SUCCESS((CMP(check, baseline))))
+#define CMP_SUCCESS(check, baseline) (ORDERING_SUCCESS((CMP_DISTANCE(check, baseline))))
 
 /* ---------------------------------------------------------------- */
 /* Comparers.                                                       */
