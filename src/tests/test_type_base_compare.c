@@ -420,7 +420,9 @@ unit_test_result_t comparers_test_run(unit_test_context_t *context)
     a = 3;
     b = 7;
     COMPARE(int(), &a, &b, -4);
+
     /* TODO */
+    result |= UNIT_TEST_SKIPPED_CONTINUE;
   }
 
   return result;
