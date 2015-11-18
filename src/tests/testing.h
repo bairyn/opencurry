@@ -276,6 +276,7 @@ void reset_err_buf(unit_test_context_t *context);
 
 void reset_err_msg_details(unit_test_context_t *context);
 size_t test_add_details_msg(unit_test_context_t *context, const char *msg);
+size_t test_set_details_msg(unit_test_context_t *context, const char *msg);
 
 size_t assert_snprintf_error_msg(unit_test_context_t *context, int snprintf_error_code, char *msg_out, size_t msg_out_size, const char *tag);
 size_t assert_msg_check_snprintf(unit_test_context_t *context, int snprintf_result, char *msg_out, size_t msg_out_size, const char *tag, int *out_is_err);

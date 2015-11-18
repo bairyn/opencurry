@@ -1182,6 +1182,22 @@ size_t test_add_details_msg(unit_test_context_t *context, const char *msg)
   return (context->details_buf_len = (size_t) l);
 }
 
+/* Clear and write to the details buffer. */
+size_t test_set_details_msg(unit_test_context_t *context, const char *msg)
+{
+#ifdef ERROR_CHECKING
+  if (!context)
+    return 0;
+#endif /* #ifdef ERROR_CHECKING */
+
+  reset_err_msg_details(context);
+
+  if (!msg)
+    return 0;
+
+  return test_add_details_msg(context, msg);
+}
+
 /*
  * These procedures return the number of characters written, excluding the NULL
  * terminating character.
