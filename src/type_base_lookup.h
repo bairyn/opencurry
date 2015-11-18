@@ -164,12 +164,19 @@ size_t bnode_set_value_in_use_bit(bnode_t *bnode, size_t bit);
   (SIGN_CASE(ordering, &(bnode)->left, &(bnode)->left, &(bnode)->right))
 size_t *bnode_get_child(bnode_t *bnode, int ordering);
 
+#define BNODE_LINK_SET_LEAF(link) \
+  *(link) = ( ((*(link)) & 1) | ( BNODE_LEAF(       ) ) )
+#define BNODE_LINK_SET_REF( link, index) \
+  *(link) = ( ((*(link)) & 1) | ( BNODE_REF ((index)) ) )
+size_t bnode_link_set_leaf(size_t *link);
+size_t bnode_link_set_ref (size_t *link, size_t index);
+
 #define BNODE_SET_LEAF(bnode, ordering) \
-  *(BNODE_GET_CHILD((bnode), (ordering))) &= 1
+  BNODE_LINK_SET_LEAF( (BNODE_GET_CHILD((bnode), (ordering))) )
 #define BNODE_SET_REF( bnode, ordering, index) \
-  *(BNODE_GET_CHILD((bnode), (ordering))) = ((BNODE_REF((index))) | ((*(BNODE_GET_CHILD((bnode), (ordering)))) & 1))
-size_t bnode_set_leaf(bnode_t *bnode, size_t bit);
-size_t bnode_set_ref (bnode_t *bnode, size_t bit);
+  BNODE_LINK_SET_REF ( (BNODE_GET_CHILD((bnode), (ordering))), index )
+size_t bnode_set_leaf(bnode_t *bnode, int ordering);
+size_t bnode_set_ref (bnode_t *bnode, int ordering, size_t index);
 
 /* ---------------------------------------------------------------- */
 

@@ -331,6 +331,26 @@ size_t *bnode_get_child(bnode_t *bnode, int ordering)
   return BNODE_GET_CHILD(bnode, ordering);
 }
 
+size_t bnode_link_set_leaf(size_t *link)
+{
+  return BNODE_LINK_SET_LEAF(link);
+}
+
+size_t bnode_link_set_ref (size_t *link, size_t index)
+{
+  return BNODE_LINK_SET_REF (link, index);
+}
+
+size_t bnode_set_leaf(bnode_t *bnode, int ordering)
+{
+  return BNODE_SET_LEAF(bnode, ordering);
+}
+
+size_t bnode_set_ref (bnode_t *bnode, int ordering, size_t index)
+{
+  return BNODE_SET_REF (bnode, ordering, index);
+}
+
 /* ---------------------------------------------------------------- */
 
 /* bnode_t field interpretors. */
@@ -1102,22 +1122,40 @@ lookup_t *lookup_remove
   {
     if (BNODE_IS_LEAF(cur->left) && BNODE_IS_LEAF(cur->right))
     {
+      /* Bottom node; make parent's child link a leaf, and free "node". */
       BNODE_SET_LEAF(par, par_ordering);
       LOOKUP_SET_IS_ORDER_FREE(lookup, node, 1);
     }
-    else if (BNODE_IS_LEAF(cur->left))
+    else if (!BNODE_IS_LEAF(cur->left))
     {
-      BNODE_SET_REF(par, par_ordering, BNODE_GET_REF(cur->right));
+      /* Has only a left-sub-tree; set parent's child link to it */
+      /* and free "node".                                        */
+      BNODE_SET_REF(par, par_ordering, BNODE_GET_REF(cur->left));
       LOOKUP_SET_IS_ORDER_FREE(lookup, node, 1);
     }
-    else if (BNODE_IS_LEAF(cur->right))
+    else if (!BNODE_IS_LEAF(cur->right))
     {
-      BNODE_SET_REF(par, par_ordering, BNODE_GET_REF(cur->left));
+      /* Has only a right-sub-tree; set parent's child link to it */
+      /* and free "node".                                         */
+      BNODE_SET_REF(par, par_ordering, BNODE_GET_REF(cur->right));
       LOOKUP_SET_IS_ORDER_FREE(lookup, node, 1);
     }
     else
     {
-      /* TODO */
+      /* Replace "node" with the left-most node of "node"'s right-sub-tree. */
+      size_t *child;
+
+      for
+        ( child =        &cur->right
+        ; !BNODE_IS_LEAF( LOOKUP_INDEX_ORDER(lookup, BNODE_GET_REF(*child))->left)
+        ; child =       (&LOOKUP_INDEX_ORDER(lookup, BNODE_GET_REF(*child))->left)
+        );
+
+      cur->value = BNODE_GET_VALUE( LOOKUP_INDEX_ORDER(lookup, BNODE_GET_REF(*child))->value );
+
+      /* Remove bottom node. */
+      LOOKUP_SET_IS_ORDER_FREE(lookup, *child, 1);
+      BNODE_LINK_SET_LEAF(child);
     }
   }
 
