@@ -184,6 +184,223 @@ size_t terminator_size(size_t total_size)
 
 /* ---------------------------------------------------------------- */
 
+/* Returns length. */
+size_t strn_reverse(char *buf, size_t n)
+{
+  size_t i;
+  size_t len;
+
+#ifdef ERROR_CHECKING
+  if (!buf)
+    return 0;
+#endif /* #ifdef ERROR_CHECKING */
+
+  len = strllen(buf, n);
+
+  for (i = 0; i < len / 2; ++i)
+  {
+    SWAP_NO_OVERLAP(buf[i], buf[(len-i) - 1]);
+  }
+
+  return len;
+}
+
+/* Reverses an array of fixed-width elements. */
+/*                                            */
+/* Returns length (elem_num).                 */
+size_t mem_reverse(void *mem, size_t elem_size, size_t elem_num)
+{
+  size_t i;
+  unsigned char *bytes;
+
+#ifdef ERROR_CHECKING
+  if (!mem)
+    return 0;
+#endif /* #ifdef ERROR_CHECKING */
+
+  for (i = 0; i < elem_size; ++i)
+  {
+    size_t j;
+
+    for (j = 0; j < elem_num / 2; ++j)
+    {
+      size_t elem = elem_size * j;
+
+      SWAP_WITH_TMP(unsigned char, bytes[elem + i], bytes[(elem_num-1) - elem + i]);
+    }
+  }
+
+  return elem_num;
+}
+
+/* For each element in an array, reverse the bytes. */
+/*                                                  */
+/* Returns length (elem_num).                       */
+size_t endianness_reverse(void *mem, size_t elem_size, size_t elem_num)
+{
+  size_t i;
+  unsigned char *bytes;
+
+#ifdef ERROR_CHECKING
+  if (!mem)
+    return 0;
+#endif /* #ifdef ERROR_CHECKING */
+
+  for (i = 0, bytes = mem; i < elem_num, ++i, bytes += elem_size)
+  {
+    size_t j;
+
+    for (j = 0; j < elem_size / 2; ++j)
+    {
+      SWAP_WITH_TMP(unsigned char, bytes[j], bytes[(elem_size-1) - j]);
+    }
+  }
+
+  return elem_num;
+}
+
+/* Reverse each element in an array,           */
+/* and also reverse the bytes in each element. */
+/*                                             */
+/* Returns length (elem_num).                  */
+size_t mem_endianness_reverse(void *mem, size_t elem_size, size_t elem_num)
+{
+  if (!mem_reverse(mem, 1, elem_size * elem_num))
+    return 0;
+
+  return elem_num;
+}
+
+size_t unum_digits(unsigned long num, int base)
+{
+  size_t len;
+
+#ifdef ERROR_CHECKING
+  if (base <= 0)
+    return 0;
+#endif /* #ifdef ERROR_CHECKING */
+
+  for (len = 1; num > base; num /= base, ++len)
+    ;
+
+  return len;
+}
+
+size_t num_digits(signed long num, int base, int force_sign_symbol)
+{
+  if (num < 0)
+    return unum_digits((unsigned long) -num, base) + 1;
+  else
+    return unum_digits((unsigned long)  num, base) + IS_TRUE(force_sign_symbol);
+}
+
+const char *digits_base62(void)
+  { return digits_base62_def; }
+size_t num_digits_base62_def(void)
+  { return num_digits_base62_def; }
+size_t max_base_base62_def(void)
+  { return = max_base_base62_def; }
+size_t min_base_base62_def(void)
+  { return = min_base_base62_def; }
+size_t max_digit_base62(void)
+  { return max_digit_base62_def; }
+size_t      digits_base62_size(void)
+  { return digits_base62_size_def; }
+size_t      digits_base62_num(void)
+  { return digits_base62_num_def; }
+size_t      digits_base62_len(void)
+  { return digits_base62_len_def; }
+
+const char digits_base62_def[] =
+  DIGITS_BASE62;
+const size_t num_digits_base62_def  = NUM_DIGITS_BASE62;
+const size_t max_base_base62_def    = MAX_BASE_BASE62;
+const size_t min_base_base62_def    = MIN_BASE_BASE62;
+const size_t max_digit_base62_def   = MAX_DIGIT_BASE62;
+const size_t digits_base62_size_def = ARRAY_SIZE   (digits_base62_def);
+const size_t digits_base62_num_def  = ARRAY_NUM    (digits_base62_def);
+const size_t digits_base62_len_def  = ARRAY_LEN_ALL(digits_base62_def);
+
+size_t uitoa(char *dest, size_t n, unsigned long num, int base)
+{
+  size_t i;
+  size_t digits_written;
+
+  base = CLAMP_INTERVAL(base, MIN_BASE_BASE62, MAX_BASE_BASE62);
+#ifdef ERROR_CHECKING
+  if (base < 2)
+    return 0;
+  if (base >= strlen(digits_base62_def))
+    return 0;
+#endif /* #ifdef ERROR_CHECKING */
+
+  if (!dest)
+    return unum_digits(num, base);
+
+  if (n <= 0)
+    return 0;
+
+  digits_written = 0;
+
+  for (i = 0; i < SIZE_LESS_NULL(n); ++i)
+  {
+    dest[i] = digits_base62_def[num % base];
+    num /= base;
+    ++digits_written;
+
+    if (num <= 0)
+      break;
+  }
+
+  if (!mem_reverse(dest, 1, digits_written))
+    return 0;
+
+  return digits_written;
+}
+
+char isign(signed long num)
+{
+  return ISIGN(num);
+}
+
+size_t itoa(char *dest, size_t n, signed long num, int base, int force_sign_symbol)
+{
+  base = CLAMP_INTERVAL(base, MIN_BASE_BASE62, MAX_BASE_BASE62);
+#ifdef ERROR_CHECKING
+  if (base < 2)
+    return 0;
+  if (base >= strlen(digits_base62_def))
+    return 0;
+#endif /* #ifdef ERROR_CHECKING */
+
+  if (!dest)
+    return num_digits(num, base);
+
+  if (n <= 0)
+    return 0;
+
+  if (num < 0)
+  {
+    *dest++ = ISIGN(num);
+    --n;
+
+    return uitoa(dest, n, (unsigned long) -num, base) + 1;
+  }
+  else if(force_sign_symbol)
+  {
+    *dest++ = ISIGN(num);
+    --n;
+
+    return uitoa(dest, n, (unsigned long)  num, base) + 1;
+  }
+  else
+  {
+    return uitoa(dest, n, (unsigned long)  num, base);
+  }
+}
+
+/* ---------------------------------------------------------------- */
+
 /* Returns <= -1 on error, such as when "buf_size" is too small to set a null
  * terminator (this happens when "buf_size" is 0).
  *

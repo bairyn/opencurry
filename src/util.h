@@ -291,6 +291,93 @@ size_t terminator_size(size_t total_size);
 
 /* ---------------------------------------------------------------- */
 
+#ifdef TODO
+#error "TODO: move to new "string" OSLT module."
+#endif /* #ifdef TODO */
+
+/* https://en.wikipedia.org/wiki/XOR_swap_algorithm */
+#define SWAP(a, b) \
+  do               \
+  {                \
+    if (a != b)    \
+    {              \
+      a ^= b;      \
+      b ^= a;      \
+      a ^= b;      \
+    }              \
+  } while(0)
+
+#define SWAP_NO_OVERLAP(a, b) \
+  do                          \
+  {                           \
+    a ^= b;                   \
+    b ^= a;                   \
+    a ^= b;                   \
+  } while(0)
+
+#define SWAP_WITH_TMP(type, a, b)                 \
+  do                                              \
+  {                                               \
+    type _SWAP_WITH_TMP_tmp = a;                  \
+    a                       = b;                  \
+    b                       = _SWAP_WITH_TMP_tmp; \
+  } while(0)
+
+size_t strn_reverse(char *buf, size_t n);
+
+size_t mem_reverse           (void *mem, size_t elem_size, size_t elem_num);
+size_t endianness_reverse    (void *mem, size_t elem_size, size_t elem_num);
+size_t mem_endianness_reverse(void *mem, size_t elem_size, size_t elem_num);
+
+#define FORCE_SIGN    ENABLED()
+#define OPTIONAL_SIGN DISABLED()
+
+size_t unum_digits(unsigned long num, int base);
+size_t num_digits (signed   long num, int base, int force_sign_symbol);
+
+#define DIGITS_BASE62 \
+  "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz"
+#define NUM_DIGITS_BASE62 \
+  ((SIZE_LESS_NULL((sizeof((DIGIT_BASE62))))))
+#define MAX_BASE_BASE62 \
+  (NUM_DIGITS_BASE62)
+#define MIN_BASE_BASE62 \
+  (MIN((MAX_BASE_BASE62), 2))
+#define MAX_DIGIT_BASE62 \
+  ((SIZE_LESS_NULL((MAX_BASE_BASE62))))
+const char *digits_base62     (void);
+size_t      num_digits_base62 (void);
+size_t      max_base_base62   (void);
+size_t      min_base_base62   (void);
+size_t      max_digit_base62  (void);
+size_t      digits_base62_size(void);
+size_t      digits_base62_num (void);
+size_t      digits_base62_len (void);
+
+#define BASE_BINARY      2
+#define BASE_OCTAL       8
+#define BASE_DECIMAL     10
+#define BASE_HEXADECIMAL 16
+#define DEFAULT_BASE     BASE_DECIMAL
+
+extern const char digits_base62_def[];
+extern const size_t num_digits_base62_def;
+extern const size_t max_base_base62_def;
+extern const size_t min_base_base62_def;
+extern const size_t max_digit_base62_def;
+extern const size_t digits_base62_size_def;
+extern const size_t digits_base62_num_def;
+extern const size_t digits_base62_len_def;
+
+#define ISIGN(num) \
+  (SIGN_CASE((num), '-', ' ', '+'))
+char isign(signed long num);
+
+size_t uitoa(char *dest, size_t n, unsigned long num, int base);
+size_t itoa (char *dest, size_t n, signed   long num, int base, int force_sign_symbol);
+
+/* ---------------------------------------------------------------- */
+
 int set_null_terminator(char *buf, size_t len_before_terminator, size_t buf_size);
 
 size_t strlcpy(char *dest, const char *src, size_t dest_size);

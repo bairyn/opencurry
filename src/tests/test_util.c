@@ -83,134 +83,134 @@ unit_test_result_t util_equalities_num_test_run(unit_test_context_t *context)
 
     /* ---------------------------------------------------------------- */
 
-    ASSERT2( inteq, min_int( 3,  7),  3 );
-    ASSERT2( inteq, max_int( 3,  7),  7 );
-    ASSERT2( inteq, min_int(-3, -7), -7 );
-    ASSERT2( inteq, max_int(-3, -7), -3 );
+    LASSERT2( inteq, min_int( 3,  7),  3 );
+    LASSERT2( inteq, max_int( 3,  7),  7 );
+    LASSERT2( inteq, min_int(-3, -7), -7 );
+    LASSERT2( inteq, max_int(-3, -7), -3 );
 
-    ASSERT2( sizeeq, min_size(3,  7),  3 );
-    ASSERT2( sizeeq, max_size(3,  7),  7 );
+    LASSERT2( sizeeq, min_size(3,  7),  3 );
+    LASSERT2( sizeeq, max_size(3,  7),  7 );
 
-    ASSERT2( sizeeq, size_less_null(0), 0 );
-    ASSERT2( sizeeq, size_less_null(1), 0 );
-    ASSERT2( sizeeq, size_less_null(2), 1 );
+    LASSERT2( sizeeq, size_less_null(0), 0 );
+    LASSERT2( sizeeq, size_less_null(1), 0 );
+    LASSERT2( sizeeq, size_less_null(2), 1 );
 
-    ASSERT2( inteq, proc_true(),  1 );
-    ASSERT2( inteq, proc_false(), 0 );
+    LASSERT2( inteq, proc_true(),  1 );
+    LASSERT2( inteq, proc_false(), 0 );
 
-    ASSERT2( inteq, proc_cond(0)(), 0 );
-    ASSERT2( inteq, proc_cond(1)(), 1 );
+    LASSERT2( inteq, proc_cond(0)(), 0 );
+    LASSERT2( inteq, proc_cond(1)(), 1 );
 
-    ASSERT2( objpeq, proc_context(&object), &object );
+    LASSERT2( objpeq, proc_context(&object), &object );
 
-    ASSERT2( inteq, proc_true_context(&object),  1 );
-    ASSERT2( inteq, proc_false_context(&object), 0 );
+    LASSERT2( inteq, proc_true_context(&object),  1 );
+    LASSERT2( inteq, proc_false_context(&object), 0 );
 
-    ASSERT2( inteq, is_big_endian(), !are_bytes_reversed() );
-
-    /* ---------------------------------------------------------------- */
-
-    ASSERT2( sizeeq, size_minus(8, 0),  8  );
-    ASSERT2( sizeeq, size_minus(8, 1),  7  );
-    ASSERT2( sizeeq, size_minus(8, 7),  1  );
-    ASSERT2( sizeeq, size_minus(8, 8),  0  );
-    ASSERT2( sizeeq, size_minus(8, 9),  0  );
-    ASSERT2( sizeeq, size_minus(8, 10), 0  );
-    ASSERT2( sizeeq, size_minus(8, 99), 0  );
-
-    ASSERT2( sizeeq, size_minus(1, 0),  1  );
-    ASSERT2( sizeeq, size_minus(1, 1),  0  );
-    ASSERT2( sizeeq, size_minus(1, 2),  0  );
-    ASSERT2( sizeeq, size_minus(1, 4),  0  );
-    ASSERT2( sizeeq, size_minus(1, 8),  0  );
-    ASSERT2( sizeeq, size_minus(1, 99), 0  );
-
-    ASSERT2( sizeeq, size_minus(0, 0),  0  );
-    ASSERT2( sizeeq, size_minus(0, 1),  0  );
-    ASSERT2( sizeeq, size_minus(0, 2),  0  );
-    ASSERT2( sizeeq, size_minus(0, 4),  0  );
-    ASSERT2( sizeeq, size_minus(0, 8),  0  );
-    ASSERT2( sizeeq, size_minus(0, 99), 0  );
-
-
-    ASSERT2( sizeeq, size_minus(0,  8), 0  );
-    ASSERT2( sizeeq, size_minus(1,  8), 0  );
-    ASSERT2( sizeeq, size_minus(7,  8), 0  );
-    ASSERT2( sizeeq, size_minus(8,  8), 0  );
-    ASSERT2( sizeeq, size_minus(9,  8), 1  );
-    ASSERT2( sizeeq, size_minus(10, 8), 2  );
-    ASSERT2( sizeeq, size_minus(99, 8), 91 );
-
-    ASSERT2( sizeeq, size_minus(0,  1), 0  );
-    ASSERT2( sizeeq, size_minus(1,  1), 0  );
-    ASSERT2( sizeeq, size_minus(2,  1), 1  );
-    ASSERT2( sizeeq, size_minus(4,  1), 3  );
-    ASSERT2( sizeeq, size_minus(8,  1), 7  );
-    ASSERT2( sizeeq, size_minus(99, 1), 98 );
-
-    ASSERT2( sizeeq, size_minus(0,  0), 0  );
-    ASSERT2( sizeeq, size_minus(1,  0), 1  );
-    ASSERT2( sizeeq, size_minus(2,  0), 2  );
-    ASSERT2( sizeeq, size_minus(4,  0), 4  );
-    ASSERT2( sizeeq, size_minus(8,  0), 8  );
-    ASSERT2( sizeeq, size_minus(99, 0), 99 );
+    LASSERT2( inteq, is_big_endian(), !are_bytes_reversed() );
 
     /* ---------------------------------------------------------------- */
 
-    ASSERT2( sizeeq, size_distance(8, 0),  8  );
-    ASSERT2( sizeeq, size_distance(8, 1),  7  );
-    ASSERT2( sizeeq, size_distance(8, 7),  1  );
-    ASSERT2( sizeeq, size_distance(8, 8),  0  );
-    ASSERT2( sizeeq, size_distance(8, 9),  1  );
-    ASSERT2( sizeeq, size_distance(8, 10), 2  );
-    ASSERT2( sizeeq, size_distance(8, 99), 91 );
+    LASSERT2( sizeeq, size_minus(8, 0),  8  );
+    LASSERT2( sizeeq, size_minus(8, 1),  7  );
+    LASSERT2( sizeeq, size_minus(8, 7),  1  );
+    LASSERT2( sizeeq, size_minus(8, 8),  0  );
+    LASSERT2( sizeeq, size_minus(8, 9),  0  );
+    LASSERT2( sizeeq, size_minus(8, 10), 0  );
+    LASSERT2( sizeeq, size_minus(8, 99), 0  );
 
-    ASSERT2( sizeeq, size_distance(1, 0),  1  );
-    ASSERT2( sizeeq, size_distance(1, 1),  0  );
-    ASSERT2( sizeeq, size_distance(1, 2),  1  );
-    ASSERT2( sizeeq, size_distance(1, 4),  3  );
-    ASSERT2( sizeeq, size_distance(1, 8),  7  );
-    ASSERT2( sizeeq, size_distance(1, 99), 98 );
+    LASSERT2( sizeeq, size_minus(1, 0),  1  );
+    LASSERT2( sizeeq, size_minus(1, 1),  0  );
+    LASSERT2( sizeeq, size_minus(1, 2),  0  );
+    LASSERT2( sizeeq, size_minus(1, 4),  0  );
+    LASSERT2( sizeeq, size_minus(1, 8),  0  );
+    LASSERT2( sizeeq, size_minus(1, 99), 0  );
 
-    ASSERT2( sizeeq, size_distance(0, 0),  0  );
-    ASSERT2( sizeeq, size_distance(0, 1),  1  );
-    ASSERT2( sizeeq, size_distance(0, 2),  2  );
-    ASSERT2( sizeeq, size_distance(0, 4),  4  );
-    ASSERT2( sizeeq, size_distance(0, 8),  8  );
-    ASSERT2( sizeeq, size_distance(0, 99), 99 );
+    LASSERT2( sizeeq, size_minus(0, 0),  0  );
+    LASSERT2( sizeeq, size_minus(0, 1),  0  );
+    LASSERT2( sizeeq, size_minus(0, 2),  0  );
+    LASSERT2( sizeeq, size_minus(0, 4),  0  );
+    LASSERT2( sizeeq, size_minus(0, 8),  0  );
+    LASSERT2( sizeeq, size_minus(0, 99), 0  );
 
 
-    ASSERT2( sizeeq, size_distance(0,  8), 8  );
-    ASSERT2( sizeeq, size_distance(1,  8), 7  );
-    ASSERT2( sizeeq, size_distance(7,  8), 1  );
-    ASSERT2( sizeeq, size_distance(8,  8), 0  );
-    ASSERT2( sizeeq, size_distance(9,  8), 1  );
-    ASSERT2( sizeeq, size_distance(10, 8), 2  );
-    ASSERT2( sizeeq, size_distance(99, 8), 91 );
+    LASSERT2( sizeeq, size_minus(0,  8), 0  );
+    LASSERT2( sizeeq, size_minus(1,  8), 0  );
+    LASSERT2( sizeeq, size_minus(7,  8), 0  );
+    LASSERT2( sizeeq, size_minus(8,  8), 0  );
+    LASSERT2( sizeeq, size_minus(9,  8), 1  );
+    LASSERT2( sizeeq, size_minus(10, 8), 2  );
+    LASSERT2( sizeeq, size_minus(99, 8), 91 );
 
-    ASSERT2( sizeeq, size_distance(0,  1), 1  );
-    ASSERT2( sizeeq, size_distance(1,  1), 0  );
-    ASSERT2( sizeeq, size_distance(2,  1), 1  );
-    ASSERT2( sizeeq, size_distance(4,  1), 3  );
-    ASSERT2( sizeeq, size_distance(8,  1), 7  );
-    ASSERT2( sizeeq, size_distance(99, 1), 98 );
+    LASSERT2( sizeeq, size_minus(0,  1), 0  );
+    LASSERT2( sizeeq, size_minus(1,  1), 0  );
+    LASSERT2( sizeeq, size_minus(2,  1), 1  );
+    LASSERT2( sizeeq, size_minus(4,  1), 3  );
+    LASSERT2( sizeeq, size_minus(8,  1), 7  );
+    LASSERT2( sizeeq, size_minus(99, 1), 98 );
 
-    ASSERT2( sizeeq, size_distance(0,  0), 0  );
-    ASSERT2( sizeeq, size_distance(1,  0), 1  );
-    ASSERT2( sizeeq, size_distance(2,  0), 2  );
-    ASSERT2( sizeeq, size_distance(4,  0), 4  );
-    ASSERT2( sizeeq, size_distance(8,  0), 8  );
-    ASSERT2( sizeeq, size_distance(99, 0), 99 );
+    LASSERT2( sizeeq, size_minus(0,  0), 0  );
+    LASSERT2( sizeeq, size_minus(1,  0), 1  );
+    LASSERT2( sizeeq, size_minus(2,  0), 2  );
+    LASSERT2( sizeeq, size_minus(4,  0), 4  );
+    LASSERT2( sizeeq, size_minus(8,  0), 8  );
+    LASSERT2( sizeeq, size_minus(99, 0), 99 );
 
     /* ---------------------------------------------------------------- */
 
-    ASSERT2( sizeeq, terminator_size(99), 98 );
-    ASSERT2( sizeeq, terminator_size(8),  7  );
-    ASSERT2( sizeeq, terminator_size(4),  3 );
-    ASSERT2( sizeeq, terminator_size(3),  2 );
-    ASSERT2( sizeeq, terminator_size(2),  1 );
-    ASSERT2( sizeeq, terminator_size(1),  0 );
-    ASSERT2( sizeeq, terminator_size(0),  0 );
+    LASSERT2( sizeeq, size_distance(8, 0),  8  );
+    LASSERT2( sizeeq, size_distance(8, 1),  7  );
+    LASSERT2( sizeeq, size_distance(8, 7),  1  );
+    LASSERT2( sizeeq, size_distance(8, 8),  0  );
+    LASSERT2( sizeeq, size_distance(8, 9),  1  );
+    LASSERT2( sizeeq, size_distance(8, 10), 2  );
+    LASSERT2( sizeeq, size_distance(8, 99), 91 );
+
+    LASSERT2( sizeeq, size_distance(1, 0),  1  );
+    LASSERT2( sizeeq, size_distance(1, 1),  0  );
+    LASSERT2( sizeeq, size_distance(1, 2),  1  );
+    LASSERT2( sizeeq, size_distance(1, 4),  3  );
+    LASSERT2( sizeeq, size_distance(1, 8),  7  );
+    LASSERT2( sizeeq, size_distance(1, 99), 98 );
+
+    LASSERT2( sizeeq, size_distance(0, 0),  0  );
+    LASSERT2( sizeeq, size_distance(0, 1),  1  );
+    LASSERT2( sizeeq, size_distance(0, 2),  2  );
+    LASSERT2( sizeeq, size_distance(0, 4),  4  );
+    LASSERT2( sizeeq, size_distance(0, 8),  8  );
+    LASSERT2( sizeeq, size_distance(0, 99), 99 );
+
+
+    LASSERT2( sizeeq, size_distance(0,  8), 8  );
+    LASSERT2( sizeeq, size_distance(1,  8), 7  );
+    LASSERT2( sizeeq, size_distance(7,  8), 1  );
+    LASSERT2( sizeeq, size_distance(8,  8), 0  );
+    LASSERT2( sizeeq, size_distance(9,  8), 1  );
+    LASSERT2( sizeeq, size_distance(10, 8), 2  );
+    LASSERT2( sizeeq, size_distance(99, 8), 91 );
+
+    LASSERT2( sizeeq, size_distance(0,  1), 1  );
+    LASSERT2( sizeeq, size_distance(1,  1), 0  );
+    LASSERT2( sizeeq, size_distance(2,  1), 1  );
+    LASSERT2( sizeeq, size_distance(4,  1), 3  );
+    LASSERT2( sizeeq, size_distance(8,  1), 7  );
+    LASSERT2( sizeeq, size_distance(99, 1), 98 );
+
+    LASSERT2( sizeeq, size_distance(0,  0), 0  );
+    LASSERT2( sizeeq, size_distance(1,  0), 1  );
+    LASSERT2( sizeeq, size_distance(2,  0), 2  );
+    LASSERT2( sizeeq, size_distance(4,  0), 4  );
+    LASSERT2( sizeeq, size_distance(8,  0), 8  );
+    LASSERT2( sizeeq, size_distance(99, 0), 99 );
+
+    /* ---------------------------------------------------------------- */
+
+    LASSERT2( sizeeq, terminator_size(99), 98 );
+    LASSERT2( sizeeq, terminator_size(8),  7  );
+    LASSERT2( sizeeq, terminator_size(4),  3 );
+    LASSERT2( sizeeq, terminator_size(3),  2 );
+    LASSERT2( sizeeq, terminator_size(2),  1 );
+    LASSERT2( sizeeq, terminator_size(1),  0 );
+    LASSERT2( sizeeq, terminator_size(0),  0 );
   }
 
   return result;
@@ -234,71 +234,71 @@ unit_test_result_t util_equalities_nullterm_test_run(unit_test_context_t *contex
     char buf_full [4] = "123";
     char buf_max  [4] = { 'l', 'o', 'v', 'e' };
 
-    ASSERT3( streqn,     buf_empty, "",            sizeof(buf_empty) );
-    ASSERT3( streqn,     buf_full,  "123",         sizeof(buf_full)  );
-    ASSERT3( streqn,     buf_max,   "love",        sizeof(buf_max)   );
-    ASSERT3( streqn,     buf_max,   "lovely love", sizeof(buf_max)   );
-    ASSERT3( not_streqn, buf_max,   "123",         sizeof(buf_max)   );
+    LASSERT3( streqn,     buf_empty, "",            sizeof(buf_empty) );
+    LASSERT3( streqn,     buf_full,  "123",         sizeof(buf_full)  );
+    LASSERT3( streqn,     buf_max,   "love",        sizeof(buf_max)   );
+    LASSERT3( streqn,     buf_max,   "lovely love", sizeof(buf_max)   );
+    LASSERT3( not_streqn, buf_max,   "123",         sizeof(buf_max)   );
 
-    ASSERT3( streqn, buf_empty, "",     sizeof(buf_empty) );
-    ASSERT3( streqn, buf_full,  "123",  sizeof(buf_full)  );
-    ASSERT3( streqn, buf_max,   "love", sizeof(buf_max)   );
+    LASSERT3( streqn, buf_empty, "",     sizeof(buf_empty) );
+    LASSERT3( streqn, buf_full,  "123",  sizeof(buf_full)  );
+    LASSERT3( streqn, buf_max,   "love", sizeof(buf_max)   );
 
-    ASSERT2( inteq, set_null_terminator(buf_empty, 0, sizeof(buf_empty)), 0);
-    ASSERT2( inteq, set_null_terminator(buf_full,  3, sizeof(buf_full)),  0);
-    ASSERT2( inteq, set_null_terminator(buf_max,   4, sizeof(buf_max)),   1);
+    LASSERT2( inteq, set_null_terminator(buf_empty, 0, sizeof(buf_empty)), 0);
+    LASSERT2( inteq, set_null_terminator(buf_full,  3, sizeof(buf_full)),  0);
+    LASSERT2( inteq, set_null_terminator(buf_max,   4, sizeof(buf_max)),   1);
 
-    ASSERT3( streqn, buf_empty, "",    sizeof(buf_empty) );
-    ASSERT3( streqn, buf_full,  "123", sizeof(buf_full)  );
-    ASSERT3( streqn, buf_max,   "lov", sizeof(buf_max)   );
+    LASSERT3( streqn, buf_empty, "",    sizeof(buf_empty) );
+    LASSERT3( streqn, buf_full,  "123", sizeof(buf_full)  );
+    LASSERT3( streqn, buf_max,   "lov", sizeof(buf_max)   );
 
-    ASSERT2( inteq, set_null_terminator(buf_empty, 0, sizeof(buf_empty)), 0);
-    ASSERT2( inteq, set_null_terminator(buf_full,  3, sizeof(buf_full)),  0);
-    ASSERT2( inteq, set_null_terminator(buf_max,   4, sizeof(buf_max)),   1);
+    LASSERT2( inteq, set_null_terminator(buf_empty, 0, sizeof(buf_empty)), 0);
+    LASSERT2( inteq, set_null_terminator(buf_full,  3, sizeof(buf_full)),  0);
+    LASSERT2( inteq, set_null_terminator(buf_max,   4, sizeof(buf_max)),   1);
 
-    ASSERT3( streqn, buf_empty, "",    sizeof(buf_empty) );
-    ASSERT3( streqn, buf_full,  "123", sizeof(buf_full)  );
-    ASSERT3( streqn, buf_max,   "lov", sizeof(buf_max)   );
+    LASSERT3( streqn, buf_empty, "",    sizeof(buf_empty) );
+    LASSERT3( streqn, buf_full,  "123", sizeof(buf_full)  );
+    LASSERT3( streqn, buf_max,   "lov", sizeof(buf_max)   );
 
-    ASSERT2( inteq, set_null_terminator(buf_empty, 2, 3), 0);
-    ASSERT2( inteq, set_null_terminator(buf_full,  2, 3), 0);
-    ASSERT2( inteq, set_null_terminator(buf_max,   2, 3), 0);
+    LASSERT2( inteq, set_null_terminator(buf_empty, 2, 3), 0);
+    LASSERT2( inteq, set_null_terminator(buf_full,  2, 3), 0);
+    LASSERT2( inteq, set_null_terminator(buf_max,   2, 3), 0);
 
-    ASSERT3( streqn, buf_empty, "",   sizeof(buf_empty) );
-    ASSERT3( streqn, buf_full,  "12", sizeof(buf_full)  );
-    ASSERT3( streqn, buf_max,   "lo", sizeof(buf_max)   );
+    LASSERT3( streqn, buf_empty, "",   sizeof(buf_empty) );
+    LASSERT3( streqn, buf_full,  "12", sizeof(buf_full)  );
+    LASSERT3( streqn, buf_max,   "lo", sizeof(buf_max)   );
 
-    ASSERT2( inteq, set_null_terminator(buf_empty, 2, 2), 1);
-    ASSERT2( inteq, set_null_terminator(buf_full,  2, 2), 1);
-    ASSERT2( inteq, set_null_terminator(buf_max,   2, 2), 1);
+    LASSERT2( inteq, set_null_terminator(buf_empty, 2, 2), 1);
+    LASSERT2( inteq, set_null_terminator(buf_full,  2, 2), 1);
+    LASSERT2( inteq, set_null_terminator(buf_max,   2, 2), 1);
 
-    ASSERT3( streqn, buf_empty, "",  sizeof(buf_empty) );
-    ASSERT3( streqn, buf_full,  "1", sizeof(buf_full)  );
-    ASSERT3( streqn, buf_max,   "l", sizeof(buf_max)   );
+    LASSERT3( streqn, buf_empty, "",  sizeof(buf_empty) );
+    LASSERT3( streqn, buf_full,  "1", sizeof(buf_full)  );
+    LASSERT3( streqn, buf_max,   "l", sizeof(buf_max)   );
 
-    ASSERT2( inteq, set_null_terminator(buf_empty, 0, 9), 0);
-    ASSERT2( inteq, set_null_terminator(buf_full,  0, 9), 0);
-    ASSERT2( inteq, set_null_terminator(buf_max,   0, 9), 0);
+    LASSERT2( inteq, set_null_terminator(buf_empty, 0, 9), 0);
+    LASSERT2( inteq, set_null_terminator(buf_full,  0, 9), 0);
+    LASSERT2( inteq, set_null_terminator(buf_max,   0, 9), 0);
 
-    ASSERT3( streqn, buf_empty, "", sizeof(buf_empty) );
-    ASSERT3( streqn, buf_full,  "", sizeof(buf_full)  );
-    ASSERT3( streqn, buf_max,   "", sizeof(buf_max)   );
+    LASSERT3( streqn, buf_empty, "", sizeof(buf_empty) );
+    LASSERT3( streqn, buf_full,  "", sizeof(buf_full)  );
+    LASSERT3( streqn, buf_max,   "", sizeof(buf_max)   );
 
-    ASSERT2( inteq, set_null_terminator(buf_empty, 0, 0), -1);
-    ASSERT2( inteq, set_null_terminator(buf_full,  0, 0), -1);
-    ASSERT2( inteq, set_null_terminator(buf_max,   0, 0), -1);
+    LASSERT2( inteq, set_null_terminator(buf_empty, 0, 0), -1);
+    LASSERT2( inteq, set_null_terminator(buf_full,  0, 0), -1);
+    LASSERT2( inteq, set_null_terminator(buf_max,   0, 0), -1);
 
-    ASSERT3( streqn, buf_empty, "", sizeof(buf_empty) );
-    ASSERT3( streqn, buf_full,  "", sizeof(buf_full)  );
-    ASSERT3( streqn, buf_max,   "", sizeof(buf_max)   );
+    LASSERT3( streqn, buf_empty, "", sizeof(buf_empty) );
+    LASSERT3( streqn, buf_full,  "", sizeof(buf_full)  );
+    LASSERT3( streqn, buf_max,   "", sizeof(buf_max)   );
 
-    ASSERT2( inteq, set_null_terminator(NULL, 0, 0), -2);
-    ASSERT2( inteq, set_null_terminator(NULL, 0, 0), -2);
-    ASSERT2( inteq, set_null_terminator(NULL, 0, 0), -2);
+    LASSERT2( inteq, set_null_terminator(NULL, 0, 0), -2);
+    LASSERT2( inteq, set_null_terminator(NULL, 0, 0), -2);
+    LASSERT2( inteq, set_null_terminator(NULL, 0, 0), -2);
 
-    ASSERT3( streqn, buf_empty, "", sizeof(buf_empty) );
-    ASSERT3( streqn, buf_full,  "", sizeof(buf_full)  );
-    ASSERT3( streqn, buf_max,   "", sizeof(buf_max)   );
+    LASSERT3( streqn, buf_empty, "", sizeof(buf_empty) );
+    LASSERT3( streqn, buf_full,  "", sizeof(buf_full)  );
+    LASSERT3( streqn, buf_max,   "", sizeof(buf_max)   );
   }
 
   return result;
@@ -325,317 +325,649 @@ unit_test_result_t util_equalities_basic_str_test_run(unit_test_context_t *conte
 
     /* ---------------------------------------------------------------- */
 
-    MASSERT2( sizeeq, "0strlcpy", strlcpy(dest,  love, 5), 4 );
-    MASSERT3( streqn, "1strlcpy", dest, "love",  sizeof(dest) );
+    LASSERT2( sizeeq, strlcpy(dest, peace, sizeof(dest)), 5 );
 
-    MASSERT2( sizeeq, "2strlcpy", strlcpy(dest,  love, 4), 3);
-    MASSERT3( streqn, "3strlcpy", dest, "lov",   sizeof(dest) );
+    LASSERT2( sizeeq, strn_reverse(dest, sizeof(dest)), 5 );
+    LASSERT3( streqn, dest, "ecaep", sizeof(dest) );
+    LASSERT2( sizeeq, strn_reverse(dest, sizeof(dest)), 5 );
+    LASSERT3( streqn, dest, "peace", sizeof(dest) );
 
-    MASSERT2( sizeeq, "4strlcpy", strlcpy(dest,  love, 1), 0);
-    MASSERT3( streqn, "5strlcpy", dest, "",      sizeof(dest) );
+    LASSERT2( sizeeq, strn_reverse(dest, 5), 4 );
+    LASSERT3( streqn, dest, "caepe", sizeof(dest) );
+    LASSERT2( sizeeq, strn_reverse(dest, 5), 4 );
+    LASSERT3( streqn, dest, "peace", sizeof(dest) );
 
+    LASSERT2( sizeeq, strn_reverse(dest, 4), 3 );
+    LASSERT3( streqn, dest, "aepce", sizeof(dest) );
+    LASSERT2( sizeeq, strn_reverse(dest, 4), 3 );
+    LASSERT3( streqn, dest, "peace", sizeof(dest) );
 
-    MASSERT2( sizeeq, "6strlcpy", strlcpy(dest,  peace, sizeof(dest)), 5 );
-    MASSERT2( sizeeq, "7strlcpy", strlcpy(dest,  love,  0),            0 );
-    MASSERT3( streqn, "8strlcpy", dest, "peace", sizeof(dest) );
+    LASSERT2( sizeeq, strn_reverse(dest, 3), 2 );
+    LASSERT3( streqn, dest, "epace", sizeof(dest) );
+    LASSERT2( sizeeq, strn_reverse(dest, 3), 2 );
+    LASSERT3( streqn, dest, "peace", sizeof(dest) );
 
-    /* ---------------------------------------------------------------- */
+    LASSERT2( sizeeq, strn_reverse(dest, 2), 1 );
+    LASSERT3( streqn, dest, "peace", sizeof(dest) );
+    LASSERT2( sizeeq, strn_reverse(dest, 2), 1 );
+    LASSERT3( streqn, dest, "peace", sizeof(dest) );
 
-    MASSERT2( sizeeq, "00strlcpy_srcmax", strlcpy_srcmax(smalldest, peace, 8, 5), 5 );
-    MASSERT3( streqn, "01strlcpy_srcmax", smalldest, "peace", sizeof(smalldest) );
+    LASSERT2( sizeeq, strn_reverse(dest, 1), 0 );
+    LASSERT3( streqn, dest, "peace", sizeof(dest) );
+    LASSERT2( sizeeq, strn_reverse(dest, 1), 0 );
+    LASSERT3( streqn, dest, "peace", sizeof(dest) );
 
-    MASSERT2( sizeeq, "02strlcpy_srcmax", strlcpy_srcmax(smalldest, peace, 8, 4), 4 );
-    MASSERT3( streqn, "03strlcpy_srcmax", smalldest, "peac",  sizeof(smalldest) );
-
-
-    MASSERT2( sizeeq, "04strlcpy_srcmax", strlcpy_srcmax(smalldest, peace, 5, 5), 4 );
-    MASSERT3( streqn, "05strlcpy_srcmax", smalldest, "peac",  sizeof(smalldest) );
-
-    MASSERT2( sizeeq, "06strlcpy_srcmax", strlcpy_srcmax(smalldest, peace, 5, 4), 4 );
-    MASSERT3( streqn, "07strlcpy_srcmax", smalldest, "peac",  sizeof(smalldest) );
-
-    MASSERT2( sizeeq, "08strlcpy_srcmax", strlcpy_srcmax(smalldest, peace, 5, 3), 3 );
-    MASSERT3( streqn, "09strlcpy_srcmax", smalldest, "pea",   sizeof(smalldest) );
-
-    MASSERT2( sizeeq, "10strlcpy_srcmax", strlcpy_srcmax(smalldest, peace, 5, 2), 2 );
-    MASSERT3( streqn, "11strlcpy_srcmax", smalldest, "pe",    sizeof(smalldest) );
-
-
-    MASSERT2( sizeeq, "12strlcpy_srcmax", strlcpy_srcmax(smalldest, peace, 4, 5), 3 );
-    MASSERT3( streqn, "13strlcpy_srcmax", smalldest, "pea",   sizeof(smalldest) );
-
-    MASSERT2( sizeeq, "14strlcpy_srcmax", strlcpy_srcmax(smalldest, peace, 4, 4), 3 );
-    MASSERT3( streqn, "15strlcpy_srcmax", smalldest, "pea",   sizeof(smalldest) );
-
-    MASSERT2( sizeeq, "16strlcpy_srcmax", strlcpy_srcmax(smalldest, peace, 4, 3), 3 );
-    MASSERT3( streqn, "17strlcpy_srcmax", smalldest, "pea",   sizeof(smalldest) );
-
-    MASSERT2( sizeeq, "18strlcpy_srcmax", strlcpy_srcmax(smalldest, peace, 4, 2), 2 );
-    MASSERT3( streqn, "19strlcpy_srcmax", smalldest, "pe",    sizeof(smalldest) );
-
-
-    MASSERT2( sizeeq, "20strlcpy_srcmax", strlcpy_srcmax(smalldest, peace, 8, 5), 5 );
-    MASSERT2( sizeeq, "21strlcpy_srcmax", strlcpy_srcmax(smalldest, peace, 8, 0), 0 );
-    MASSERT3( streqn, "22strlcpy_srcmax", smalldest, "",      sizeof(smalldest) );
-
-
-    MASSERT2( sizeeq, "23strlcpy_srcmax", strlcpy_srcmax(smalldest, peace, 8, 5), 5 );
-    MASSERT2( sizeeq, "24strlcpy_srcmax", strlcpy_srcmax(smalldest, peace, 0, 5), 0 );
-    MASSERT3( streqn, "25strlcpy_srcmax", smalldest, "peace", sizeof(smalldest) );
+    LASSERT2( sizeeq, strn_reverse(dest, 0), 0 );
+    LASSERT3( streqn, dest, "peace", sizeof(dest) );
+    LASSERT2( sizeeq, strn_reverse(dest, 0), 0 );
+    LASSERT3( streqn, dest, "peace", sizeof(dest) );
 
     /* ---------------------------------------------------------------- */
 
-    MASSERT2( sizeeq, "00strlcpy_with_max", strlcpy_with_max(dest, love, 8, 4, 4), 4 );
-    MASSERT3( streqn, "01strlcpy_with_max", dest, "love", sizeof(dest) );
-
-
-    MASSERT2( sizeeq, "02strlcpy_with_max", strlcpy_with_max(dest, love, 8, 4, 3), 3 );
-    MASSERT3( streqn, "03strlcpy_with_max", dest, "lov",  sizeof(dest) );
-
-    MASSERT2( sizeeq, "02strlcpy_with_max", strlcpy_with_max(dest, love, 8, 3, 4), 3 );
-    MASSERT3( streqn, "03strlcpy_with_max", dest, "lov",  sizeof(dest) );
-
-    MASSERT2( sizeeq, "04strlcpy_with_max", strlcpy_with_max(dest, love, 8, 3, 3), 3 );
-    MASSERT3( streqn, "05strlcpy_with_max", dest, "lov",  sizeof(dest) );
-
-
-    MASSERT2( sizeeq, "06strlcpy_with_max", strlcpy_with_max(dest, love, 8, 4, 4), 4 );
-    MASSERT2( sizeeq, "07strlcpy_with_max", strlcpy_with_max(dest, love, 8, 0, 4), 0 );
-    MASSERT3( streqn, "08strlcpy_with_max", dest, "",     sizeof(dest) );
-
-    MASSERT2( sizeeq, "09strlcpy_with_max", strlcpy_with_max(dest, love, 8, 4, 4), 4 );
-    MASSERT2( sizeeq, "10strlcpy_with_max", strlcpy_with_max(dest, love, 8, 4, 0), 0 );
-    MASSERT3( streqn, "11strlcpy_with_max", dest, "",     sizeof(dest) );
-
-    MASSERT2( sizeeq, "12strlcpy_with_max", strlcpy_with_max(dest, love, 8, 4, 4), 4 );
-    MASSERT2( sizeeq, "13strlcpy_with_max", strlcpy_with_max(dest, love, 8, 0, 0), 0 );
-    MASSERT3( streqn, "14strlcpy_with_max", dest, "",     sizeof(dest) );
-
-    MASSERT2( sizeeq, "15strlcpy_with_max", strlcpy_with_max(dest, love, 8, 4, 4), 4 );
-    MASSERT2( sizeeq, "16strlcpy_with_max", strlcpy_with_max(dest, love, 1, 4, 4), 0 );
-    MASSERT3( streqn, "17strlcpy_with_max", dest, "",     sizeof(dest) );
-
-    MASSERT2( sizeeq, "18strlcpy_with_max", strlcpy_with_max(dest, love, 8, 4, 4), 4 );
-    MASSERT2( sizeeq, "19strlcpy_with_max", strlcpy_with_max(dest, love, 0, 4, 4), 0 );
-    MASSERT3( streqn, "20strlcpy_with_max", dest, "love", sizeof(dest) );
+#ifdef TODO
+    #error "TODO: Test (mem|endianness)_*_reverse."
+#endif /* #ifdef TODO */
 
     /* ---------------------------------------------------------------- */
 
-    MASSERT2( sizeeq, "str?len strlcpy", strlcpy(dest, love, sizeof(dest)), 4 );
-
-    MASSERT2( sizeeq, "0strnlen", strnlen(dest, 7), 4 );
-    MASSERT2( sizeeq, "1strnlen", strnlen(dest, 6), 4 );
-    MASSERT2( sizeeq, "2strnlen", strnlen(dest, 5), 4 );
-    MASSERT2( sizeeq, "3strnlen", strnlen(dest, 4), 4 );
-    MASSERT2( sizeeq, "4strnlen", strnlen(dest, 3), 3 );
-    MASSERT2( sizeeq, "5strnlen", strnlen(dest, 2), 2 );
-    MASSERT2( sizeeq, "6strnlen", strnlen(dest, 1), 1 );
-    MASSERT2( sizeeq, "7strnlen", strnlen(dest, 0), 0 );
-
-    MASSERT2( sizeeq, "0strllen", strllen(dest, 7), 4 );
-    MASSERT2( sizeeq, "1strllen", strllen(dest, 6), 4 );
-    MASSERT2( sizeeq, "2strllen", strllen(dest, 5), 4 );
-    MASSERT2( sizeeq, "3strllen", strllen(dest, 4), 3 );
-    MASSERT2( sizeeq, "4strllen", strllen(dest, 3), 2 );
-    MASSERT2( sizeeq, "5strllen", strllen(dest, 2), 1 );
-    MASSERT2( sizeeq, "6strllen", strllen(dest, 1), 0 );
-    MASSERT2( sizeeq, "7strllen", strllen(dest, 0), 0 );
+    LASSERT2( inteq, BASE_BINARY,      2  );
+    LASSERT2( inteq, BASE_OCTAL,       8  );
+    LASSERT2( inteq, BASE_DECIMAL,     10 );
+    LASSERT2( inteq, BASE_HEXADECIMAL, 16 );
+    LASSERT2( inteq, DEFAULT_BASE,     10 );
+    LASSERT2( inteq, DEFAULT_BASE,     BASE_DECIMAL );
 
     /* ---------------------------------------------------------------- */
 
-    MASSERT2( sizeeq, "has_null strlcpy", strlcpy(dest, love, sizeof(dest)), 4 );
-
-    MASSERT1( true,  "0has_null", strn_has_null_terminator(dest, sizeof(dest)) );
-
-    MASSERT1( true,  "1has_null", strn_has_null_terminator(dest, 5) );
-    MASSERT1( false, "2has_null", strn_has_null_terminator(dest, 4) );
-    MASSERT1( false, "2has_null", strn_has_null_terminator(dest, 3) );
-
-    /* ---------------------------------------------------------------- */
-
-    MASSERT2( sizeeq, "00strlcp_cycle",    strlcpy_cycle(dest, love, sizeof(dest), 4),  4 );
-    MASSERT3( nstreq, "01strlcp_cycle eq", sizeof(dest), dest, "love" );
-
-    MASSERT2( sizeeq, "02strlcp_cycle",    strlcpy_cycle(dest, love, sizeof(dest), 1),  1 );
-    MASSERT3( nstreq, "03strlcp_cycle eq", sizeof(dest), dest, "l" );
-
-    MASSERT2( sizeeq, "04strlcp_cycle",    strlcpy_cycle(dest, love, sizeof(dest), 0),  0 );
-    MASSERT3( nstreq, "05strlcp_cycle eq", sizeof(dest), dest, "" );
-
-    MASSERT2( sizeeq, "06strlcp_cycle",    strlcpy_cycle(dest, love, sizeof(dest), 5),  5 );
-    MASSERT3( nstreq, "07strlcp_cycle eq", sizeof(dest), dest, "lovel" );
-
-    MASSERT2( sizeeq, "08strlcp_cycle",    strlcpy_cycle(dest, love, sizeof(dest), 8),  8 );
-    MASSERT3( nstreq, "09strlcp_cycle eq", sizeof(dest), dest, "lovelove" );
-
-    MASSERT2( sizeeq, "10strlcp_cycle",    strlcpy_cycle(dest, love, sizeof(dest), 9),  9 );
-    MASSERT3( nstreq, "11strlcp_cycle eq", sizeof(dest), dest, "lovelovel" );
-
-    MASSERT2( sizeeq, "12strlcp_cycle",    strlcpy_cycle(dest, love, sizeof(dest), 12), 12 );
-    MASSERT3( nstreq, "13strlcp_cycle eq", sizeof(dest), dest, "lovelovelove" );
+    LASSERT2( sizeeq, unum_digits(0,        BASE_DECIMAL),                1 );
+    LASSERT2( sizeeq, unum_digits(1,        BASE_DECIMAL),                1 );
+    LASSERT2( sizeeq, unum_digits(8,        BASE_DECIMAL),                1 );
+    LASSERT2( sizeeq, unum_digits(512,      BASE_DECIMAL),                3 );
+    LASSERT2( sizeeq, unum_digits(1024,     BASE_DECIMAL),                4 );
+    LASSERT2( sizeeq, unum_digits(7777,     BASE_DECIMAL),                4 );
+    LASSERT2( sizeeq, unum_digits(7777777,  BASE_DECIMAL),                7 );
 
 
-    MASSERT2( sizeeq, "14strlcp_cycle",    strlcpy_cycle(dest, love, sizeof(dest), 4),  4 );
-    MASSERT2( sizeeq, "15strlcp_cycle",    strlcpy_cycle(dest, love, 5,            4),  4 );
-    MASSERT3( nstreq, "16strlcp_cycle eq", sizeof(dest), dest, "love" );
+    LASSERT2( sizeeq, num_digits (0,        BASE_DECIMAL, OPTIONAL_SIGN), 1 );
+    LASSERT2( sizeeq, num_digits (1,        BASE_DECIMAL, OPTIONAL_SIGN), 1 );
+    LASSERT2( sizeeq, num_digits (8,        BASE_DECIMAL, OPTIONAL_SIGN), 1 );
+    LASSERT2( sizeeq, num_digits (512,      BASE_DECIMAL, OPTIONAL_SIGN), 3 );
+    LASSERT2( sizeeq, num_digits (1024,     BASE_DECIMAL, OPTIONAL_SIGN), 4 );
+    LASSERT2( sizeeq, num_digits (7777,     BASE_DECIMAL, OPTIONAL_SIGN), 4 );
+    LASSERT2( sizeeq, num_digits (7777777,  BASE_DECIMAL, OPTIONAL_SIGN), 7 );
 
-    MASSERT2( sizeeq, "17strlcp_cycle",    strlcpy_cycle(dest, love, sizeof(dest), 4),  4 );
-    MASSERT2( sizeeq, "18strlcp_cycle",    strlcpy_cycle(dest, love, 2,            4),  1 );
-    MASSERT3( nstreq, "19strlcp_cycle eq", sizeof(dest), dest, "l" );
-
-    MASSERT2( sizeeq, "20strlcp_cycle",    strlcpy_cycle(dest, love, sizeof(dest), 4),  4 );
-    MASSERT2( sizeeq, "21strlcp_cycle",    strlcpy_cycle(dest, love, 1,            4),  0 );
-    MASSERT3( nstreq, "22strlcp_cycle eq", sizeof(dest), dest, "" );
-
-    MASSERT2( sizeeq, "23strlcp_cycle",    strlcpy_cycle(dest, love, sizeof(dest), 4),  4 );
-    MASSERT2( sizeeq, "24strlcp_cycle",    strlcpy_cycle(dest, love, 0,            4),  0 );
-    MASSERT3( nstreq, "25strlcp_cycle eq", sizeof(dest), dest, "love" );
-
-
-    MASSERT2( sizeeq, "26strlcp_cycle",    strlcpy_cycle(dest, love, sizeof(dest), 4),  4 );
-    MASSERT2( sizeeq, "27strlcp_cycle",    strlcpy_cycle(dest, "",   5,            4),  0 );
-    MASSERT3( nstreq, "28strlcp_cycle eq", sizeof(dest), dest, "" );
-
-    MASSERT2( sizeeq, "29strlcp_cycle",    strlcpy_cycle(dest, love, sizeof(dest), 4),  4 );
-    MASSERT2( sizeeq, "30strlcp_cycle",    strlcpy_cycle(dest, "",   2,            4),  0 );
-    MASSERT3( nstreq, "31strlcp_cycle eq", sizeof(dest), dest, "" );
-
-    MASSERT2( sizeeq, "32strlcp_cycle",    strlcpy_cycle(dest, love, sizeof(dest), 4),  4 );
-    MASSERT2( sizeeq, "33strlcp_cycle",    strlcpy_cycle(dest, "",   1,            4),  0 );
-    MASSERT3( nstreq, "34strlcp_cycle eq", sizeof(dest), dest, "" );
-
-    MASSERT2( sizeeq, "35strlcp_cycle",    strlcpy_cycle(dest, love, sizeof(dest), 4),  4 );
-    MASSERT2( sizeeq, "36strlcp_cycle",    strlcpy_cycle(dest, "",   0,            4),  0 );
-    MASSERT3( nstreq, "37strlcp_cycle eq", sizeof(dest), dest, "love" );
+    LASSERT2( sizeeq, num_digits (0,        BASE_DECIMAL, OPTIONAL_SIGN), 1 );
+    LASSERT2( sizeeq, num_digits (-1,       BASE_DECIMAL, OPTIONAL_SIGN), 2 );
+    LASSERT2( sizeeq, num_digits (-8,       BASE_DECIMAL, OPTIONAL_SIGN), 2 );
+    LASSERT2( sizeeq, num_digits (-512,     BASE_DECIMAL, OPTIONAL_SIGN), 4 );
+    LASSERT2( sizeeq, num_digits (-1024,    BASE_DECIMAL, OPTIONAL_SIGN), 5 );
+    LASSERT2( sizeeq, num_digits (-7777,    BASE_DECIMAL, OPTIONAL_SIGN), 5 );
+    LASSERT2( sizeeq, num_digits (-7777777, BASE_DECIMAL, OPTIONAL_SIGN), 8 );
 
 
-    MASSERT2( sizeeq, "38strlcp_cycle",    strlcpy_cycle(dest, love, sizeof(dest), 4),  4 );
-    MASSERT2( sizeeq, "39strlcp_cycle",    strlcpy_cycle(dest, love, 3,            8),  2 );
-    MASSERT3( nstreq, "40strlcp_cycle eq", sizeof(dest), dest, "lo" );
+    LASSERT2( sizeeq, num_digits (0,        BASE_DECIMAL, FORCE_SIGN), 2 );
+    LASSERT2( sizeeq, num_digits (1,        BASE_DECIMAL, FORCE_SIGN), 2 );
+    LASSERT2( sizeeq, num_digits (8,        BASE_DECIMAL, FORCE_SIGN), 2 );
+    LASSERT2( sizeeq, num_digits (512,      BASE_DECIMAL, FORCE_SIGN), 4 );
+    LASSERT2( sizeeq, num_digits (1024,     BASE_DECIMAL, FORCE_SIGN), 5 );
+    LASSERT2( sizeeq, num_digits (7777,     BASE_DECIMAL, FORCE_SIGN), 5 );
+    LASSERT2( sizeeq, num_digits (7777777,  BASE_DECIMAL, FORCE_SIGN), 8 );
 
-    MASSERT2( sizeeq, "41strlcp_cycle",    strlcpy_cycle(dest, love, sizeof(dest), 4),  4 );
-    MASSERT2( sizeeq, "42strlcp_cycle",    strlcpy_cycle(dest, love, 5,            8),  4 );
-    MASSERT3( nstreq, "43strlcp_cycle eq", sizeof(dest), dest, "love" );
-
-    MASSERT2( sizeeq, "44strlcp_cycle",    strlcpy_cycle(dest, love, sizeof(dest), 4),  4 );
-    MASSERT2( sizeeq, "45strlcp_cycle",    strlcpy_cycle(dest, love, 0,            8),  0 );
-    MASSERT3( nstreq, "46strlcp_cycle eq", sizeof(dest), dest, "love" );
-
-
-    MASSERT2( sizeeq, "47strlcp_cycle",    strlcpy_cycle(dest, love, sizeof(dest), 4),  4 );
-    MASSERT2( sizeeq, "38strlcp_cycle",    strlcpy_cycle(dest, love, 3,            10), 2 );
-    MASSERT3( nstreq, "49strlcp_cycle eq", sizeof(dest), dest, "lo" );
-
-    MASSERT2( sizeeq, "50strlcp_cycle",    strlcpy_cycle(dest, love, sizeof(dest), 4),  4 );
-    MASSERT2( sizeeq, "51strlcp_cycle",    strlcpy_cycle(dest, love, 5,            10), 4 );
-    MASSERT3( nstreq, "53strlcp_cycle eq", sizeof(dest), dest, "love" );
-
-    MASSERT2( sizeeq, "54strlcp_cycle",    strlcpy_cycle(dest, love, sizeof(dest), 4),  4 );
-    MASSERT2( sizeeq, "55strlcp_cycle",    strlcpy_cycle(dest, love, 9,            10), 8 );
-    MASSERT3( nstreq, "56strlcp_cycle eq", sizeof(dest), dest, "lovelove" );
-
-    MASSERT2( sizeeq, "57strlcp_cycle",    strlcpy_cycle(dest, love, sizeof(dest), 4),  4 );
-    MASSERT2( sizeeq, "58strlcp_cycle",    strlcpy_cycle(dest, love, 0,            10), 0 );
-    MASSERT3( nstreq, "59strlcp_cycle eq", sizeof(dest), dest, "love" );
+    LASSERT2( sizeeq, num_digits (0,        BASE_DECIMAL, FORCE_SIGN), 1 );
+    LASSERT2( sizeeq, num_digits (-1,       BASE_DECIMAL, FORCE_SIGN), 2 );
+    LASSERT2( sizeeq, num_digits (-8,       BASE_DECIMAL, FORCE_SIGN), 2 );
+    LASSERT2( sizeeq, num_digits (-512,     BASE_DECIMAL, FORCE_SIGN), 4 );
+    LASSERT2( sizeeq, num_digits (-1024,    BASE_DECIMAL, FORCE_SIGN), 5 );
+    LASSERT2( sizeeq, num_digits (-7777,    BASE_DECIMAL, FORCE_SIGN), 5 );
+    LASSERT2( sizeeq, num_digits (-7777777, BASE_DECIMAL, FORCE_SIGN), 8 );
 
 
-    MASSERT2( sizeeq, "60strlcp_cycle",    strlcpy_cycle(dest, love, sizeof(dest), 4),  4 );
-    MASSERT2( sizeeq, "61strlcp_cycle",    strlcpy_cycle(dest, love, 1,            1),  0 );
-    MASSERT3( nstreq, "62strlcp_cycle eq", sizeof(dest), dest, "" );
-
-    MASSERT2( sizeeq, "63strlcp_cycle",    strlcpy_cycle(dest, love, sizeof(dest), 4),  4 );
-    MASSERT2( sizeeq, "64strlcp_cycle",    strlcpy_cycle(dest, love, 1,            0),  0 );
-    MASSERT3( nstreq, "65strlcp_cycle eq", sizeof(dest), dest, "" );
-
-    MASSERT2( sizeeq, "66strlcp_cycle",    strlcpy_cycle(dest, love, sizeof(dest), 4),  4 );
-    MASSERT2( sizeeq, "67strlcp_cycle",    strlcpy_cycle(dest, love, 0,            1),  0 );
-    MASSERT3( nstreq, "68strlcp_cycle eq", sizeof(dest), dest, "love" );
-
-    MASSERT2( sizeeq, "69strlcp_cycle",    strlcpy_cycle(dest, love, sizeof(dest), 4),  4 );
-    MASSERT2( sizeeq, "70strlcp_cycle",    strlcpy_cycle(dest, love, 0,            0),  0 );
-    MASSERT3( nstreq, "71strlcp_cycle eq", sizeof(dest), dest, "love" );
+    LASSERT2( sizeeq, unum_digits(0x00,        BASE_HEXADECIMAL),      1 );
+    LASSERT2( sizeeq, unum_digits(0x01,        BASE_HEXADECIMAL),      1 );
+    LASSERT2( sizeeq, unum_digits(0x08,        BASE_HEXADECIMAL),      1 );
+    LASSERT2( sizeeq, unum_digits(0x78         BASE_HEXADECIMAL),      2 );
+    LASSERT2( sizeeq, unum_digits(0x80         BASE_HEXADECIMAL),      2 );
+    LASSERT2( sizeeq, unum_digits(0x88,        BASE_HEXADECIMAL),      2 );
+    LASSERT2( sizeeq, unum_digits(0x10F,       BASE_HEXADECIMAL),      3 );
+    LASSERT2( sizeeq, unum_digits(0x00000000U, BASE_HEXADECIMAL),      1 );
+    LASSERT2( sizeeq, unum_digits(0x00000001U, BASE_HEXADECIMAL),      1 );
+    LASSERT2( sizeeq, unum_digits(0x00000010U, BASE_HEXADECIMAL),      2 );
+    LASSERT2( sizeeq, unum_digits(0x00000100U, BASE_HEXADECIMAL),      3 );
+    LASSERT2( sizeeq, unum_digits(0x00001000U, BASE_HEXADECIMAL),      4 );
+    LASSERT2( sizeeq, unum_digits(0x00010000U, BASE_HEXADECIMAL),      5 );
+    LASSERT2( sizeeq, unum_digits(0x00100000U, BASE_HEXADECIMAL),      6 );
+    LASSERT2( sizeeq, unum_digits(0x01000000U, BASE_HEXADECIMAL),      7 );
+    LASSERT2( sizeeq, unum_digits(0x10000000U, BASE_HEXADECIMAL),      8 );
+    LASSERT2( sizeeq, unum_digits(0x7777777,   BASE_HEXADECIMAL),      7 );
 
     /* ---------------------------------------------------------------- */
 
-    MASSERT2( sizeeq, "0 0index_bounds", index_bounds(32, 0, 8),  8  );
-    MASSERT2( sizeeq, "0 1index_bounds", index_bounds(32, 0, 29), 29 );
-    MASSERT2( sizeeq, "0 2index_bounds", index_bounds(32, 0, 30), 30 );
-    MASSERT2( sizeeq, "0 3index_bounds", index_bounds(32, 0, 31), 31 );
-    MASSERT2( sizeeq, "0 4index_bounds", index_bounds(32, 0, 32), 31 );
-    MASSERT2( sizeeq, "0 5index_bounds", index_bounds(32, 0, 32), 31 );
-    MASSERT2( sizeeq, "0 6index_bounds", index_bounds(32, 0, 33), 31 );
-    MASSERT2( sizeeq, "0 7index_bounds", index_bounds(32, 0, 34), 31 );
-    MASSERT2( sizeeq, "0 8index_bounds", index_bounds(32, 0, 35), 31 );
-    MASSERT2( sizeeq, "0 9index_bounds", index_bounds(32, 0, 36), 31 );
-    MASSERT2( sizeeq, "0 Aindex_bounds", index_bounds(32, 0, 64), 31 );
+    LASSERT2( inteq, (int) isign(-7777777), (int) ISIGN(-7777777) );
+    LASSERT2( inteq, (int) isign(-8      ), (int) ISIGN(-8      ) );
+    LASSERT2( inteq, (int) isign(-1      ), (int) ISIGN(-1      ) );
+    LASSERT2( inteq, (int) isign( 0      ), (int) ISIGN( 0      ) );
+    LASSERT2( inteq, (int) isign( 1      ), (int) ISIGN( 1      ) );
+    LASSERT2( inteq, (int) isign( 8      ), (int) ISIGN( 8      ) );
+    LASSERT2( inteq, (int) isign( 7777777), (int) ISIGN( 7777777) );
 
-    MASSERT2( sizeeq, "1 0index_bounds", index_bounds(32, 1, 8),  8  );
-    MASSERT2( sizeeq, "1 1index_bounds", index_bounds(32, 1, 29), 29 );
-    MASSERT2( sizeeq, "1 2index_bounds", index_bounds(32, 1, 30), 30 );
-    MASSERT2( sizeeq, "1 3index_bounds", index_bounds(32, 1, 31), 30 );
-    MASSERT2( sizeeq, "1 4index_bounds", index_bounds(32, 1, 32), 30 );
-    MASSERT2( sizeeq, "1 5index_bounds", index_bounds(32, 1, 32), 30 );
-    MASSERT2( sizeeq, "1 6index_bounds", index_bounds(32, 1, 33), 30 );
-    MASSERT2( sizeeq, "1 7index_bounds", index_bounds(32, 1, 34), 30 );
-    MASSERT2( sizeeq, "1 8index_bounds", index_bounds(32, 1, 35), 30 );
-    MASSERT2( sizeeq, "1 9index_bounds", index_bounds(32, 1, 36), 30 );
-    MASSERT2( sizeeq, "1 Aindex_bounds", index_bounds(32, 1, 64), 30 );
+    LASSERT2( inteq, (int) isign(-7777777), (int) '-' );
+    LASSERT2( inteq, (int) isign(-8      ), (int) '-' );
+    LASSERT2( inteq, (int) isign(-1      ), (int) '-' );
+    LASSERT2( inteq, (int) isign( 0      ), (int) ' ' );
+    LASSERT2( inteq, (int) isign( 1      ), (int) '+' );
+    LASSERT2( inteq, (int) isign( 8      ), (int) '+' );
+    LASSERT2( inteq, (int) isign( 7777777), (int) '+' );
 
     /* ---------------------------------------------------------------- */
 
-    MASSERT2( sizeeq, "strn_index_bounds strlcpy", strlcpy(dest, love, sizeof(dest)), 4 );
+    LASSERT2( sizeeq, uitoa(NULL, sizeof(dest), 0,        BASE_DECIMAL),                1 );
+    LASSERT2( sizeeq, uitoa(NULL, sizeof(dest), 1,        BASE_DECIMAL),                1 );
+    LASSERT2( sizeeq, uitoa(NULL, sizeof(dest), 8,        BASE_DECIMAL),                1 );
+    LASSERT2( sizeeq, uitoa(NULL, sizeof(dest), 512,      BASE_DECIMAL),                3 );
+    LASSERT2( sizeeq, uitoa(NULL, sizeof(dest), 1024,     BASE_DECIMAL),                4 );
+    LASSERT2( sizeeq, uitoa(NULL, sizeof(dest), 7777,     BASE_DECIMAL),                4 );
+    LASSERT2( sizeeq, uitoa(NULL, sizeof(dest), 7777777,  BASE_DECIMAL),                7 );
 
-    ASSERT2( sizeeq, strn_index_bounds(dest, sizeof(dest), 0, 8), 4 );
-    ASSERT2( sizeeq, strn_index_bounds(dest, sizeof(dest), 0, 7), 4 );
-    ASSERT2( sizeeq, strn_index_bounds(dest, sizeof(dest), 0, 4), 4 );
-    ASSERT2( sizeeq, strn_index_bounds(dest, sizeof(dest), 0, 3), 3 );
-    ASSERT2( sizeeq, strn_index_bounds(dest, sizeof(dest), 0, 2), 2 );
-    ASSERT2( sizeeq, strn_index_bounds(dest, sizeof(dest), 0, 1), 1 );
-    ASSERT2( sizeeq, strn_index_bounds(dest, sizeof(dest), 0, 0), 0 );
+    LASSERT2( sizeeq, itoa (NULL, sizeof(dest), 0,        BASE_DECIMAL, OPTIONAL_SIGN), 1 );
+    LASSERT2( sizeeq, itoa (NULL, sizeof(dest), 1,        BASE_DECIMAL, OPTIONAL_SIGN), 1 );
+    LASSERT2( sizeeq, itoa (NULL, sizeof(dest), 8,        BASE_DECIMAL, OPTIONAL_SIGN), 1 );
+    LASSERT2( sizeeq, itoa (NULL, sizeof(dest), 512,      BASE_DECIMAL, OPTIONAL_SIGN), 3 );
+    LASSERT2( sizeeq, itoa (NULL, sizeof(dest), 1024,     BASE_DECIMAL, OPTIONAL_SIGN), 4 );
+    LASSERT2( sizeeq, itoa (NULL, sizeof(dest), 7777,     BASE_DECIMAL, OPTIONAL_SIGN), 4 );
+    LASSERT2( sizeeq, itoa (NULL, sizeof(dest), 7777777,  BASE_DECIMAL, OPTIONAL_SIGN), 7 );
 
-    ASSERT2( sizeeq, strn_index_bounds(dest, sizeof(dest), 1, 8), 3 );
-    ASSERT2( sizeeq, strn_index_bounds(dest, sizeof(dest), 1, 7), 3 );
-    ASSERT2( sizeeq, strn_index_bounds(dest, sizeof(dest), 1, 4), 3 );
-    ASSERT2( sizeeq, strn_index_bounds(dest, sizeof(dest), 1, 3), 3 );
-    ASSERT2( sizeeq, strn_index_bounds(dest, sizeof(dest), 1, 2), 2 );
-    ASSERT2( sizeeq, strn_index_bounds(dest, sizeof(dest), 1, 1), 1 );
-    ASSERT2( sizeeq, strn_index_bounds(dest, sizeof(dest), 1, 0), 0 );
+    LASSERT2( sizeeq, itoa (NULL, sizeof(dest), 0,        BASE_DECIMAL, OPTIONAL_SIGN), 1 );
+    LASSERT2( sizeeq, itoa (NULL, sizeof(dest), -1,       BASE_DECIMAL, OPTIONAL_SIGN), 2 );
+    LASSERT2( sizeeq, itoa (NULL, sizeof(dest), -8,       BASE_DECIMAL, OPTIONAL_SIGN), 2 );
+    LASSERT2( sizeeq, itoa (NULL, sizeof(dest), -512,     BASE_DECIMAL, OPTIONAL_SIGN), 4 );
+    LASSERT2( sizeeq, itoa (NULL, sizeof(dest), -1024,    BASE_DECIMAL, OPTIONAL_SIGN), 5 );
+    LASSERT2( sizeeq, itoa (NULL, sizeof(dest), -7777,    BASE_DECIMAL, OPTIONAL_SIGN), 5 );
+    LASSERT2( sizeeq, itoa (NULL, sizeof(dest), -7777777, BASE_DECIMAL, OPTIONAL_SIGN), 8 );
+
+    LASSERT2( sizeeq, itoa (NULL, sizeof(dest), 0,        BASE_DECIMAL, FORCE_SIGN),    2 );
+    LASSERT2( sizeeq, itoa (NULL, sizeof(dest), 1,        BASE_DECIMAL, FORCE_SIGN),    2 );
+    LASSERT2( sizeeq, itoa (NULL, sizeof(dest), 8,        BASE_DECIMAL, FORCE_SIGN),    2 );
+    LASSERT2( sizeeq, itoa (NULL, sizeof(dest), 512,      BASE_DECIMAL, FORCE_SIGN),    4 );
+    LASSERT2( sizeeq, itoa (NULL, sizeof(dest), 1024,     BASE_DECIMAL, FORCE_SIGN),    5 );
+    LASSERT2( sizeeq, itoa (NULL, sizeof(dest), 7777,     BASE_DECIMAL, FORCE_SIGN),    5 );
+    LASSERT2( sizeeq, itoa (NULL, sizeof(dest), 7777777,  BASE_DECIMAL, FORCE_SIGN),    8 );
+
+    LASSERT2( sizeeq, itoa (NULL, sizeof(dest), 0,        BASE_DECIMAL, FORCE_SIGN),    2 );
+    LASSERT2( sizeeq, itoa (NULL, sizeof(dest), -1,       BASE_DECIMAL, FORCE_SIGN),    2 );
+    LASSERT2( sizeeq, itoa (NULL, sizeof(dest), -8,       BASE_DECIMAL, FORCE_SIGN),    2 );
+    LASSERT2( sizeeq, itoa (NULL, sizeof(dest), -512,     BASE_DECIMAL, FORCE_SIGN),    4 );
+    LASSERT2( sizeeq, itoa (NULL, sizeof(dest), -1024,    BASE_DECIMAL, FORCE_SIGN),    5 );
+    LASSERT2( sizeeq, itoa (NULL, sizeof(dest), -7777,    BASE_DECIMAL, FORCE_SIGN),    5 );
+    LASSERT2( sizeeq, itoa (NULL, sizeof(dest), -7777777, BASE_DECIMAL, FORCE_SIGN),    8 );
 
 
-    ASSERT2( sizeeq, strn_index_bounds(dest, 5, 0, 8), 4 );
-    ASSERT2( sizeeq, strn_index_bounds(dest, 5, 0, 7), 4 );
-    ASSERT2( sizeeq, strn_index_bounds(dest, 5, 0, 4), 4 );
-    ASSERT2( sizeeq, strn_index_bounds(dest, 5, 0, 3), 3 );
-    ASSERT2( sizeeq, strn_index_bounds(dest, 5, 0, 2), 2 );
-    ASSERT2( sizeeq, strn_index_bounds(dest, 5, 0, 1), 1 );
-    ASSERT2( sizeeq, strn_index_bounds(dest, 5, 0, 0), 0 );
+    LASSERT2( sizeeq, uitoa(NULL, 0,            0,        BASE_DECIMAL),                1 );
+    LASSERT2( sizeeq, uitoa(NULL, 0,            1,        BASE_DECIMAL),                1 );
+    LASSERT2( sizeeq, uitoa(NULL, 0,            8,        BASE_DECIMAL),                1 );
+    LASSERT2( sizeeq, uitoa(NULL, 0,            512,      BASE_DECIMAL),                3 );
+    LASSERT2( sizeeq, uitoa(NULL, 0,            1024,     BASE_DECIMAL),                4 );
+    LASSERT2( sizeeq, uitoa(NULL, 0,            7777,     BASE_DECIMAL),                4 );
+    LASSERT2( sizeeq, uitoa(NULL, 0,            7777777,  BASE_DECIMAL),                7 );
 
-    ASSERT2( sizeeq, strn_index_bounds(dest, 5, 1, 8), 3 );
-    ASSERT2( sizeeq, strn_index_bounds(dest, 5, 1, 7), 3 );
-    ASSERT2( sizeeq, strn_index_bounds(dest, 5, 1, 4), 3 );
-    ASSERT2( sizeeq, strn_index_bounds(dest, 5, 1, 3), 3 );
-    ASSERT2( sizeeq, strn_index_bounds(dest, 5, 1, 2), 2 );
-    ASSERT2( sizeeq, strn_index_bounds(dest, 5, 1, 1), 1 );
-    ASSERT2( sizeeq, strn_index_bounds(dest, 5, 1, 0), 0 );
+    LASSERT2( sizeeq, itoa (NULL, 0,            0,        BASE_DECIMAL, OPTIONAL_SIGN), 1 );
+    LASSERT2( sizeeq, itoa (NULL, 0,            1,        BASE_DECIMAL, OPTIONAL_SIGN), 1 );
+    LASSERT2( sizeeq, itoa (NULL, 0,            8,        BASE_DECIMAL, OPTIONAL_SIGN), 1 );
+    LASSERT2( sizeeq, itoa (NULL, 0,            512,      BASE_DECIMAL, OPTIONAL_SIGN), 3 );
+    LASSERT2( sizeeq, itoa (NULL, 0,            1024,     BASE_DECIMAL, OPTIONAL_SIGN), 4 );
+    LASSERT2( sizeeq, itoa (NULL, 0,            7777,     BASE_DECIMAL, OPTIONAL_SIGN), 4 );
+    LASSERT2( sizeeq, itoa (NULL, 0,            7777777,  BASE_DECIMAL, OPTIONAL_SIGN), 7 );
+
+    LASSERT2( sizeeq, itoa (NULL, 0,            0,        BASE_DECIMAL, OPTIONAL_SIGN), 1 );
+    LASSERT2( sizeeq, itoa (NULL, 0,            -1,       BASE_DECIMAL, OPTIONAL_SIGN), 2 );
+    LASSERT2( sizeeq, itoa (NULL, 0,            -8,       BASE_DECIMAL, OPTIONAL_SIGN), 2 );
+    LASSERT2( sizeeq, itoa (NULL, 0,            -512,     BASE_DECIMAL, OPTIONAL_SIGN), 4 );
+    LASSERT2( sizeeq, itoa (NULL, 0,            -1024,    BASE_DECIMAL, OPTIONAL_SIGN), 5 );
+    LASSERT2( sizeeq, itoa (NULL, 0,            -7777,    BASE_DECIMAL, OPTIONAL_SIGN), 5 );
+    LASSERT2( sizeeq, itoa (NULL, 0,            -7777777, BASE_DECIMAL, OPTIONAL_SIGN), 8 );
+
+    LASSERT2( sizeeq, itoa (NULL, 0,            0,        BASE_DECIMAL, FORCE_SIGN),    2 );
+    LASSERT2( sizeeq, itoa (NULL, 0,            1,        BASE_DECIMAL, FORCE_SIGN),    2 );
+    LASSERT2( sizeeq, itoa (NULL, 0,            8,        BASE_DECIMAL, FORCE_SIGN),    2 );
+    LASSERT2( sizeeq, itoa (NULL, 0,            512,      BASE_DECIMAL, FORCE_SIGN),    4 );
+    LASSERT2( sizeeq, itoa (NULL, 0,            1024,     BASE_DECIMAL, FORCE_SIGN),    5 );
+    LASSERT2( sizeeq, itoa (NULL, 0,            7777,     BASE_DECIMAL, FORCE_SIGN),    5 );
+    LASSERT2( sizeeq, itoa (NULL, 0,            7777777,  BASE_DECIMAL, FORCE_SIGN),    8 );
+
+    LASSERT2( sizeeq, itoa (NULL, 0,            0,        BASE_DECIMAL, FORCE_SIGN),    2 );
+    LASSERT2( sizeeq, itoa (NULL, 0,            -1,       BASE_DECIMAL, FORCE_SIGN),    2 );
+    LASSERT2( sizeeq, itoa (NULL, 0,            -8,       BASE_DECIMAL, FORCE_SIGN),    2 );
+    LASSERT2( sizeeq, itoa (NULL, 0,            -512,     BASE_DECIMAL, FORCE_SIGN),    4 );
+    LASSERT2( sizeeq, itoa (NULL, 0,            -1024,    BASE_DECIMAL, FORCE_SIGN),    5 );
+    LASSERT2( sizeeq, itoa (NULL, 0,            -7777,    BASE_DECIMAL, FORCE_SIGN),    5 );
+    LASSERT2( sizeeq, itoa (NULL, 0,            -7777777, BASE_DECIMAL, FORCE_SIGN),    8 );
+
+
+    LASSERT2( sizeeq, uitoa(dest, sizeof(dest), 0,        BASE_DECIMAL), 1 );
+      LASSERT3( nstreq, sizeof(dest), dest,    "0" );
+    LASSERT2( sizeeq, uitoa(dest, sizeof(dest), 1,        BASE_DECIMAL), 1 );
+      LASSERT3( nstreq, sizeof(dest), dest,    "1" );
+    LASSERT2( sizeeq, uitoa(dest, sizeof(dest), 8,        BASE_DECIMAL), 1 );
+      LASSERT3( nstreq, sizeof(dest), dest,    "8" );
+    LASSERT2( sizeeq, uitoa(dest, sizeof(dest), 512,      BASE_DECIMAL), 3 );
+      LASSERT3( nstreq, sizeof(dest), dest,    "512" );
+    LASSERT2( sizeeq, uitoa(dest, sizeof(dest), 1024,     BASE_DECIMAL), 4 );
+      LASSERT3( nstreq, sizeof(dest), dest,    "1024" );
+    LASSERT2( sizeeq, uitoa(dest, sizeof(dest), 7777,     BASE_DECIMAL), 4 );
+      LASSERT3( nstreq, sizeof(dest), dest,    "7777" );
+    LASSERT2( sizeeq, uitoa(dest, sizeof(dest), 7777777,  BASE_DECIMAL), 7 );
+      LASSERT3( nstreq, sizeof(dest), dest,    "7777777" );
+
+
+    LASSERT2( sizeeq, itoa(dest, sizeof(dest), 0,         BASE_DECIMAL, OPTIONAL_SIGN), 1 );
+      LASSERT3( nstreq, sizeof(dest), dest,    "0" );
+    LASSERT2( sizeeq, itoa(dest, sizeof(dest), 1,         BASE_DECIMAL, OPTIONAL_SIGN), 1 );
+      LASSERT3( nstreq, sizeof(dest), dest,    "1" );
+    LASSERT2( sizeeq, itoa(dest, sizeof(dest), 8,         BASE_DECIMAL, OPTIONAL_SIGN), 1 );
+      LASSERT3( nstreq, sizeof(dest), dest,    "8" );
+    LASSERT2( sizeeq, itoa(dest, sizeof(dest), 512,       BASE_DECIMAL, OPTIONAL_SIGN), 3 );
+      LASSERT3( nstreq, sizeof(dest), dest,    "512" );
+    LASSERT2( sizeeq, itoa(dest, sizeof(dest), 1024,      BASE_DECIMAL, OPTIONAL_SIGN), 4 );
+      LASSERT3( nstreq, sizeof(dest), dest,    "1024" );
+    LASSERT2( sizeeq, itoa(dest, sizeof(dest), 7777,      BASE_DECIMAL, OPTIONAL_SIGN), 4 );
+      LASSERT3( nstreq, sizeof(dest), dest,    "7777" );
+    LASSERT2( sizeeq, itoa(dest, sizeof(dest), 7777777,   BASE_DECIMAL, OPTIONAL_SIGN), 7 );
+      LASSERT3( nstreq, sizeof(dest), dest,    "7777777" );
+
+    LASSERT2( sizeeq, itoa(dest, sizeof(dest), 0,         BASE_DECIMAL, OPTIONAL_SIGN), 1 );
+      LASSERT3( nstreq, sizeof(dest), dest,    "0" );
+    LASSERT2( sizeeq, itoa(dest, sizeof(dest), -1,        BASE_DECIMAL, OPTIONAL_SIGN), 2 );
+      LASSERT3( nstreq, sizeof(dest), dest,    "-1" );
+    LASSERT2( sizeeq, itoa(dest, sizeof(dest), -8,        BASE_DECIMAL, OPTIONAL_SIGN), 2 );
+      LASSERT3( nstreq, sizeof(dest), dest,    "-8" );
+    LASSERT2( sizeeq, itoa(dest, sizeof(dest), -512,      BASE_DECIMAL, OPTIONAL_SIGN), 4 );
+      LASSERT3( nstreq, sizeof(dest), dest,    "-512" );
+    LASSERT2( sizeeq, itoa(dest, sizeof(dest), -1024,     BASE_DECIMAL, OPTIONAL_SIGN), 5 );
+      LASSERT3( nstreq, sizeof(dest), dest,    "-1024" );
+    LASSERT2( sizeeq, itoa(dest, sizeof(dest), -7777,     BASE_DECIMAL, OPTIONAL_SIGN), 5 );
+      LASSERT3( nstreq, sizeof(dest), dest,    "-7777" );
+    LASSERT2( sizeeq, itoa(dest, sizeof(dest), -7777777,  BASE_DECIMAL, OPTIONAL_SIGN), 8 );
+      LASSERT3( nstreq, sizeof(dest), dest,    "-7777777" );
+
+
+    LASSERT2( sizeeq, itoa(dest, sizeof(dest), 0,         BASE_DECIMAL, FORCE_SIGN), 2 );
+      LASSERT3( nstreq, sizeof(dest), dest,    "0" );
+    LASSERT2( sizeeq, itoa(dest, sizeof(dest), 1,         BASE_DECIMAL, FORCE_SIGN), 2 );
+      LASSERT3( nstreq, sizeof(dest), dest,    "1" );
+    LASSERT2( sizeeq, itoa(dest, sizeof(dest), 8,         BASE_DECIMAL, FORCE_SIGN), 2 );
+      LASSERT3( nstreq, sizeof(dest), dest,    "8" );
+    LASSERT2( sizeeq, itoa(dest, sizeof(dest), 512,       BASE_DECIMAL, FORCE_SIGN), 4 );
+      LASSERT3( nstreq, sizeof(dest), dest,    "512" );
+    LASSERT2( sizeeq, itoa(dest, sizeof(dest), 1024,      BASE_DECIMAL, FORCE_SIGN), 5 );
+      LASSERT3( nstreq, sizeof(dest), dest,    "1024" );
+    LASSERT2( sizeeq, itoa(dest, sizeof(dest), 7777,      BASE_DECIMAL, FORCE_SIGN), 5 );
+      LASSERT3( nstreq, sizeof(dest), dest,    "7777" );
+    LASSERT2( sizeeq, itoa(dest, sizeof(dest), 7777777,   BASE_DECIMAL, FORCE_SIGN), 8 );
+      LASSERT3( nstreq, sizeof(dest), dest,    "7777777" );
+
+    LASSERT2( sizeeq, itoa(dest, sizeof(dest), 0,         BASE_DECIMAL, FORCE_SIGN), 2 );
+      LASSERT3( nstreq, sizeof(dest), dest,    "0" );
+    LASSERT2( sizeeq, itoa(dest, sizeof(dest), -1,        BASE_DECIMAL, FORCE_SIGN), 2 );
+      LASSERT3( nstreq, sizeof(dest), dest,    "-1" );
+    LASSERT2( sizeeq, itoa(dest, sizeof(dest), -8,        BASE_DECIMAL, FORCE_SIGN), 2 );
+      LASSERT3( nstreq, sizeof(dest), dest,    "-8" );
+    LASSERT2( sizeeq, itoa(dest, sizeof(dest), -512,      BASE_DECIMAL, FORCE_SIGN), 4 );
+      LASSERT3( nstreq, sizeof(dest), dest,    "-512" );
+    LASSERT2( sizeeq, itoa(dest, sizeof(dest), -1024,     BASE_DECIMAL, FORCE_SIGN), 5 );
+      LASSERT3( nstreq, sizeof(dest), dest,    "-1024" );
+    LASSERT2( sizeeq, itoa(dest, sizeof(dest), -7777,     BASE_DECIMAL, FORCE_SIGN), 5 );
+      LASSERT3( nstreq, sizeof(dest), dest,    "-7777" );
+    LASSERT2( sizeeq, itoa(dest, sizeof(dest), -7777777,  BASE_DECIMAL, FORCE_SIGN), 8 );
+      LASSERT3( nstreq, sizeof(dest), dest,    "-7777777" );
+
+
+    LASSERT2( sizeeq, uitoa(dest, sizeof(dest), 0x00,        BASE_HEXADECIMAL),      1 );
+      LASSERT3( nstreq, sizeof(dest), dest, "0" );
+    LASSERT2( sizeeq, uitoa(dest, sizeof(dest), 0x01,        BASE_HEXADECIMAL),      1 );
+      LASSERT3( nstreq, sizeof(dest), dest, "1" );
+    LASSERT2( sizeeq, uitoa(dest, sizeof(dest), 0x08,        BASE_HEXADECIMAL),      1 );
+      LASSERT3( nstreq, sizeof(dest), dest, "8" );
+    LASSERT2( sizeeq, uitoa(dest, sizeof(dest), 0x78         BASE_HEXADECIMAL),      2 );
+      LASSERT3( nstreq, sizeof(dest), dest, "78" );
+    LASSERT2( sizeeq, uitoa(dest, sizeof(dest), 0x80,        BASE_HEXADECIMAL),      2 );
+      LASSERT3( nstreq, sizeof(dest), dest, "80" );
+    LASSERT2( sizeeq, uitoa(dest, sizeof(dest), 0x88,        BASE_HEXADECIMAL),      2 );
+      LASSERT3( nstreq, sizeof(dest), dest, "88" );
+    LASSERT2( sizeeq, uitoa(dest, sizeof(dest), 0x10F,       BASE_HEXADECIMAL),      3 );
+      LASSERT3( nstreq, sizeof(dest), dest, "10F" );
+    LASSERT2( sizeeq, uitoa(dest, sizeof(dest), 0x00000000U, BASE_HEXADECIMAL),      1 );
+      LASSERT3( nstreq, sizeof(dest), dest, "00000000" );
+    LASSERT2( sizeeq, uitoa(dest, sizeof(dest), 0x00000001U, BASE_HEXADECIMAL),      1 );
+      LASSERT3( nstreq, sizeof(dest), dest, "00000001" );
+    LASSERT2( sizeeq, uitoa(dest, sizeof(dest), 0x00000010U, BASE_HEXADECIMAL),      2 );
+      LASSERT3( nstreq, sizeof(dest), dest, "00000010" );
+    LASSERT2( sizeeq, uitoa(dest, sizeof(dest), 0x00000100U, BASE_HEXADECIMAL),      3 );
+      LASSERT3( nstreq, sizeof(dest), dest, "00000100" );
+    LASSERT2( sizeeq, uitoa(dest, sizeof(dest), 0x00001000U, BASE_HEXADECIMAL),      4 );
+      LASSERT3( nstreq, sizeof(dest), dest, "00001000" );
+    LASSERT2( sizeeq, uitoa(dest, sizeof(dest), 0x00010000U, BASE_HEXADECIMAL),      5 );
+      LASSERT3( nstreq, sizeof(dest), dest, "00010000" );
+    LASSERT2( sizeeq, uitoa(dest, sizeof(dest), 0x00100000U, BASE_HEXADECIMAL),      6 );
+      LASSERT3( nstreq, sizeof(dest), dest, "00100000" );
+    LASSERT2( sizeeq, uitoa(dest, sizeof(dest), 0x01000000U, BASE_HEXADECIMAL),      7 );
+      LASSERT3( nstreq, sizeof(dest), dest, "01000000" );
+    LASSERT2( sizeeq, uitoa(dest, sizeof(dest), 0x10000000U, BASE_HEXADECIMAL),      8 );
+      LASSERT3( nstreq, sizeof(dest), dest, "10000000" );
+    LASSERT2( sizeeq, uitoa(dest, sizeof(dest), 0x7777777,   BASE_HEXADECIMAL),      7 );
+      LASSERT3( nstreq, sizeof(dest), dest, "7777777" );
+
+    /* ---------------------------------------------------------------- */
+
+    LASSERT2( sizeeq, strlcpy(dest,  love, 5), 4 );
+    LASSERT3( streqn, dest, "love",  sizeof(dest) );
+
+    LASSERT2( sizeeq, strlcpy(dest,  love, 4), 3);
+    LASSERT3( streqn, dest, "lov",   sizeof(dest) );
+
+    LASSERT2( sizeeq, strlcpy(dest,  love, 1), 0);
+    LASSERT3( streqn, dest, "",      sizeof(dest) );
+
+
+    LASSERT2( sizeeq, strlcpy(dest,  peace, sizeof(dest)), 5 );
+    LASSERT2( sizeeq, strlcpy(dest,  love,  0),            0 );
+    LASSERT3( streqn, dest, "peace", sizeof(dest) );
+
+    /* ---------------------------------------------------------------- */
+
+    LASSERT2( sizeeq, strlcpy_srcmax(smalldest, peace, 8, 5), 5 );
+    LASSERT3( streqn, smalldest, "peace", sizeof(smalldest) );
+
+    LASSERT2( sizeeq, strlcpy_srcmax(smalldest, peace, 8, 4), 4 );
+    LASSERT3( streqn, smalldest, "peac",  sizeof(smalldest) );
+
+
+    LASSERT2( sizeeq, strlcpy_srcmax(smalldest, peace, 5, 5), 4 );
+    LASSERT3( streqn, smalldest, "peac",  sizeof(smalldest) );
+
+    LASSERT2( sizeeq, strlcpy_srcmax(smalldest, peace, 5, 4), 4 );
+    LASSERT3( streqn, smalldest, "peac",  sizeof(smalldest) );
+
+    LASSERT2( sizeeq, strlcpy_srcmax(smalldest, peace, 5, 3), 3 );
+    LASSERT3( streqn, smalldest, "pea",   sizeof(smalldest) );
+
+    LASSERT2( sizeeq, strlcpy_srcmax(smalldest, peace, 5, 2), 2 );
+    LASSERT3( streqn, smalldest, "pe",    sizeof(smalldest) );
+
+
+    LASSERT2( sizeeq, strlcpy_srcmax(smalldest, peace, 4, 5), 3 );
+    LASSERT3( streqn, smalldest, "pea",   sizeof(smalldest) );
+
+    LASSERT2( sizeeq, strlcpy_srcmax(smalldest, peace, 4, 4), 3 );
+    LASSERT3( streqn, smalldest, "pea",   sizeof(smalldest) );
+
+    LASSERT2( sizeeq, strlcpy_srcmax(smalldest, peace, 4, 3), 3 );
+    LASSERT3( streqn, smalldest, "pea",   sizeof(smalldest) );
+
+    LASSERT2( sizeeq, strlcpy_srcmax(smalldest, peace, 4, 2), 2 );
+    LASSERT3( streqn, smalldest, "pe",    sizeof(smalldest) );
+
+
+    LASSERT2( sizeeq, strlcpy_srcmax(smalldest, peace, 8, 5), 5 );
+    LASSERT2( sizeeq, strlcpy_srcmax(smalldest, peace, 8, 0), 0 );
+    LASSERT3( streqn, smalldest, "",      sizeof(smalldest) );
+
+
+    LASSERT2( sizeeq, strlcpy_srcmax(smalldest, peace, 8, 5), 5 );
+    LASSERT2( sizeeq, strlcpy_srcmax(smalldest, peace, 0, 5), 0 );
+    LASSERT3( streqn, smalldest, "peace", sizeof(smalldest) );
+
+    /* ---------------------------------------------------------------- */
+
+    LASSERT2( sizeeq, strlcpy_with_max(dest, love, 8, 4, 4), 4 );
+    LASSERT3( streqn, dest, "love", sizeof(dest) );
+
+
+    LASSERT2( sizeeq, strlcpy_with_max(dest, love, 8, 4, 3), 3 );
+    LASSERT3( streqn, dest, "lov",  sizeof(dest) );
+
+    LASSERT2( sizeeq, strlcpy_with_max(dest, love, 8, 3, 4), 3 );
+    LASSERT3( streqn, dest, "lov",  sizeof(dest) );
+
+    LASSERT2( sizeeq, strlcpy_with_max(dest, love, 8, 3, 3), 3 );
+    LASSERT3( streqn, dest, "lov",  sizeof(dest) );
+
+
+    LASSERT2( sizeeq, strlcpy_with_max(dest, love, 8, 4, 4), 4 );
+    LASSERT2( sizeeq, strlcpy_with_max(dest, love, 8, 0, 4), 0 );
+    LASSERT3( streqn, dest, "",     sizeof(dest) );
+
+    LASSERT2( sizeeq, strlcpy_with_max(dest, love, 8, 4, 4), 4 );
+    LASSERT2( sizeeq, strlcpy_with_max(dest, love, 8, 4, 0), 0 );
+    LASSERT3( streqn, dest, "",     sizeof(dest) );
+
+    LASSERT2( sizeeq, strlcpy_with_max(dest, love, 8, 4, 4), 4 );
+    LASSERT2( sizeeq, strlcpy_with_max(dest, love, 8, 0, 0), 0 );
+    LASSERT3( streqn, dest, "",     sizeof(dest) );
+
+    LASSERT2( sizeeq, strlcpy_with_max(dest, love, 8, 4, 4), 4 );
+    LASSERT2( sizeeq, strlcpy_with_max(dest, love, 1, 4, 4), 0 );
+    LASSERT3( streqn, dest, "",     sizeof(dest) );
+
+    LASSERT2( sizeeq, strlcpy_with_max(dest, love, 8, 4, 4), 4 );
+    LASSERT2( sizeeq, strlcpy_with_max(dest, love, 0, 4, 4), 0 );
+    LASSERT3( streqn, dest, "love", sizeof(dest) );
+
+    /* ---------------------------------------------------------------- */
+
+    LASSERT2( sizeeq, strlcpy(dest, love, sizeof(dest)), 4 );
+
+    LASSERT2( sizeeq, strnlen(dest, 7), 4 );
+    LASSERT2( sizeeq, strnlen(dest, 6), 4 );
+    LASSERT2( sizeeq, strnlen(dest, 5), 4 );
+    LASSERT2( sizeeq, strnlen(dest, 4), 4 );
+    LASSERT2( sizeeq, strnlen(dest, 3), 3 );
+    LASSERT2( sizeeq, strnlen(dest, 2), 2 );
+    LASSERT2( sizeeq, strnlen(dest, 1), 1 );
+    LASSERT2( sizeeq, strnlen(dest, 0), 0 );
+
+    LASSERT2( sizeeq, strllen(dest, 7), 4 );
+    LASSERT2( sizeeq, strllen(dest, 6), 4 );
+    LASSERT2( sizeeq, strllen(dest, 5), 4 );
+    LASSERT2( sizeeq, strllen(dest, 4), 3 );
+    LASSERT2( sizeeq, strllen(dest, 3), 2 );
+    LASSERT2( sizeeq, strllen(dest, 2), 1 );
+    LASSERT2( sizeeq, strllen(dest, 1), 0 );
+    LASSERT2( sizeeq, strllen(dest, 0), 0 );
+
+    /* ---------------------------------------------------------------- */
+
+    LASSERT2( sizeeq, strlcpy(dest, love, sizeof(dest)), 4 );
+
+    LASSERT1( true,  strn_has_null_terminator(dest, sizeof(dest)) );
+
+    LASSERT1( true,  strn_has_null_terminator(dest, 5) );
+    LASSERT1( false, strn_has_null_terminator(dest, 4) );
+    LASSERT1( false, strn_has_null_terminator(dest, 3) );
+
+    /* ---------------------------------------------------------------- */
+
+    LASSERT2( sizeeq, strlcpy_cycle(dest, love, sizeof(dest), 4),  4 );
+    LASSERT3( nstreq, sizeof(dest), dest, "love" );
+
+    LASSERT2( sizeeq, strlcpy_cycle(dest, love, sizeof(dest), 1),  1 );
+    LASSERT3( nstreq, sizeof(dest), dest, "l" );
+
+    LASSERT2( sizeeq, strlcpy_cycle(dest, love, sizeof(dest), 0),  0 );
+    LASSERT3( nstreq, sizeof(dest), dest, "" );
+
+    LASSERT2( sizeeq, strlcpy_cycle(dest, love, sizeof(dest), 5),  5 );
+    LASSERT3( nstreq, sizeof(dest), dest, "lovel" );
+
+    LASSERT2( sizeeq, strlcpy_cycle(dest, love, sizeof(dest), 8),  8 );
+    LASSERT3( nstreq, sizeof(dest), dest, "lovelove" );
+
+    LASSERT2( sizeeq, strlcpy_cycle(dest, love, sizeof(dest), 9),  9 );
+    LASSERT3( nstreq, sizeof(dest), dest, "lovelovel" );
+
+    LASSERT2( sizeeq, strlcpy_cycle(dest, love, sizeof(dest), 12), 12 );
+    LASSERT3( nstreq, sizeof(dest), dest, "lovelovelove" );
+
+
+    LASSERT2( sizeeq, strlcpy_cycle(dest, love, sizeof(dest), 4),  4 );
+    LASSERT2( sizeeq, strlcpy_cycle(dest, love, 5,            4),  4 );
+    LASSERT3( nstreq, sizeof(dest), dest, "love" );
+
+    LASSERT2( sizeeq, strlcpy_cycle(dest, love, sizeof(dest), 4),  4 );
+    LASSERT2( sizeeq, strlcpy_cycle(dest, love, 2,            4),  1 );
+    LASSERT3( nstreq, sizeof(dest), dest, "l" );
+
+    LASSERT2( sizeeq, strlcpy_cycle(dest, love, sizeof(dest), 4),  4 );
+    LASSERT2( sizeeq, strlcpy_cycle(dest, love, 1,            4),  0 );
+    LASSERT3( nstreq, sizeof(dest), dest, "" );
+
+    LASSERT2( sizeeq, strlcpy_cycle(dest, love, sizeof(dest), 4),  4 );
+    LASSERT2( sizeeq, strlcpy_cycle(dest, love, 0,            4),  0 );
+    LASSERT3( nstreq, sizeof(dest), dest, "love" );
+
+
+    LASSERT2( sizeeq, strlcpy_cycle(dest, love, sizeof(dest), 4),  4 );
+    LASSERT2( sizeeq, strlcpy_cycle(dest, "",   5,            4),  0 );
+    LASSERT3( nstreq, sizeof(dest), dest, "" );
+
+    LASSERT2( sizeeq, strlcpy_cycle(dest, love, sizeof(dest), 4),  4 );
+    LASSERT2( sizeeq, strlcpy_cycle(dest, "",   2,            4),  0 );
+    LASSERT3( nstreq, sizeof(dest), dest, "" );
+
+    LASSERT2( sizeeq, strlcpy_cycle(dest, love, sizeof(dest), 4),  4 );
+    LASSERT2( sizeeq, strlcpy_cycle(dest, "",   1,            4),  0 );
+    LASSERT3( nstreq, sizeof(dest), dest, "" );
+
+    LASSERT2( sizeeq, strlcpy_cycle(dest, love, sizeof(dest), 4),  4 );
+    LASSERT2( sizeeq, strlcpy_cycle(dest, "",   0,            4),  0 );
+    LASSERT3( nstreq, sizeof(dest), dest, "love" );
+
+
+    LASSERT2( sizeeq, strlcpy_cycle(dest, love, sizeof(dest), 4),  4 );
+    LASSERT2( sizeeq, strlcpy_cycle(dest, love, 3,            8),  2 );
+    LASSERT3( nstreq, sizeof(dest), dest, "lo" );
+
+    LASSERT2( sizeeq, strlcpy_cycle(dest, love, sizeof(dest), 4),  4 );
+    LASSERT2( sizeeq, strlcpy_cycle(dest, love, 5,            8),  4 );
+    LASSERT3( nstreq, sizeof(dest), dest, "love" );
+
+    LASSERT2( sizeeq, strlcpy_cycle(dest, love, sizeof(dest), 4),  4 );
+    LASSERT2( sizeeq, strlcpy_cycle(dest, love, 0,            8),  0 );
+    LASSERT3( nstreq, sizeof(dest), dest, "love" );
+
+
+    LASSERT2( sizeeq, strlcpy_cycle(dest, love, sizeof(dest), 4),  4 );
+    LASSERT2( sizeeq, strlcpy_cycle(dest, love, 3,            10), 2 );
+    LASSERT3( nstreq, sizeof(dest), dest, "lo" );
+
+    LASSERT2( sizeeq, strlcpy_cycle(dest, love, sizeof(dest), 4),  4 );
+    LASSERT2( sizeeq, strlcpy_cycle(dest, love, 5,            10), 4 );
+    LASSERT3( nstreq, sizeof(dest), dest, "love" );
+
+    LASSERT2( sizeeq, strlcpy_cycle(dest, love, sizeof(dest), 4),  4 );
+    LASSERT2( sizeeq, strlcpy_cycle(dest, love, 9,            10), 8 );
+    LASSERT3( nstreq, sizeof(dest), dest, "lovelove" );
+
+    LASSERT2( sizeeq, strlcpy_cycle(dest, love, sizeof(dest), 4),  4 );
+    LASSERT2( sizeeq, strlcpy_cycle(dest, love, 0,            10), 0 );
+    LASSERT3( nstreq, sizeof(dest), dest, "love" );
+
+
+    LASSERT2( sizeeq, strlcpy_cycle(dest, love, sizeof(dest), 4),  4 );
+    LASSERT2( sizeeq, strlcpy_cycle(dest, love, 1,            1),  0 );
+    LASSERT3( nstreq, sizeof(dest), dest, "" );
+
+    LASSERT2( sizeeq, strlcpy_cycle(dest, love, sizeof(dest), 4),  4 );
+    LASSERT2( sizeeq, strlcpy_cycle(dest, love, 1,            0),  0 );
+    LASSERT3( nstreq, sizeof(dest), dest, "" );
+
+    LASSERT2( sizeeq, strlcpy_cycle(dest, love, sizeof(dest), 4),  4 );
+    LASSERT2( sizeeq, strlcpy_cycle(dest, love, 0,            1),  0 );
+    LASSERT3( nstreq, sizeof(dest), dest, "love" );
+
+    LASSERT2( sizeeq, strlcpy_cycle(dest, love, sizeof(dest), 4),  4 );
+    LASSERT2( sizeeq, strlcpy_cycle(dest, love, 0,            0),  0 );
+    LASSERT3( nstreq, sizeof(dest), dest, "love" );
+
+    /* ---------------------------------------------------------------- */
+
+    LASSERT2( sizeeq, index_bounds(32, 0, 8),  8  );
+    LASSERT2( sizeeq, index_bounds(32, 0, 29), 29 );
+    LASSERT2( sizeeq, index_bounds(32, 0, 30), 30 );
+    LASSERT2( sizeeq, index_bounds(32, 0, 31), 31 );
+    LASSERT2( sizeeq, index_bounds(32, 0, 32), 31 );
+    LASSERT2( sizeeq, index_bounds(32, 0, 32), 31 );
+    LASSERT2( sizeeq, index_bounds(32, 0, 33), 31 );
+    LASSERT2( sizeeq, index_bounds(32, 0, 34), 31 );
+    LASSERT2( sizeeq, index_bounds(32, 0, 35), 31 );
+    LASSERT2( sizeeq, index_bounds(32, 0, 36), 31 );
+    LASSERT2( sizeeq, index_bounds(32, 0, 64), 31 );
+
+    LASSERT2( sizeeq, index_bounds(32, 1, 8),  8  );
+    LASSERT2( sizeeq, index_bounds(32, 1, 29), 29 );
+    LASSERT2( sizeeq, index_bounds(32, 1, 30), 30 );
+    LASSERT2( sizeeq, index_bounds(32, 1, 31), 30 );
+    LASSERT2( sizeeq, index_bounds(32, 1, 32), 30 );
+    LASSERT2( sizeeq, index_bounds(32, 1, 32), 30 );
+    LASSERT2( sizeeq, index_bounds(32, 1, 33), 30 );
+    LASSERT2( sizeeq, index_bounds(32, 1, 34), 30 );
+    LASSERT2( sizeeq, index_bounds(32, 1, 35), 30 );
+    LASSERT2( sizeeq, index_bounds(32, 1, 36), 30 );
+    LASSERT2( sizeeq, index_bounds(32, 1, 64), 30 );
+
+    /* ---------------------------------------------------------------- */
+
+    LASSERT2( sizeeq, strlcpy(dest, love, sizeof(dest)), 4 );
+
+    LASSERT2( sizeeq, strn_index_bounds(dest, sizeof(dest), 0, 8), 4 );
+    LASSERT2( sizeeq, strn_index_bounds(dest, sizeof(dest), 0, 7), 4 );
+    LASSERT2( sizeeq, strn_index_bounds(dest, sizeof(dest), 0, 4), 4 );
+    LASSERT2( sizeeq, strn_index_bounds(dest, sizeof(dest), 0, 3), 3 );
+    LASSERT2( sizeeq, strn_index_bounds(dest, sizeof(dest), 0, 2), 2 );
+    LASSERT2( sizeeq, strn_index_bounds(dest, sizeof(dest), 0, 1), 1 );
+    LASSERT2( sizeeq, strn_index_bounds(dest, sizeof(dest), 0, 0), 0 );
+
+    LASSERT2( sizeeq, strn_index_bounds(dest, sizeof(dest), 1, 8), 3 );
+    LASSERT2( sizeeq, strn_index_bounds(dest, sizeof(dest), 1, 7), 3 );
+    LASSERT2( sizeeq, strn_index_bounds(dest, sizeof(dest), 1, 4), 3 );
+    LASSERT2( sizeeq, strn_index_bounds(dest, sizeof(dest), 1, 3), 3 );
+    LASSERT2( sizeeq, strn_index_bounds(dest, sizeof(dest), 1, 2), 2 );
+    LASSERT2( sizeeq, strn_index_bounds(dest, sizeof(dest), 1, 1), 1 );
+    LASSERT2( sizeeq, strn_index_bounds(dest, sizeof(dest), 1, 0), 0 );
+
+
+    LASSERT2( sizeeq, strn_index_bounds(dest, 5, 0, 8), 4 );
+    LASSERT2( sizeeq, strn_index_bounds(dest, 5, 0, 7), 4 );
+    LASSERT2( sizeeq, strn_index_bounds(dest, 5, 0, 4), 4 );
+    LASSERT2( sizeeq, strn_index_bounds(dest, 5, 0, 3), 3 );
+    LASSERT2( sizeeq, strn_index_bounds(dest, 5, 0, 2), 2 );
+    LASSERT2( sizeeq, strn_index_bounds(dest, 5, 0, 1), 1 );
+    LASSERT2( sizeeq, strn_index_bounds(dest, 5, 0, 0), 0 );
+
+    LASSERT2( sizeeq, strn_index_bounds(dest, 5, 1, 8), 3 );
+    LASSERT2( sizeeq, strn_index_bounds(dest, 5, 1, 7), 3 );
+    LASSERT2( sizeeq, strn_index_bounds(dest, 5, 1, 4), 3 );
+    LASSERT2( sizeeq, strn_index_bounds(dest, 5, 1, 3), 3 );
+    LASSERT2( sizeeq, strn_index_bounds(dest, 5, 1, 2), 2 );
+    LASSERT2( sizeeq, strn_index_bounds(dest, 5, 1, 1), 1 );
+    LASSERT2( sizeeq, strn_index_bounds(dest, 5, 1, 0), 0 );
 
 
     /* ---------------------------------------------------------------- */
 
-    ASSERT2( sizeeq, str_index_bounds(love, 0, 8), 4 );
-    ASSERT2( sizeeq, str_index_bounds(love, 0, 7), 4 );
-    ASSERT2( sizeeq, str_index_bounds(love, 0, 4), 4 );
-    ASSERT2( sizeeq, str_index_bounds(love, 0, 3), 3 );
-    ASSERT2( sizeeq, str_index_bounds(love, 0, 2), 2 );
-    ASSERT2( sizeeq, str_index_bounds(love, 0, 1), 1 );
-    ASSERT2( sizeeq, str_index_bounds(love, 0, 0), 0 );
+    LASSERT2( sizeeq, str_index_bounds(love, 0, 8), 4 );
+    LASSERT2( sizeeq, str_index_bounds(love, 0, 7), 4 );
+    LASSERT2( sizeeq, str_index_bounds(love, 0, 4), 4 );
+    LASSERT2( sizeeq, str_index_bounds(love, 0, 3), 3 );
+    LASSERT2( sizeeq, str_index_bounds(love, 0, 2), 2 );
+    LASSERT2( sizeeq, str_index_bounds(love, 0, 1), 1 );
+    LASSERT2( sizeeq, str_index_bounds(love, 0, 0), 0 );
 
-    ASSERT2( sizeeq, str_index_bounds(love, 1, 8), 3 );
-    ASSERT2( sizeeq, str_index_bounds(love, 1, 7), 3 );
-    ASSERT2( sizeeq, str_index_bounds(love, 1, 4), 3 );
-    ASSERT2( sizeeq, str_index_bounds(love, 1, 3), 3 );
-    ASSERT2( sizeeq, str_index_bounds(love, 1, 2), 2 );
-    ASSERT2( sizeeq, str_index_bounds(love, 1, 1), 1 );
-    ASSERT2( sizeeq, str_index_bounds(love, 1, 0), 0 );
+    LASSERT2( sizeeq, str_index_bounds(love, 1, 8), 3 );
+    LASSERT2( sizeeq, str_index_bounds(love, 1, 7), 3 );
+    LASSERT2( sizeeq, str_index_bounds(love, 1, 4), 3 );
+    LASSERT2( sizeeq, str_index_bounds(love, 1, 3), 3 );
+    LASSERT2( sizeeq, str_index_bounds(love, 1, 2), 2 );
+    LASSERT2( sizeeq, str_index_bounds(love, 1, 1), 1 );
+    LASSERT2( sizeeq, str_index_bounds(love, 1, 0), 0 );
   }
 
   return result;
