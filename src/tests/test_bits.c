@@ -601,6 +601,42 @@ unit_test_result_t bits_equalities_test_run(unit_test_context_t *context)
     TASSERT2( inteq, "cmp_distance  7  0", (int) cmp_distance_int( 7,  0), (int)  7  );
     TASSERT2( inteq, "cmp_distance  7  2", (int) cmp_distance_int( 7,  2), (int)  5  );
     TASSERT2( inteq, "cmp_distance  7  7", (int) cmp_distance_int( 7,  7), (int)  0  );
+
+    /* ---------------------------------------------------------------- */
+
+    ASSERT2( inteq, most_significant_bit_pos_ulong( 0x00 ), 0 );
+
+    ASSERT2( inteq, most_significant_bit_pos_ulong( 0x01 ), 0 );
+
+    ASSERT2( inteq, most_significant_bit_pos_ulong( 0x02 ), 1 );
+    ASSERT2( inteq, most_significant_bit_pos_ulong( 0x03 ), 1 );
+
+    ASSERT2( inteq, most_significant_bit_pos_ulong( 0x04 ), 2 );
+    ASSERT2( inteq, most_significant_bit_pos_ulong( 0x05 ), 2 );
+    ASSERT2( inteq, most_significant_bit_pos_ulong( 0x06 ), 2 );
+    ASSERT2( inteq, most_significant_bit_pos_ulong( 0x07 ), 2 );
+
+    ASSERT2( inteq, most_significant_bit_pos_ulong( 0x08 ), 3 );
+    ASSERT2( inteq, most_significant_bit_pos_ulong( 0x0C ), 3 );
+
+    ASSERT2( inteq, most_significant_bit_pos_ulong( 0x10 ), 4 );
+    ASSERT2( inteq, most_significant_bit_pos_ulong( 0x18 ), 4 );
+    ASSERT2( inteq, most_significant_bit_pos_ulong( 0x1C ), 4 );
+    ASSERT2( inteq, most_significant_bit_pos_ulong( 0x1F ), 4 );
+
+    ASSERT2( inteq, most_significant_bit_pos_ulong( 0x80 ), 7 );
+    ASSERT2( inteq, most_significant_bit_pos_ulong( 0x88 ), 7 );
+    ASSERT2( inteq, most_significant_bit_pos_ulong( 0x8C ), 7 );
+    ASSERT2( inteq, most_significant_bit_pos_ulong( 0x8F ), 7 );
+
+
+    ASSERT2( inteq, most_significant_bit_pos_ulong( 0x8033 ), 15 );
+    ASSERT2( inteq, most_significant_bit_pos_ulong( 0x8833 ), 15 );
+    ASSERT2( inteq, most_significant_bit_pos_ulong( 0x8C33 ), 15 );
+    ASSERT2( inteq, most_significant_bit_pos_ulong( 0x8F33 ), 15 );
+
+    ASSERT2( inteq, most_significant_bit_pos_ulong( 0x8000 ), 15 );
+    ASSERT2( inteq, most_significant_bit_pos_ulong( 0x0800 ), 8  );
   }
 
   return result;

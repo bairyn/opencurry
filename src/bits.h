@@ -290,4 +290,50 @@ int cmp_distance_int(int check, int baseline);
 int cmp_distance_uint(unsigned int check, unsigned int baseline);
 int cmp_distance_ulong(unsigned long check, unsigned long baseline);
 
+/* ---------------------------------------------------------------- */
+
+#define MOST_SIGNIFICANT_BIT_POS_BYTE_MAP \
+  {
+    /* 0000 0000 */
+    0
+
+    /* 0000 0001 */
+  , 0
+
+    /* 0000 001x */
+  , 1,1
+
+    /* 0000 01xx */
+  , 2,2,2,2
+
+    /* 0000 1xxx */
+  , 3,3,3,3, 3,3,3,3
+
+    /* 0001 xxxx */
+  , 4,4,4,4, 4,4,4,4,  4,4,4,4, 4,4,4,4
+
+    /* 001x xxxx */
+  , 5,5,5,5, 5,5,5,5,  5,5,5,5, 5,5,5,5,  5,5,5,5, 5,5,5,5,  5,5,5,5, 5,5,5,5
+
+    /* 01xx xxxx */
+  , 6,6,6,6, 6,6,6,6,  6,6,6,6, 6,6,6,6,  6,6,6,6, 6,6,6,6,  6,6,6,6, 6,6,6,6
+  , 6,6,6,6, 6,6,6,6,  6,6,6,6, 6,6,6,6,  6,6,6,6, 6,6,6,6,  6,6,6,6, 6,6,6,6
+
+    /* 10xx xxxx */
+  , 7,7,7,7, 7,7,7,7,  7,7,7,7, 7,7,7,7,  7,7,7,7, 7,7,7,7,  7,7,7,7, 7,7,7,7
+  , 7,7,7,7, 7,7,7,7,  7,7,7,7, 7,7,7,7,  7,7,7,7, 7,7,7,7,  7,7,7,7, 7,7,7,7
+  , 7,7,7,7, 7,7,7,7,  7,7,7,7, 7,7,7,7,  7,7,7,7, 7,7,7,7,  7,7,7,7, 7,7,7,7
+  , 7,7,7,7, 7,7,7,7,  7,7,7,7, 7,7,7,7,  7,7,7,7, 7,7,7,7,  7,7,7,7, 7,7,7,7
+  };
+
+#define MAX_BYTE_BITS 8
+#define MAX_BYTE      (1 << MAX_BYTE_BITS)
+extern const int           max_byte_bits;
+extern const unsigned char max_byte;
+extern const int most_significant_bit_pos_byte_map[MAX_BYTE];
+int most_significant_bit_pos_char(char num);
+int most_significant_bit_pos_schar(char num);
+int most_significant_bit_pos_uchar(unsigned char num);
+int most_significant_bit_pos_ulong(unsigned long num);
+
 #endif /* ifndef BITS_H */

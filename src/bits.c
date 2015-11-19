@@ -230,3 +230,38 @@ int cmp_distance_ulong(unsigned long check, unsigned long baseline)
 {
   return CMP_DISTANCE(check, baseline);
 }
+
+/* ---------------------------------------------------------------- */
+
+const int most_significant_bit_pos_byte_map[1 << 8] =
+  MOST_SIGNIFICANT_BIT_POS_BYTE_MAP;
+
+const int           max_byte_bits =
+  MAX_BYTE_BITS;
+const unsigned char max_byte      =
+  MAX_BYTE;
+
+/* Get the position of the most significant bit. */
+int most_significant_bit_pos_char(char num)
+{
+  return most_significant_bit_pos_uchar((unsigned char) (int) num);
+}
+int most_significant_bit_pos_schar(signed char num)
+{
+  return most_significant_bit_pos_uchar((unsigned char) (int) num);
+}
+
+int most_significant_bit_pos_uchar(unsigned char num)
+{
+  return most_significant_bit_pos_byte_map[num];
+}
+
+int most_significant_bit_pos_ulong(unsigned long num)
+{
+  int pos = 0;
+
+  for (pos = 0; num > MAX_BYTE; pos += MAX_BYTE_BITS, num >>= MAX_BYTE_BITS)
+    ;
+
+  return pos + most_significant_bit_pos_uchar((unsigned char) (num & MAX_BYTE));
+}
