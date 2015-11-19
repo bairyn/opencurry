@@ -373,6 +373,21 @@ extern const size_t digits_base62_len_def;
   (SIGN_CASE((num), '-', ' ', '+'))
 char isign(signed long num);
 
+#define UDIGITS_DECIMAL_BUF_SIZE ( (MAX(1, (3 * sizeof(unsigned long))))      + 1)
+#define DIGITS_DECIMAL_BUF_SIZE  (((MAX(1, (3 * sizeof(unsigned long)))) + 1) + 1)
+size_t udigits_decimal_buf_size(void);
+size_t digits_decimal_buf_size(void);
+extern const size_t udigits_decimal_buf_size_def;
+extern const size_t digits_decimal_buf_size_def;
+
+/* (binary) */
+#define UDIGITS_BUF_SIZE ( (MAX(1, (8 * sizeof(unsigned long))))      + 1)
+#define DIGITS_BUF_SIZE  (((MAX(1, (8 * sizeof(unsigned long)))) + 1) + 1)
+size_t udigits_buf_size(void);
+size_t digits_buf_size(void);
+extern const size_t udigits_buf_size_def;
+extern const size_t digits_buf_size_def;
+
 size_t uitoa(char *dest, size_t n, unsigned long num, int base);
 size_t itoa (char *dest, size_t n, signed   long num, int base, int force_sign_symbol);
 

@@ -219,13 +219,17 @@ void lookup_deinit
 /* Capacity of the lookup tree. */
 #define LOOKUP_CAPACITY(lookup) ((lookup)->capacity)
 size_t lookup_capacity    (const lookup_t *lookup);
+#define LOOKUP_NULL(lookup) (!(LOOKUP_CAPACITY((lookup))))
 int    lookup_null        (const lookup_t *lookup);
 
 /* Number of elements contained in the lookup tree. */
 #define LOOKUP_LEN(lookup) ((lookup)->len)
 size_t lookup_len         (const lookup_t *lookup);
+#define LOOKUP_EMPTY(lookup) (!(LOOKUP_LEN((lookup))))
 int    lookup_empty       (const lookup_t *lookup);
 
+#define LOOKUP_MAX_CAPACITY(lookup) \
+  (((LOOKUP_LEN((lookup))) >= (LOOKUP_CAPACITY((lookup))))
 int    lookup_max_capacity(const lookup_t *lookup);
 
 /* ---------------------------------------------------------------- */
@@ -238,6 +242,17 @@ size_t lookup_value_size(const lookup_t *lookup);
 lookup_t *lookup_expand
   ( lookup_t *lookup
   , size_t    capacity
+
+  , void *(*calloc)(void *context, size_t nmemb, size_t size)
+  , void   *calloc_context
+
+  , void *(*realloc)(void *context, void *area, size_t size)
+  , void   *realloc_context
+  );
+
+/* If we're either at max capacity or recycling, then double the capacity. */
+lookup_t *lookup_auto_expand
+  ( lookup_t *lookup
 
   , void *(*calloc)(void *context, size_t nmemb, size_t size)
   , void   *calloc_context
@@ -298,6 +313,11 @@ int lookup_is_order_recycling(const lookup_t *lookup);
 void    *lookup_index_value(lookup_t *lookup, size_t index);
 bnode_t *lookup_index_order(lookup_t *lookup, size_t index);
 
+#define LOOKUP_INDEX_CVALUE(lookup, index) ((const void *) (((const unsigned char *) ((lookup)->values)) + ((ptrdiff_t) ((lookup)->value_size * (index)))))
+#define LOOKUP_INDEX_CORDER(lookup, index) ((const bnode_t *) (&(lookup)->order[(index)]))
+const void    *lookup_index_cvalue(const lookup_t *lookup, size_t index);
+const bnode_t *lookup_index_corder(const lookup_t *lookup, size_t index);
+
 /* ---------------------------------------------------------------- */
 
 #define LOOKUP_IS_VALUE_FREE(lookup, index) (BNODE_GET_VALUE_IN_USE_BIT((LOOKUP_INDEX_ORDER((lookup), (index)))))
@@ -315,6 +335,18 @@ size_t lookup_set_is_order_free(lookup_t *lookup, size_t index, size_t bit);
 
 /* ---------------------------------------------------------------- */
 
+#define BALANCED_BTREE_MAX_NODES(height) \
+  (ONE_BIT_REPEAT(((size_t) (MAX(0, (height) + 1)))))
+size_t balanced_btree_max_nodes (int height);
+int    balanced_btree_max_height(size_t num_nodes);
+
+int    lookup_max_height(size_t num_nodes);
+
+int lookup_height_from(const lookup_t *lookup, const bnode_t *bnode);
+int lookup_height(const lookup_t *lookup);
+
+/* ---------------------------------------------------------------- */
+
 lookup_t *lookup_insert
   ( lookup_t           *lookup
   , const void         *val
@@ -325,16 +357,22 @@ lookup_t *lookup_insert
   , int                *out_already_exists
   );
 
-void *lookup_retrieve
-  ( lookup_t           *lookup
+const void *lookup_retrieve
+  ( const lookup_t     *lookup
   , const void         *val
 
   , callback_compare_t  cmp
+
+  , const bnode_t      **out_node
   );
 
-/* TODO: retrieve_multiple */
+void *lookup_min(lookup_t *lookup);
+void *lookup_max(lookup_t *lookup);
 
-lookup_t *lookup_remove
+const void *lookup_cmin(const lookup_t *lookup);
+const void *lookup_cmax(const lookup_t *lookup);
+
+lookup_t *lookup_delete
   ( lookup_t           *lookup
   , const void         *val
 

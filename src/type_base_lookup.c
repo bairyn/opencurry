@@ -58,6 +58,7 @@
 #endif /* #ifdef TODO */
 #include "type_base_type.h"
 
+#include "bits.h"
 #include "ptrs.h"
 
 #include "util.h"
@@ -491,7 +492,7 @@ int    lookup_null    (const lookup_t *lookup)
     return -1;
 #endif /* #if ERROR_CHECKING  */
 
-  return LOOKUP_CAPACITY(lookup) <= 0;
+  return LOOKUP_NULL(lookup);
 }
 
 /* ---------------------------------------------------------------- */
@@ -515,19 +516,19 @@ int    lookup_empty   (const lookup_t *lookup)
     return -1;
 #endif /* #if ERROR_CHECKING  */
 
-  return LOOKUP_LEN(lookup) <= 0;
+  return LOOKUP_EMPTY(lookup);
 }
 
 /* ---------------------------------------------------------------- */
 
-int    lookup_max_capacity(const lookup_t *lookup)
+int lookup_max_capacity(const lookup_t *lookup)
 {
 #if ERROR_CHECKING
   if (!lookup)
     return -1;
 #endif /* #if ERROR_CHECKING  */
 
-  return LOOKUP_LEN(lookup) >= LOOKUP_CAPACITY(lookup);
+  return LOOKUP_MAX_CAPACITY(lookup);
 }
 
 /* ---------------------------------------------------------------- */
@@ -639,6 +640,38 @@ lookup_t *lookup_expand
   }
 }
 
+/* If we're either at max capacity or recycling, then double the capacity. */
+lookup_t *lookup_auto_expand
+  ( lookup_t *lookup
+
+  , void *(*calloc)(void *context, size_t nmemb, size_t size)
+  , void   *calloc_context
+
+  , void *(*realloc)(void *context, void *area, size_t size)
+  , void   *realloc_context
+  )
+{
+#if ERROR_CHECKING
+  if (!lookup)
+    return NULL;
+#endif /* #if ERROR_CHECKING  */
+
+  if (!(LOOKUP_MAX_CAPACITY(lookup)) && !(LOOKUP_IS_RECYCLING(lookup)))
+    return lookup;
+
+  return
+    lookup_expand
+      ( lookup
+      , LOOKUP_CAPACITY(lookup) << 1
+
+      , calloc
+      , calloc_context
+
+      , realloc
+      , realloc_context
+      );
+}
+
 #ifdef TODO /* TODO */
 /* Move elements to remove gaps of free element slots. */
 void lookup_defragment(lookup_t *lookup);
@@ -740,6 +773,16 @@ bnode_t *lookup_index_order(lookup_t *lookup, size_t index)
   return LOOKUP_INDEX_ORDER(lookup, index);
 }
 
+const void *lookup_index_cvalue(const lookup_t *lookup, size_t index)
+{
+  return LOOKUP_INDEX_CVALUE(lookup, index);
+}
+
+const bnode_t *lookup_index_corder(const lookup_t *lookup, size_t index)
+{
+  return LOOKUP_INDEX_CORDER(lookup, index);
+}
+
 /* ---------------------------------------------------------------- */
 
 int lookup_is_value_free(const lookup_t *lookup, size_t value)
@@ -814,6 +857,160 @@ size_t lookup_set_is_value_free(lookup_t *lookup, size_t index, size_t bit)
 size_t lookup_set_is_order_free(lookup_t *lookup, size_t index, size_t bit)
 {
   return (LOOKUP_SET_IS_ORDER_FREE(lookup, index, bit));
+}
+
+/* ---------------------------------------------------------------- */
+
+size_t balanced_btree_max_nodes(int height)
+{
+  /*
+   * Max nodes from g to each level:
+   *
+   *                                         r                          '
+   *                                     ___/ \___...                   '
+   *                                    /                               '
+   *                                   /                                '
+   *                                  g                                 | 1
+   *                 ________________/ \________________                |
+   *                /                                   \               |
+   *               /                                     \              |
+   *              p                                       u             | 2 + 1
+   *        _____/ \_____                           _____/ \_____       |
+   *       /             \                         /             \      |
+   *      /               \                       /               \     |
+   *     n                 s                     A                 B    | 3 + 2 + 1
+   *    / \               / \                   / \               / \   |
+   *   /   \             /   \                 /   \             /   \  |
+   *  l     r           C     D               E     F           G     H | 4 + 3 + 2 + 1
+   *
+   * r: Root node.
+   * g: Grandparent node.
+   * p: Parent node.
+   * u: Aunt node.
+   * n: Current node.
+   * l: Left child.
+   * r: Right child.
+   *
+   * ----------------------------------------------------------------
+   *
+   * f(height) = max nodes      | binary version
+   *
+   * f(0)      = 1              | 0000 0001
+   * f(1)      = 2 + 1          | 0000 0011
+   * f(2)      = 3 + 2 + 1      | 0000 0111
+   * f(3)      = 4 + 3 + 2 + 1  | 0000 1111
+   *
+   * f(h)      = ONE_BIT_REPEAT(h + 1)
+   */
+
+  return BALANCED_BTREE_MAX_NODES(height);
+}
+
+int balanced_btree_max_height(size_t num_nodes)
+{
+  if (num_nodes == 0)
+    return -1;
+
+  /*
+   * Max nodes from g to each level:
+   *
+   *                                         r                          '
+   *                                     ___/ \___...                   '
+   *                                    /                               '
+   *                                   /                                '
+   *                                  g                                 | 1
+   *                 ________________/ \________________                |
+   *                /                                   \               |
+   *               /                                     \              |
+   *              p                                       u             | 2 + 1
+   *        _____/ \_____                           _____/ \_____       |
+   *       /             \                         /             \      |
+   *      /               \                       /               \     |
+   *     n                 s                     A                 B    | 3 + 2 + 1
+   *    / \               / \                   / \               / \   |
+   *   /   \             /   \                 /   \             /   \  |
+   *  l     r           C     D               E     F           G     H | 4 + 3 + 2 + 1
+   *
+   * r: Root node.
+   * g: Grandparent node.
+   * p: Parent node.
+   * u: Aunt node.
+   * n: Current node.
+   * l: Left child.
+   * r: Right child.
+   *
+   * ----------------------------------------------------------------
+   *
+   * f(num) | binary num = height
+   *
+   * f(1)   | 0000 0001  = 0
+   *
+   *
+   * f(2)   | 0000 0010  = 1
+   * f(3)   | 0000 0011  = 1
+   *
+   *
+   * f(4)   | 0000 0100  = 2
+   * f(5)   | 0000 0101  = 2
+   * f(6)   | 0000 0110  = 2
+   * f(7)   | 0000 0111  = 2
+   *
+   *
+   * f(8)   | 0000 1000  = 3
+   * f(9)   | 0000 1001  = 3
+   * f(10)  | 0000 1010  = 3
+   * f(11)  | 0000 1011  = 3
+   *
+   * f(12)  | 0000 1100  = 3
+   * f(13)  | 0000 1101  = 3
+   * f(14)  | 0000 1110  = 3
+   * f(15)  | 0000 1111  = 3
+   *
+   * f(num >= 1)         = MOST_SIGNIFICANT_BIT_POS(num)
+   */
+
+  return most_significant_bit_pos_ulong((unsigned long) num_nodes);
+}
+
+int lookup_max_height(size_t num_nodes)
+{
+  if (num_nodes == 0)
+    return -1;
+
+  /* http://doctrina.org/maximum-height-of-red-black-tree.html */
+  return most_significant_bit_pos_ulong((unsigned long) (num_nodes + 1)) << 1;
+}
+
+int lookup_height_from(const lookup_t *lookup, const bnode_t *bnode)
+{
+#if ERROR_CHECKING
+  if (!lookup)
+    return -2;
+#endif /* #if ERROR_CHECKING  */
+
+  if (lookup_empty(lookup))
+    return -1;
+
+  if (!bnode)
+    bnode = &lookup->nodes[0];
+
+  if      ( BNODE_IS_LEAF(bnode->left) &&  BNODE_IS_LEAF(bnode->right))
+    return 0;
+  else if (!BNODE_IS_LEAF(bnode->left) &&  BNODE_IS_LEAF(bnode->right))
+    return lookup_height_from(lookup, LOOKUP_INDEX_ORDER(lookup, BNODE_GET_REF(bnode->left ))) + 1;
+  else if ( BNODE_IS_LEAF(bnode->left) && !BNODE_IS_LEAF(bnode->right))
+    return lookup_height_from(lookup, LOOKUP_INDEX_ORDER(lookup, BNODE_GET_REF(bnode->right))) + 1;
+  else
+    return
+      MAX
+        ( lookup_height_from(lookup, LOOKUP_INDEX_ORDER(lookup, BNODE_GET_REF(bnode->left )))
+        , lookup_height_from(lookup, LOOKUP_INDEX_ORDER(lookup, BNODE_GET_REF(bnode->right)))
+        ) + 1;
+}
+
+int lookup_height(const lookup_t *lookup)
+{
+  return lookup_height_from(lookup, NULL);
 }
 
 /* ---------------------------------------------------------------- */
@@ -974,22 +1171,26 @@ lookup_t *lookup_insert
   }
 }
 
-void *lookup_retrieve
-  ( lookup_t           *lookup
+const void *lookup_retrieve
+  ( const lookup_t     *lookup
   , const void         *val
 
   , callback_compare_t  cmp
+
+  , const bnode_t     **out_node
   )
 {
-  size_t   node;
+  size_t         node;
 
-  void    *dest;
-  bnode_t *cur;
+  const void    *dest;
+  const bnode_t *cur;
 
 #if ERROR_CHECKING
   if (!lookup)
     return NULL;
 #endif /* #if ERROR_CHECKING  */
+
+  WRITE_OUTPUT(out_node, NULL);
 
   if (!val)
     return NULL;
@@ -1002,8 +1203,8 @@ void *lookup_retrieve
   {
     int ordering;
 
-    cur   = LOOKUP_INDEX_ORDER(lookup, node);
-    dest  = LOOKUP_INDEX_VALUE(lookup, BNODE_GET_VALUE(cur->value));
+    cur   = LOOKUP_INDEX_CORDER(lookup, node);
+    dest  = LOOKUP_INDEX_CVALUE(lookup, BNODE_GET_VALUE(cur->value));
 
     ordering = call_callback_compare(cmp, val, dest);
 
@@ -1013,11 +1214,18 @@ void *lookup_retrieve
 #endif /* #if ERROR_CHECKING  */
 
     if      (ordering < 0)
+    {
       node = cur->left;
+    }
     else if (ordering > 0)
+    {
       node = cur->right;
+    }
     else
+    {
+      WRITE_OUTPUT(out_node, node);
       return dest;
+    }
 
     if (BNODE_IS_LEAF(node))
       break;
@@ -1025,10 +1233,99 @@ void *lookup_retrieve
       node = BNODE_GET_REF(node);
   }
 
+  WRITE_OUTPUT(out_node, NULL);
   return NULL;
 }
 
-lookup_t *lookup_remove
+void *lookup_min(lookup_t *lookup)
+{
+  const bnode_t *cur;
+
+#if ERROR_CHECKING
+  if (!lookup)
+    return NULL;
+#endif /* #if ERROR_CHECKING  */
+
+  if (lookup_empty(lookup))
+    return NULL;
+
+  for
+    ( cur = &lookup->nodes[0]
+    ; !BNODE_IS_LEAF(cur->left)
+    ; cur = LOOKUP_INDEX_ORDER(lookup, BNODE_GET_REF(cur->left))
+    )
+    ;
+
+  return LOOKUP_INDEX_VALUE(BNODE_GET_VALUE(cur->value));
+}
+
+void *lookup_max(lookup_t *lookup)
+{
+  const bnode_t *cur;
+
+#if ERROR_CHECKING
+  if (!lookup)
+    return NULL;
+#endif /* #if ERROR_CHECKING  */
+
+  if (lookup_empty(lookup))
+    return NULL;
+
+  for
+    ( cur = &lookup->nodes[0]
+    ; !BNODE_IS_LEAF(cur->right)
+    ; cur = LOOKUP_INDEX_ORDER(lookup, BNODE_GET_REF(cur->right))
+    )
+    ;
+
+  return LOOKUP_INDEX_VALUE(BNODE_GET_VALUE(cur->value));
+}
+
+const void *lookup_cmin(const lookup_t *lookup)
+{
+  const bnode_t *cur;
+
+#if ERROR_CHECKING
+  if (!lookup)
+    return NULL;
+#endif /* #if ERROR_CHECKING  */
+
+  if (lookup_empty(lookup))
+    return NULL;
+
+  for
+    ( cur = &lookup->nodes[0]
+    ; !BNODE_IS_LEAF(cur->left)
+    ; cur = LOOKUP_INDEX_ORDER(lookup, BNODE_GET_REF(cur->left))
+    )
+    ;
+
+  return LOOKUP_INDEX_CVALUE(BNODE_GET_VALUE(cur->value));
+}
+
+const void *lookup_cmax(const lookup_t *lookup)
+{
+  const bnode_t *cur;
+
+#if ERROR_CHECKING
+  if (!lookup)
+    return NULL;
+#endif /* #if ERROR_CHECKING  */
+
+  if (lookup_empty(lookup))
+    return NULL;
+
+  for
+    ( cur = &lookup->nodes[0]
+    ; !BNODE_IS_LEAF(cur->right)
+    ; cur = LOOKUP_INDEX_ORDER(lookup, BNODE_GET_REF(cur->right))
+    )
+    ;
+
+  return LOOKUP_INDEX_CVALUE(BNODE_GET_VALUE(cur->value));
+}
+
+lookup_t *lookup_delete
   ( lookup_t           *lookup
   , const void         *val
 

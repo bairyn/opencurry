@@ -321,6 +321,20 @@ const size_t digits_base62_size_def = ARRAY_SIZE   (digits_base62_def);
 const size_t digits_base62_num_def  = ARRAY_NUM    (digits_base62_def);
 const size_t digits_base62_len_def  = ARRAY_LEN_ALL(digits_base62_def);
 
+size_t udigits_decimal_buf_size(void)
+  { return udigits_decimal_buf_size_def; }
+size_t digits_decimal_buf_size(void)
+  { return digits_decimal_buf_size_def; }
+const size_t udigits_decimal_buf_size_def = UDIGITS_DECIMAL_BUF_SIZE;
+const size_t digits_decimal_buf_size_def  = DIGITS_DECIMAL_BUF_SIZE;
+
+size_t udigits_buf_size(void)
+  { return udigits_buf_size_def; }
+size_t digits_buf_size(void)
+  { return digits_buf_size_def; }
+const size_t udigits_buf_size_def = UDIGITS_BUF_SIZE;
+const size_t digits_buf_size_def  = DIGITS_BUF_SIZE;
+
 size_t uitoa(char *dest, size_t n, unsigned long num, int base)
 {
   size_t i;

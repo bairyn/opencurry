@@ -1,1 +1,2 @@
 TODO: #endif /* ifndef ... */ => #endif /* #ifndef ... */
+TODO: #ifdef ERROR_CHECKING => #if ERROR_CHECKING

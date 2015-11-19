@@ -51,6 +51,28 @@ unit_test_result_t test_type_base_lookup_run(unit_test_context_t *context);
 
 /* ---------------------------------------------------------------- */
 
+#define CHECKED_LOOKUP_NUM_USED_VALUES(lookup) \
+  checked_lookup_num_used_values(context, &result, lookup)
+
+#define CHECKED_LOOKUP_NUM_USED_NODES(lookup) \
+  checked_lookup_num_used_nodes(context, &result, lookup)
+
+#define CHECKED_LOOKUP_INT_LEN(lookup) \
+  checked_lookup_int_len(context, &result, lookup)
+
+size_t checked_lookup_num_used_values(unit_test_context_t *context, unit_test_result_t *out_result, const lookup_t *lookup);
+size_t checked_lookup_num_used_nodes (unit_test_context_t *context, unit_test_result_t *out_result, const lookup_t *lookup);
+
+unit_test_result_t assert_lookup_int_ordered_from          (ASSERT_PARAMS, const lookup_t *lookup, const bnode_t *bnode);
+unit_test_result_t assert_lookup_int_ordered               (ASSERT_PARAMS, const lookup_t *lookup);
+
+unit_test_result_t assert_lookup_sufficiently_balanced_from(ASSERT_PARAMS, const lookup_t *lookup, const bnode_t *bnode, int *out_height, size_t *out_num);
+unit_test_result_t assert_lookup_sufficiently_balanced     (ASSERT_PARAMS, const lookup_t *lookup, int *out_height, size_t *out_num);
+
+size_t checked_lookup_int_len(unit_test_context_t *context, unit_test_result_t *out_result, const lookup_t *lookup);
+
+/* ---------------------------------------------------------------- */
+
 extern unit_test_t lookup_memory_management_test;
 unit_test_result_t lookup_memory_management_test_run(unit_test_context_t *context);
 
