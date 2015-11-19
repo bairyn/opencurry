@@ -641,8 +641,74 @@ lookup_t *lookup_expand
 }
 
 /* If we're either at max capacity or recycling, then double the capacity. */
+/*                                                                         */
+/* auto_defragment:                                                        */
+/*   If recycling, first defragment and only continue if we're using more  */
+/*   than half the capacity.                                               */
 lookup_t *lookup_auto_expand
   ( lookup_t *lookup
+  , int       auto_defragment
+
+  , void *(*calloc)(void *context, size_t nmemb, size_t size)
+  , void   *calloc_context
+
+  , void *(*realloc)(void *context, void *area, size_t size)
+  , void   *realloc_context
+
+  , int *out_expanded
+  , int *out_defragmented
+  )
+{
+#if ERROR_CHECKING
+  if (!lookup)
+    return NULL;
+#endif /* #if ERROR_CHECKING  */
+
+  if (!(LOOKUP_MAX_CAPACITY(lookup)) && !(LOOKUP_IS_RECYCLING(lookup)))
+  {
+    WRITE_OUTPUT(out_expanded,     0);
+    WRITE_OUTPUT(out_defragmented, 0);
+
+    return lookup;
+  }
+
+  if (auto_defragment && LOOKUP_IS_RECYCLING(lookup))
+  {
+    WRITE_OUTPUT(out_defragmented, 1);
+
+    lookup_defragment(lookup);
+
+    /* Are we not using more than half the capacity? */
+    if ((LOOKUP_LEN(lookup)) <= ((LOOKUP_CAPACITY(lookup)) >> 1))
+    {
+      WRITE_OUTPUT(out_expanded, 0);
+      return lookup;
+    }
+  }
+  else
+  {
+    WRITE_OUTPUT(out_defragmented, 0);
+  }
+
+  WRITE_OUTPUT(out_expanded, 1);
+
+  return
+    lookup_expand
+      ( lookup
+      , LOOKUP_CAPACITY(lookup) << 1
+
+      , calloc
+      , calloc_context
+
+      , realloc
+      , realloc_context
+      );
+}
+
+/* "lookup_auto_expand" except without the output parameters. */
+lookup_t *lookup_auto_expand_simple
+  ( lookup_t *lookup
+  , int       auto_defragment
 
   , void *(*calloc)(void *context, size_t nmemb, size_t size)
   , void   *calloc_context
@@ -659,6 +725,15 @@ lookup_t *lookup_auto_expand
   if (!(LOOKUP_MAX_CAPACITY(lookup)) && !(LOOKUP_IS_RECYCLING(lookup)))
     return lookup;
 
+  if (auto_defragment && LOOKUP_IS_RECYCLING(lookup))
+  {
+    lookup_defragment(lookup);
+
+    /* Are we not using more than half the capacity? */
+    if ((LOOKUP_LEN(lookup)) <= ((LOOKUP_CAPACITY(lookup)) >> 1))
+      return lookup;
+  }
+
   return
     lookup_expand
       ( lookup
@@ -672,10 +747,21 @@ lookup_t *lookup_auto_expand
       );
 }
 
-#ifdef TODO /* TODO */
 /* Move elements to remove gaps of free element slots. */
-void lookup_defragment(lookup_t *lookup);
+void lookup_defragment(lookup_t *lookup)
+{
+#if ERROR_CHECKING
+  if (!lookup)
+    return;
+#endif /* #if ERROR_CHECKING  */
 
+  /* TODO */
+#ifdef TODO
+#error "TODO: implement lookup_defragment."
+#endif /* #ifdef TODO */
+}
+
+#ifdef TODO /* TODO */
 /* Reallocate less memory for fewer element slots.      */
 /*                                                      */
 /* "capacity" is bounded by the last used element slot. */

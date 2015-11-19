@@ -253,6 +253,21 @@ lookup_t *lookup_expand
 /* If we're either at max capacity or recycling, then double the capacity. */
 lookup_t *lookup_auto_expand
   ( lookup_t *lookup
+  , int       auto_defragment
+
+  , void *(*calloc)(void *context, size_t nmemb, size_t size)
+  , void   *calloc_context
+
+  , void *(*realloc)(void *context, void *area, size_t size)
+  , void   *realloc_context
+
+  , int *out_expanded
+  , int *out_defragmented
+  );
+
+lookup_t *lookup_auto_expand_simple
+  ( lookup_t *lookup
+  , int       auto_defragment
 
   , void *(*calloc)(void *context, size_t nmemb, size_t size)
   , void   *calloc_context
@@ -261,8 +276,8 @@ lookup_t *lookup_auto_expand
   , void   *realloc_context
   );
 
-#ifdef TODO /* TODO */
 void      lookup_defragment(lookup_t *lookup);
+#ifdef TODO /* TODO */
 lookup_t *lookup_shrink
   ( lookup_t *lookup
   , size_t    capacity
