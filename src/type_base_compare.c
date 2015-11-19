@@ -861,7 +861,6 @@ int compare_strnr   (void *context, const          char        **check, const   
 
 int compare_strzr   (void *context, const          char        **check, const          char        **baseline)
 {
-
 #if ERROR_CHECKING
   if (!check || !baseline)
     return ordering_err_2();
@@ -877,6 +876,21 @@ int compare_strzr   (void *context, const          char        **check, const   
 int compare_mempos  (void *context, const          void         *check, const          void         *baseline)
 {
   return CMP_SUCCESS(check, baseline);
+}
+
+
+/* For comparers that don't require context, invert the comparison. */
+int compare_invert_stateless(void *context, const  void         *check, const          void         *baseline)
+{
+  comparer_t comparer;
+
+#if ERROR_CHECKING
+  if (!context)
+    return ordering_err_2();
+#endif
+
+  comparer = (comparer_t) objp_to_funp(context);
+  return ORDERING_INVERT(call_comparer(comparer, NULL, check, baseline));
 }
 
 /* ---------------------------------------------------------------- */
@@ -1024,6 +1038,12 @@ void *compare_mempos_context (void)
   return NULL;
 }
 
+
+void *compare_invert_stateless_context(comparer_t comparer)
+{
+  return funp_to_objp(comparer);
+}
+
 /* ---------------------------------------------------------------- */
 
 const comparer_t comparer_with_type     = (comparer_t) &compare_with_type;
@@ -1061,6 +1081,8 @@ const comparer_t comparer_strnr         = (comparer_t) &compare_strnr;
 const comparer_t comparer_strzr         = (comparer_t) &compare_strzr;
 
 const comparer_t comparer_mempos        = (comparer_t) &compare_mempos;
+
+const comparer_t comparer_invert_stateless = (comparer_t) &compare_invert_stateless;
 
 /* ---------------------------------------------------------------- */
 
@@ -1312,5 +1334,14 @@ callback_compare_t callback_compare_mempos (void)
     callback_compare
       ( comparer_mempos
       , compare_mempos_context()
+      );
+}
+
+callback_compare_t callback_compare_invert_stateless(comparer_t comparer)
+{
+  return
+    callback_compare
+      ( comparer_invert_stateless
+      , compare_invert_stateless_context(comparer)
       );
 }

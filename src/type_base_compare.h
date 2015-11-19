@@ -265,6 +265,8 @@ int compare_strzr   (void *context, const          char        **check, const   
 /* Directly compare the pointers, the locations of the values in memory. */
 int compare_mempos  (void *context, const          void         *check, const          void         *baseline);
 
+int compare_invert_stateless(void *context, const  void         *check, const          void         *baseline);
+
 /* ---------------------------------------------------------------- */
 
 void *compare_with_type_context    (const type_t *type);
@@ -302,6 +304,8 @@ void *compare_strnr_context  (size_t n);
 void *compare_strzr_context  (void);
 
 void *compare_mempos_context (void);
+
+void *compare_invert_stateless_context(void);
 
 /* ---------------------------------------------------------------- */
 
@@ -341,6 +345,8 @@ extern const comparer_t comparer_strzr;
 
 extern const comparer_t comparer_mempos;
 
+extern const comparer_t comparer_invert_stateless;
+
 /* ---------------------------------------------------------------- */
 
 callback_compare_t callback_compare_with_type    (const type_t *type);
@@ -378,6 +384,8 @@ callback_compare_t callback_compare_strnr  (size_t n);
 callback_compare_t callback_compare_strzr  (void);
 
 callback_compare_t callback_compare_mempos (void);
+
+callback_compare_t callback_compare_invert_stateless(void);
 
 /* ---------------------------------------------------------------- */
 /* Post-dependencies.                                               */
