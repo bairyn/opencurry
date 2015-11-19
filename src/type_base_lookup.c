@@ -248,25 +248,25 @@ const lookup_t lookup_defaults =
 /* bnode_t methods.                                                 */
 /* ---------------------------------------------------------------- */
 
-void bnode_init(bnode_t *bnode)
+void bnode_init(bnode_t *node)
 {
 #if ERROR_CHECKING
-  if (!bnode)
+  if (!node)
     return;
 #endif /* #if ERROR_CHECKING  */
 
-  bnode->value = 0;
+  node->value = 0;
 
-  bnode->left  = 0;
-  bnode->right = 0;
+  node->left  = 0;
+  node->right = 0;
 }
 
-void bnode_init_array(bnode_t *bnode, size_t num)
+void bnode_init_array(bnode_t *node, size_t num)
 {
-  if (!bnode)
+  if (!node)
     return;
 
-  memset(bnode, 0x00, num * sizeof(bnode_t));
+  memset(node, 0x00, num * sizeof(bnode_t));
 }
 
 /* ---------------------------------------------------------------- */
@@ -302,34 +302,34 @@ size_t bnode_ref(size_t index)
   return BNODE_REF          (index);
 }
 
-size_t bnode_set_order_in_use_bit(bnode_t *bnode, size_t bit)
+size_t bnode_set_order_in_use_bit(bnode_t *node, size_t bit)
 {
 #if ERROR_CHECKING
-  if (!bnode)
+  if (!node)
     return 0;
 #endif /* #if ERROR_CHECKING  */
 
-  return (BNODE_SET_ORDER_IN_USE_BIT(bnode, bit));
+  return (BNODE_SET_ORDER_IN_USE_BIT(node, bit));
 }
 
-size_t bnode_set_value_in_use_bit(bnode_t *bnode, size_t bit)
+size_t bnode_set_value_in_use_bit(bnode_t *node, size_t bit)
 {
 #if ERROR_CHECKING
-  if (!bnode)
+  if (!node)
     return 0;
 #endif /* #if ERROR_CHECKING  */
 
-  return (BNODE_SET_VALUE_IN_USE_BIT(bnode, bit));
+  return (BNODE_SET_VALUE_IN_USE_BIT(node, bit));
 }
 
-size_t *bnode_get_child(bnode_t *bnode, int ordering)
+size_t *bnode_get_child(bnode_t *node, int ordering)
 {
 #if ERROR_CHECKING
-  if (!bnode)
+  if (!node)
     return NULL;
 #endif /* #if ERROR_CHECKING  */
 
-  return BNODE_GET_CHILD(bnode, ordering);
+  return BNODE_GET_CHILD(node, ordering);
 }
 
 size_t bnode_link_set_leaf(size_t *link)
@@ -388,24 +388,24 @@ size_t bnode_get_ref(size_t ref)
   return BNODE_GET_REF(ref);
 }
 
-size_t bnode_get_order_in_use_bit(const bnode_t *bnode)
+size_t bnode_get_order_in_use_bit(const bnode_t *node)
 {
 #if ERROR_CHECKING
-  if (!bnode)
+  if (!node)
     return 0;
 #endif /* #if ERROR_CHECKING  */
 
-  return BNODE_GET_ORDER_IN_USE_BIT(bnode);
+  return BNODE_GET_ORDER_IN_USE_BIT(node);
 }
 
-size_t bnode_get_value_in_use_bit(const bnode_t *bnode)
+size_t bnode_get_value_in_use_bit(const bnode_t *node)
 {
 #if ERROR_CHECKING
-  if (!bnode)
+  if (!node)
     return 0;
 #endif /* #if ERROR_CHECKING  */
 
-  return BNODE_GET_VALUE_IN_USE_BIT(bnode);
+  return BNODE_GET_VALUE_IN_USE_BIT(node);
 }
 
 /* ---------------------------------------------------------------- */
@@ -1067,7 +1067,7 @@ int lookup_max_height(size_t num_nodes)
   return most_significant_bit_pos_ulong((unsigned long) (num_nodes + 1)) << 1;
 }
 
-int lookup_height_from(const lookup_t *lookup, const bnode_t *bnode)
+int lookup_height_from(const lookup_t *lookup, const bnode_t *node)
 {
 #if ERROR_CHECKING
   if (!lookup)
@@ -1077,20 +1077,20 @@ int lookup_height_from(const lookup_t *lookup, const bnode_t *bnode)
   if (lookup_empty(lookup))
     return -1;
 
-  if (!bnode)
-    bnode = &lookup->nodes[0];
+  if (!node)
+    node = &lookup->nodes[0];
 
-  if      ( BNODE_IS_LEAF(bnode->left) &&  BNODE_IS_LEAF(bnode->right))
+  if      ( BNODE_IS_LEAF(node->left) &&  BNODE_IS_LEAF(node->right))
     return 0;
-  else if (!BNODE_IS_LEAF(bnode->left) &&  BNODE_IS_LEAF(bnode->right))
-    return lookup_height_from(lookup, LOOKUP_INDEX_ORDER(lookup, BNODE_GET_REF(bnode->left ))) + 1;
-  else if ( BNODE_IS_LEAF(bnode->left) && !BNODE_IS_LEAF(bnode->right))
-    return lookup_height_from(lookup, LOOKUP_INDEX_ORDER(lookup, BNODE_GET_REF(bnode->right))) + 1;
+  else if (!BNODE_IS_LEAF(node->left) &&  BNODE_IS_LEAF(node->right))
+    return lookup_height_from(lookup, LOOKUP_INDEX_ORDER(lookup, BNODE_GET_REF(node->left ))) + 1;
+  else if ( BNODE_IS_LEAF(node->left) && !BNODE_IS_LEAF(node->right))
+    return lookup_height_from(lookup, LOOKUP_INDEX_ORDER(lookup, BNODE_GET_REF(node->right))) + 1;
   else
     return
       MAX
-        ( lookup_height_from(lookup, LOOKUP_INDEX_ORDER(lookup, BNODE_GET_REF(bnode->left )))
-        , lookup_height_from(lookup, LOOKUP_INDEX_ORDER(lookup, BNODE_GET_REF(bnode->right)))
+        ( lookup_height_from(lookup, LOOKUP_INDEX_ORDER(lookup, BNODE_GET_REF(node->left )))
+        , lookup_height_from(lookup, LOOKUP_INDEX_ORDER(lookup, BNODE_GET_REF(node->right)))
         ) + 1;
 }
 
@@ -1156,7 +1156,7 @@ lookup_t *lookup_insert
     value = 0;
     node  = 0;
     dest = LOOKUP_INDEX_VALUE(lookup, value);
-    cur  = LOOKUP_INDEX_ORDER(lookup, value);
+    cur  = LOOKUP_INDEX_ORDER(lookup, node);
 
     /* Write the value. */
     memmove(dest, val, LOOKUP_VALUE_SIZE(lookup));
@@ -1545,4 +1545,260 @@ lookup_t *lookup_delete
   --lookup->len;
 
   return lookup;
+}
+
+/* ---------------------------------------------------------------- */
+
+static void *lookup_iterate_node_from_step
+  ( const lookup_t *lookup
+  , const bnode_t  *node
+  , int             reverse_direction
+
+  , void *(*with_value)(void *context, void *last_accumulation, const void *value, const bnode_t *node, int *out_iteration_break)
+  , void *context
+
+  , void *initial_accumulation
+
+  , int *iteration_break
+  )
+{
+  void *value;
+
+  int   iteration_break_working;
+
+
+  int i;
+  size_t children[2];
+
+  void *accumulation = initial_accumulation;
+
+#ifdef ERROR_CHECKING
+  if (!lookup)
+    return  NULL;
+  if (!with_value)
+    return  NULL;
+#endif /* #if ERROR_CHECKING  */
+
+  if (lookup_empty(lookup))
+    return initial_accumulation;
+
+  if (!node)
+    node = &lookup->nodes[0];
+
+  value = LOOKUP_INDEX_VALUE(lookup, BNODE_GET_VALUE(node->value));
+
+  if (!iteration_break)
+  {
+    iteration_break = &iteration_break_working;
+    *iteration_break = 0;
+  }
+
+  if (*iteration_break)
+    return initial_accumulation;
+
+  reverse_direction = IS_TRUE(reverse_direction);
+
+  children[ reverse_direction] = node->left;
+  children[!reverse_direction] = node->right;
+
+  for (i = 0; i < ARRAY_NUM(children) && !*iteration_break; ++i)
+  {
+    size_t child = children[i];
+
+    if (!BNODE_IS_LEAF(child))
+      accumulation =
+        lookup_iterate_node_from_step
+          ( lookup
+          , LOOKUP_INDEX_ORDER(lookup, BNODE_GET_REF(child))
+          , reverse_direction
+
+          , with_value
+          , context
+
+          , accumulation
+
+          , iteration_break
+          );
+
+    if (i == 0 && !*iteration_break)
+      accumulation = with_value(context, accumulation, value, iteration_break);
+  }
+
+  return accumulation;
+}
+
+void *lookup_iterate_node_from
+  ( const lookup_t *lookup
+  , const bnode_t  *node
+  , int             reverse_direction
+
+  , void *(*with_value)(void *context, void *last_accumulation, const void *value, const bnode_t *node, int *out_iteration_break)
+  , void *context
+
+  , void *initial_accumulation
+  )
+{
+  return
+    lookup_iterate_node_from_step
+      ( lookup
+      , node
+      , reverse_direction
+
+      , with_value
+      , context
+
+      , initial_accumulation
+
+      , NULL
+      );
+}
+
+void *lookup_iterate_node
+  ( const lookup_t *lookup
+  , int             reverse_direction
+
+  , void *(*with_value)(void *context, void *last_accumulation, const void *value, const bnode_t *node, int *out_iteration_break)
+  , void *context
+
+  , void *initial_accumulation
+  )
+{
+  return
+    lookup_iterate_node_from
+      ( lookup
+      , NULL
+      , reverse_direction
+
+      , with_value
+      , context
+
+      , initial_accumulation
+      );
+}
+
+static void *lookup_iterate_from_step
+  ( const lookup_t *lookup
+  , const bnode_t  *node
+  , int             reverse_direction
+
+  , void *(*with_value)(void *context, void *last_accumulation, const void *value, int *out_iteration_break)
+  , void *context
+
+  , void *initial_accumulation
+
+  , int *iteration_break
+  )
+{
+  void *value;
+
+  int   iteration_break_working;
+
+
+  int i;
+  size_t children[2];
+
+  void *accumulation = initial_accumulation;
+
+#ifdef ERROR_CHECKING
+  if (!lookup)
+    return  NULL;
+  if (!with_value)
+    return  NULL;
+#endif /* #if ERROR_CHECKING  */
+
+  if (lookup_empty(lookup))
+    return initial_accumulation;
+
+  if (!node)
+    node = &lookup->nodes[0];
+
+  value = LOOKUP_INDEX_VALUE(lookup, BNODE_GET_VALUE(node->value));
+
+  if (!iteration_break)
+  {
+    iteration_break = &iteration_break_working;
+    *iteration_break = 0;
+  }
+
+  if (*iteration_break)
+    return initial_accumulation;
+
+  reverse_direction = IS_TRUE(reverse_direction);
+
+  children[ reverse_direction] = node->left;
+  children[!reverse_direction] = node->right;
+
+  for (i = 0; i < ARRAY_NUM(children) && !*iteration_break; ++i)
+  {
+    size_t child = children[i];
+
+    if (!BNODE_IS_LEAF(child))
+      accumulation =
+        lookup_iterate_node_from_step
+          ( lookup
+          , LOOKUP_INDEX_ORDER(lookup, BNODE_GET_REF(child))
+          , reverse_direction
+
+          , with_value
+          , context
+
+          , accumulation
+
+          , iteration_break
+          );
+
+    if (i == 0 && !*iteration_break)
+      accumulation = with_value(context, accumulation, value, iteration_break);
+  }
+
+  return accumulation;
+}
+
+void *lookup_iterate_from
+  ( const lookup_t *lookup
+  , const bnode_t  *node
+  , int             reverse_direction
+
+  , void *(*with_value)(void *context, void *last_accumulation, const void *value, int *out_iteration_break)
+  , void *context
+
+  , void *initial_accumulation
+  )
+{
+  return
+    lookup_iterate_from_step
+      ( lookup
+      , node
+      , reverse_direction
+
+      , with_value
+      , context
+
+      , initial_accumulation
+
+      , NULL
+      );
+}
+
+void *lookup_iterate
+  ( const lookup_t *lookup
+  , int             reverse_direction
+
+  , void *(*with_value)(void *context, void *last_accumulation, const void *value, int *out_iteration_break)
+  , void *context
+
+  , void *initial_accumulation
+  )
+{
+  return
+    lookup_iterate_from
+      ( lookup
+      , NULL
+      , reverse_direction
+
+      , with_value
+      , context
+
+      , initial_accumulation
+      );
 }

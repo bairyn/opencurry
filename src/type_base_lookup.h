@@ -133,8 +133,8 @@ extern const lookup_t lookup_defaults;
 /* bnode_t methods.                                                 */
 /* ---------------------------------------------------------------- */
 
-void bnode_init(bnode_t *bnode);
-void bnode_init_array(bnode_t *bnode, size_t num);
+void bnode_init(bnode_t *node);
+void bnode_init_array(bnode_t *node, size_t num);
 
 /* ---------------------------------------------------------------- */
 
@@ -155,14 +155,14 @@ size_t bnode_colored_value(size_t index, size_t color);
 size_t bnode_leaf(void);
 size_t bnode_ref (size_t index);
 
-#define BNODE_SET_ORDER_IN_USE_BIT(bnode, bit) (bnode)->left  = SET_BIT(0, bit, (bnode)->left)
-#define BNODE_SET_VALUE_IN_USE_BIT(bnode, bit) (bnode)->right = SET_BIT(0, bit, (bnode)->right)
-size_t bnode_set_order_in_use_bit(bnode_t *bnode, size_t bit);
-size_t bnode_set_value_in_use_bit(bnode_t *bnode, size_t bit);
+#define BNODE_SET_ORDER_IN_USE_BIT(node, bit) (node)->left  = SET_BIT(0, bit, (node)->left)
+#define BNODE_SET_VALUE_IN_USE_BIT(node, bit) (node)->right = SET_BIT(0, bit, (node)->right)
+size_t bnode_set_order_in_use_bit(bnode_t *node, size_t bit);
+size_t bnode_set_value_in_use_bit(bnode_t *node, size_t bit);
 
-#define BNODE_GET_CHILD(bnode, ordering) \
-  (SIGN_CASE(ordering, &(bnode)->left, &(bnode)->left, &(bnode)->right))
-size_t *bnode_get_child(bnode_t *bnode, int ordering);
+#define BNODE_GET_CHILD(node, ordering) \
+  (SIGN_CASE(ordering, &(node)->left, &(node)->left, &(node)->right))
+size_t *bnode_get_child(bnode_t *node, int ordering);
 
 #define BNODE_LINK_SET_LEAF(link) \
   *(link) = ( ((*(link)) & 1) | ( BNODE_LEAF(       ) ) )
@@ -171,12 +171,12 @@ size_t *bnode_get_child(bnode_t *bnode, int ordering);
 size_t bnode_link_set_leaf(size_t *link);
 size_t bnode_link_set_ref (size_t *link, size_t index);
 
-#define BNODE_SET_LEAF(bnode, ordering) \
-  BNODE_LINK_SET_LEAF( (BNODE_GET_CHILD((bnode), (ordering))) )
-#define BNODE_SET_REF( bnode, ordering, index) \
-  BNODE_LINK_SET_REF ( (BNODE_GET_CHILD((bnode), (ordering))), index )
-size_t bnode_set_leaf(bnode_t *bnode, int ordering);
-size_t bnode_set_ref (bnode_t *bnode, int ordering, size_t index);
+#define BNODE_SET_LEAF(node, ordering) \
+  BNODE_LINK_SET_LEAF( (BNODE_GET_CHILD((node), (ordering))) )
+#define BNODE_SET_REF( node, ordering, index) \
+  BNODE_LINK_SET_REF ( (BNODE_GET_CHILD((node), (ordering))), index )
+size_t bnode_set_leaf(bnode_t *node, int ordering);
+size_t bnode_set_ref (bnode_t *node, int ordering, size_t index);
 
 /* ---------------------------------------------------------------- */
 
@@ -197,10 +197,10 @@ size_t bnode_get_value(size_t value);
 int    bnode_is_leaf(size_t ref);
 size_t bnode_get_ref(size_t ref);
 
-#define BNODE_GET_ORDER_IN_USE_BIT(bnode) ((bnode)->left  & 1)
-#define BNODE_GET_VALUE_IN_USE_BIT(bnode) ((bnode)->right & 1)
-size_t bnode_get_order_in_use_bit(const bnode_t *bnode);
-size_t bnode_get_value_in_use_bit(const bnode_t *bnode);
+#define BNODE_GET_ORDER_IN_USE_BIT(node) ((node)->left  & 1)
+#define BNODE_GET_VALUE_IN_USE_BIT(node) ((node)->right & 1)
+size_t bnode_get_order_in_use_bit(const bnode_t *node);
+size_t bnode_get_value_in_use_bit(const bnode_t *node);
 
 /* ---------------------------------------------------------------- */
 /* lookup_t methods.                                                */
@@ -306,6 +306,50 @@ lookup_t *lookup_resize
 
 /* ---------------------------------------------------------------- */
 
+void *lookup_iterate_node_from
+  ( const lookup_t *lookup
+  , const bnode_t  *node
+  , int             reverse_direction
+
+  , void *(*with_value)(void *context, void *last_accumulation, const void *value, const bnode_t *node, int *out_iteration_break)
+  , void *context
+
+  , void *initial_accumulation
+  );
+
+void *lookup_iterate_node
+  ( const lookup_t *lookup
+  , int             reverse_direction
+
+  , void *(*with_value)(void *context, void *last_accumulation, const void *value, const bnode_t *node, int *out_iteration_break)
+  , void *context
+
+  , void *initial_accumulation
+  );
+
+void *lookup_iterate_from
+  ( const lookup_t *lookup
+  , const bnode_t  *node
+  , int             reverse_direction
+
+  , void *(*with_value)(void *context, void *last_accumulation, const void *value, int *out_iteration_break)
+  , void *context
+
+  , void *initial_accumulation
+  );
+
+void *lookup_iterate
+  ( const lookup_t *lookup
+  , int             reverse_direction
+
+  , void *(*with_value)(void *context, void *last_accumulation, const void *value, int *out_iteration_break)
+  , void *context
+
+  , void *initial_accumulation
+  );
+
+/* ---------------------------------------------------------------- */
+
 /* Check whether the lookup container has reached the end of its capacity and
  * is reusing previously used elements.
  *
@@ -357,7 +401,7 @@ int    balanced_btree_max_height(size_t num_nodes);
 
 int    lookup_max_height(size_t num_nodes);
 
-int lookup_height_from(const lookup_t *lookup, const bnode_t *bnode);
+int lookup_height_from(const lookup_t *lookup, const bnode_t *node);
 int lookup_height(const lookup_t *lookup);
 
 /* ---------------------------------------------------------------- */
