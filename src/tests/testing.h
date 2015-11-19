@@ -321,64 +321,75 @@ size_t assert_not_memeq_msg     (unit_test_context_t *context, char *msg_out, si
 /* ---------------------------------------------------------------- */
 /* Assertions with default error messages; non-zero on failure. */
 
+#define ASSERT_PARAMS unit_test_context_t *context, const char *err_msg, const char *tag
+#define ASSERT_PARAMSC 3
+
+#define ASSERT_ARGS context, err_msg, tag
+#define ASSERT_ARGC ASSERT_PARAMSC
+
+#define ASSERT_ARGS_TAGGED(  tag)                   ASSERT_ARGS_CONTEXT (context, tag)
+#define ASSERT_ARGS_CONTEXT( context, tag)          ASSERT_ARGS_COMPLETE(context, NULL, tag)
+#define ASSERT_ARGS_COMPLETE(context, err_msg, tag) context, err_msg, tag
+
 unit_test_result_t assert_success             (unit_test_context_t *context);
-unit_test_result_t assert_failure             (unit_test_context_t *context, const char *err_msg, const char *tag);
-unit_test_result_t assert_failure_continue    (unit_test_context_t *context, const char *err_msg, const char *tag);
+unit_test_result_t assert_successful          (ASSERT_PARAMS);
+unit_test_result_t assert_failure             (ASSERT_PARAMS);
+unit_test_result_t assert_failure_continue    (ASSERT_PARAMS);
 
-unit_test_result_t assert_true                (unit_test_context_t *context, const char *err_msg, const char *tag, int           condition);
-unit_test_result_t assert_true_continue       (unit_test_context_t *context, const char *err_msg, const char *tag, int           condition);
+unit_test_result_t assert_true                (ASSERT_PARAMS, int           condition);
+unit_test_result_t assert_true_continue       (ASSERT_PARAMS, int           condition);
 
-unit_test_result_t assert_inteq               (unit_test_context_t *context, const char *err_msg, const char *tag, int           check,     int            model);
-unit_test_result_t assert_inteq_continue      (unit_test_context_t *context, const char *err_msg, const char *tag, int           check,     int            model);
-unit_test_result_t assert_uinteq              (unit_test_context_t *context, const char *err_msg, const char *tag, unsigned int  check,     unsigned int   model);
-unit_test_result_t assert_uinteq_continue     (unit_test_context_t *context, const char *err_msg, const char *tag, unsigned int  check,     unsigned int   model);
-unit_test_result_t assert_ulongeq             (unit_test_context_t *context, const char *err_msg, const char *tag, unsigned long check,     unsigned long  model);
-unit_test_result_t assert_ulongeq_continue    (unit_test_context_t *context, const char *err_msg, const char *tag, unsigned long check,     unsigned long  model);
-unit_test_result_t assert_sizeeq              (unit_test_context_t *context, const char *err_msg, const char *tag, size_t        check,     size_t         model);
-unit_test_result_t assert_sizeeq_continue     (unit_test_context_t *context, const char *err_msg, const char *tag, size_t        check,     size_t         model);
+unit_test_result_t assert_inteq               (ASSERT_PARAMS, int           check,     int            model);
+unit_test_result_t assert_inteq_continue      (ASSERT_PARAMS, int           check,     int            model);
+unit_test_result_t assert_uinteq              (ASSERT_PARAMS, unsigned int  check,     unsigned int   model);
+unit_test_result_t assert_uinteq_continue     (ASSERT_PARAMS, unsigned int  check,     unsigned int   model);
+unit_test_result_t assert_ulongeq             (ASSERT_PARAMS, unsigned long check,     unsigned long  model);
+unit_test_result_t assert_ulongeq_continue    (ASSERT_PARAMS, unsigned long check,     unsigned long  model);
+unit_test_result_t assert_sizeeq              (ASSERT_PARAMS, size_t        check,     size_t         model);
+unit_test_result_t assert_sizeeq_continue     (ASSERT_PARAMS, size_t        check,     size_t         model);
 
-unit_test_result_t assert_objpeq              (unit_test_context_t *context, const char *err_msg, const char *tag, const void   *check,     const void    *model);
-unit_test_result_t assert_objpeq_continue     (unit_test_context_t *context, const char *err_msg, const char *tag, const void   *check,     const void    *model);
-unit_test_result_t assert_funpeq              (unit_test_context_t *context, const char *err_msg, const char *tag, tests_funp_t  check,     tests_funp_t   model);
-unit_test_result_t assert_funpeq_continue     (unit_test_context_t *context, const char *err_msg, const char *tag, tests_funp_t  check,     tests_funp_t   model);
+unit_test_result_t assert_objpeq              (ASSERT_PARAMS, const void   *check,     const void    *model);
+unit_test_result_t assert_objpeq_continue     (ASSERT_PARAMS, const void   *check,     const void    *model);
+unit_test_result_t assert_funpeq              (ASSERT_PARAMS, tests_funp_t  check,     tests_funp_t   model);
+unit_test_result_t assert_funpeq_continue     (ASSERT_PARAMS, tests_funp_t  check,     tests_funp_t   model);
 
-unit_test_result_t assert_streqz              (unit_test_context_t *context, const char *err_msg, const char *tag, const char   *check,     const char    *model);
-unit_test_result_t assert_streqz_continue     (unit_test_context_t *context, const char *err_msg, const char *tag, const char   *check,     const char    *model);
-unit_test_result_t assert_streqn              (unit_test_context_t *context, const char *err_msg, const char *tag, const char   *check,     const char    *model, size_t max_len);
-unit_test_result_t assert_streqn_continue     (unit_test_context_t *context, const char *err_msg, const char *tag, const char   *check,     const char    *model, size_t max_len);
-unit_test_result_t assert_nstreq              (unit_test_context_t *context, const char *err_msg, const char *tag, size_t max_len, const char   *check,     const char    *model);
-unit_test_result_t assert_nstreq_continue     (unit_test_context_t *context, const char *err_msg, const char *tag, size_t max_len, const char   *check,     const char    *model);
+unit_test_result_t assert_streqz              (ASSERT_PARAMS, const char   *check,     const char    *model);
+unit_test_result_t assert_streqz_continue     (ASSERT_PARAMS, const char   *check,     const char    *model);
+unit_test_result_t assert_streqn              (ASSERT_PARAMS, const char   *check,     const char    *model, size_t max_len);
+unit_test_result_t assert_streqn_continue     (ASSERT_PARAMS, const char   *check,     const char    *model, size_t max_len);
+unit_test_result_t assert_nstreq              (ASSERT_PARAMS, size_t max_len, const char   *check,     const char    *model);
+unit_test_result_t assert_nstreq_continue     (ASSERT_PARAMS, size_t max_len, const char   *check,     const char    *model);
 
-unit_test_result_t assert_memeq               (unit_test_context_t *context, const char *err_msg, const char *tag, void         *check,     void          *model, size_t n);
-unit_test_result_t assert_memeq_continue      (unit_test_context_t *context, const char *err_msg, const char *tag, void         *check,     void          *model, size_t n);
+unit_test_result_t assert_memeq               (ASSERT_PARAMS, void         *check,     void          *model, size_t n);
+unit_test_result_t assert_memeq_continue      (ASSERT_PARAMS, void         *check,     void          *model, size_t n);
 
 
-unit_test_result_t assert_false               (unit_test_context_t *context, const char *err_msg, const char *tag, int           condition);
-unit_test_result_t assert_false_continue      (unit_test_context_t *context, const char *err_msg, const char *tag, int           condition);
+unit_test_result_t assert_false               (ASSERT_PARAMS, int           condition);
+unit_test_result_t assert_false_continue      (ASSERT_PARAMS, int           condition);
 
-unit_test_result_t assert_not_inteq           (unit_test_context_t *context, const char *err_msg, const char *tag, int           check,     int            model);
-unit_test_result_t assert_not_inteq_continue  (unit_test_context_t *context, const char *err_msg, const char *tag, int           check,     int            model);
-unit_test_result_t assert_not_uinteq          (unit_test_context_t *context, const char *err_msg, const char *tag, unsigned int  check,     unsigned int   model);
-unit_test_result_t assert_not_uinteq_continue (unit_test_context_t *context, const char *err_msg, const char *tag, unsigned int  check,     unsigned int   model);
-unit_test_result_t assert_not_ulongeq         (unit_test_context_t *context, const char *err_msg, const char *tag, unsigned long check,     unsigned long  model);
-unit_test_result_t assert_not_ulongeq_continue(unit_test_context_t *context, const char *err_msg, const char *tag, unsigned long check,     unsigned long  model);
-unit_test_result_t assert_not_sizeeq          (unit_test_context_t *context, const char *err_msg, const char *tag, size_t        check,     size_t         model);
-unit_test_result_t assert_not_sizeeq_continue (unit_test_context_t *context, const char *err_msg, const char *tag, size_t        check,     size_t         model);
+unit_test_result_t assert_not_inteq           (ASSERT_PARAMS, int           check,     int            model);
+unit_test_result_t assert_not_inteq_continue  (ASSERT_PARAMS, int           check,     int            model);
+unit_test_result_t assert_not_uinteq          (ASSERT_PARAMS, unsigned int  check,     unsigned int   model);
+unit_test_result_t assert_not_uinteq_continue (ASSERT_PARAMS, unsigned int  check,     unsigned int   model);
+unit_test_result_t assert_not_ulongeq         (ASSERT_PARAMS, unsigned long check,     unsigned long  model);
+unit_test_result_t assert_not_ulongeq_continue(ASSERT_PARAMS, unsigned long check,     unsigned long  model);
+unit_test_result_t assert_not_sizeeq          (ASSERT_PARAMS, size_t        check,     size_t         model);
+unit_test_result_t assert_not_sizeeq_continue (ASSERT_PARAMS, size_t        check,     size_t         model);
 
-unit_test_result_t assert_not_objpeq          (unit_test_context_t *context, const char *err_msg, const char *tag, const void   *check,     const void    *model);
-unit_test_result_t assert_not_objpeq_continue (unit_test_context_t *context, const char *err_msg, const char *tag, const void   *check,     const void    *model);
-unit_test_result_t assert_not_funpeq          (unit_test_context_t *context, const char *err_msg, const char *tag, tests_funp_t  check,     tests_funp_t   model);
-unit_test_result_t assert_not_funpeq_continue (unit_test_context_t *context, const char *err_msg, const char *tag, tests_funp_t  check,     tests_funp_t   model);
+unit_test_result_t assert_not_objpeq          (ASSERT_PARAMS, const void   *check,     const void    *model);
+unit_test_result_t assert_not_objpeq_continue (ASSERT_PARAMS, const void   *check,     const void    *model);
+unit_test_result_t assert_not_funpeq          (ASSERT_PARAMS, tests_funp_t  check,     tests_funp_t   model);
+unit_test_result_t assert_not_funpeq_continue (ASSERT_PARAMS, tests_funp_t  check,     tests_funp_t   model);
 
-unit_test_result_t assert_not_streqz          (unit_test_context_t *context, const char *err_msg, const char *tag, const char   *check,     const char    *model);
-unit_test_result_t assert_not_streqz_continue (unit_test_context_t *context, const char *err_msg, const char *tag, const char   *check,     const char    *model);
-unit_test_result_t assert_not_streqn          (unit_test_context_t *context, const char *err_msg, const char *tag, const char   *check,     const char    *model, size_t max_len);
-unit_test_result_t assert_not_streqn_continue (unit_test_context_t *context, const char *err_msg, const char *tag, const char   *check,     const char    *model, size_t max_len);
-unit_test_result_t assert_not_nstreq          (unit_test_context_t *context, const char *err_msg, const char *tag, size_t max_len, const char   *check,     const char    *model);
-unit_test_result_t assert_not_nstreq_continue (unit_test_context_t *context, const char *err_msg, const char *tag, size_t max_len, const char   *check,     const char    *model);
+unit_test_result_t assert_not_streqz          (ASSERT_PARAMS, const char   *check,     const char    *model);
+unit_test_result_t assert_not_streqz_continue (ASSERT_PARAMS, const char   *check,     const char    *model);
+unit_test_result_t assert_not_streqn          (ASSERT_PARAMS, const char   *check,     const char    *model, size_t max_len);
+unit_test_result_t assert_not_streqn_continue (ASSERT_PARAMS, const char   *check,     const char    *model, size_t max_len);
+unit_test_result_t assert_not_nstreq          (ASSERT_PARAMS, size_t max_len, const char   *check,     const char    *model);
+unit_test_result_t assert_not_nstreq_continue (ASSERT_PARAMS, size_t max_len, const char   *check,     const char    *model);
 
-unit_test_result_t assert_not_memeq           (unit_test_context_t *context, const char *err_msg, const char *tag, void         *check,     void          *model, size_t n);
-unit_test_result_t assert_not_memeq_continue  (unit_test_context_t *context, const char *err_msg, const char *tag, void         *check,     void          *model, size_t n);
+unit_test_result_t assert_not_memeq           (ASSERT_PARAMS, void         *check,     void          *model, size_t n);
+unit_test_result_t assert_not_memeq_continue  (ASSERT_PARAMS, void         *check,     void          *model, size_t n);
 
 /* ---------------------------------------------------------------- */
 /* Utilities.                                                       */
@@ -432,7 +443,20 @@ unit_test_result_t assert_not_memeq_continue  (unit_test_context_t *context, con
   else                                 \
     do {} while(0)
 
-#define COMPOUND(assertion) BREAKABLE((result |= assertion))
+#define COMPOUND_TRIVIAL(assertion) BREAKABLE((result |= assertion))
+
+/* Allows "result" to be set in the assertion". */
+#define COMPOUND(assertion)              \
+  if (1)                                 \
+  {                                      \
+    unit_test_result_t _COMPOUND_result; \
+                                         \
+    _COMPOUND_result = (assertion);      \
+                                         \
+    COMPOUND_TRIVIAL(_COMPOUND_result);  \
+  }                                      \
+  else                                   \
+    do {} while(0)
 
 /*
  * n-ary COMPOUND-based assertions.
@@ -524,42 +548,76 @@ unit_test_result_t assert_not_memeq_continue  (unit_test_context_t *context, con
 #define LASSERT10(assert_method, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10) \
   TASSERT10(assert_method, LINETAG(), arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10)
 
+
+#define LTASSERT0( assert_method, tag) \
+  TASSERT0 (assert_method, LINETAG() ": " tag)
+
+#define LTASSERT1( assert_method, tag, arg1) \
+  TASSERT1 (assert_method, LINETAG() ": " tag, arg1)
+
+#define LTASSERT2( assert_method, tag, arg1, arg2) \
+  TASSERT2 (assert_method, LINETAG() ": " tag, arg1, arg2)
+
+#define LTASSERT3( assert_method, tag, arg1, arg2, arg3) \
+  TASSERT3 (assert_method, LINETAG() ": " tag, arg1, arg2, arg3)
+
+#define LTASSERT4( assert_method, tag, arg1, arg2, arg3, arg4) \
+  TASSERT4 (assert_method, LINETAG() ": " tag, arg1, arg2, arg3, arg4)
+
+#define LTASSERT5( assert_method, tag, arg1, arg2, arg3, arg4, arg5) \
+  TASSERT5 (assert_method, LINETAG() ": " tag, arg1, arg2, arg3, arg4, arg5)
+
+#define LTASSERT6( assert_method, tag, arg1, arg2, arg3, arg4, arg5, arg6) \
+  TASSERT6 (assert_method, LINETAG() ": " tag, arg1, arg2, arg3, arg4, arg5, arg6)
+
+#define LTASSERT7( assert_method, tag, arg1, arg2, arg3, arg4, arg5, arg6, arg7) \
+  TASSERT7 (assert_method, LINETAG() ": " tag, arg1, arg2, arg3, arg4, arg5, arg6, arg7)
+
+#define LTASSERT8( assert_method, tag, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8) \
+  TASSERT8 (assert_method, LINETAG() ": " tag, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8)
+
+#define LTASSERT9( assert_method, tag, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9) \
+  TASSERT9 (assert_method, LINETAG() ": " tag, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9)
+
+#define LTASSERT10(assert_method, tag, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10) \
+  TASSERT10(assert_method, LINETAG() ": " tag, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10)
+
 /* n-ary assertions where the tag passed is a stringification of the assertion
  * method and select arguments.
  */
 
 #define ASSERT0( assert_method) \
-  TASSERT0 (assert_method, STR(assert_method) STR((...)                                                             ))
+  LTASSERT0 (assert_method, STR(assert_method) STR((...)                                                             ))
 
 #define ASSERT1( assert_method, arg1) \
-  TASSERT1 (assert_method, STR(assert_method) STR((..., arg1)                                                       ), arg1)
+  LTASSERT1 (assert_method, STR(assert_method) STR((..., arg1)                                                       ), arg1)
 
 #define ASSERT2( assert_method, arg1, arg2) \
-  TASSERT2 (assert_method, STR(assert_method) STR((..., arg1, arg2)                                                 ), arg1, arg2)
+  LTASSERT2 (assert_method, STR(assert_method) STR((..., arg1, arg2)                                                 ), arg1, arg2)
 
 #define ASSERT3( assert_method, arg1, arg2, arg3) \
-  TASSERT3 (assert_method, STR(assert_method) STR((..., arg1, arg2, arg3)                                           ), arg1, arg2, arg3)
+  LTASSERT3 (assert_method, STR(assert_method) STR((..., arg1, arg2, arg3)                                           ), arg1, arg2, arg3)
 
 #define ASSERT4( assert_method, arg1, arg2, arg3, arg4) \
-  TASSERT4 (assert_method, STR(assert_method) STR((..., arg1, arg2, arg3, arg4)                                     ), arg1, arg2, arg3, arg4)
+  LTASSERT4 (assert_method, STR(assert_method) STR((..., arg1, arg2, arg3, arg4)                                     ), arg1, arg2, arg3, arg4)
 
 #define ASSERT5( assert_method, arg1, arg2, arg3, arg4, arg5) \
-  TASSERT5 (assert_method, STR(assert_method) STR((..., arg1, arg2, arg3, arg4, arg5)                               ), arg1, arg2, arg3, arg4, arg5)
+  LTASSERT5 (assert_method, STR(assert_method) STR((..., arg1, arg2, arg3, arg4, arg5)                               ), arg1, arg2, arg3, arg4, arg5)
 
 #define ASSERT6( assert_method, arg1, arg2, arg3, arg4, arg5, arg6) \
-  TASSERT6 (assert_method, STR(assert_method) STR((..., arg1, arg2, arg3, arg4, arg5, arg6)                         ), arg1, arg2, arg3, arg4, arg5, arg6)
+  LTASSERT6 (assert_method, STR(assert_method) STR((..., arg1, arg2, arg3, arg4, arg5, arg6)                         ), arg1, arg2, arg3, arg4, arg5, arg6)
 
 #define ASSERT7( assert_method, arg1, arg2, arg3, arg4, arg5, arg6, arg7) \
-  TASSERT7 (assert_method, STR(assert_method) STR((..., arg1, arg2, arg3, arg4, arg5, arg6, arg7)                   ), arg1, arg2, arg3, arg4, arg5, arg6, arg7)
+  LTASSERT7 (assert_method, STR(assert_method) STR((..., arg1, arg2, arg3, arg4, arg5, arg6, arg7)                   ), arg1, arg2, arg3, arg4, arg5, arg6, arg7)
 
 #define ASSERT8( assert_method, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8) \
-  TASSERT8 (assert_method, STR(assert_method) STR((..., arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8)             ), arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8)
+  LTASSERT8 (assert_method, STR(assert_method) STR((..., arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8)             ), arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8)
 
 #define ASSERT9( assert_method, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9) \
-  TASSERT9 (assert_method, STR(assert_method) STR((..., arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9)       ), arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9)
+  LTASSERT9 (assert_method, STR(assert_method) STR((..., arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9)       ), arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9)
 
 #define ASSERT10(assert_method, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10) \
-  TASSERT10(assert_method, STR(assert_method) STR((..., arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10)), arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10)
+  LTASSERT10(assert_method, STR(assert_method) STR((..., arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10)), arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10)
 
 /* n-ary assertions with a tag prefixed to the call.  Effectively combines
  * ASSERT(...) and TASSERT(...).
