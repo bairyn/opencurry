@@ -211,6 +211,19 @@ struct callback_compare_s
   }
 extern const callback_compare_t callback_compare_defaults;
 
+
+const type_t *callback_compare_inverted_type(void);
+extern const type_t callback_compare_type_inverted_def;
+typedef callback_compare_t callback_compare_inverted_t;
+
+#define CALLBACK_COMPARE_INVERTED_DEFAULTS           \
+  { callback_compare_inverted_type                   \
+                                                     \
+  , /* comparer         */ (comparer_t) compare_objp \
+  , /* comparer_context */ NULL                      \
+  }
+extern const callback_compare_inverted_t callback_compare_inverted_defaults;
+
 /* ---------------------------------------------------------------- */
 
 callback_compare_t callback_compare(comparer_t comparer, void *comparer_context);
@@ -386,6 +399,8 @@ callback_compare_t callback_compare_strzr  (void);
 callback_compare_t callback_compare_mempos (void);
 
 callback_compare_t callback_compare_invert_stateless(void);
+
+callback_compare_t callback_compare_invert(callback_compare_t callback_compare);
 
 /* ---------------------------------------------------------------- */
 /* Post-dependencies.                                               */

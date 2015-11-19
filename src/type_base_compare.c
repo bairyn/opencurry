@@ -430,6 +430,9 @@ const type_t *callback_compare_type(void)
 
 static const char          *callback_compare_type_name       (const type_t *self);
 static size_t               callback_compare_type_size       (const type_t *self, const tval *val);
+static const type_t        *callback_compare_type_is_subtype ( const type_t *self
+                                                             , const type_t *is_subtype
+                                                             );
 static const struct_info_t *callback_compare_type_is_struct  (const type_t *self);
 static const tval          *callback_compare_type_has_default(const type_t *self);
 
@@ -452,7 +455,7 @@ const type_t callback_compare_type_def =
   , /* @size                  */ callback_compare_type_size
   , /* @is_struct             */ callback_compare_type_is_struct
   , /* is_mutable             */ NULL
-  , /* is_subtype             */ NULL
+  , /* is_subtype             */ callback_compare_type_is_subtype
   , /* is_supertype           */ NULL
 
   , /* cons_type              */ NULL
@@ -480,6 +483,17 @@ static const char          *callback_compare_type_name       (const type_t *self
 static size_t               callback_compare_type_size       (const type_t *self, const tval *val)
   { return sizeof(callback_compare_t); }
 
+static const type_t        *callback_compare_type_is_subtype ( const type_t *self
+                                                             , const type_t *is_subtype
+                                                             )
+{
+  const type_t *result;
+  if ((result = type_is_subtype(callback_compare_inverted_type(), is_subtype)))
+    return result;
+
+  return default_type_is_subtype(self, is_subtype);
+}
+
 DEF_FIELD_DEFAULT_VALUE_FROM_TYPE(callback_compare)
 static const struct_info_t *callback_compare_type_is_struct  (const type_t *self)
   {
@@ -506,6 +520,65 @@ const callback_compare_t callback_compare_defaults =
 
 /* ---------------------------------------------------------------- */
 
+/* callback_compare_inverted type. */
+
+const type_t *callback_compare_inverted_type(void)
+  { return &callback_compare_inverted_type_def; }
+
+static const char          *callback_compare_inverted_type_name       (const type_t *self);
+
+const type_t callback_compare_inverted_type_def =
+  { type_type
+
+    /* @: Required.           */
+
+  , /* memory                 */ MEMORY_TRACKER_DEFAULTS
+  , /* is_self_mutable        */ NULL
+  , /* @indirect              */ callback_compare_inverted_type
+
+  , /* self                   */ NULL
+  , /* container              */ NULL
+
+  , /* typed                  */ NULL
+
+  , /* @name                  */ callback_compare_inverted_type_name
+  , /* info                   */ NULL
+  , /* @size                  */ callback_compare_type_size
+  , /* @is_struct             */ callback_compare_type_is_struct
+  , /* is_mutable             */ NULL
+  , /* is_subtype             */ NULL
+  , /* is_supertype           */ NULL
+
+  , /* cons_type              */ NULL
+  , /* init                   */ NULL
+  , /* free                   */ NULL
+  , /* has_default            */ callback_compare_inverted_type_has_default
+  , /* mem                    */ NULL
+  , /* mem_init               */ NULL
+  , /* mem_is_dyn             */ NULL
+  , /* mem_free               */ NULL
+  , /* default_memory_manager */ NULL
+
+  , /* dup                    */ NULL
+
+  , /* user                   */ NULL
+  , /* cuser                  */ NULL
+  , /* cmp                    */ NULL
+
+  , /* parity                 */ ""
+  };
+
+static const char          *callback_compare_inverted_type_name       (const type_t *self)
+  { return "callback_compare_inverted_t"; }
+
+/* ---------------------------------------------------------------- */
+
+const callback_compare_inverted_t callback_compare_inverted_defaults =
+  CALLBACK_COMPARE_INVERTED_DEFAULTS;
+
+/* ---------------------------------------------------------------- */
+/* ---------------------------------------------------------------- */
+
 callback_compare_t callback_compare(comparer_t comparer, void *comparer_context)
 {
   callback_compare_t callback_compare;
@@ -520,7 +593,14 @@ callback_compare_t callback_compare(comparer_t comparer, void *comparer_context)
 
 int call_callback_compare(callback_compare_t callback_compare, const void *check, const void *baseline)
 {
-  return call_comparer(callback_compare.comparer, callback_compare.comparer_context, check, baseline);
+  int ordering;
+
+  ordering = call_comparer(callback_compare.comparer, callback_compare.comparer_context, check, baseline);
+
+  if (!is_subtype(callback_compare.type(), callback_compare_inverted_type()))
+    return ordering;
+  else
+    return ORDERING_INVERT(ordering);
 }
 
 /* ---------------------------------------------------------------- */
@@ -1337,6 +1417,7 @@ callback_compare_t callback_compare_mempos (void)
       );
 }
 
+
 callback_compare_t callback_compare_invert_stateless(comparer_t comparer)
 {
   return
@@ -1344,4 +1425,15 @@ callback_compare_t callback_compare_invert_stateless(comparer_t comparer)
       ( comparer_invert_stateless
       , compare_invert_stateless_context(comparer)
       );
+}
+
+
+callback_compare_t callback_compare_invert(callback_compare_t callback_compare)
+{
+  if (!is_subtype(callback_compare.type(), callback_compare_inverted_type()))
+    callback_compare.type = callback_compare_inverted_type;
+  else
+    callback_compare.type = callback_compare_type;
+
+  return callback_compare;
 }
