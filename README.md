@@ -1,3 +1,3 @@
 # opencurry
 
-Haskell compiler.
+Work-in-progress.
