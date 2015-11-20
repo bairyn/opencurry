@@ -525,7 +525,8 @@ const callback_compare_t callback_compare_defaults =
 const type_t *callback_compare_inverted_type(void)
   { return &callback_compare_inverted_type_def; }
 
-static const char          *callback_compare_inverted_type_name       (const type_t *self);
+static const char *callback_compare_inverted_type_name       (const type_t *self);
+static const tval *callback_compare_inverted_type_has_default(const type_t *self);
 
 const type_t callback_compare_inverted_type_def =
   { type_type
@@ -568,8 +569,11 @@ const type_t callback_compare_inverted_type_def =
   , /* parity                 */ ""
   };
 
-static const char          *callback_compare_inverted_type_name       (const type_t *self)
+static const char *callback_compare_inverted_type_name       (const type_t *self)
   { return "callback_compare_inverted_t"; }
+
+static const tval *callback_compare_inverted_type_has_default(const type_t *self)
+  { return &callback_compare_inverted_defaults; }
 
 /* ---------------------------------------------------------------- */
 
@@ -1121,7 +1125,7 @@ void *compare_mempos_context (void)
 
 void *compare_invert_stateless_context(comparer_t comparer)
 {
-  return funp_to_objp(comparer);
+  return funp_to_objp((funp_cast_t) comparer);
 }
 
 /* ---------------------------------------------------------------- */

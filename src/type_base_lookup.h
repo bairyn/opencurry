@@ -229,7 +229,7 @@ size_t lookup_len         (const lookup_t *lookup);
 int    lookup_empty       (const lookup_t *lookup);
 
 #define LOOKUP_MAX_CAPACITY(lookup) \
-  (((LOOKUP_LEN((lookup))) >= (LOOKUP_CAPACITY((lookup))))
+  ((LOOKUP_LEN((lookup))) >= (LOOKUP_CAPACITY((lookup))))
 int    lookup_max_capacity(const lookup_t *lookup);
 
 /* ---------------------------------------------------------------- */

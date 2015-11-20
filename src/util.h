@@ -338,7 +338,7 @@ size_t num_digits (signed   long num, int base, int force_sign_symbol);
 #define DIGITS_BASE62 \
   "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz"
 #define NUM_DIGITS_BASE62 \
-  ((SIZE_LESS_NULL((sizeof((DIGIT_BASE62))))))
+  ((SIZE_LESS_NULL((sizeof((DIGITS_BASE62))))))
 #define MAX_BASE_BASE62 \
   (NUM_DIGITS_BASE62)
 #define MIN_BASE_BASE62 \
@@ -552,10 +552,10 @@ const char *last_bytes(const char *str, size_t num_bytes);
     )                                             \
   : ((max))                                       \
   )
-#define CLAMP_INTERVAL(value, a, b)              \
-  ( ((a) <= (b))                                 \
-  ? (CLAMP_INTERVAL_MONOTONIC((a), (b), (value)) \
-  : (CLAMP_INTERVAL_MONOTONIC((b), (a), (value)) \
+#define CLAMP_INTERVAL(value, a, b)               \
+  ( ((a) <= (b))                                  \
+  ? (CLAMP_INTERVAL_MONOTONIC((a), (b), (value))) \
+  : (CLAMP_INTERVAL_MONOTONIC((b), (a), (value))) \
   )
 #define CLAMP(value) ((CLAMP_INTERVAL((0), (1), (value))))
 

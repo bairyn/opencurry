@@ -218,6 +218,8 @@ size_t mem_reverse(void *mem, size_t elem_size, size_t elem_num)
     return 0;
 #endif /* #ifdef ERROR_CHECKING */
 
+  bytes = mem;
+
   for (i = 0; i < elem_size; ++i)
   {
     size_t j;
@@ -246,7 +248,7 @@ size_t endianness_reverse(void *mem, size_t elem_size, size_t elem_num)
     return 0;
 #endif /* #ifdef ERROR_CHECKING */
 
-  for (i = 0, bytes = mem; i < elem_num, ++i, bytes += elem_size)
+  for (i = 0, bytes = mem; i < elem_num; ++i, bytes += elem_size)
   {
     size_t j;
 
@@ -296,19 +298,26 @@ size_t num_digits(signed long num, int base, int force_sign_symbol)
 
 const char *digits_base62(void)
   { return digits_base62_def; }
-size_t num_digits_base62_def(void)
+
+size_t      num_digits_base62 (void)
   { return num_digits_base62_def; }
-size_t max_base_base62_def(void)
-  { return = max_base_base62_def; }
-size_t min_base_base62_def(void)
-  { return = min_base_base62_def; }
-size_t max_digit_base62(void)
+
+size_t      max_base_base62   (void)
+  { return max_base_base62_def; }
+
+size_t      min_base_base62   (void)
+  { return min_base_base62_def; }
+
+size_t      max_digit_base62  (void)
   { return max_digit_base62_def; }
+
 size_t      digits_base62_size(void)
   { return digits_base62_size_def; }
-size_t      digits_base62_num(void)
+
+size_t      digits_base62_num (void)
   { return digits_base62_num_def; }
-size_t      digits_base62_len(void)
+
+size_t      digits_base62_len (void)
   { return digits_base62_len_def; }
 
 const char digits_base62_def[] =
@@ -388,7 +397,7 @@ size_t itoa(char *dest, size_t n, signed long num, int base, int force_sign_symb
 #endif /* #ifdef ERROR_CHECKING */
 
   if (!dest)
-    return num_digits(num, base);
+    return num_digits(num, base, force_sign_symbol);
 
   if (n <= 0)
     return 0;

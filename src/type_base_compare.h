@@ -213,7 +213,7 @@ extern const callback_compare_t callback_compare_defaults;
 
 
 const type_t *callback_compare_inverted_type(void);
-extern const type_t callback_compare_type_inverted_def;
+extern const type_t callback_compare_inverted_type_def;
 typedef callback_compare_t callback_compare_inverted_t;
 
 #define CALLBACK_COMPARE_INVERTED_DEFAULTS           \
@@ -318,7 +318,7 @@ void *compare_strzr_context  (void);
 
 void *compare_mempos_context (void);
 
-void *compare_invert_stateless_context(void);
+void *compare_invert_stateless_context(comparer_t comparer);
 
 /* ---------------------------------------------------------------- */
 
@@ -398,7 +398,7 @@ callback_compare_t callback_compare_strzr  (void);
 
 callback_compare_t callback_compare_mempos (void);
 
-callback_compare_t callback_compare_invert_stateless(void);
+callback_compare_t callback_compare_invert_stateless(comparer_t comparer);
 
 callback_compare_t callback_compare_invert(callback_compare_t callback_compare);
 
