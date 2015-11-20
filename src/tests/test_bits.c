@@ -636,7 +636,7 @@ unit_test_result_t bits_equalities_test_run(unit_test_context_t *context)
     ASSERT2( inteq, most_significant_bit_pos_ulong( 0x8F33 ), 15 );
 
     ASSERT2( inteq, most_significant_bit_pos_ulong( 0x8000 ), 15 );
-    ASSERT2( inteq, most_significant_bit_pos_ulong( 0x0800 ), 8  );
+    ASSERT2( inteq, most_significant_bit_pos_ulong( 0x0800 ), 11 );
   }
 
   return result;
