@@ -1324,7 +1324,7 @@ lookup_t *lookup_insert
 
       /* Finalize the new node. */
       LOOKUP_SET_ORDER_IN_USE_BIT(lookup, child_index,     1);
-      LOOKUP_SET_ORDER_IN_USE_BIT(lookup, child_val_index, 1);
+      LOOKUP_SET_VALUE_IN_USE_BIT(lookup, child_val_index, 1);
 
       /* TODO: balance! */
       return lookup;
