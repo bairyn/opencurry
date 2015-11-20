@@ -375,6 +375,8 @@ size_t uitoa(char *dest, size_t n, unsigned long num, int base)
       break;
   }
 
+  dest[digits_written] = 0;
+
   if (!mem_reverse(dest, 1, digits_written))
     return 0;
 
@@ -401,6 +403,12 @@ size_t itoa(char *dest, size_t n, signed long num, int base, int force_sign_symb
 
   if (n <= 0)
     return 0;
+
+  if (n <= 1)
+  {
+    *dest = 0;
+    return 0;
+  }
 
   if (num < 0)
   {
