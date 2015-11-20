@@ -892,24 +892,35 @@ int lookup_is_order_recycling(const lookup_t *lookup)
 
 /* ---------------------------------------------------------------- */
 
-void    *lookup_index_value(lookup_t *lookup, size_t index)
+void    *lookup_index_value(lookup_t *lookup, size_t        index)
 {
   return LOOKUP_INDEX_VALUE(lookup, index);
 }
 
-bnode_t *lookup_index_order(lookup_t *lookup, size_t index)
+bnode_t *lookup_index_order(lookup_t *lookup, size_t        index)
 {
   return LOOKUP_INDEX_ORDER(lookup, index);
 }
 
-const void *lookup_index_cvalue(const lookup_t *lookup, size_t index)
+void    *lookup_node_value (lookup_t *lookup, const bnode_t *node)
+{
+  return LOOKUP_NODE_VALUE(lookup, node);
+}
+
+
+const void    *lookup_index_cvalue(const lookup_t *lookup, size_t        index)
 {
   return LOOKUP_INDEX_CVALUE(lookup, index);
 }
 
-const bnode_t *lookup_index_corder(const lookup_t *lookup, size_t index)
+const bnode_t *lookup_index_corder(const lookup_t *lookup, size_t        index)
 {
   return LOOKUP_INDEX_CORDER(lookup, index);
+}
+
+const void    *lookup_node_cvalue (const lookup_t *lookup, const bnode_t *node)
+{
+  return LOOKUP_NODE_CVALUE(lookup, node);
 }
 
 /* ---------------------------------------------------------------- */
@@ -943,15 +954,15 @@ size_t lookup_next_value(lookup_t *lookup)
     return 0;
 #endif /* #if ERROR_CHECKING  */
 
-  current_value = lookup->next_value++;
+  current_value = lookup->next_value;
 
-  for (; lookup->next_value < lookup->capacity; ++lookup->next_value)
-    if (!LOOKUP_IS_VALUE_FREE(lookup, lookup->next_value))
-      return current_value;
+  for (                      ; lookup->next_value < lookup->capacity; ++lookup->next_value)
+    if (LOOKUP_IS_VALUE_FREE(lookup, lookup->next_value))
+      return lookup->next_value++;
 
-  for (lookup->next_value = 0; lookup->next_value < current_value; ++lookup->next_value)
-    if (!LOOKUP_IS_VALUE_FREE(lookup, lookup->next_value))
-      return current_value;
+  for (lookup->next_value = 0; lookup->next_value < current_value   ; ++lookup->next_value)
+    if (LOOKUP_IS_VALUE_FREE(lookup, lookup->next_value))
+      return lookup->next_value++;
 
   return 0;
 }
@@ -965,15 +976,15 @@ size_t lookup_next_order(lookup_t *lookup)
     return 0;
 #endif /* #if ERROR_CHECKING  */
 
-  current_order = lookup->next_order++;
+  current_order = lookup->next_order;
 
-  for (; lookup->next_order < lookup->capacity; ++lookup->next_order)
-    if (!LOOKUP_IS_ORDER_FREE(lookup, lookup->next_order))
-      return current_order;
+  for (                      ; lookup->next_order < lookup->capacity; ++lookup->next_order)
+    if (LOOKUP_IS_ORDER_FREE(lookup, lookup->next_order))
+      return lookup->next_order++;
 
-  for (lookup->next_order = 0; lookup->next_order < current_order; ++lookup->next_order)
-    if (!LOOKUP_IS_ORDER_FREE(lookup, lookup->next_order))
-      return current_order;
+  for (lookup->next_order = 0; lookup->next_order < current_order   ; ++lookup->next_order)
+    if (LOOKUP_IS_ORDER_FREE(lookup, lookup->next_order))
+      return lookup->next_order++;
 
   return 0;
 }
@@ -1205,16 +1216,16 @@ lookup_t *lookup_insert
 
     /* Write the node. */
     cur->value = BNODE_BLACK_VALUE(value);
-    cur->left  = BNODE_LEAF();
-    cur->right = BNODE_LEAF();
+    BNODE_LINK_SET_LEAF(&cur->left);
+    BNODE_LINK_SET_LEAF(&cur->right);
 
     /* Update len. */
     lookup_next_value(lookup);
     lookup_next_order(lookup);
     ++lookup->len;
 
-    BNODE_SET_ORDER_IN_USE_BIT(cur, 1);
-    BNODE_SET_VALUE_IN_USE_BIT(cur, 1);
+    LOOKUP_SET_ORDER_IN_USE_BIT(lookup, node,  1);
+    LOOKUP_SET_VALUE_IN_USE_BIT(lookup, value, 1);
 
     /* Success. */
     return lookup;
@@ -1238,7 +1249,7 @@ lookup_t *lookup_insert
     for(;;)
     {
       /* val <?= node value */
-      node_val = LOOKUP_INDEX_VALUE(lookup, node->value);
+      node_val = LOOKUP_NODE_CVALUE(lookup, node);
       ordering = call_callback_compare(cmp, val, node_val);
 
 #if ERROR_CHECKING

@@ -155,8 +155,8 @@ size_t bnode_colored_value(size_t index, size_t color);
 size_t bnode_leaf(void);
 size_t bnode_ref (size_t index);
 
-#define BNODE_SET_ORDER_IN_USE_BIT(node, bit) (node)->left  = SET_BIT(0, bit, (node)->left)
-#define BNODE_SET_VALUE_IN_USE_BIT(node, bit) (node)->right = SET_BIT(0, bit, (node)->right)
+#define BNODE_SET_ORDER_IN_USE_BIT(node, bit) (node)->left  = (SET_BIT((0), (bit), ((node)->left)) )
+#define BNODE_SET_VALUE_IN_USE_BIT(node, bit) (node)->right = (SET_BIT((0), (bit), ((node)->right)))
 size_t bnode_set_order_in_use_bit(bnode_t *node, size_t bit);
 size_t bnode_set_value_in_use_bit(bnode_t *node, size_t bit);
 
@@ -381,26 +381,30 @@ int lookup_is_order_recycling(const lookup_t *lookup);
 
 #define LOOKUP_INDEX_VALUE(lookup, index) ((void *) (((unsigned char *) ((lookup)->values)) + ((ptrdiff_t) ((lookup)->value_size * (index)))))
 #define LOOKUP_INDEX_ORDER(lookup, index) (&(lookup)->order[(index)])
-void    *lookup_index_value(lookup_t *lookup, size_t index);
-bnode_t *lookup_index_order(lookup_t *lookup, size_t index);
+#define LOOKUP_NODE_VALUE( lookup, node)  (LOOKUP_INDEX_VALUE((lookup), (BNODE_GET_VALUE((node)->value))))
+void    *lookup_index_value(lookup_t *lookup, size_t         index);
+bnode_t *lookup_index_order(lookup_t *lookup, size_t         index);
+void    *lookup_node_value (lookup_t *lookup, const bnode_t *node);
 
 #define LOOKUP_INDEX_CVALUE(lookup, index) ((const void *) (((const unsigned char *) ((lookup)->values)) + ((ptrdiff_t) ((lookup)->value_size * (index)))))
 #define LOOKUP_INDEX_CORDER(lookup, index) ((const bnode_t *) (&(lookup)->order[(index)]))
-const void    *lookup_index_cvalue(const lookup_t *lookup, size_t index);
-const bnode_t *lookup_index_corder(const lookup_t *lookup, size_t index);
+#define LOOKUP_NODE_CVALUE( lookup, node)  (LOOKUP_INDEX_CVALUE((lookup), (BNODE_GET_VALUE((node)->value))))
+const void    *lookup_index_cvalue(const lookup_t *lookup, size_t         index);
+const bnode_t *lookup_index_corder(const lookup_t *lookup, size_t         index);
+const void    *lookup_node_cvalue (const lookup_t *lookup, const bnode_t *node);
 
 /* ---------------------------------------------------------------- */
 
-#define LOOKUP_IS_VALUE_FREE(lookup, index) (BNODE_GET_VALUE_IN_USE_BIT((LOOKUP_INDEX_ORDER((lookup), (index)))))
-#define LOOKUP_IS_ORDER_FREE(lookup, index) (BNODE_GET_ORDER_IN_USE_BIT((LOOKUP_INDEX_ORDER((lookup), (index)))))
+#define LOOKUP_IS_VALUE_FREE(lookup, index) ((LOOKUP_GET_VALUE_IN_USE_BIT((lookup), (index))) ^ 1)
+#define LOOKUP_IS_ORDER_FREE(lookup, index) ((LOOKUP_GET_ORDER_IN_USE_BIT((lookup), (index))) ^ 1)
 int lookup_is_value_free(const lookup_t *lookup, size_t value);
 int lookup_is_order_free(const lookup_t *lookup, size_t order);
 
 size_t lookup_next_value(lookup_t *lookup);
 size_t lookup_next_order(lookup_t *lookup);
 
-#define LOOKUP_SET_IS_VALUE_FREE(lookup, index, bit) BNODE_SET_VALUE_IN_USE_BIT( (LOOKUP_INDEX_ORDER((lookup), (index))), ((bit) ^ 1) )
-#define LOOKUP_SET_IS_ORDER_FREE(lookup, index, bit) BNODE_SET_ORDER_IN_USE_BIT( (LOOKUP_INDEX_ORDER((lookup), (index))), ((bit) ^ 1) )
+#define LOOKUP_SET_IS_VALUE_FREE(lookup, index, bit) LOOKUP_SET_VALUE_IN_USE_BIT((lookup), (index), ((bit) ^ 1))
+#define LOOKUP_SET_IS_ORDER_FREE(lookup, index, bit) LOOKUP_SET_ORDER_IN_USE_BIT((lookup), (index), ((bit) ^ 1))
 size_t lookup_set_is_value_free(lookup_t *lookup, size_t index, size_t bit);
 size_t lookup_set_is_order_free(lookup_t *lookup, size_t index, size_t bit);
 

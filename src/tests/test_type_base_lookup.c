@@ -131,10 +131,10 @@ size_t checked_lookup_num_used_values(unit_test_context_t *context, unit_test_re
     {
       const bnode_t *node = &lookup->order[i];
 
-      if (bnode_get_order_in_use_bit(node))
+      if (bnode_get_value_in_use_bit(node))
         ++num;
 
-      LASSERT2( inteq, bnode_get_order_in_use_bit(node), BNODE_GET_ORDER_IN_USE_BIT(node) );
+      LASSERT2( inteq, bnode_get_value_in_use_bit(node), BNODE_GET_VALUE_IN_USE_BIT(node) );
     }; BREAKABLE(result);
   }
 
@@ -178,10 +178,10 @@ size_t checked_lookup_num_used_nodes(unit_test_context_t *context, unit_test_res
     {
       const bnode_t *node = &lookup->order[i];
 
-      if (bnode_get_value_in_use_bit(node))
+      if (bnode_get_order_in_use_bit(node))
         ++num;
 
-      LASSERT2( inteq, bnode_get_value_in_use_bit(node), BNODE_GET_VALUE_IN_USE_BIT(node) );
+      LASSERT2( inteq, bnode_get_order_in_use_bit(node), BNODE_GET_ORDER_IN_USE_BIT(node) );
     }; BREAKABLE(result);
 
     LASSERT2( inteq, lookup_num_nodes_from(lookup, NULL), num );
