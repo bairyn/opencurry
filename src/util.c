@@ -282,7 +282,7 @@ size_t unum_digits(unsigned long num, int base)
     return 0;
 #endif /* #ifdef ERROR_CHECKING */
 
-  for (len = 1; num > base; num /= base, ++len)
+  for (len = 1; num >= base; num /= base, ++len)
     ;
 
   return len;
