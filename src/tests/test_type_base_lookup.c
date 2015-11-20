@@ -998,7 +998,7 @@ unit_test_result_t lookup_insert_test_run(unit_test_context_t *context)
   ENCLOSE()
   {
     test_set_details_msg(context, "lookup_insert_test_run: #1.");
-    lookup_insert_tests(context, &lookup_val, &lookup);
+    COMPOUND(lookup_insert_tests(context, &lookup_val, &lookup));
 
     LOOKUP_DEINIT(lookup);
     LOOKUP_DEINIT(lookup);
@@ -1007,7 +1007,7 @@ unit_test_result_t lookup_insert_test_run(unit_test_context_t *context)
     lookup_init_empty(lookup, sizeof(value_type));
 
     test_set_details_msg(context, "lookup_insert_test_run: #2.");
-    lookup_insert_tests(context, &lookup_val, &lookup);
+    COMPOUND(lookup_insert_tests(context, &lookup_val, &lookup));
 
     {
       int run;
@@ -1023,7 +1023,7 @@ unit_test_result_t lookup_insert_test_run(unit_test_context_t *context)
         lookup_init_empty(lookup, sizeof(value_type));
 
         test_set_details_msg(context, details);
-        lookup_insert_tests(context, &lookup_val, &lookup);
+        COMPOUND(lookup_insert_tests(context, &lookup_val, &lookup));
       }; BREAKABLE(result);
     }
   }
@@ -1071,7 +1071,7 @@ unit_test_result_t lookup_insert_delete_test_run(unit_test_context_t *context)
     /* ---------------------------------------------------------------- */
 
     test_set_details_msg(context, "lookup_insert_delete_test_run: insertion tests.");
-    lookup_insert_tests(context, &lookup_val, &lookup);
+    COMPOUND(lookup_insert_tests(context, &lookup_val, &lookup));
 
     /* Make sure "lookup_insert_tests" ends in what we expect. */
 
