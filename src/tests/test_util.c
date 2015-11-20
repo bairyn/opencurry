@@ -413,7 +413,7 @@ unit_test_result_t util_equalities_basic_str_test_run(unit_test_context_t *conte
     LASSERT2( sizeeq, num_digits (7777,     BASE_DECIMAL, FORCE_SIGN), 5 );
     LASSERT2( sizeeq, num_digits (7777777,  BASE_DECIMAL, FORCE_SIGN), 8 );
 
-    LASSERT2( sizeeq, num_digits (0,        BASE_DECIMAL, FORCE_SIGN), 1 );
+    LASSERT2( sizeeq, num_digits (0,        BASE_DECIMAL, FORCE_SIGN), 2 );
     LASSERT2( sizeeq, num_digits (-1,       BASE_DECIMAL, FORCE_SIGN), 2 );
     LASSERT2( sizeeq, num_digits (-8,       BASE_DECIMAL, FORCE_SIGN), 2 );
     LASSERT2( sizeeq, num_digits (-512,     BASE_DECIMAL, FORCE_SIGN), 4 );
