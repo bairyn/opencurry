@@ -40,6 +40,8 @@
 #include "../base.h"
 #include "testing.h"
 
+#include "../type_base_lookup.h"
+
 #include "../util.h"
 
 int test_type_base_lookup_cli(int argc, char **argv);

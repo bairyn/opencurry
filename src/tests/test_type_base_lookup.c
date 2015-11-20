@@ -41,7 +41,7 @@
 #include "../type_base_compare.h"
 #include "../type_base_type.h"
 
-#include "util.h"
+#include "../util.h"
 
 #ifdef TODO
 #error "TODO: test_type_base_lookup: tests for bnode_t too."
@@ -128,12 +128,12 @@ size_t checked_lookup_num_used_values(unit_test_context_t *context, unit_test_re
 
     for (i = 0; i < lookup->capacity; ++i)
     {
-      const bnode_t *node = lookup->nodes[i];
+      const bnode_t *node = &lookup->order[i];
 
-      if (bnode_get_order_in_use_bit(bnode))
+      if (bnode_get_order_in_use_bit(node))
         ++num;
 
-      LASSERT2( inteq, bnode_get_order_in_use_bit(bnode) BNODE_GET_ORDER_IN_USE_BIT(bnode) );
+      LASSERT2( inteq, bnode_get_order_in_use_bit(node), BNODE_GET_ORDER_IN_USE_BIT(node) );
     }; BREAKABLE(result);
   }
 
@@ -143,22 +143,22 @@ size_t checked_lookup_num_used_values(unit_test_context_t *context, unit_test_re
   return num;
 }
 
-static size_t lookup_num_nodes_from(const lookup_t *lookup, const bnode_t *bnode)
+static size_t lookup_num_nodes_from(const lookup_t *lookup, const bnode_t *node)
 {
   size_t num;
 
   if (lookup_empty(lookup))
     return 0;
 
-  if (!bnode)
-    bnode = &lookup->nodes[0];
+  if (!node)
+    node = &lookup->order[0];
 
   num = 1;
 
-  if (!BNODE_IS_LEAF(bnode->left))
-    num += lookup_num_nodes_from(lookup, LOOKUP_INDEX_ORDER(lookup, BNODE_GET_REF(bnode->left)));
-  if (!BNODE_IS_LEAF(bnode->right))
-    num += lookup_num_nodes_from(lookup, LOOKUP_INDEX_ORDER(lookup, BNODE_GET_REF(bnode->right)));
+  if (!BNODE_IS_LEAF(node->left))
+    num += lookup_num_nodes_from(lookup, LOOKUP_INDEX_ORDER(lookup, BNODE_GET_REF(node->left)));
+  if (!BNODE_IS_LEAF(node->right))
+    num += lookup_num_nodes_from(lookup, LOOKUP_INDEX_ORDER(lookup, BNODE_GET_REF(node->right)));
 
   return num;
 }
@@ -175,12 +175,12 @@ size_t checked_lookup_num_used_nodes(unit_test_context_t *context, unit_test_res
 
     for (i = 0; i < lookup->capacity; ++i)
     {
-      const bnode_t *node = lookup->nodes[i];
+      const bnode_t *node = &lookup->order[i];
 
-      if (bnode_get_value_in_use_bit(bnode))
+      if (bnode_get_value_in_use_bit(node))
         ++num;
 
-      LASSERT2( inteq, bnode_get_value_in_use_bit(bnode), BNODE_GET_VALUE_IN_USE_BIT(bnode) );
+      LASSERT2( inteq, bnode_get_value_in_use_bit(node), BNODE_GET_VALUE_IN_USE_BIT(node) );
     }; BREAKABLE(result);
 
     LASSERT2( inteq, lookup_num_nodes_from(lookup, NULL), num );
@@ -192,11 +192,11 @@ size_t checked_lookup_num_used_nodes(unit_test_context_t *context, unit_test_res
   return num;
 }
 
-unit_test_result_t assert_lookup_int_ordered_from(ASSERT_PARAMS, const lookup_t *lookup, const bnode_t *bnode)
+unit_test_result_t assert_lookup_int_ordered_from(ASSERT_PARAMS, const lookup_t *lookup, const bnode_t *node)
 {
   unit_test_result_t result = assert_success(context);
 
-  typedef type_t value_type;
+  typedef int value_type;
 
   ENCLOSE()
   {
@@ -205,17 +205,17 @@ unit_test_result_t assert_lookup_int_ordered_from(ASSERT_PARAMS, const lookup_t 
     if (lookup_empty(lookup))
       break;
 
-    if (!bnode)
-      bnode = &lookup->nodes[0];
+    if (!node)
+      node = &lookup->order[0];
 
-    ASSERT2( inteq,  bnode_get_order_in_use_bit(bnode), BNODE_GET_ORDER_IN_USE_BIT(bnode) );
-    ASSERT2( inteq,  bnode_get_order_in_use_bit(bnode), 1 );
+    ASSERT2( inteq,  bnode_get_order_in_use_bit(node), BNODE_GET_ORDER_IN_USE_BIT(node) );
+    ASSERT2( inteq,  bnode_get_order_in_use_bit(node), 1 );
 
-    ASSERT2( sizeeq, bnode_get_value(bnode->value),                             BNODE_GET_VALUE(bnode->value) );
-    ASSERT2( inteq,  bnode_get_value_in_use_bit(BNODE_GET_VALUE(bnode->value)), BNODE_GET_VALUE_IN_USE_BIT(BNODE_GET_VALUE(bnode->value)) );
-    ASSERT2( inteq,  bnode_get_value_in_use_bit(BNODE_GET_VALUE(bnode->value)), 1 );
+    ASSERT2( sizeeq, bnode_get_value(node->value),                             BNODE_GET_VALUE(node->value) );
+    ASSERT2( inteq,  bnode_get_value_in_use_bit(LOOKUP_INDEX_ORDER(lookup, BNODE_GET_VALUE(node->value))), BNODE_GET_VALUE_IN_USE_BIT(LOOKUP_INDEX_ORDER(lookup, BNODE_GET_VALUE(node->value))) );
+    ASSERT2( inteq,  bnode_get_value_in_use_bit(LOOKUP_INDEX_ORDER(lookup, BNODE_GET_VALUE(node->value))), 1 );
 
-    if (!BNODE_IS_LEAF(bnode->left))
+    if (!BNODE_IS_LEAF(node->left))
     {
       const bnode_t *child;
 
@@ -224,16 +224,16 @@ unit_test_result_t assert_lookup_int_ordered_from(ASSERT_PARAMS, const lookup_t 
 
       LASSERT2( sizeeq, lookup->value_size, sizeof(value_type) );
 
-      child       = LOOKUP_INDEX_ORDER(lookup, BNODE_GET_REF(bnode->left));
+      child       = LOOKUP_INDEX_ORDER(lookup, BNODE_GET_REF(node->left));
 
-      value       = LOOKUP_INDEX_VALUE(BNODE_GET_VALUE(bnode->value));
-      child_value = LOOKUP_INDEX_VALUE(BNODE_GET_VALUE(child->value));
+      value       = LOOKUP_INDEX_VALUE(lookup, BNODE_GET_VALUE(node->value));
+      child_value = LOOKUP_INDEX_VALUE(lookup, BNODE_GET_VALUE(child->value));
 
       ASSERT1( true, *child_value <= *value );
 
-      ASSERT2( lookup_int_ordered, lookup, child );
+      ASSERT2( lookup_int_ordered_from, lookup, child );
     }
-    if (!BNODE_IS_LEAF(bnode->right))
+    if (!BNODE_IS_LEAF(node->right))
     {
       const bnode_t *child;
 
@@ -242,14 +242,14 @@ unit_test_result_t assert_lookup_int_ordered_from(ASSERT_PARAMS, const lookup_t 
 
       LASSERT2( sizeeq, lookup->value_size, sizeof(value_type) );
 
-      child       = LOOKUP_INDEX_ORDER(lookup, BNODE_GET_REF(bnode->right));
+      child       = LOOKUP_INDEX_ORDER(lookup, BNODE_GET_REF(node->right));
 
-      value       = LOOKUP_INDEX_VALUE(BNODE_GET_VALUE(bnode->value));
-      child_value = LOOKUP_INDEX_VALUE(BNODE_GET_VALUE(child->value));
+      value       = LOOKUP_INDEX_VALUE(lookup, BNODE_GET_VALUE(node->value));
+      child_value = LOOKUP_INDEX_VALUE(lookup, BNODE_GET_VALUE(child->value));
 
       ASSERT1( true, *value <= *child_value );
 
-      ASSERT2( lookup_int_ordered, lookup, child );
+      ASSERT2( lookup_int_ordered_from, lookup, child );
     }
   }
 
@@ -261,7 +261,7 @@ unit_test_result_t assert_lookup_int_ordered(ASSERT_PARAMS, const lookup_t *look
   return assert_lookup_int_ordered_from(ASSERT_ARGS, lookup, NULL);
 }
 
-unit_test_result_t assert_lookup_sufficiently_balanced_from(ASSERT_PARAMS, const lookup_t *lookup, const bnode_t *bnode, int *out_height, size_t *out_num)
+unit_test_result_t assert_lookup_sufficiently_balanced_from(ASSERT_PARAMS, const lookup_t *lookup, const bnode_t *node, int *out_height, size_t *out_num)
 {
   unit_test_result_t result = assert_success(context);
 
@@ -271,7 +271,7 @@ unit_test_result_t assert_lookup_sufficiently_balanced_from(ASSERT_PARAMS, const
   ENCLOSE()
   {
     size_t num;
-    size_t height;
+    int    height;
 
     ASSERT1( true, IS_TRUE(lookup) );
 
@@ -282,33 +282,33 @@ unit_test_result_t assert_lookup_sufficiently_balanced_from(ASSERT_PARAMS, const
       break;
     }
 
-    if (!bnode)
-      bnode = &lookup->nodes[0];
+    if (!node)
+      node = &lookup->order[0];
 
-    if      ( BNODE_IS_LEAF(bnode->left) &&  BNODE_IS_LEAF(bnode->right))
+    if      ( BNODE_IS_LEAF(node->left) &&  BNODE_IS_LEAF(node->right))
     {
       height = 0;
 
       num    = 1;
     }
-    else if (!BNODE_IS_LEAF(bnode->left) &&  BNODE_IS_LEAF(bnode->right))
+    else if (!BNODE_IS_LEAF(node->left) &&  BNODE_IS_LEAF(node->right))
     {
       size_t left_num;
-      size_t left_height;
+      int    left_height;
 
-      ASSERT2( lookup_sufficiently_balanced_from, lookup, LOOKUP_INDEX_ORDER(lookup, BNODE_GET_REF(bnode->left )), &left_height,  &left_num  );
+      ASSERT4( lookup_sufficiently_balanced_from, lookup, LOOKUP_INDEX_ORDER(lookup, BNODE_GET_REF(node->left )), &left_height,  &left_num  );
 
       height =
         left_height + 1;
 
       num = left_num + 1;
     }
-    else if ( BNODE_IS_LEAF(bnode->left) && !BNODE_IS_LEAF(bnode->right))
+    else if ( BNODE_IS_LEAF(node->left) && !BNODE_IS_LEAF(node->right))
     {
       size_t right_num;
-      size_t right_height;
+      int    right_height;
 
-      ASSERT2( lookup_sufficiently_balanced_from, lookup, LOOKUP_INDEX_ORDER(lookup, BNODE_GET_REF(bnode->right)), &right_height, &right_num );
+      ASSERT4( lookup_sufficiently_balanced_from, lookup, LOOKUP_INDEX_ORDER(lookup, BNODE_GET_REF(node->right)), &right_height, &right_num );
 
       height =
         right_height + 1;
@@ -320,11 +320,11 @@ unit_test_result_t assert_lookup_sufficiently_balanced_from(ASSERT_PARAMS, const
       size_t left_num;
       size_t right_num;
 
-      size_t left_height;
-      size_t right_height;
+      int    left_height;
+      int    right_height;
 
-      ASSERT2( lookup_sufficiently_balanced_from, lookup, LOOKUP_INDEX_ORDER(lookup, BNODE_GET_REF(bnode->left )), &left_height,  &left_num  );
-      ASSERT2( lookup_sufficiently_balanced_from, lookup, LOOKUP_INDEX_ORDER(lookup, BNODE_GET_REF(bnode->right)), &right_height, &right_num );
+      ASSERT4( lookup_sufficiently_balanced_from, lookup, LOOKUP_INDEX_ORDER(lookup, BNODE_GET_REF(node->left )), &left_height,  &left_num  );
+      ASSERT4( lookup_sufficiently_balanced_from, lookup, LOOKUP_INDEX_ORDER(lookup, BNODE_GET_REF(node->right)), &right_height, &right_num );
 
       height =
         MAX
@@ -353,7 +353,7 @@ size_t checked_lookup_int_len(unit_test_context_t *context, unit_test_result_t *
 {
   unit_test_result_t result = assert_success(context);
 
-  typedef type_t value_type;
+  typedef int value_type;
 
   size_t len;
 
@@ -403,7 +403,7 @@ unit_test_result_t lookup_memory_management_test_run(unit_test_context_t *contex
 {
   unit_test_result_t result = assert_success(context);
 
-  typedef type_t value_type;
+  typedef int value_type;
 
   lookup_t lookup_val;
   lookup_t *lookup = &lookup_val;
@@ -680,7 +680,7 @@ static unit_test_result_t lookup_insert_tests(unit_test_context_t *context, look
 
 
     value = 7;
-    LASSERT2( objpeq, lookup_insert(lookup, val,  0, cmp, ae), lookup_val_refue );
+    LASSERT2( objpeq, lookup_insert(lookup, val,  0, cmp, ae), lookup_val_ref );
     LASSERT2( inteq,  already_exists, 0 );
     LASSERT2( inteq,  CHECKED_LOOKUP_INT_LEN(lookup), 4 );
     LASSERT1( false,  lookup_max_capacity(lookup) );
@@ -694,7 +694,7 @@ static unit_test_result_t lookup_insert_tests(unit_test_context_t *context, look
 
 
     value = 7;
-    LASSERT2( objpeq, lookup_insert(lookup, val,  1, cmp, ae), lookup_val_refue );
+    LASSERT2( objpeq, lookup_insert(lookup, val,  1, cmp, ae), lookup_val_ref );
     LASSERT2( inteq,  already_exists, 0 );
     LASSERT2( inteq,  CHECKED_LOOKUP_INT_LEN(lookup), 5 );
     LASSERT1( false,  lookup_max_capacity(lookup) );
@@ -723,7 +723,7 @@ static unit_test_result_t lookup_insert_tests(unit_test_context_t *context, look
 
     /* Insert 8. */
     value = 8;
-    LASSERT2( objpeq, lookup_insert(lookup, val,  1, cmp, ae), lookup_val_refue );
+    LASSERT2( objpeq, lookup_insert(lookup, val,  1, cmp, ae), lookup_val_ref );
     LASSERT2( inteq,  already_exists, 0 );
     LASSERT2( inteq,  CHECKED_LOOKUP_INT_LEN(lookup), 6 );
     LASSERT1( false,  lookup_max_capacity(lookup) );
@@ -744,7 +744,7 @@ static unit_test_result_t lookup_insert_tests(unit_test_context_t *context, look
 
     /* Insert 9. */
     value = 9;
-    LASSERT2( objpeq, lookup_insert(lookup, val,  1, cmp, ae), lookup_val_refue );
+    LASSERT2( objpeq, lookup_insert(lookup, val,  1, cmp, ae), lookup_val_ref );
     LASSERT2( inteq,  already_exists, 0 );
     LASSERT2( inteq,  CHECKED_LOOKUP_INT_LEN(lookup), 7 );
     LASSERT1( true,   lookup_max_capacity(lookup) );
@@ -919,7 +919,9 @@ static unit_test_result_t lookup_insert_tests(unit_test_context_t *context, look
       ASSERT2( inteq,  lookup_capacity(lookup), 8 + num_additional_values );
       ASSERT1( false,  lookup_empty(lookup));
       if (num_additional_values >= 1)
+      {
         ASSERT1( false,  lookup_max_capacity(lookup) );
+      }
       ASSERT2( inteq,  CHECKED_LOOKUP_INT_LEN(lookup), 8 + num_additional_values );
 
       for (i = 0; i < num_additional_values; ++i)
@@ -931,7 +933,7 @@ static unit_test_result_t lookup_insert_tests(unit_test_context_t *context, look
 
         /* Does this value already exists? */
         retrieve = value;
-        should_already_exist == val_or_m1(lookup_retrieve(lookup, ret, cmp, NULL)) != -1;
+        should_already_exist = val_or_m1(lookup_retrieve(lookup, ret, cmp, NULL)) != -1;
 
         /* Insert the value. */
         ASSERT2( objpeq, lookup_insert(lookup, val,  1, cmp, ae), lookup_val_ref );
@@ -945,8 +947,6 @@ static unit_test_result_t lookup_insert_tests(unit_test_context_t *context, look
         /* Make sure we can retrieve it. */
         retrieve = value; LASSERT2( inteq, val_or_m1(lookup_retrieve(lookup, ret, cmp, NULL)), retrieve );
         retrieve = value; LASSERT2( inteq, val_or_m1(lookup_retrieve(lookup, ret, cmp, NULL)), value    );
-
-        if (already_ex
       }; BREAKABLE(result);
     }
 
@@ -998,7 +998,7 @@ unit_test_result_t lookup_insert_test_run(unit_test_context_t *context)
   ENCLOSE()
   {
     test_set_details_msg(context, "lookup_insert_test_run: #1.");
-    lookup_insert_tests(context, &lookup_value, &lookup);
+    lookup_insert_tests(context, &lookup_val, &lookup);
 
     LOOKUP_DEINIT(lookup);
     LOOKUP_DEINIT(lookup);
@@ -1007,7 +1007,7 @@ unit_test_result_t lookup_insert_test_run(unit_test_context_t *context)
     lookup_init_empty(lookup, sizeof(value_type));
 
     test_set_details_msg(context, "lookup_insert_test_run: #2.");
-    lookup_insert_tests(context, &lookup_value, &lookup);
+    lookup_insert_tests(context, &lookup_val, &lookup);
 
     {
       int run;
@@ -1023,7 +1023,7 @@ unit_test_result_t lookup_insert_test_run(unit_test_context_t *context)
         lookup_init_empty(lookup, sizeof(value_type));
 
         test_set_details_msg(context, details);
-        lookup_insert_tests(context, &lookup_value, &lookup);
+        lookup_insert_tests(context, &lookup_val, &lookup);
       }; BREAKABLE(result);
     }
   }
@@ -1071,7 +1071,7 @@ unit_test_result_t lookup_insert_delete_test_run(unit_test_context_t *context)
     /* ---------------------------------------------------------------- */
 
     test_set_details_msg(context, "lookup_insert_delete_test_run: insertion tests.");
-    lookup_insert_tests(context, &lookup_value, &lookup);
+    lookup_insert_tests(context, &lookup_val, &lookup);
 
     /* Make sure "lookup_insert_tests" ends in what we expect. */
 

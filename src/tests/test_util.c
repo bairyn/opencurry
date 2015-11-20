@@ -425,8 +425,8 @@ unit_test_result_t util_equalities_basic_str_test_run(unit_test_context_t *conte
     LASSERT2( sizeeq, unum_digits(0x00,        BASE_HEXADECIMAL),      1 );
     LASSERT2( sizeeq, unum_digits(0x01,        BASE_HEXADECIMAL),      1 );
     LASSERT2( sizeeq, unum_digits(0x08,        BASE_HEXADECIMAL),      1 );
-    LASSERT2( sizeeq, unum_digits(0x78         BASE_HEXADECIMAL),      2 );
-    LASSERT2( sizeeq, unum_digits(0x80         BASE_HEXADECIMAL),      2 );
+    LASSERT2( sizeeq, unum_digits(0x78,        BASE_HEXADECIMAL),      2 );
+    LASSERT2( sizeeq, unum_digits(0x80,        BASE_HEXADECIMAL),      2 );
     LASSERT2( sizeeq, unum_digits(0x88,        BASE_HEXADECIMAL),      2 );
     LASSERT2( sizeeq, unum_digits(0x10F,       BASE_HEXADECIMAL),      3 );
     LASSERT2( sizeeq, unum_digits(0x00000000U, BASE_HEXADECIMAL),      1 );
@@ -626,7 +626,7 @@ unit_test_result_t util_equalities_basic_str_test_run(unit_test_context_t *conte
       LASSERT3( nstreq, sizeof(dest), dest, "1" );
     LASSERT2( sizeeq, uitoa(dest, sizeof(dest), 0x08,        BASE_HEXADECIMAL),      1 );
       LASSERT3( nstreq, sizeof(dest), dest, "8" );
-    LASSERT2( sizeeq, uitoa(dest, sizeof(dest), 0x78         BASE_HEXADECIMAL),      2 );
+    LASSERT2( sizeeq, uitoa(dest, sizeof(dest), 0x78,        BASE_HEXADECIMAL),      2 );
       LASSERT3( nstreq, sizeof(dest), dest, "78" );
     LASSERT2( sizeeq, uitoa(dest, sizeof(dest), 0x80,        BASE_HEXADECIMAL),      2 );
       LASSERT3( nstreq, sizeof(dest), dest, "80" );

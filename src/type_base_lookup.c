@@ -1078,7 +1078,7 @@ int lookup_height_from(const lookup_t *lookup, const bnode_t *node)
     return -1;
 
   if (!node)
-    node = &lookup->nodes[0];
+    node = &lookup->order[0];
 
   if      ( BNODE_IS_LEAF(node->left) &&  BNODE_IS_LEAF(node->right))
     return 0;
@@ -1309,7 +1309,7 @@ const void *lookup_retrieve
     }
     else
     {
-      WRITE_OUTPUT(out_node, node);
+      WRITE_OUTPUT(out_node, cur);
       return dest;
     }
 
@@ -1336,13 +1336,13 @@ void *lookup_min(lookup_t *lookup)
     return NULL;
 
   for
-    ( cur = &lookup->nodes[0]
+    ( cur = &lookup->order[0]
     ; !BNODE_IS_LEAF(cur->left)
     ; cur = LOOKUP_INDEX_ORDER(lookup, BNODE_GET_REF(cur->left))
     )
     ;
 
-  return LOOKUP_INDEX_VALUE(BNODE_GET_VALUE(cur->value));
+  return LOOKUP_INDEX_VALUE(lookup, BNODE_GET_VALUE(cur->value));
 }
 
 void *lookup_max(lookup_t *lookup)
@@ -1358,13 +1358,13 @@ void *lookup_max(lookup_t *lookup)
     return NULL;
 
   for
-    ( cur = &lookup->nodes[0]
+    ( cur = &lookup->order[0]
     ; !BNODE_IS_LEAF(cur->right)
     ; cur = LOOKUP_INDEX_ORDER(lookup, BNODE_GET_REF(cur->right))
     )
     ;
 
-  return LOOKUP_INDEX_VALUE(BNODE_GET_VALUE(cur->value));
+  return LOOKUP_INDEX_VALUE(lookup, BNODE_GET_VALUE(cur->value));
 }
 
 const void *lookup_cmin(const lookup_t *lookup)
@@ -1380,13 +1380,13 @@ const void *lookup_cmin(const lookup_t *lookup)
     return NULL;
 
   for
-    ( cur = &lookup->nodes[0]
+    ( cur = &lookup->order[0]
     ; !BNODE_IS_LEAF(cur->left)
     ; cur = LOOKUP_INDEX_ORDER(lookup, BNODE_GET_REF(cur->left))
     )
     ;
 
-  return LOOKUP_INDEX_CVALUE(BNODE_GET_VALUE(cur->value));
+  return LOOKUP_INDEX_CVALUE(lookup, BNODE_GET_VALUE(cur->value));
 }
 
 const void *lookup_cmax(const lookup_t *lookup)
@@ -1402,13 +1402,13 @@ const void *lookup_cmax(const lookup_t *lookup)
     return NULL;
 
   for
-    ( cur = &lookup->nodes[0]
+    ( cur = &lookup->order[0]
     ; !BNODE_IS_LEAF(cur->right)
     ; cur = LOOKUP_INDEX_ORDER(lookup, BNODE_GET_REF(cur->right))
     )
     ;
 
-  return LOOKUP_INDEX_CVALUE(BNODE_GET_VALUE(cur->value));
+  return LOOKUP_INDEX_CVALUE(lookup, BNODE_GET_VALUE(cur->value));
 }
 
 lookup_t *lookup_delete
@@ -1583,7 +1583,7 @@ static void *lookup_iterate_node_from_step
     return initial_accumulation;
 
   if (!node)
-    node = &lookup->nodes[0];
+    node = &lookup->order[0];
 
   value = LOOKUP_INDEX_VALUE(lookup, BNODE_GET_VALUE(node->value));
 
@@ -1621,7 +1621,7 @@ static void *lookup_iterate_node_from_step
           );
 
     if (i == 0 && !*iteration_break)
-      accumulation = with_value(context, accumulation, value, iteration_break);
+      accumulation = with_value(context, accumulation, value, node, iteration_break);
   }
 
   return accumulation;
@@ -1710,7 +1710,7 @@ static void *lookup_iterate_from_step
     return initial_accumulation;
 
   if (!node)
-    node = &lookup->nodes[0];
+    node = &lookup->order[0];
 
   value = LOOKUP_INDEX_VALUE(lookup, BNODE_GET_VALUE(node->value));
 
@@ -1734,7 +1734,7 @@ static void *lookup_iterate_from_step
 
     if (!BNODE_IS_LEAF(child))
       accumulation =
-        lookup_iterate_node_from_step
+        lookup_iterate_from_step
           ( lookup
           , LOOKUP_INDEX_ORDER(lookup, BNODE_GET_REF(child))
           , reverse_direction
