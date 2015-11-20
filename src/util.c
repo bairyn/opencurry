@@ -83,6 +83,12 @@ size_t size_less_null(size_t size)
 
 /* ---------------------------------------------------------------- */
 
+void suppress_uninitialized(void *a)
+{
+}
+
+/* ---------------------------------------------------------------- */
+
 int proc_true(void)
 {
   return 1;

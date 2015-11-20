@@ -239,6 +239,18 @@ size_t lookup_value_size(const lookup_t *lookup);
 
 /* ---------------------------------------------------------------- */
 
+#define LOOKUP_SET_ORDER_IN_USE_BIT(lookup, index, bit) BNODE_SET_ORDER_IN_USE_BIT(( LOOKUP_INDEX_ORDER((lookup), (index)) ), (bit))
+#define LOOKUP_SET_VALUE_IN_USE_BIT(lookup, index, bit) BNODE_SET_VALUE_IN_USE_BIT(( LOOKUP_INDEX_ORDER((lookup), (index)) ), (bit))
+size_t lookup_set_order_in_use_bit(lookup_t *lookup, size_t index, size_t bit);
+size_t lookup_set_value_in_use_bit(lookup_t *lookup, size_t index, size_t bit);
+
+#define LOOKUP_GET_ORDER_IN_USE_BIT(lookup, index) (BNODE_GET_ORDER_IN_USE_BIT(( LOOKUP_INDEX_CORDER((lookup), (index))) ))
+#define LOOKUP_GET_VALUE_IN_USE_BIT(lookup, index) (BNODE_GET_VALUE_IN_USE_BIT(( LOOKUP_INDEX_CORDER((lookup), (index))) ))
+size_t lookup_get_order_in_use_bit(const lookup_t *lookup, size_t index);
+size_t lookup_get_value_in_use_bit(const lookup_t *lookup, size_t index);
+
+/* ---------------------------------------------------------------- */
+
 lookup_t *lookup_expand
   ( lookup_t *lookup
   , size_t    capacity
@@ -413,7 +425,7 @@ lookup_t *lookup_insert
 
   , callback_compare_t  cmp
 
-  , int                *out_already_exists
+  , int                *out_is_duplicate
   );
 
 const void *lookup_retrieve
@@ -437,7 +449,7 @@ lookup_t *lookup_delete
 
   , callback_compare_t  cmp
 
-  , int                *out_missing
+  , int                *out_num_deleted
   );
 
 /* ---------------------------------------------------------------- */

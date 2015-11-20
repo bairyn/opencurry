@@ -154,6 +154,133 @@ size_t max_size(size_t a, size_t b);
 
 /* ---------------------------------------------------------------- */
 
+#define NOP() \
+  do          \
+  {           \
+  } while(0)
+
+#define NOP0()                                                   \
+  NOP()
+#define NOP1( a)                                                 \
+  NOP()
+#define NOP2( a, b)                                              \
+  NOP()
+#define NOP3( a, b, c)                                           \
+  NOP()
+#define NOP4( a, b, c, d)                                        \
+  NOP()
+#define NOP5( a, b, c, d, e)                                     \
+  NOP()
+#define NOP6( a, b, c, d, e, f)                                  \
+  NOP()
+#define NOP7( a, b, c, d, e, f, g)                               \
+  NOP()
+#define NOP8( a, b, c, d, e, f, g, h)                            \
+  NOP()
+#define NOP9( a, b, c, d, e, f, g, h, i)                         \
+  NOP()
+#define NOP10(a, b, c, d, e, f, g, h, i, j)                      \
+  NOP()
+#define NOP11(a, b, c, d, e, f, g, h, i, j, k)                   \
+  NOP()
+#define NOP12(a, b, c, d, e, f, g, h, i, j, k, l)                \
+  NOP()
+#define NOP13(a, b, c, d, e, f, g, h, i, j, k, l, m)             \
+  NOP()
+#define NOP14(a, b, c, d, e, f, g, h, i, j, k, l, m, n)          \
+  NOP()
+#define NOP15(a, b, c, d, e, f, g, h, i, j, k, l, m, n, o)       \
+  NOP()
+#define NOP16(a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p)    \
+  NOP()
+#define NOP17(a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q) \
+  NOP()
+
+#define EMPTY0()                                                   \
+  EMPTY()
+#define EMPTY1( a)                                                 \
+  EMPTY()
+#define EMPTY2( a, b)                                              \
+  EMPTY()
+#define EMPTY3( a, b, c)                                           \
+  EMPTY()
+#define EMPTY4( a, b, c, d)                                        \
+  EMPTY()
+#define EMPTY5( a, b, c, d, e)                                     \
+  EMPTY()
+#define EMPTY6( a, b, c, d, e, f)                                  \
+  EMPTY()
+#define EMPTY7( a, b, c, d, e, f, g)                               \
+  EMPTY()
+#define EMPTY8( a, b, c, d, e, f, g, h)                            \
+  EMPTY()
+#define EMPTY9( a, b, c, d, e, f, g, h, i)                         \
+  EMPTY()
+#define EMPTY10(a, b, c, d, e, f, g, h, i, j)                      \
+  EMPTY()
+#define EMPTY11(a, b, c, d, e, f, g, h, i, j, k)                   \
+  EMPTY()
+#define EMPTY12(a, b, c, d, e, f, g, h, i, j, k, l)                \
+  EMPTY()
+#define EMPTY13(a, b, c, d, e, f, g, h, i, j, k, l, m)             \
+  EMPTY()
+#define EMPTY14(a, b, c, d, e, f, g, h, i, j, k, l, m, n)          \
+  EMPTY()
+#define EMPTY15(a, b, c, d, e, f, g, h, i, j, k, l, m, n, o)       \
+  EMPTY()
+#define EMPTY16(a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p)    \
+  EMPTY()
+#define EMPTY17(a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q) \
+  EMPTY()
+
+#define UNUSED(a) \
+  (void)((a))
+
+#define UNUSED0() \
+  do { } while(0)
+#define UNUSED1( a) \
+  do { UNUSED(a); } while(0)
+#define UNUSED2( a, b) \
+  do { UNUSED1(a); UNUSED1 (b); } while(0)
+#define UNUSED3( a, b, c) \
+  do { UNUSED1(a); UNUSED2 (b, c); } while(0)
+#define UNUSED4( a, b, c, d) \
+  do { UNUSED1(a); UNUSED3 (b, c, d); } while(0)
+#define UNUSED5( a, b, c, d, e) \
+  do { UNUSED1(a); UNUSED4 (b, c, d, e); } while(0)
+#define UNUSED6( a, b, c, d, e, f) \
+  do { UNUSED1(a); UNUSED5 (b, c, d, e, f); } while(0)
+#define UNUSED7( a, b, c, d, e, f, g) \
+  do { UNUSED1(a); UNUSED6 (b, c, d, e, f, g); } while(0)
+#define UNUSED8( a, b, c, d, e, f, g, h) \
+  do { UNUSED1(a); UNUSED7 (b, c, d, e, f, g, h); } while(0)
+#define UNUSED9( a, b, c, d, e, f, g, h, i) \
+  do { UNUSED1(a); UNUSED8 (b, c, d, e, f, g, h, i); } while(0)
+#define UNUSED10(a, b, c, d, e, f, g, h, i, j) \
+  do { UNUSED1(a); UNUSED9 (b, c, d, e, f, g, h, i, j); } while(0)
+#define UNUSED11(a, b, c, d, e, f, g, h, i, j, k) \
+  do { UNUSED1(a); UNUSED10(b, c, d, e, f, g, h, i, j, k); } while(0)
+#define UNUSED12(a, b, c, d, e, f, g, h, i, j, k, l) \
+  do { UNUSED1(a); UNUSED11(b, c, d, e, f, g, h, i, j, k, l); } while(0)
+#define UNUSED13(a, b, c, d, e, f, g, h, i, j, k, l, m) \
+  do { UNUSED1(a); UNUSED12(b, c, d, e, f, g, h, i, j, k, l, m); } while(0)
+#define UNUSED14(a, b, c, d, e, f, g, h, i, j, k, l, m, n) \
+  do { UNUSED1(a); UNUSED13(b, c, d, e, f, g, h, i, j, k, l, m, n); } while(0)
+#define UNUSED15(a, b, c, d, e, f, g, h, i, j, k, l, m, n, o) \
+  do { UNUSED1(a); UNUSED14(b, c, d, e, f, g, h, i, j, k, l, m, n, o); } while(0)
+#define UNUSED16(a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p) \
+  do { UNUSED1(a); UNUSED15(b, c, d, e, f, g, h, i, j, k, l, m, n, o, p); } while(0)
+#define UNUSED17(a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q) \
+  do { UNUSED1(a); UNUSED16(b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q); } while(0)
+
+/* ---------------------------------------------------------------- */
+
+void suppress_uninitialized(void *a);
+#define SUPPRESS_UNINITIALIZED(a) \
+  suppress_uninitialized(&(a))
+
+/* ---------------------------------------------------------------- */
+
 #define HASH   #
 #define COMMA  ,
 #define LPAREN (

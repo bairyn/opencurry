@@ -540,6 +540,49 @@ size_t lookup_value_size(const lookup_t *lookup)
 
 /* ---------------------------------------------------------------- */
 
+size_t lookup_set_order_in_use_bit(lookup_t *lookup, size_t index, size_t bit)
+{
+#if ERROR_CHECKING
+  if (!lookup)
+    return 0;
+#endif /* #if ERROR_CHECKING  */
+
+  return LOOKUP_SET_ORDER_IN_USE_BIT(lookup, index, bit);
+}
+
+size_t lookup_set_value_in_use_bit(lookup_t *lookup, size_t index, size_t bit)
+{
+#if ERROR_CHECKING
+  if (!lookup)
+    return 0;
+#endif /* #if ERROR_CHECKING  */
+
+  return LOOKUP_SET_VALUE_IN_USE_BIT(lookup, index, bit);
+}
+
+
+size_t lookup_get_order_in_use_bit(const lookup_t *lookup, size_t index)
+{
+#if ERROR_CHECKING
+  if (!lookup)
+    return 0;
+#endif /* #if ERROR_CHECKING  */
+
+  return LOOKUP_GET_ORDER_IN_USE_BIT(lookup, index);
+}
+
+size_t lookup_get_value_in_use_bit(const lookup_t *lookup, size_t index)
+{
+#if ERROR_CHECKING
+  if (!lookup)
+    return 0;
+#endif /* #if ERROR_CHECKING  */
+
+  return LOOKUP_GET_VALUE_IN_USE_BIT(lookup, index);
+}
+
+/* ---------------------------------------------------------------- */
+
 /* Allocate more memory for additional element slots. */
 /*                                                    */
 /* Does nothing with a "num" argument smaller than    */
@@ -1116,35 +1159,34 @@ lookup_t *lookup_insert
 
   , callback_compare_t  cmp
 
-  , int                *out_already_exists
+  , int                *out_is_duplicate
   )
 {
   size_t   capacity;
-
-  size_t   value;
-  size_t   node;
-
-  void    *dest;
-  bnode_t *cur;
 
 #if ERROR_CHECKING
   if (!lookup)
     return NULL;
 #endif /* #if ERROR_CHECKING  */
 
+  WRITE_OUTPUT(out_is_duplicate, -1);
+
   /* Is a value provided? */
   if (!val)
-  {
-    WRITE_OUTPUT(out_already_exists, 0);
     return NULL;
-  }
 
   capacity = lookup_capacity(lookup);
 
   /* Are we inserting the first element? */
   if (lookup_empty(lookup))
   {
-    WRITE_OUTPUT(out_already_exists, 0);
+    size_t   value;
+    size_t   node;
+
+    void    *dest;
+    bnode_t *cur;
+
+    WRITE_OUTPUT(out_is_duplicate, 0);
 
     /* Do we have space? */
     if (capacity <= 0)
@@ -1179,81 +1221,114 @@ lookup_t *lookup_insert
   }
   else
   {
-    size_t child;
+    bnode_t    *parent;
+    bnode_t    *node;
+    size_t     *child_link;
 
-    int ordering;
+    const void *node_val;
 
-    /* Traverse our binary search tree until we reach a leaf. */
-    node = 0;
-    for (;;)
+    int         ordering;
+
+    UNUSED(parent);
+    SUPPRESS_UNINITIALIZED(child_link);
+
+    /* Ordered BST traversal to leaf or first duplicate. */
+    parent = NULL;
+    node   = &lookup->order[0];
+    for(;;)
     {
-      cur   = LOOKUP_INDEX_ORDER(lookup, node);
-      dest  = LOOKUP_INDEX_VALUE(lookup, BNODE_GET_VALUE(cur->value));
-
-      ordering = call_callback_compare(cmp, val, dest);
+      /* val <?= node value */
+      node_val = LOOKUP_INDEX_VALUE(lookup, node->value);
+      ordering = call_callback_compare(cmp, val, node_val);
 
 #if ERROR_CHECKING
       if (IS_ORDERING_ERROR(ordering))
         return NULL;
 #endif /* #if ERROR_CHECKING  */
 
-      if (ordering <= 0)
-        child = cur->left;
+      if      (ordering < 0)
+        child_link = &node->left;
+      else if (ordering > 0)
+        child_link = &node->right;
       else
-        child = cur->right;
-
-      if (BNODE_IS_LEAF(child))
         break;
-      else
-        node = BNODE_GET_REF(child);
+
+      if (BNODE_IS_LEAF(*child_link))
+        break;
+
+      parent = node;
+      node   = LOOKUP_INDEX_ORDER(lookup, BNODE_GET_REF(*child_link));
     }
 
-    /* "node" refers to the index of the parent of the leaf.   */
-    /* "ordering" refers to the result of the last comparison. */
-
+    /* Is duplicate? */
     if (ordering == 0)
     {
-      WRITE_OUTPUT(out_already_exists, 1);
+      WRITE_OUTPUT(out_is_duplicate, 1);
 
       if (!add_when_exists)
         return lookup;
+
+      child_link = &node->left;
     }
     else
     {
-      WRITE_OUTPUT(out_already_exists, 0);
+      WRITE_OUTPUT(out_is_duplicate, 0);
     }
 
-    if (lookup->len >= lookup->capacity)
+    /* Out of space? */
+    if (LOOKUP_MAX_CAPACITY(lookup))
     {
-      /* Out of space. */
       return NULL;
     }
+    else
+    {
+      /* Add the node. */
 
-    /* Get the next free index. */
-    /*
-    value = lookup_next_value(lookup);
-    child = lookup_next_order(lookup);
-    */
-    value = lookup->next_value++;
-    child = lookup->next_order++;
-    ++lookup->len;
+      size_t   child_index;
+      size_t   child_val_index;
 
-    BNODE_SET_REF(cur, ordering, child);
+      bnode_t *child;
+      void    *child_val;
 
-    cur   = LOOKUP_INDEX_ORDER(lookup, child);
-    dest  = LOOKUP_INDEX_VALUE(lookup, value);
+      child_index     = lookup_next_order(lookup);
+      child_val_index = lookup_next_value(lookup);
+      ++lookup->len;
 
-    /* Write the value. */
-    memmove(dest, val, LOOKUP_VALUE_SIZE(lookup));
-    cur->value = BNODE_BLACK_VALUE(value);
-    cur->left  = BNODE_LEAF();
-    cur->right = BNODE_LEAF();
+      child     = LOOKUP_INDEX_ORDER(lookup, child_index);
+      child_val = LOOKUP_INDEX_VALUE(lookup, child_val_index);
 
-    BNODE_SET_ORDER_IN_USE_BIT(cur, 1);
-    BNODE_SET_VALUE_IN_USE_BIT(cur, 1);
+      child->value = BNODE_BLACK_VALUE(child_val_index);
 
-    /* TODO: balance! */
-    return lookup;
+      /* Write the value. */
+      memmove(child_val, val, LOOKUP_VALUE_SIZE(lookup));
+
+      /* Link the node. */
+      if (ordering == 0)
+      {
+        /* Inserting a duplicate.  Make "child" node's (left) child. */
+
+        /* Is "node's" (left) child currently a leaf? */
+        if (BNODE_IS_LEAF(*child_link))
+          BNODE_LINK_SET_LEAF(&child->left);
+        else
+          BNODE_LINK_SET_REF (&child->left, *child_link);
+        BNODE_LINK_SET_LEAF(&child->right);
+        BNODE_LINK_SET_REF (child_link, child_index);
+      }
+      else
+      {
+        BNODE_LINK_SET_LEAF(&child->left);
+        BNODE_LINK_SET_LEAF(&child->right);
+        BNODE_LINK_SET_REF (child_link, child_index);
+      }
+
+      /* Finalize the new node. */
+      LOOKUP_SET_ORDER_IN_USE_BIT(lookup, child_index,     1);
+      LOOKUP_SET_ORDER_IN_USE_BIT(lookup, child_val_index, 1);
+
+      /* TODO: balance! */
+      return lookup;
+    }
   }
 }
 
@@ -1417,7 +1492,7 @@ lookup_t *lookup_delete
 
   , callback_compare_t  cmp
 
-  , int                *out_missing
+  , int                *out_num_deleted
   )
 {
   size_t   parent;
@@ -1436,13 +1511,13 @@ lookup_t *lookup_delete
 
   if (!val)
   {
-    WRITE_OUTPUT(out_missing, 0);
+    WRITE_OUTPUT(out_num_deleted, 0);
     return NULL;
   }
 
   if (lookup_empty(lookup))
   {
-    WRITE_OUTPUT(out_missing, 1);
+    WRITE_OUTPUT(out_num_deleted, 0);
     return NULL;
   }
 
@@ -1475,7 +1550,7 @@ lookup_t *lookup_delete
 
     if (BNODE_IS_LEAF(node))
     {
-      WRITE_OUTPUT(out_missing, 1);
+      WRITE_OUTPUT(out_num_deleted, 0);
       return lookup;
     }
     else
@@ -1485,7 +1560,7 @@ lookup_t *lookup_delete
     }
   }
 
-  WRITE_OUTPUT(out_missing, 0);
+  WRITE_OUTPUT(out_num_deleted, 1);
   node = BNODE_GET_REF(node);
 
   /* cur => node (we're removing "node") */
@@ -1496,10 +1571,32 @@ lookup_t *lookup_delete
 
   /* Second, update the tree. */
 
+  /* TODO: duplicates! */
+
   /* Are we removing the root node? */
   if (parent == node)
   {
-    /* TODO */
+    if (BNODE_IS_LEAF(cur->left) && BNODE_IS_LEAF(cur->right))
+    {
+      LOOKUP_SET_ORDER_IN_USE_BIT(lookup, node, 0);
+    }
+    else
+    {
+      /* Replace "node" with the left-most node of "node"'s right-sub-tree. */
+      size_t *child;
+
+      for
+        ( child =        &cur->right
+        ; !BNODE_IS_LEAF( LOOKUP_INDEX_ORDER(lookup, BNODE_GET_REF(*child))->left)
+        ; child =       (&LOOKUP_INDEX_ORDER(lookup, BNODE_GET_REF(*child))->left)
+        );
+
+      cur->value = BNODE_GET_VALUE( LOOKUP_INDEX_ORDER(lookup, BNODE_GET_REF(*child))->value );
+
+      /* Remove bottom node. */
+      LOOKUP_SET_IS_ORDER_FREE(lookup, *child, 1);
+      BNODE_LINK_SET_LEAF(child);
+    }
   }
   else
   {
