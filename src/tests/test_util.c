@@ -1279,12 +1279,6 @@ unit_test_result_t util_equalities_basic_str_test_run(unit_test_context_t *conte
     ASSERT2( sizeeq, strlcpy_cycle(dest, love, sizeof(dest), 4), 4  );
     ASSERT2( sizeeq, strlappendz(dest, sizeof(dest), love),      8  );
     ASSERT2( sizeeq, strlappendz(dest, sizeof(dest), peace),     13 );
-    ASSERT2( sizeeq, strlappendz(dest, sizeof(dest), love),      16 );
-    ASSERT3( nstreq, sizeof(dest), dest, "lovelovepeacelov" );
-
-    ASSERT2( sizeeq, strlcpy_cycle(dest, love, sizeof(dest), 4), 4  );
-    ASSERT2( sizeeq, strlappendz(dest, sizeof(dest), love),      8  );
-    ASSERT2( sizeeq, strlappendz(dest, sizeof(dest), peace),     13 );
     ASSERT2( sizeeq, strlappendz(dest, sizeof(dest), love),      17 );
     ASSERT2( sizeeq, strlappendz(dest, sizeof(dest), love),      21 );
     ASSERT3( nstreq, sizeof(dest), dest, "lovelovepeacelovelove" );
