@@ -477,10 +477,21 @@ unit_test_result_t assert_not_memeq_continue  (ASSERT_PARAMS, void         *chec
     do {} while(0)
 
 /* Break on any non-successful result, whether or not testing can continue. */
-#define BREAKABLE(result)              \
-  if (!is_test_result_success(result)) \
-    break;                             \
-  else                                 \
+#define BREAKABLE_ANY(result)                \
+  if (  (  is_test_result_aborting(result) ) \
+     || ( !is_test_result_success (result) ) \
+     )                                       \
+    break;                                   \
+  else                                       \
+    do {} while(0)
+
+/* Break on failure, whether or not testing can continue. */
+#define BREAKABLE(result)                   \
+  if (  ( is_test_result_aborting(result) ) \
+     || ( is_test_result_failure (result) ) \
+     )                                      \
+    break;                                  \
+  else                                      \
     do {} while(0)
 
 /* COMPOUND: add the result of an assertion, breaking in an enclosure if

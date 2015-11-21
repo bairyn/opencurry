@@ -597,7 +597,7 @@ int is_test_result_success(unit_test_result_t result)
 
 int is_test_result_failure(unit_test_result_t result)
 {
-  return result == UNIT_TEST_FAIL || result == UNIT_TEST_FAIL_CONTINUE;
+  return !is_test_result_success(result) && !is_test_result_skip(result);
 }
 
 int is_test_result_skip(unit_test_result_t result)
