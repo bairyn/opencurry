@@ -1024,20 +1024,20 @@ unit_test_result_t util_equalities_basic_str_test_run(unit_test_context_t *conte
     ASSERT2( sizeeq, strlappendn(dest, sizeof(dest), love,  sizeof(love)),  8  );
     ASSERT2( sizeeq, strlappendn(dest, sizeof(dest), peace, sizeof(peace)), 13 );
     ASSERT2( sizeeq, strlappendn(dest, sizeof(dest), love,  sizeof(love)),  17 );
-    ASSERT3( nstreq, sizeof(dest), dest, "lovepeacelove" );
+    ASSERT3( nstreq, sizeof(dest), dest, "lovelovepeacelove" );
 
     ASSERT2( sizeeq, strlcpy_cycle(dest, love, sizeof(dest), 4),            4  );
     ASSERT2( sizeeq, strlappendn(dest, sizeof(dest), love,  sizeof(love)),  8  );
     ASSERT2( sizeeq, strlappendn(dest, sizeof(dest), peace, sizeof(peace)), 13 );
     ASSERT2( sizeeq, strlappendn(dest, sizeof(dest), love,  3),             16 );
-    ASSERT3( nstreq, sizeof(dest), dest, "lovepeacelov" );
+    ASSERT3( nstreq, sizeof(dest), dest, "lovelovepeacelov" );
 
     ASSERT2( sizeeq, strlcpy_cycle(dest, love, sizeof(dest), 4),            4  );
     ASSERT2( sizeeq, strlappendn(dest, sizeof(dest), love,  sizeof(love)),  8  );
     ASSERT2( sizeeq, strlappendn(dest, sizeof(dest), peace, sizeof(peace)), 13 );
     ASSERT2( sizeeq, strlappendn(dest, sizeof(dest), love,  sizeof(love)),  17 );
     ASSERT2( sizeeq, strlappendn(dest, sizeof(dest), love,  sizeof(love)),  21 );
-    ASSERT3( nstreq, sizeof(dest), dest, "lovepeacelovelove" );
+    ASSERT3( nstreq, sizeof(dest), dest, "lovelovepeacelovelove" );
 
     ASSERT2( sizeeq, strlcpy_cycle(dest, love, sizeof(dest), 4),            4  );
     ASSERT2( sizeeq, strlappendn(dest, sizeof(dest), love,  sizeof(love)),  8  );
@@ -1045,7 +1045,7 @@ unit_test_result_t util_equalities_basic_str_test_run(unit_test_context_t *conte
     ASSERT2( sizeeq, strlappendn(dest, sizeof(dest), love,  sizeof(love)),  17 );
     ASSERT2( sizeeq, strlappendn(dest, sizeof(dest), love,  sizeof(love)),  21 );
     ASSERT2( sizeeq, strlappendc(dest, sizeof(dest), '!'),                  22 );
-    ASSERT3( nstreq, sizeof(dest), dest, "lovepeacelovelove!" );
+    ASSERT3( nstreq, sizeof(dest), dest, "lovelovepeacelovelove!" );
 
     ASSERT2( sizeeq, strlcpy_cycle(dest, love, sizeof(dest), 4),            4  );
     ASSERT2( sizeeq, strlappendn(dest, sizeof(dest), love,  sizeof(love)),  8  );
@@ -1053,7 +1053,7 @@ unit_test_result_t util_equalities_basic_str_test_run(unit_test_context_t *conte
     ASSERT2( sizeeq, strlappendn(dest, sizeof(dest), love,  sizeof(love)),  17 );
     ASSERT2( sizeeq, strlappendn(dest, sizeof(dest), love,  sizeof(love)),  21 );
     ASSERT2( sizeeq, strlappendn(dest, sizeof(dest), "!",   0),             21 );
-    ASSERT3( nstreq, sizeof(dest), dest, "lovepeacelovelove" );
+    ASSERT3( nstreq, sizeof(dest), dest, "lovelovepeacelovelove" );
 
     ASSERT2( sizeeq, strlcpy_cycle(dest, love, sizeof(dest), 4),            4  );
     ASSERT2( sizeeq, strlappendn(dest, sizeof(dest), love,  sizeof(love)),  8  );
@@ -1061,7 +1061,7 @@ unit_test_result_t util_equalities_basic_str_test_run(unit_test_context_t *conte
     ASSERT2( sizeeq, strlappendn(dest, sizeof(dest), love,  sizeof(love)),  17 );
     ASSERT2( sizeeq, strlappendn(dest, sizeof(dest), love,  sizeof(love)),  21 );
     ASSERT2( sizeeq, strlappendn(dest, sizeof(dest), "!",   1),             22 );
-    ASSERT3( nstreq, sizeof(dest), dest, "lovepeacelovelove!" );
+    ASSERT3( nstreq, sizeof(dest), dest, "lovelovepeacelovelove!" );
 
     ASSERT2( sizeeq, strlcpy_cycle(dest, love, sizeof(dest), 4),            4  );
     ASSERT2( sizeeq, strlappendn(dest, sizeof(dest), love,  sizeof(love)),  8  );
@@ -1069,7 +1069,7 @@ unit_test_result_t util_equalities_basic_str_test_run(unit_test_context_t *conte
     ASSERT2( sizeeq, strlappendn(dest, sizeof(dest), love,  sizeof(love)),  17 );
     ASSERT2( sizeeq, strlappendn(dest, sizeof(dest), love,  sizeof(love)),  21 );
     ASSERT2( sizeeq, strlappendn(dest, sizeof(dest), "!",   2),             22 );
-    ASSERT3( nstreq, sizeof(dest), dest, "lovepeacelovelove!" );
+    ASSERT3( nstreq, sizeof(dest), dest, "lovelovepeacelovelove!" );
 
     ASSERT2( sizeeq, strlcpy_cycle(dest, love, sizeof(dest), 4),            4  );
     ASSERT2( sizeeq, strlappendn(dest, sizeof(dest), love,  sizeof(love)),  8  );
@@ -1078,9 +1078,21 @@ unit_test_result_t util_equalities_basic_str_test_run(unit_test_context_t *conte
     ASSERT2( sizeeq, strlappendn(dest, sizeof(dest), love,  sizeof(love)),  21 );
     ASSERT2( sizeeq, strlappendc(dest, sizeof(dest), '!'),                  22 );
     ASSERT2( sizeeq, strlappendc(dest, sizeof(dest), '!'),                  23 );
-    ASSERT3( nstreq, sizeof(dest), dest, "lovepeacelovelove!!" );
+    ASSERT3( nstreq, sizeof(dest), dest, "lovelovepeacelovelove!!" );
 
     ASSERT2( sizeeq, strlcpy_cycle(dest, love, sizeof(dest), 4),            4  );
+    ASSERT2( sizeeq, strlappendc(dest, sizeof(dest), ' '),                  5  );
+    ASSERT2( sizeeq, strlappendn(dest, sizeof(dest), love,  sizeof(love)),  9  );
+    ASSERT2( sizeeq, strlappendc(dest, sizeof(dest), ' '),                  10 );
+    ASSERT2( sizeeq, strlappendn(dest, sizeof(dest), peace, sizeof(peace)), 15 );
+    ASSERT2( sizeeq, strlappendc(dest, sizeof(dest), ' '),                  16 );
+    ASSERT2( sizeeq, strlappendn(dest, sizeof(dest), love,  sizeof(love)),  20 );
+    ASSERT2( sizeeq, strlappendc(dest, sizeof(dest), ' '),                  21 );
+    ASSERT2( sizeeq, strlappendn(dest, sizeof(dest), love,  sizeof(love)),  25 );
+    ASSERT2( sizeeq, strlappendc(dest, sizeof(dest), '!'),                  26 );
+    ASSERT3( nstreq, sizeof(dest), dest, "love love peace love love!" );
+
+    ASSERT2( sizeeq, strlcpy_cycle(dest, love, sizeof(dest), 0),            0  );
     ASSERT2( sizeeq, strlappendn(dest, sizeof(dest), love,  sizeof(love)),  8  );
     ASSERT2( sizeeq, strlappendc(dest, sizeof(dest), ' '),                  9  );
     ASSERT2( sizeeq, strlappendn(dest, sizeof(dest), peace, sizeof(peace)), 14 );
@@ -1238,20 +1250,20 @@ unit_test_result_t util_equalities_basic_str_test_run(unit_test_context_t *conte
     ASSERT2( sizeeq, strlappendz(dest, sizeof(dest), love),      8  );
     ASSERT2( sizeeq, strlappendz(dest, sizeof(dest), peace),     13 );
     ASSERT2( sizeeq, strlappendz(dest, sizeof(dest), love),      17 );
-    ASSERT3( nstreq, sizeof(dest), dest, "lovepeacelove" );
+    ASSERT3( nstreq, sizeof(dest), dest, "lovelovepeacelove" );
 
     ASSERT2( sizeeq, strlcpy_cycle(dest, love, sizeof(dest), 4), 4  );
     ASSERT2( sizeeq, strlappendz(dest, sizeof(dest), love),      8  );
     ASSERT2( sizeeq, strlappendz(dest, sizeof(dest), peace),     13 );
     ASSERT2( sizeeq, strlappendz(dest, sizeof(dest), love),      16 );
-    ASSERT3( nstreq, sizeof(dest), dest, "lovepeacelov" );
+    ASSERT3( nstreq, sizeof(dest), dest, "lovelovepeacelov" );
 
     ASSERT2( sizeeq, strlcpy_cycle(dest, love, sizeof(dest), 4), 4  );
     ASSERT2( sizeeq, strlappendz(dest, sizeof(dest), love),      8  );
     ASSERT2( sizeeq, strlappendz(dest, sizeof(dest), peace),     13 );
     ASSERT2( sizeeq, strlappendz(dest, sizeof(dest), love),      17 );
     ASSERT2( sizeeq, strlappendz(dest, sizeof(dest), love),      21 );
-    ASSERT3( nstreq, sizeof(dest), dest, "lovepeacelovelove" );
+    ASSERT3( nstreq, sizeof(dest), dest, "lovelovepeacelovelove" );
 
     ASSERT2( sizeeq, strlcpy_cycle(dest, love, sizeof(dest), 4), 4  );
     ASSERT2( sizeeq, strlappendz(dest, sizeof(dest), love),      8  );
@@ -1259,7 +1271,7 @@ unit_test_result_t util_equalities_basic_str_test_run(unit_test_context_t *conte
     ASSERT2( sizeeq, strlappendz(dest, sizeof(dest), love),      17 );
     ASSERT2( sizeeq, strlappendz(dest, sizeof(dest), love),      21 );
     ASSERT2( sizeeq, strlappendc(dest, sizeof(dest), '!'),       22 );
-    ASSERT3( nstreq, sizeof(dest), dest, "lovepeacelovelove!" );
+    ASSERT3( nstreq, sizeof(dest), dest, "lovelovepeacelovelove!" );
 
     ASSERT2( sizeeq, strlcpy_cycle(dest, love, sizeof(dest), 4), 4  );
     ASSERT2( sizeeq, strlappendz(dest, sizeof(dest), love),      8  );
@@ -1267,7 +1279,7 @@ unit_test_result_t util_equalities_basic_str_test_run(unit_test_context_t *conte
     ASSERT2( sizeeq, strlappendz(dest, sizeof(dest), love),      17 );
     ASSERT2( sizeeq, strlappendz(dest, sizeof(dest), love),      21 );
     ASSERT2( sizeeq, strlappendz(dest, sizeof(dest), "!"),       22 );
-    ASSERT3( nstreq, sizeof(dest), dest, "lovepeacelovelove!" );
+    ASSERT3( nstreq, sizeof(dest), dest, "lovelovepeacelovelove!" );
 
     ASSERT2( sizeeq, strlcpy_cycle(dest, love, sizeof(dest), 4), 4  );
     ASSERT2( sizeeq, strlappendz(dest, sizeof(dest), love),      8  );
@@ -1276,9 +1288,21 @@ unit_test_result_t util_equalities_basic_str_test_run(unit_test_context_t *conte
     ASSERT2( sizeeq, strlappendz(dest, sizeof(dest), love),      21 );
     ASSERT2( sizeeq, strlappendc(dest, sizeof(dest), '!'),       22 );
     ASSERT2( sizeeq, strlappendc(dest, sizeof(dest), '!'),       23 );
-    ASSERT3( nstreq, sizeof(dest), dest, "lovepeacelovelove!!" );
+    ASSERT3( nstreq, sizeof(dest), dest, "lovelovepeacelovelove!!" );
 
     ASSERT2( sizeeq, strlcpy_cycle(dest, love, sizeof(dest), 4), 4  );
+    ASSERT2( sizeeq, strlappendc(dest, sizeof(dest), ' '),   5  );
+    ASSERT2( sizeeq, strlappendz(dest, sizeof(dest), love),  9  );
+    ASSERT2( sizeeq, strlappendc(dest, sizeof(dest), ' '),   10  );
+    ASSERT2( sizeeq, strlappendz(dest, sizeof(dest), peace), 15 );
+    ASSERT2( sizeeq, strlappendc(dest, sizeof(dest), ' '),   16 );
+    ASSERT2( sizeeq, strlappendz(dest, sizeof(dest), love),  20 );
+    ASSERT2( sizeeq, strlappendc(dest, sizeof(dest), ' '),   21 );
+    ASSERT2( sizeeq, strlappendz(dest, sizeof(dest), love),  25 );
+    ASSERT2( sizeeq, strlappendc(dest, sizeof(dest), '!'),   26 );
+    ASSERT3( nstreq, sizeof(dest), dest, "love love peace love love!" );
+
+    ASSERT2( sizeeq, strlcpy_cycle(dest, love, sizeof(dest), 0), 0  );
     ASSERT2( sizeeq, strlappendz(dest, sizeof(dest), love),  8  );
     ASSERT2( sizeeq, strlappendc(dest, sizeof(dest), ' '),   9  );
     ASSERT2( sizeeq, strlappendz(dest, sizeof(dest), peace), 14 );
