@@ -1629,153 +1629,30 @@ const void *lookup_retrieve
   , const void         *val
 
   , callback_compare_t  cmp
-
-  , const bnode_t     **out_node
   )
 {
-  size_t         node;
-
-  const void    *dest;
-  const bnode_t *cur;
+  LOOKUP_CFIND_VARIABLE_DECLARATIONS;
 
 #if ERROR_CHECKING
   if (!lookup)
     return NULL;
 #endif /* #if ERROR_CHECKING  */
 
-  WRITE_OUTPUT(out_node, NULL);
-
+  /* Is a value provided? */
   if (!val)
     return NULL;
 
-  if (lookup_empty(lookup))
+  /* ---------------------------------------------------------------- */
+
+  /* Ordered BST traversal to leaf or first duplicate. */
+  if (!LOOKUP_CFIND_FROM_STD(lookup, NULL, val, cmp))
     return NULL;
 
-  node = 0;
-  for (;;)
-  {
-    int ordering;
-
-    cur   = LOOKUP_INDEX_CORDER(lookup, node);
-    dest  = LOOKUP_INDEX_CVALUE(lookup, BNODE_GET_VALUE(cur->value));
-
-    ordering = call_callback_compare(cmp, val, dest);
-
-#if ERROR_CHECKING
-    if (IS_ORDERING_ERROR(ordering))
-      return NULL;
-#endif /* #if ERROR_CHECKING  */
-
-    if      (ordering < 0)
-    {
-      node = cur->left;
-    }
-    else if (ordering > 0)
-    {
-      node = cur->right;
-    }
-    else
-    {
-      WRITE_OUTPUT(out_node, cur);
-      return dest;
-    }
-
-    if (BNODE_IS_LEAF(node))
-      break;
-    else
-      node = BNODE_GET_REF(node);
-  }
-
-  WRITE_OUTPUT(out_node, NULL);
-  return NULL;
-}
-
-void *lookup_min(lookup_t *lookup)
-{
-  const bnode_t *cur;
-
-#if ERROR_CHECKING
-  if (!lookup)
-    return NULL;
-#endif /* #if ERROR_CHECKING  */
-
-  if (lookup_empty(lookup))
+  /* Was there no match? */
+  if (ordering != 0)
     return NULL;
 
-  for
-    ( cur = &lookup->order[0]
-    ; !BNODE_IS_LEAF(cur->left)
-    ; cur = LOOKUP_INDEX_ORDER(lookup, BNODE_GET_REF(cur->left))
-    )
-    ;
-
-  return LOOKUP_INDEX_VALUE(lookup, BNODE_GET_VALUE(cur->value));
-}
-
-void *lookup_max(lookup_t *lookup)
-{
-  const bnode_t *cur;
-
-#if ERROR_CHECKING
-  if (!lookup)
-    return NULL;
-#endif /* #if ERROR_CHECKING  */
-
-  if (lookup_empty(lookup))
-    return NULL;
-
-  for
-    ( cur = &lookup->order[0]
-    ; !BNODE_IS_LEAF(cur->right)
-    ; cur = LOOKUP_INDEX_ORDER(lookup, BNODE_GET_REF(cur->right))
-    )
-    ;
-
-  return LOOKUP_INDEX_VALUE(lookup, BNODE_GET_VALUE(cur->value));
-}
-
-const void *lookup_cmin(const lookup_t *lookup)
-{
-  const bnode_t *cur;
-
-#if ERROR_CHECKING
-  if (!lookup)
-    return NULL;
-#endif /* #if ERROR_CHECKING  */
-
-  if (lookup_empty(lookup))
-    return NULL;
-
-  for
-    ( cur = &lookup->order[0]
-    ; !BNODE_IS_LEAF(cur->left)
-    ; cur = LOOKUP_INDEX_ORDER(lookup, BNODE_GET_REF(cur->left))
-    )
-    ;
-
-  return LOOKUP_INDEX_CVALUE(lookup, BNODE_GET_VALUE(cur->value));
-}
-
-const void *lookup_cmax(const lookup_t *lookup)
-{
-  const bnode_t *cur;
-
-#if ERROR_CHECKING
-  if (!lookup)
-    return NULL;
-#endif /* #if ERROR_CHECKING  */
-
-  if (lookup_empty(lookup))
-    return NULL;
-
-  for
-    ( cur = &lookup->order[0]
-    ; !BNODE_IS_LEAF(cur->right)
-    ; cur = LOOKUP_INDEX_ORDER(lookup, BNODE_GET_REF(cur->right))
-    )
-    ;
-
-  return LOOKUP_INDEX_CVALUE(lookup, BNODE_GET_VALUE(cur->value));
+  return node_val;
 }
 
 lookup_t *lookup_delete
@@ -2190,4 +2067,48 @@ void *lookup_iterate
 
       , initial_accumulation
       );
+}
+
+/* ---------------------------------------------------------------- */
+
+const void *lookup_min(const lookup_t *lookup, const bnode_t *root)
+{
+  const bnode_t *node = root;
+
+#if ERROR_CHECKING
+  if (!lookup)
+    return NULL;
+#endif /* #if ERROR_CHECKING  */
+
+  if (lookup_empty(lookup))
+    return NULL;
+
+  if (!node)
+    node = &lookup->order[0];
+
+  while (!BNODE_IS_LEAF(node->left))
+    node = LOOKUP_INDEX_ORDER(lookup, BNODE_GET_REF(node->left));
+
+  return LOOKUP_INDEX_VALUE(lookup, BNODE_GET_VALUE(node->value));
+}
+
+const void *lookup_max(const lookup_t *lookup, const bnode_t *root)
+{
+  const bnode_t *node = root;
+
+#if ERROR_CHECKING
+  if (!lookup)
+    return NULL;
+#endif /* #if ERROR_CHECKING  */
+
+  if (lookup_empty(lookup))
+    return NULL;
+
+  if (!node)
+    node = &lookup->order[0];
+
+  while (!BNODE_IS_LEAF(node->right))
+    node = LOOKUP_INDEX_ORDER(lookup, BNODE_GET_REF(node->right));
+
+  return LOOKUP_INDEX_VALUE(lookup, BNODE_GET_VALUE(node->value));
 }

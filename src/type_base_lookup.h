@@ -458,6 +458,7 @@ int lookup_height(const lookup_t *lookup);
     ( lookup                                         \
     , root                                           \
     , val                                            \
+                                                      \
     , cmp                                            \
                                                      \
     , &grandparent                                   \
@@ -513,6 +514,7 @@ lookup_t *lookup_find_from
     ( lookup                                          \
     , root                                            \
     , val                                             \
+                                                      \
     , cmp                                             \
                                                       \
     , &grandparent                                    \
@@ -566,15 +568,7 @@ const void *lookup_retrieve
   , const void         *val
 
   , callback_compare_t  cmp
-
-  , const bnode_t      **out_node
   );
-
-void *lookup_min(lookup_t *lookup);
-void *lookup_max(lookup_t *lookup);
-
-const void *lookup_cmin(const lookup_t *lookup);
-const void *lookup_cmax(const lookup_t *lookup);
 
 lookup_t *lookup_delete
   ( lookup_t           *lookup
@@ -584,6 +578,11 @@ lookup_t *lookup_delete
 
   , size_t             *out_num_deleted
   );
+
+/* ---------------------------------------------------------------- */
+
+const void *lookup_min(const lookup_t *lookup, const bnode_t *root);
+const void *lookup_max(const lookup_t *lookup, const bnode_t *root);
 
 /* ---------------------------------------------------------------- */
 /* Post-dependencies.                                               */
