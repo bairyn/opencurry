@@ -1250,7 +1250,7 @@ int lookup_height(const lookup_t *lookup)
  */
 lookup_t *lookup_find_from
   ( lookup_t           *lookup
-  , bnode_t            *node
+  , bnode_t            *root
   , const void         *val
 
   , callback_compare_t  cmp
@@ -1269,17 +1269,7 @@ lookup_t *lookup_find_from
   , int         *out_ordering
   )
 {
-  bnode_t    *grandparent;
-  size_t     *grandparent_link;
-  bnode_t    *parent;
-  size_t     *parent_link;
-  size_t     *node_link;
-
-  const void *node_val;
-
-  int         grandparent_ordering;
-  int         parent_ordering;
-  int         ordering;
+  LOOKUP_FIND_VARIABLE_DECLARATIONS;
 
 #if ERROR_CHECKING
   if (!lookup)
@@ -1306,15 +1296,18 @@ lookup_t *lookup_find_from
     return lookup;
   }
 
+  node = root;
   if (!node)
     node = &lookup->order[0];
 
-  grandparent      = NULL;
-  grandparent_link = NULL;
-  parent           = NULL;
-  parent_link      = NULL;
-  node_link        = NULL;
-  ordering = 0;
+  grandparent          = NULL;
+  grandparent_link     = NULL;
+  parent               = NULL;
+  parent_link          = NULL;
+  node_link            = NULL;
+  grandparent_ordering = 0;
+  parent_ordering      = 0;
+  ordering             = 0;
   node   = &lookup->order[0];
   for (;;)
   {
@@ -1323,7 +1316,7 @@ lookup_t *lookup_find_from
 
     /* val <?= node value */
     node_val = LOOKUP_NODE_CVALUE(lookup, node);
-    ordering = call_callback_compare(cmp, val, dest);
+    ordering = call_callback_compare(cmp, val, node_val);
 
 #if ERROR_CHECKING
     if (IS_ORDERING_ERROR(ordering))
@@ -1385,7 +1378,7 @@ lookup_t *lookup_find_from
 
 const lookup_t *lookup_cfind_from
   ( const lookup_t      *lookup
-  , const bnode_t       *node
+  , const bnode_t       *root
   , const void          *val
 
   , callback_compare_t   cmp
@@ -1404,17 +1397,7 @@ const lookup_t *lookup_cfind_from
   , int           *out_ordering
   )
 {
-  const bnode_t *grandparent;
-  const size_t  *grandparent_link;
-  const bnode_t *parent;
-  const size_t  *parent_link;
-  const size_t  *node_link;
-
-  const void    *node_val;
-
-  int            grandparent_ordering;
-  int            parent_ordering;
-  int            ordering;
+  LOOKUP_CFIND_VARIABLE_DECLARATIONS;
 
 #if ERROR_CHECKING
   if (!lookup)
@@ -1441,15 +1424,18 @@ const lookup_t *lookup_cfind_from
     return lookup;
   }
 
+  node = root;
   if (!node)
     node = &lookup->order[0];
 
-  grandparent      = NULL;
-  grandparent_link = NULL;
-  parent           = NULL;
-  parent_link      = NULL;
-  node_link        = NULL;
-  ordering = 0;
+  grandparent          = NULL;
+  grandparent_link     = NULL;
+  parent               = NULL;
+  parent_link          = NULL;
+  node_link            = NULL;
+  grandparent_ordering = 0;
+  parent_ordering      = 0;
+  ordering             = 0;
   node   = &lookup->order[0];
   for (;;)
   {
@@ -1458,7 +1444,7 @@ const lookup_t *lookup_cfind_from
 
     /* val <?= node value */
     node_val = LOOKUP_NODE_CVALUE(lookup, node);
-    ordering = call_callback_compare(cmp, val, dest);
+    ordering = call_callback_compare(cmp, val, node_val);
 
 #if ERROR_CHECKING
     if (IS_ORDERING_ERROR(ordering))
@@ -1795,15 +1781,14 @@ lookup_t *lookup_delete
   , size_t             *out_num_deleted
   )
 {
-  bnode_t    *parent;
-  bnode_t    *node;
-  size_t     *child_link;
+  size_t   parent;
+  size_t   node;
 
-  const void *node_val;
+  void    *dest;
+  bnode_t *par;
+  bnode_t *cur;
 
-  int         ordering;
-
-  UNUSED(parent);
+  int      par_ordering = 0;
 
 #if ERROR_CHECKING
   if (!lookup)
@@ -1821,44 +1806,6 @@ lookup_t *lookup_delete
     WRITE_OUTPUT(out_num_deleted, 0);
     return NULL;
   }
-
-  parent = NULL;
-  node   = &lookup->order[0];
-  for (;;)
-  {
-    /* val <?= node value */
-    node_val = LOOKUP_NODE_CVALUE(lookup, node);
-    ordering = call_callback_compare(cmp, val, node_val);
-  }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
   parent = 0;
   node   = 0;

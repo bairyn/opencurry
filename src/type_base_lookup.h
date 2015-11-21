@@ -444,6 +444,7 @@ int lookup_height(const lookup_t *lookup);
   size_t     *grandparent_link;           \
   bnode_t    *parent;                     \
   size_t     *parent_link;                \
+  bnode_t    *node;                       \
   size_t     *node_link;                  \
                                           \
   const void *node_val;                   \
@@ -452,10 +453,10 @@ int lookup_height(const lookup_t *lookup);
   int         parent_ordering;            \
   int         ordering
 
-#define LOOKUP_FIND_FROM_STD(lookup, node, val, cmp) \
+#define LOOKUP_FIND_FROM_STD(lookup, root, val, cmp) \
   lookup_find_from                                   \
     ( lookup                                         \
-    , node                                           \
+    , root                                           \
     , val                                            \
     , cmp                                            \
                                                      \
@@ -474,7 +475,7 @@ int lookup_height(const lookup_t *lookup);
     )
 lookup_t *lookup_find_from
   ( lookup_t           *lookup
-  , bnode_t            *node
+  , bnode_t            *root
   , const void         *val
 
   , callback_compare_t  cmp
@@ -498,6 +499,7 @@ lookup_t *lookup_find_from
   const size_t  *grandparent_link;         \
   const bnode_t *parent;                   \
   const size_t  *parent_link;              \
+  const bnode_t *node;                     \
   const size_t  *node_link;                \
                                            \
   const void    *node_val;                 \
@@ -506,10 +508,10 @@ lookup_t *lookup_find_from
   int            parent_ordering;          \
   int            ordering
 
-#define LOOKUP_CFIND_FROM_STD(lookup, node, val, cmp) \
+#define LOOKUP_CFIND_FROM_STD(lookup, root, val, cmp) \
   lookup_cfind_from                                   \
     ( lookup                                          \
-    , node                                            \
+    , root                                            \
     , val                                             \
     , cmp                                             \
                                                       \
@@ -528,7 +530,7 @@ lookup_t *lookup_find_from
     )
 const lookup_t *lookup_cfind_from
   ( const lookup_t      *lookup
-  , const bnode_t       *node
+  , const bnode_t       *root
   , const void          *val
 
   , callback_compare_t   cmp
