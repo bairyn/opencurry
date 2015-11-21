@@ -45,7 +45,7 @@ ifneq ($(DEBUG),1)
 	CPPFLAGS_DEBUG_BASE  :=
 
 	CFLAGS_DEBUG_INFO    :=
-	CPPFLAGS_DEBUG_INFO  := -DNDEBUG
+	CPPFLAGS_DEBUG_INFO  := -DDEBUG=0
 
 	CFLAGS_DEBUG_OPTIM   := -O2 -s
 	CPPFLAGS_DEBUG_OPTIM :=
@@ -58,7 +58,7 @@ else
 	CPPFLAGS_DEBUG_BASE  :=
 
 	CFLAGS_DEBUG_INFO    :=
-	CPPFLAGS_DEBUG_INFO  := -DDEBUG
+	CPPFLAGS_DEBUG_INFO  := -DDEBUG=1
 
 	CFLAGS_DEBUG_OPTIM   := -Og
 	CPPFLAGS_DEBUG_OPTIM :=
@@ -151,6 +151,8 @@ TEST_CLI_OBJS :=                                   \
 	$(OBJ_DIR)/tests/ansi_c_ast_base.o               \
 	                                                 \
 	$(OBJ_DIR)/tests/test_testing.o                  \
+	                                                 \
+	$(OBJ_DIR)/tests/test_cpp.o                      \
 	                                                 \
 	$(OBJ_DIR)/tests/test_resources.o                \
 	$(OBJ_DIR)/tests/test_bits.o                     \

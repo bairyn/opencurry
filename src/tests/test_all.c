@@ -41,6 +41,8 @@
 
 #include "test_testing.h"
 
+#include "test_cpp.h"
+
 #include "test_resources.h"
 #include "test_bits.h"
 #include "test_util.h"
@@ -94,6 +96,8 @@ unit_test_t test_all_test =
 /* Array of all test groups. */
 unit_test_t *all_tests[] =
   { &testing_test
+
+  , &cpp_test
 
   , &resources_test
   , &bits_test
