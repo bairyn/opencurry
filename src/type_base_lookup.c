@@ -1322,7 +1322,7 @@ lookup_t *lookup_insert
         if (BNODE_IS_LEAF(*child_link))
           BNODE_LINK_SET_LEAF(&child->left);
         else
-          BNODE_LINK_SET_REF (&child->left, *child_link);
+          BNODE_LINK_SET_REF (&child->left, BNODE_GET_REF(*child_link));
         BNODE_LINK_SET_LEAF(&child->right);
         BNODE_LINK_SET_REF (child_link, child_index);
       }
