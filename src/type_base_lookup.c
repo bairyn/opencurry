@@ -1652,9 +1652,79 @@ const void *lookup_retrieve
   if (ordering != 0)
     return NULL;
 
+  /* Return the value. */
   return node_val;
 }
 
+/* Returns the number of matches, (even when it exceeds out_val_num_max). */
+size_t lookup_retrieve_multiple
+  ( const lookup_t     *lookup
+  , const void         *val
+
+  , callback_compare_t  cmp
+
+  , void               *out_val
+  , size_t              out_val_num_max
+  )
+{
+  size_t num_child_matches;
+
+  unsigned char *out_val_bytes = out_val;
+
+  LOOKUP_CFIND_VARIABLE_DECLARATIONS;
+
+#if ERROR_CHECKING
+  if (!lookup)
+    return 0;
+#endif /* #if ERROR_CHECKING  */
+
+  /* Is a value provided? */
+  if (!val)
+    return 0;
+
+  /* ---------------------------------------------------------------- */
+
+  /* Ordered BST traversal to leaf or first match. */
+  if (!LOOKUP_CFIND_FROM_STD(lookup, NULL, val, cmp))
+    return 0;
+
+  /* Was there no match? */
+  if (ordering != 0)
+    return 0;
+
+  /* Traverse each left-node while equivalent. */
+  for (num_child_matches = 0; ; ++num_child_matches)
+  {
+    if (out_val_bytes)
+    {
+      /* Write out node_val? */
+      if (num_child_matches < out_val_num_max)
+      {
+        memmove(out_val_bytes, node_val, LOOKUP_VALUE_SIZE(lookup));
+        out_val_bytes += LOOKUP_VALUE_SIZE(lookup);
+      }
+
+      /* Leaf? */
+      if (BNODE_IS_LEAF(node->left))
+        break;
+
+      /* Next node. */
+      node = LOOKUP_INDEX_CORDER(lookup, BNODE_GET_REF(node->left));
+
+      /* val <?= node value */
+      node_val = LOOKUP_NODE_CVALUE(lookup, node);
+      ordering = call_callback_compare(cmp, val, node_val);
+
+      /* Non-matching value? */
+      if (ordering != 0)
+        break;
+    }
+  }
+
+  return num_child_matches + 1;
+}
+
+/* Delete all matches. */
 lookup_t *lookup_delete
   ( lookup_t           *lookup
   , const void         *val
@@ -1812,6 +1882,19 @@ lookup_t *lookup_delete
 
   return lookup;
 }
+
+/* Returns the number of deletions, (even when it exceeds out_val_num_max). */
+size_t lookup_delete_limit
+  ( lookup_t           *lookup
+  , const void         *val
+  , size_t              limit
+
+  , callback_compare_t  cmp
+
+  , size_t             *out_num_deleted
+  , void               *out_val
+  , size_t              out_val_num_max
+  );
 
 /* ---------------------------------------------------------------- */
 

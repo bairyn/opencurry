@@ -570,6 +570,16 @@ const void *lookup_retrieve
   , callback_compare_t  cmp
   );
 
+size_t lookup_retrieve_multiple
+  ( const lookup_t     *lookup
+  , const void         *val
+
+  , callback_compare_t  cmp
+
+  , void               *out_val
+  , size_t              out_val_num_max
+  );
+
 lookup_t *lookup_delete
   ( lookup_t           *lookup
   , const void         *val
