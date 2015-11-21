@@ -737,12 +737,12 @@ size_t strlappendz(char *dest, size_t dest_size, const char *src)
       size = min_size(size, strlen(src));
     }
 
-    for (; i < size; ++i)
+    while (i < size)
     {
       if (!*src)
         break;
 
-      dest[i] = *src++;
+      dest[i++] = *src++;
     }
   }
 
