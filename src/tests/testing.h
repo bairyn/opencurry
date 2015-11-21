@@ -189,8 +189,11 @@ void                free_unit_test_context(unit_test_context_t *context);
 #define UNIT_TEST_FAIL             (-1)
 #define UNIT_TEST_FAIL_CONTINUE    ( 1)
 #define UNIT_TEST_INTERNAL_ERROR   (-3)
-#define UNIT_TEST_SKIPPED          (-4)
-#define UNIT_TEST_SKIPPED_CONTINUE ( 4)
+#define UNIT_TEST_SKIP             (-4)
+#define UNIT_TEST_SKIP_CONTINUE    ( 4)
+
+#define UNIT_TEST_SKIPPED          UNIT_TEST_SKIP
+#define UNIT_TEST_SKIPPED_CONTINUE UNIT_TEST_SKIP_CONTINUE
 typedef int unit_test_result_t;
 
 /* A unit test is a function, coupled with a name and description:
@@ -281,11 +284,11 @@ extern const unit_test_fun_t failing_continue_test_fun;
 extern const unit_test_fun_t skipped_continue_test_fun;
 extern const unit_test_fun_t internal_error_test_fun;
 
-unit_test_fun_t trivial_test(unit_test_t *context, unit_test_result_t result);
-unit_test_t trivial_unit_test(unit_test_t *context, unit_test_result_t result, const char *name, const char *description);
-unit_test_result_t run_trivial_test(unit_test_t *context, unit_test_result_t result, const char *name, const char *description);
+unit_test_fun_t trivial_test(unit_test_context_t *context, unit_test_result_t result);
+unit_test_t trivial_unit_test(unit_test_context_t *context, unit_test_result_t result, const char *name, const char *description);
+unit_test_result_t run_trivial_test(unit_test_context_t *context, unit_test_result_t result, const char *name, const char *description);
 
-unit_test_t anonymous_skip_continue_test(unit_test *context);
+unit_test_t anonymous_skip_continue_test(unit_test_context_t *context);
 
 /* ---------------------------------------------------------------- */
 /* Default error messages for assertion failures.                   */

@@ -1191,9 +1191,9 @@ const unit_test_fun_t failing_continue_test_fun = failing_continue_test;
 const unit_test_fun_t skipped_continue_test_fun = skipped_continue_test;
 const unit_test_fun_t internal_error_test_fun = internal_error_test;
 
-unit_test_fun_t trivial_test(unit_test_t *context, unit_test_result_t result)
+unit_test_fun_t trivial_test(unit_test_context_t *context, unit_test_result_t result)
 {
-  switch result
+  switch (result)
   {
     case UNIT_TEST_PASS:
       return passing_test_fun;
@@ -1211,17 +1211,17 @@ unit_test_fun_t trivial_test(unit_test_t *context, unit_test_result_t result)
   }
 }
 
-unit_test_t trivial_unit_test(unit_test_t *context, unit_test_result_t result, const char *name, const char *description)
+unit_test_t trivial_unit_test(unit_test_context_t *context, unit_test_result_t result, const char *name, const char *description)
 {
-  return unit_test(trivial_test(result), name, description);
+  return unit_test(trivial_test(context, result), name, description);
 }
 
-unit_test_result_t run_trivial_test(unit_test_t *context, unit_test_result_t result, const char *name, const char *description)
+unit_test_result_t run_trivial_test(unit_test_context_t *context, unit_test_result_t result, const char *name, const char *description)
 {
   return run_test(context, trivial_unit_test(context, result, name, description));
 }
 
-unit_test_t anonymous_skip_continue_test(unit_test *context)
+unit_test_t anonymous_skip_continue_test(unit_test_context_t *context)
 {
   return trivial_unit_test(context, UNIT_TEST_SKIP_CONTINUE, "<anonymous>", "<anonymous: anonymous_skip_continue_test(context)>");
 }
