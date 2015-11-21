@@ -1024,6 +1024,8 @@ static unit_test_result_t lookup_insert_tests(unit_test_context_t *context, look
 
     /* Inserting many values. */
     {
+      static int skip_length_check = 0;
+
       int i;
       const int mul[] =
         { 1, -1, 2 };
@@ -1053,7 +1055,21 @@ static unit_test_result_t lookup_insert_tests(unit_test_context_t *context, look
         /* Insert the value. */
         ASSERT2( objpeq, lookup_insert(lookup, val,  1, cmp, dp), lookup_val_ref );
         ASSERT2( inteq,  is_duplicate, should_already_exist );
-        ASSERT2( inteq,  CHECKED_LOOKUP_INT_LEN(lookup), 9 + i + 1 );
+        if (  ( !skip_length_check )
+           && (  ( i <= 10                                 )
+              || ( DISTANCE(i, num_additional_values) <= 3 )
+              || ( i % 128 == 0                            )
+              )
+           )
+        {
+          /* More thorough testing for the first 10 and last 10 values, and for
+           * every 128th value. */
+          ASSERT2( inteq,  CHECKED_LOOKUP_INT_LEN(lookup), 9 + i + 1 );
+        }
+        else
+        {
+          ASSERT2( inteq,  lookup_len(lookup), 9 + i + 1 );
+        }
         if (i + 1 < num_additional_values )
           ASSERT1( false, lookup_max_capacity(lookup) );
         else
@@ -1063,6 +1079,8 @@ static unit_test_result_t lookup_insert_tests(unit_test_context_t *context, look
         retrieve = value; LASSERT2( inteq, val_or_m1(lookup_retrieve(lookup, ret, cmp, NULL)), retrieve );
         retrieve = value; LASSERT2( inteq, val_or_m1(lookup_retrieve(lookup, ret, cmp, NULL)), value    );
       }; BREAKABLE(result);
+
+      skip_length_check = 1;
     }
 
     /* Check parts of final state match what we expect. */
