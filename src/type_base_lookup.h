@@ -141,12 +141,29 @@ void bnode_init_array(bnode_t *node, size_t num);
 /* bnode_t field constructors. */
 
 /* Construct values for the "value" field. */
-#define BNODE_BLACK_VALUE( index)         ((index << 1) | (BNODE_BLACK_BIT))
-#define BNODE_RED_VALUE(   index)         ((index << 1) | (BNODE_RED_BIT)  )
-#define BNODE_COLORED_VALUE(index, color) ((index << 1) | (color)          )
+#define BNODE_BLACK_VALUE( index)         (((index) << 1) | (BNODE_BLACK_BIT))
+#define BNODE_RED_VALUE(   index)         (((index) << 1) | (BNODE_RED_BIT)  )
+#define BNODE_COLORED_VALUE(index, color) (((index) << 1) | (color)          )
 size_t bnode_black_value  (size_t index);
 size_t bnode_red_value    (size_t index);
-size_t bnode_colored_value(size_t index, size_t color);
+size_t bnode_colored_value(size_t index, size_t color_bit);
+
+/* The final bit will still need to be set. */
+#define BNODE_VALUE(index) ((index) << 1)
+size_t bnode_value(size_t index);
+#define BNODE_COLOR(color_bit) (color_bit)
+size_t bnode_color(size_t color_bit);
+
+#define BNODE_SET_VALUE(node, index) \
+  (node)->value = ((((node)->value) & 1) | (BNODE_VALUE((index))) )
+#define BNODE_SET_COLOR(node, color_bit) \
+  (node)->value = (SET_BIT(0, (color_bit), (node)->value))
+#define BNODE_SET_BLACK(node) BNODE_SET_COLOR(node, BNODE_BLACK_BIT)
+#define BNODE_SET_RED(  node) BNODE_SET_COLOR(node, BNODE_RED_BIT  )
+size_t bnode_set_value(bnode_t *node, size_t index);
+size_t bnode_set_color(bnode_t *node, size_t color_bit);
+size_t bnode_set_black(bnode_t *node);
+size_t bnode_set_red  (bnode_t *node);
 
 /* Construct values for the "left" and "right" fields. */
 /* The final bit will still need to be set.            */
@@ -155,8 +172,8 @@ size_t bnode_colored_value(size_t index, size_t color);
 size_t bnode_leaf(void);
 size_t bnode_ref (size_t index);
 
-#define BNODE_SET_ORDER_IN_USE_BIT(node, bit) (node)->left  = (SET_BIT((0), (bit), ((node)->left)) )
-#define BNODE_SET_VALUE_IN_USE_BIT(node, bit) (node)->right = (SET_BIT((0), (bit), ((node)->right)))
+#define BNODE_SET_ORDER_IN_USE_BIT(node, bit) (node)->left  = (SET_BIT(0, (bit), (node)->left) )
+#define BNODE_SET_VALUE_IN_USE_BIT(node, bit) (node)->right = (SET_BIT(0, (bit), (node)->right))
 size_t bnode_set_order_in_use_bit(bnode_t *node, size_t bit);
 size_t bnode_set_value_in_use_bit(bnode_t *node, size_t bit);
 
@@ -422,6 +439,116 @@ int lookup_height(const lookup_t *lookup);
 
 /* ---------------------------------------------------------------- */
 
+#define LOOKUP_FIND_VARIABLE_DECLARATIONS \
+  bnode_t    *grandparent;                \
+  size_t     *grandparent_link;           \
+  bnode_t    *parent;                     \
+  size_t     *parent_link;                \
+  size_t     *node_link;                  \
+                                          \
+  const void *node_val;                   \
+                                          \
+  int         grandparent_ordering;       \
+  int         parent_ordering;            \
+  int         ordering
+
+#define LOOKUP_FIND_FROM_STD(lookup, node, val, cmp) \
+  lookup_find_from                                   \
+    ( lookup                                         \
+    , node                                           \
+    , val                                            \
+    , cmp                                            \
+                                                     \
+    , &grandparent                                   \
+    , &grandparent_link                              \
+    , &parent                                        \
+    , &parent_link                                   \
+    , &node                                          \
+    , &node_link                                     \
+                                                     \
+    , &node_val                                      \
+                                                     \
+    , &grandparent_ordering                          \
+    , &parent_ordering                               \
+    , &ordering                                      \
+    )
+lookup_t *lookup_find_from
+  ( lookup_t           *lookup
+  , bnode_t            *node
+  , const void         *val
+
+  , callback_compare_t  cmp
+
+  , bnode_t    **out_grandparent
+  , size_t     **out_grandparent_link
+  , bnode_t    **out_parent
+  , size_t     **out_parent_link
+  , bnode_t    **out_node
+  , size_t     **out_node_link
+
+  , const void **out_node_val
+
+  , int         *out_grandparent_ordering
+  , int         *out_parent_ordering
+  , int         *out_ordering
+  );
+
+#define LOOKUP_CFIND_VARIABLE_DECLARATIONS \
+  const bnode_t *grandparent;              \
+  const size_t  *grandparent_link;         \
+  const bnode_t *parent;                   \
+  const size_t  *parent_link;              \
+  const size_t  *node_link;                \
+                                           \
+  const void    *node_val;                 \
+                                           \
+  int            grandparent_ordering;     \
+  int            parent_ordering;          \
+  int            ordering
+
+#define LOOKUP_CFIND_FROM_STD(lookup, node, val, cmp) \
+  lookup_cfind_from                                   \
+    ( lookup                                          \
+    , node                                            \
+    , val                                             \
+    , cmp                                             \
+                                                      \
+    , &grandparent                                    \
+    , &grandparent_link                               \
+    , &parent                                         \
+    , &parent_link                                    \
+    , &node                                           \
+    , &node_link                                      \
+                                                      \
+    , &node_val                                       \
+                                                      \
+    , &grandparent_ordering                           \
+    , &parent_ordering                                \
+    , &ordering                                       \
+    )
+const lookup_t *lookup_cfind_from
+  ( const lookup_t      *lookup
+  , const bnode_t       *node
+  , const void          *val
+
+  , callback_compare_t   cmp
+
+  , const bnode_t **out_grandparent
+  , const size_t  **out_grandparent_link
+  , const bnode_t **out_parent
+  , const size_t  **out_parent_link
+  , const bnode_t **out_node
+  , const size_t  **out_node_link
+
+  , const void    **out_node_val
+
+  , int           *out_grandparent_ordering
+  , int           *out_parent_ordering
+  , int           *out_ordering
+  );
+
+/* ---------------------------------------------------------------- */
+
 lookup_t *lookup_insert
   ( lookup_t           *lookup
   , const void         *val
@@ -453,7 +580,7 @@ lookup_t *lookup_delete
 
   , callback_compare_t  cmp
 
-  , int                *out_num_deleted
+  , size_t             *out_num_deleted
   );
 
 /* ---------------------------------------------------------------- */

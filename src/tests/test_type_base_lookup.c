@@ -1229,8 +1229,8 @@ unit_test_result_t lookup_insert_delete_test_run(unit_test_context_t *context)
     value_type value    = -1, *val  = &value;
     value_type retrieve = -1, *ret  = &retrieve;
 
-    int is_duplicate = -1, *dp = &is_duplicate;
-    int num_deleted  = -1, *nd = &num_deleted;
+    int    is_duplicate = -1, *dp = &is_duplicate;
+    size_t num_deleted  = -1, *nd = &num_deleted;
 
     callback_compare_t cmp = callback_compare_int();
 

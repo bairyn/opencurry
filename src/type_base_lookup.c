@@ -285,9 +285,34 @@ size_t bnode_red_value(size_t index)
   return BNODE_RED_VALUE    (index);
 }
 
-size_t bnode_colored_value(size_t index, size_t color)
+size_t bnode_colored_value(size_t index, size_t color_bit)
 {
-  return BNODE_COLORED_VALUE(index, color);
+  return BNODE_COLORED_VALUE(index, color_bit);
+}
+
+size_t bnode_value(size_t index)
+{
+  return BNODE_VALUE(index);
+}
+
+size_t bnode_color(size_t color_bit)
+{
+  return BNODE_COLOR(color_bit);
+}
+
+size_t bnode_set_color(bnode_t *node, size_t color_bit)
+{
+  return (BNODE_SET_COLOR(node, color_bit));
+}
+
+size_t bnode_set_black(bnode_t *node)
+{
+  return (BNODE_SET_BLACK(node));
+}
+
+size_t bnode_set_red  (bnode_t *node)
+{
+  return (BNODE_SET_RED(node));
 }
 
 /* Construct values for the "left" and "right" fields. */
@@ -1156,12 +1181,350 @@ int lookup_height(const lookup_t *lookup)
 /* ---------------------------------------------------------------- */
 
 /*
+ * Traverse the binary search tree, stopping at the given value or at a leaf.
+ *
+ * "node" when non-NULL determines the relative root:
+ *
+ * If the "node" parameter is NULL, traversal starts at lookup's root node;
+ * otherwise traversal starts at the "node" parameter.
+ *
+ * If the value was found:
+ * | parent
+ * |   => Parent of the value node, or NULL if the value node is the relative
+ * |      root (the "node" parameter).
+ * |
+ * | parent_link
+ * |   => "left" or "right" reference in "parent" to the value node.
+ * |
+ * | node
+ * |   => The value node, i.e. the node containing a value equal to "val".
+ * |
+ * | node_link
+ * |   => &node->left
+ * |
+ * | node_val
+ * |   => The value associated with the value node.
+ * |
+ * | parent_ordering
+ * |   => The comparison of "val" with the parent node's value,
+ * |      or 0 if "parent" is NULL.
+ * |
+ * | ordering
+ * |   => The comparison of "val" with the value node's value; i.e. 0
+ * |      (ordering_rel_eq).
+ *
+ * If the value was not found, then the output is the same, except the "value
+ * node" is the parent of the leaf, and "node_link" is the "left" or "right"
+ * reference to the leaf:
+ * | parent
+ * |   => Grandparent of the leaf, or NULL if the value node is the relative
+ * |      root (the "node" parameter).
+ * |
+ * | parent_link
+ * |   => "left" or "right" reference in "parent" to the parent of the leaf.
+ * |
+ * | node
+ * |   => Parent of the leaf.
+ * |
+ * | node_link
+ * |   => "left" or "right" reference in the parent to the leaf.
+ * |
+ * | node_val
+ * |   => The value associated with the parent of the leaf.
+ * |
+ * | parent_ordering
+ * |   => The comparison of "val"  with the leaf's grandparent's value,
+ * |      or 0 if "parent" is NULL.
+ * |
+ * | ordering
+ * |   => The comparison of "val" with the leaf's parent's value.
+ *
+ * Thus "node" is either the value node when found, else parent of the leaf.
+ *
+ * To check whether a leaf was reached, check whether "ordering" is not 0.
+ * (Alternatively, check whether "node_link" is non-NULL.)
+ *
+ * ----------------------------------------------------------------
+ *
+ * If the tree is empty, outputs all NULL's and 0's.
+ */
+lookup_t *lookup_find_from
+  ( lookup_t           *lookup
+  , bnode_t            *node
+  , const void         *val
+
+  , callback_compare_t  cmp
+
+  , bnode_t    **out_grandparent
+  , size_t     **out_grandparent_link
+  , bnode_t    **out_parent
+  , size_t     **out_parent_link
+  , bnode_t    **out_node
+  , size_t     **out_node_link
+
+  , const void **out_node_val
+
+  , int         *out_grandparent_ordering
+  , int         *out_parent_ordering
+  , int         *out_ordering
+  )
+{
+  bnode_t    *grandparent;
+  size_t     *grandparent_link;
+  bnode_t    *parent;
+  size_t     *parent_link;
+  size_t     *node_link;
+
+  const void *node_val;
+
+  int         grandparent_ordering;
+  int         parent_ordering;
+  int         ordering;
+
+#if ERROR_CHECKING
+  if (!lookup)
+    return NULL;
+  if (!val)
+    return NULL;
+#endif /* #if ERROR_CHECKING  */
+
+  if (lookup_empty(lookup))
+  {
+    WRITE_OUTPUT(out_grandparent,          NULL);
+    WRITE_OUTPUT(out_grandparent_link,     NULL);
+    WRITE_OUTPUT(out_parent,               NULL);
+    WRITE_OUTPUT(out_parent_link,          NULL);
+    WRITE_OUTPUT(out_node,                 &lookup->order[0]);
+    WRITE_OUTPUT(out_node_link,            &lookup->order[0].left);
+
+    WRITE_OUTPUT(out_node_val,             NULL);
+
+    WRITE_OUTPUT(out_grandparent_ordering, 0);
+    WRITE_OUTPUT(out_parent_ordering,      0);
+    WRITE_OUTPUT(out_ordering,             0);
+
+    return lookup;
+  }
+
+  if (!node)
+    node = &lookup->order[0];
+
+  grandparent      = NULL;
+  grandparent_link = NULL;
+  parent           = NULL;
+  parent_link      = NULL;
+  node_link        = NULL;
+  ordering = 0;
+  node   = &lookup->order[0];
+  for (;;)
+  {
+    grandparent_ordering = parent_ordering;
+    parent_ordering      = ordering;
+
+    /* val <?= node value */
+    node_val = LOOKUP_NODE_CVALUE(lookup, node);
+    ordering = call_callback_compare(cmp, val, dest);
+
+#if ERROR_CHECKING
+    if (IS_ORDERING_ERROR(ordering))
+    {
+      WRITE_OUTPUT(out_grandparent,          NULL);
+      WRITE_OUTPUT(out_grandparent_link,     NULL);
+      WRITE_OUTPUT(out_parent,               NULL);
+      WRITE_OUTPUT(out_parent_link,          NULL);
+      WRITE_OUTPUT(out_node,                 NULL);
+      WRITE_OUTPUT(out_node_link,            NULL);
+
+      WRITE_OUTPUT(out_node_val,             NULL);
+
+      WRITE_OUTPUT(out_grandparent_ordering, grandparent_ordering);
+      WRITE_OUTPUT(out_parent_ordering,      parent_ordering);
+      WRITE_OUTPUT(out_ordering,             ordering);
+
+      return NULL;
+    }
+#endif /* #if ERROR_CHECKING  */
+
+    if      (ordering < 0)
+      node_link = &node->left;
+    else if (ordering > 0)
+      node_link = &node->right;
+    else
+      break;
+
+    if (BNODE_IS_LEAF(*node_link))
+      break;
+
+    grandparent      = parent;
+    grandparent_link = parent_link;
+
+    parent      = node;
+    parent_link = node_link;
+
+    node = LOOKUP_INDEX_ORDER(lookup, BNODE_GET_REF(*node_link));
+  }
+
+  if (ordering == 0)
+    node_link = &node->left;
+
+  WRITE_OUTPUT(out_grandparent,          grandparent);
+  WRITE_OUTPUT(out_grandparent_link,     grandparent_link);
+  WRITE_OUTPUT(out_parent,               parent);
+  WRITE_OUTPUT(out_parent_link,          parent_link);
+  WRITE_OUTPUT(out_node,                 node);
+  WRITE_OUTPUT(out_node_link,            node_link);
+
+  WRITE_OUTPUT(out_node_val,             node_val);
+
+  WRITE_OUTPUT(out_grandparent_ordering, grandparent_ordering);
+  WRITE_OUTPUT(out_parent_ordering,      parent_ordering);
+  WRITE_OUTPUT(out_ordering,             ordering);
+
+  return lookup;
+}
+
+const lookup_t *lookup_cfind_from
+  ( const lookup_t      *lookup
+  , const bnode_t       *node
+  , const void          *val
+
+  , callback_compare_t   cmp
+
+  , const bnode_t **out_grandparent
+  , const size_t  **out_grandparent_link
+  , const bnode_t **out_parent
+  , const size_t  **out_parent_link
+  , const bnode_t **out_node
+  , const size_t  **out_node_link
+
+  , const void    **out_node_val
+
+  , int           *out_grandparent_ordering
+  , int           *out_parent_ordering
+  , int           *out_ordering
+  )
+{
+  const bnode_t *grandparent;
+  const size_t  *grandparent_link;
+  const bnode_t *parent;
+  const size_t  *parent_link;
+  const size_t  *node_link;
+
+  const void    *node_val;
+
+  int            grandparent_ordering;
+  int            parent_ordering;
+  int            ordering;
+
+#if ERROR_CHECKING
+  if (!lookup)
+    return NULL;
+  if (!val)
+    return NULL;
+#endif /* #if ERROR_CHECKING  */
+
+  if (lookup_empty(lookup))
+  {
+    WRITE_OUTPUT(out_grandparent,          NULL);
+    WRITE_OUTPUT(out_grandparent_link,     NULL);
+    WRITE_OUTPUT(out_parent,               NULL);
+    WRITE_OUTPUT(out_parent_link,          NULL);
+    WRITE_OUTPUT(out_node,                 NULL);
+    WRITE_OUTPUT(out_node_link,            NULL);
+
+    WRITE_OUTPUT(out_node_val,             NULL);
+
+    WRITE_OUTPUT(out_grandparent_ordering, 0);
+    WRITE_OUTPUT(out_parent_ordering,      0);
+    WRITE_OUTPUT(out_ordering,             0);
+
+    return lookup;
+  }
+
+  if (!node)
+    node = &lookup->order[0];
+
+  grandparent      = NULL;
+  grandparent_link = NULL;
+  parent           = NULL;
+  parent_link      = NULL;
+  node_link        = NULL;
+  ordering = 0;
+  node   = &lookup->order[0];
+  for (;;)
+  {
+    grandparent_ordering = parent_ordering;
+    parent_ordering      = ordering;
+
+    /* val <?= node value */
+    node_val = LOOKUP_NODE_CVALUE(lookup, node);
+    ordering = call_callback_compare(cmp, val, dest);
+
+#if ERROR_CHECKING
+    if (IS_ORDERING_ERROR(ordering))
+    {
+      WRITE_OUTPUT(out_grandparent,          NULL);
+      WRITE_OUTPUT(out_grandparent_link,     NULL);
+      WRITE_OUTPUT(out_parent,               NULL);
+      WRITE_OUTPUT(out_parent_link,          NULL);
+      WRITE_OUTPUT(out_node,                 NULL);
+      WRITE_OUTPUT(out_node_link,            NULL);
+
+      WRITE_OUTPUT(out_node_val,             NULL);
+
+      WRITE_OUTPUT(out_grandparent_ordering, grandparent_ordering);
+      WRITE_OUTPUT(out_parent_ordering,      parent_ordering);
+      WRITE_OUTPUT(out_ordering,             ordering);
+
+      return NULL;
+    }
+#endif /* #if ERROR_CHECKING  */
+
+    if      (ordering < 0)
+      node_link = &node->left;
+    else if (ordering > 0)
+      node_link = &node->right;
+    else
+      break;
+
+    if (BNODE_IS_LEAF(*node_link))
+      break;
+
+    grandparent      = parent;
+    grandparent_link = parent_link;
+
+    parent      = node;
+    parent_link = node_link;
+
+    node = LOOKUP_INDEX_CORDER(lookup, BNODE_GET_REF(*node_link));
+  }
+
+  if (ordering == 0)
+    node_link = &node->left;
+
+  WRITE_OUTPUT(out_grandparent,          grandparent);
+  WRITE_OUTPUT(out_grandparent_link,     grandparent_link);
+  WRITE_OUTPUT(out_parent,               parent);
+  WRITE_OUTPUT(out_parent_link,          parent_link);
+  WRITE_OUTPUT(out_node,                 node);
+  WRITE_OUTPUT(out_node_link,            node_link);
+
+  WRITE_OUTPUT(out_node_val,             node_val);
+
+  WRITE_OUTPUT(out_grandparent_ordering, grandparent_ordering);
+  WRITE_OUTPUT(out_parent_ordering,      parent_ordering);
+  WRITE_OUTPUT(out_ordering,             ordering);
+
+  return lookup;
+}
+
+/* ---------------------------------------------------------------- */
+
+/*
  * TODO
  *
- * If the tree reaches maximum capacity, enable out_max_capacity.
- *
- * If there is no space to insert a value, enable out_max_capacity and return
- * NULL.
+ * If there is no space to insert a value,
+ * then sets "out_is_duplicate" and returns NULL.
  */
 lookup_t *lookup_insert
   ( lookup_t           *lookup
@@ -1173,7 +1536,12 @@ lookup_t *lookup_insert
   , int                *out_is_duplicate
   )
 {
-  size_t   capacity;
+  LOOKUP_FIND_VARIABLE_DECLARATIONS;
+
+  size_t   child_ref;
+  bnode_t *child;
+
+  size_t   value_ref;
 
 #if ERROR_CHECKING
   if (!lookup)
@@ -1186,160 +1554,81 @@ lookup_t *lookup_insert
   if (!val)
     return NULL;
 
-  capacity = lookup_capacity(lookup);
+  /* Ordered BST traversal to leaf or first duplicate. */
+  if (!LOOKUP_FIND_FROM_STD(lookup, NULL, val, cmp))
+    return NULL;
 
-  /* Are we inserting the first element? */
-  if (lookup_empty(lookup))
+  /* Is duplicate? */
+  if (!LOOKUP_EMPTY(lookup) && ordering == 0)
   {
-    size_t   value;
-    size_t   node;
+    WRITE_OUTPUT(out_is_duplicate, 1);
 
-    void    *dest;
-    bnode_t *cur;
-
+    if (!add_when_exists)
+      return lookup;
+  }
+  else
+  {
     WRITE_OUTPUT(out_is_duplicate, 0);
+  }
 
-    /* Do we have space? */
-    if (capacity <= 0)
-      return NULL;
+  /* Out of space? */
+  if (LOOKUP_MAX_CAPACITY(lookup))
+    return NULL;
 
-    /* ---------------------------------------------------------------- */
+  /* Add a value and node. */
+  child_ref = lookup_next_value(lookup);
+  value_ref = lookup_next_order(lookup);
+  ++lookup->len;
 
-    /* Set indices. */
-    value = 0;
-    node  = 0;
-    dest = LOOKUP_INDEX_VALUE(lookup, value);
-    cur  = LOOKUP_INDEX_ORDER(lookup, node);
+  /* Link the value. */
+  child = LOOKUP_INDEX_ORDER(lookup, child_ref);
+  BNODE_SET_VALUE(child, value_ref);
 
-    /* Write the value. */
-    memmove(dest, val, LOOKUP_VALUE_SIZE(lookup));
+  /* Write the value. */
+  memmove(LOOKUP_INDEX_VALUE(lookup, value_ref), val, LOOKUP_VALUE_SIZE(lookup));
 
-    /* Write the node. */
-    cur->value = BNODE_BLACK_VALUE(value);
-    BNODE_LINK_SET_LEAF(&cur->left);
-    BNODE_LINK_SET_LEAF(&cur->right);
+  /* Set in use. */
+  LOOKUP_SET_ORDER_IN_USE_BIT(lookup, child_ref, 1);
+  LOOKUP_SET_VALUE_IN_USE_BIT(lookup, value_ref, 1);
 
-    /* Update len. */
-    lookup_next_value(lookup);
-    lookup_next_order(lookup);
-    ++lookup->len;
+  /* ---------------------------------------------------------------- */
 
-    LOOKUP_SET_ORDER_IN_USE_BIT(lookup, node,  1);
-    LOOKUP_SET_VALUE_IN_USE_BIT(lookup, value, 1);
+  /* Insert the node into the tree. */
 
-    /* Success. */
+  /* Is this the first value? */
+  if (LOOKUP_EMPTY(lookup))
+  {
+    BNODE_SET_BLACK(child);
+    BNODE_LINK_SET_LEAF(&child->left);
+    BNODE_LINK_SET_LEAF(&child->right);
+
+    return lookup;
+  }
+
+  /* TODO: balance! */
+
+  /* Are we inserting into a leaf? */
+  if (ordering != 0)
+  {
+    BNODE_LINK_SET_LEAF(&child->left);
+    BNODE_LINK_SET_LEAF(&child->right);
+
+    BNODE_LINK_SET_REF (node_link, child_ref);
+
     return lookup;
   }
   else
   {
-    bnode_t    *parent;
-    bnode_t    *node;
-    size_t     *child_link;
-
-    const void *node_val;
-
-    int         ordering;
-
-    UNUSED(parent);
-    SUPPRESS_UNINITIALIZED(child_link);
-
-    /* Ordered BST traversal to leaf or first duplicate. */
-    parent = NULL;
-    node   = &lookup->order[0];
-    for(;;)
-    {
-      /* val <?= node value */
-      node_val = LOOKUP_NODE_CVALUE(lookup, node);
-      ordering = call_callback_compare(cmp, val, node_val);
-
-#if ERROR_CHECKING
-      if (IS_ORDERING_ERROR(ordering))
-        return NULL;
-#endif /* #if ERROR_CHECKING  */
-
-      if      (ordering < 0)
-        child_link = &node->left;
-      else if (ordering > 0)
-        child_link = &node->right;
-      else
-        break;
-
-      if (BNODE_IS_LEAF(*child_link))
-        break;
-
-      parent = node;
-      node   = LOOKUP_INDEX_ORDER(lookup, BNODE_GET_REF(*child_link));
-    }
-
-    /* Is duplicate? */
-    if (ordering == 0)
-    {
-      WRITE_OUTPUT(out_is_duplicate, 1);
-
-      if (!add_when_exists)
-        return lookup;
-
-      child_link = &node->left;
-    }
+    /* Inserting a duplicate value. */
+    if (BNODE_IS_LEAF(*node_link))
+      BNODE_LINK_SET_LEAF(&child->left);
     else
-    {
-      WRITE_OUTPUT(out_is_duplicate, 0);
-    }
+      BNODE_LINK_SET_REF (&child->left, BNODE_GET_REF(*node_link));
+    BNODE_LINK_SET_LEAF(&child->right);
 
-    /* Out of space? */
-    if (LOOKUP_MAX_CAPACITY(lookup))
-    {
-      return NULL;
-    }
-    else
-    {
-      /* Add the node. */
+    BNODE_LINK_SET_REF(node_link, child_ref);
 
-      size_t   child_index;
-      size_t   child_val_index;
-
-      bnode_t *child;
-      void    *child_val;
-
-      child_index     = lookup_next_order(lookup);
-      child_val_index = lookup_next_value(lookup);
-      ++lookup->len;
-
-      child     = LOOKUP_INDEX_ORDER(lookup, child_index);
-      child_val = LOOKUP_INDEX_VALUE(lookup, child_val_index);
-
-      child->value = BNODE_BLACK_VALUE(child_val_index);
-
-      /* Write the value. */
-      memmove(child_val, val, LOOKUP_VALUE_SIZE(lookup));
-
-      /* Link the node. */
-      if (ordering == 0)
-      {
-        /* Inserting a duplicate.  Make "child" node's (left) child. */
-
-        /* Is "node's" (left) child currently a leaf? */
-        if (BNODE_IS_LEAF(*child_link))
-          BNODE_LINK_SET_LEAF(&child->left);
-        else
-          BNODE_LINK_SET_REF (&child->left, BNODE_GET_REF(*child_link));
-        BNODE_LINK_SET_LEAF(&child->right);
-        BNODE_LINK_SET_REF (child_link, child_index);
-      }
-      else
-      {
-        BNODE_LINK_SET_LEAF(&child->left);
-        BNODE_LINK_SET_LEAF(&child->right);
-        BNODE_LINK_SET_REF (child_link, child_index);
-      }
-
-      /* Finalize the new node. */
-      LOOKUP_SET_ORDER_IN_USE_BIT(lookup, child_index,     1);
-      LOOKUP_SET_VALUE_IN_USE_BIT(lookup, child_val_index, 1);
-
-      /* TODO: balance! */
-      return lookup;
-    }
+    return lookup;
   }
 }
 
@@ -1503,17 +1792,18 @@ lookup_t *lookup_delete
 
   , callback_compare_t  cmp
 
-  , int                *out_num_deleted
+  , size_t             *out_num_deleted
   )
 {
-  size_t   parent;
-  size_t   node;
+  bnode_t    *parent;
+  bnode_t    *node;
+  size_t     *child_link;
 
-  void    *dest;
-  bnode_t *par;
-  bnode_t *cur;
+  const void *node_val;
 
-  int      par_ordering = 0;
+  int         ordering;
+
+  UNUSED(parent);
 
 #if ERROR_CHECKING
   if (!lookup)
@@ -1531,6 +1821,44 @@ lookup_t *lookup_delete
     WRITE_OUTPUT(out_num_deleted, 0);
     return NULL;
   }
+
+  parent = NULL;
+  node   = &lookup->order[0];
+  for (;;)
+  {
+    /* val <?= node value */
+    node_val = LOOKUP_NODE_CVALUE(lookup, node);
+    ordering = call_callback_compare(cmp, val, node_val);
+  }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
   parent = 0;
   node   = 0;
