@@ -1734,14 +1734,7 @@ lookup_t *lookup_delete
   , size_t             *out_num_deleted
   )
 {
-  size_t   parent;
-  size_t   node;
-
-  void    *dest;
-  bnode_t *par;
-  bnode_t *cur;
-
-  int      par_ordering = 0;
+  LOOKUP_FIND_VARIABLE_DECLARATIONS;
 
 #if ERROR_CHECKING
   if (!lookup)
@@ -1754,133 +1747,169 @@ lookup_t *lookup_delete
     return NULL;
   }
 
-  if (lookup_empty(lookup))
+  WRITE_OUTPUT(out_num_deleted, 0);
+
+  /* ---------------------------------------------------------------- */
+
+  /* Is the lookup container empty? */
+  if (LOOKUP_EMPTY(lookup))
   {
     WRITE_OUTPUT(out_num_deleted, 0);
     return NULL;
   }
 
-  parent = 0;
-  node   = 0;
-  for (;;)
+  /* Ordered BST traversal to leaf or first match. */
+  if (!LOOKUP_FIND_FROM_STD(lookup, NULL, val, cmp))
+    return NULL;
+
+  /* Did we find a match? */
+  if (ordering != 0)
   {
-    int      ordering;
-    size_t   child;
-
-    cur   = LOOKUP_INDEX_ORDER(lookup, node);
-    dest  = LOOKUP_INDEX_VALUE(lookup, BNODE_GET_VALUE(cur->value));
-
-    ordering = call_callback_compare(cmp, val, dest);
-
-#if ERROR_CHECKING
-    if (IS_ORDERING_ERROR(ordering))
-      return NULL;
-#endif /* #if ERROR_CHECKING  */
-
-    if      (ordering < 0)
-      child = cur->left;
-    else if (ordering > 0)
-      child = cur->right;
-    else
-      break;
-
-    parent       = node;
-    par_ordering = ordering;
-
-    if (BNODE_IS_LEAF(node))
-    {
-      WRITE_OUTPUT(out_num_deleted, 0);
-      return lookup;
-    }
-    else
-    {
-      parent = node;
-      node   = BNODE_GET_REF(child);
-    }
+    WRITE_OUTPUT(out_num_deleted, 0);
+    return lookup;
   }
 
-  WRITE_OUTPUT(out_num_deleted, 1);
-  node = BNODE_GET_REF(node);
+  /* ---------------------------------------------------------------- */
 
-  /* cur => node (we're removing "node") */
-  par = LOOKUP_INDEX_ORDER(lookup, parent);
-
-  /* First, mark the element as free in our container. */
-  LOOKUP_SET_IS_VALUE_FREE(lookup, BNODE_GET_VALUE(cur->value), 1);
-
-  /* Second, update the tree. */
-
-  /* TODO: duplicates! */
-
-  /* Are we removing the root node? */
-  if (parent == node)
+  if (!LOOKUP_IS_RECYCLING(lookup))
   {
-    if (BNODE_IS_LEAF(cur->left) && BNODE_IS_LEAF(cur->right))
-    {
-      LOOKUP_SET_ORDER_IN_USE_BIT(lookup, node, 0);
-    }
-    else
-    {
-      /* Replace "node" with the left-most node of "node"'s right-sub-tree. */
-      size_t *child;
+    --lookup->next_value;
+    --lookup->next_order;
+  }
 
-      for
-        ( child =        &cur->right
-        ; !BNODE_IS_LEAF( LOOKUP_INDEX_ORDER(lookup, BNODE_GET_REF(*child))->left)
-        ; child =       (&LOOKUP_INDEX_ORDER(lookup, BNODE_GET_REF(*child))->left)
-        );
+  if      ( BNODE_IS_LEAF(node->left) &&  BNODE_IS_LEAF(node->right))
+  {
+    if (parent_link)
+      BNODE_LINK_SET_LEAF(parent_link);
 
-      cur->value = BNODE_GET_VALUE( LOOKUP_INDEX_ORDER(lookup, BNODE_GET_REF(*child))->value );
+    LOOKUP_SET_ORDER_IN_USE_BIT(lookup, node - lookup->order,         0);
+    LOOKUP_SET_VALUE_IN_USE_BIT(lookup, BNODE_GET_VALUE(node->value), 0);
 
-      /* Remove bottom node. */
-      LOOKUP_SET_IS_ORDER_FREE(lookup, *child, 1);
-      BNODE_LINK_SET_LEAF(child);
-    }
+    --lookup->len;
+
+    WRITE_OUTPUT(out_num_deleted, 1);
+
+    return lookup;
+  }
+  else if (!BNODE_IS_LEAF(node->left) &&  BNODE_IS_LEAF(node->right))
+  {
+    /* num_children_deleted: TODO: anti-lazify. */
+    size_t num_children_deleted;
+
+    if (parent_link)
+      BNODE_LINK_SET_REF(parent_link, BNODE_GET_REF(node->left));
+
+    LOOKUP_SET_ORDER_IN_USE_BIT(lookup, node - lookup->order,         0);
+    LOOKUP_SET_VALUE_IN_USE_BIT(lookup, BNODE_GET_VALUE(node->value), 0);
+
+    --lookup->len;
+
+    if (!lookup_delete(lookup, val, cmp, &num_children_deleted))
+      return NULL;
+
+    WRITE_OUTPUT(out_num_deleted, num_children_deleted + 1);
+
+    return lookup;
+  }
+  else if ( BNODE_IS_LEAF(node->left) && !BNODE_IS_LEAF(node->right))
+  {
+    if (parent_link)
+      BNODE_LINK_SET_REF(parent_link, BNODE_GET_REF(node->right));
+
+    LOOKUP_SET_ORDER_IN_USE_BIT(lookup, node - lookup->order,         0);
+    LOOKUP_SET_VALUE_IN_USE_BIT(lookup, BNODE_GET_VALUE(node->value), 0);
+
+    --lookup->len;
+
+    WRITE_OUTPUT(out_num_deleted, 1);
+
+    return lookup;
   }
   else
   {
-    if (BNODE_IS_LEAF(cur->left) && BNODE_IS_LEAF(cur->right))
+    /* We need to handle duplicates. */
+
+    bnode_t    *end;
+    const void *end_val;
+
+    bnode_t    *begin;
+
+    LOOKUP_SET_VALUE_IN_USE_BIT(lookup, BNODE_GET_VALUE(node->value), 0);
+
+    /* First, go right, then left until the end.                  */
+    /* Then set end->left to node->left.                          */
+    /* Then go right, then left until the first match with "end". */
+    /* Then set this_first_match->right to node->right.           */
+    /* Replace this node with this first match.                   */
+
+    /* 1) Get end node.                                           */
+    if (!(end_val = lookup_min(lookup, LOOKUP_INDEX_ORDER(lookup, BNODE_GET_REF(node->right)), &end)))
+      return NULL;
+
+    /* 2) Set end->left to node->left.                            */
+    BNODE_LINK_SET_REF(&end->left, BNODE_GET_REF(node->left));
+
+    /* 3) Get first end node with same value. */
+    if
+      (
+        !(
+          lookup_find_from
+            ( /* lookup                   */ lookup
+            , /* root                     */ LOOKUP_INDEX_ORDER(lookup, BNODE_GET_REF(node->right))
+            , /* val                      */ end_val
+
+            , /* cmp                      */ cmp
+
+            , /* out_grandparent          */ NULL
+            , /* out_grandparent_link     */ NULL
+            , /* out_parent               */ NULL
+            , /* out_parent_link          */ NULL
+            , /* out_node                 */ &begin
+            , /* out_node_link            */ NULL
+
+            , /* out_node_val             */ NULL
+
+            , /* out_grandparent_ordering */ NULL
+            , /* out_parent_ordering      */ NULL
+            , /* out_ordering             */ NULL
+            )
+        )
+      )
+      return NULL;
+
+    /* 4) Set begin->right to node->right.                      */
+    BNODE_LINK_SET_REF(&begin->right, BNODE_GET_REF(node->right));
+
+    /* 5) Replace this node with begin.                         */
+    if (parent_link)
     {
-      /* Bottom node; make parent's child link a leaf, and free "node". */
-      BNODE_SET_LEAF(par, par_ordering);
-      LOOKUP_SET_IS_ORDER_FREE(lookup, node, 1);
-    }
-    else if (!BNODE_IS_LEAF(cur->left))
-    {
-      /* Has only a left-sub-tree; set parent's child link to it */
-      /* and free "node".                                        */
-      BNODE_SET_REF(par, par_ordering, BNODE_GET_REF(cur->left));
-      LOOKUP_SET_IS_ORDER_FREE(lookup, node, 1);
-    }
-    else if (!BNODE_IS_LEAF(cur->right))
-    {
-      /* Has only a right-sub-tree; set parent's child link to it */
-      /* and free "node".                                         */
-      BNODE_SET_REF(par, par_ordering, BNODE_GET_REF(cur->right));
-      LOOKUP_SET_IS_ORDER_FREE(lookup, node, 1);
+      BNODE_LINK_SET_REF(parent_link, BNODE_REF(begin - lookup->order));
+
+      LOOKUP_SET_ORDER_IN_USE_BIT(lookup, node - lookup->order, 0);
     }
     else
     {
-      /* Replace "node" with the left-most node of "node"'s right-sub-tree. */
-      size_t *child;
+      BNODE_SET_VALUE   (node,         BNODE_GET_VALUE(begin->value));
+      BNODE_LINK_SET_REF(&node->left,  BNODE_GET_REF  (begin->left));
+      BNODE_LINK_SET_REF(&node->right, BNODE_GET_REF  (begin->right));
 
-      for
-        ( child =        &cur->right
-        ; !BNODE_IS_LEAF( LOOKUP_INDEX_ORDER(lookup, BNODE_GET_REF(*child))->left)
-        ; child =       (&LOOKUP_INDEX_ORDER(lookup, BNODE_GET_REF(*child))->left)
-        );
-
-      cur->value = BNODE_GET_VALUE( LOOKUP_INDEX_ORDER(lookup, BNODE_GET_REF(*child))->value );
-
-      /* Remove bottom node. */
-      LOOKUP_SET_IS_ORDER_FREE(lookup, *child, 1);
-      BNODE_LINK_SET_LEAF(child);
+      LOOKUP_SET_ORDER_IN_USE_BIT(lookup, begin - lookup->order, 0);
     }
+
+    --lookup->len;
+
+    /* TODO: anti-lazify */
+    {
+      size_t num_children_deleted;
+
+      if (!lookup_delete(lookup, val, cmp, &num_children_deleted))
+        return NULL;
+
+      WRITE_OUTPUT(out_num_deleted, num_children_deleted + 1);
+    }
+
+    return lookup;
   }
-
-  --lookup->len;
-
-  return lookup;
 }
 
 /* Returns the number of deletions, (even when it exceeds out_val_num_max). */
@@ -2154,7 +2183,53 @@ void *lookup_iterate
 
 /* ---------------------------------------------------------------- */
 
-const void *lookup_min(const lookup_t *lookup, const bnode_t *root)
+const void *lookup_min(lookup_t *lookup, bnode_t *root, bnode_t **out_end)
+{
+  bnode_t *node = root;
+
+#if ERROR_CHECKING
+  if (!lookup)
+    return NULL;
+#endif /* #if ERROR_CHECKING  */
+
+  if (lookup_empty(lookup))
+    return NULL;
+
+  if (!node)
+    node = &lookup->order[0];
+
+  while (!BNODE_IS_LEAF(node->left))
+    node = LOOKUP_INDEX_ORDER(lookup, BNODE_GET_REF(node->left));
+
+  WRITE_OUTPUT(out_end, node);
+
+  return LOOKUP_INDEX_VALUE(lookup, BNODE_GET_VALUE(node->value));
+}
+
+const void *lookup_max(lookup_t *lookup, bnode_t *root, bnode_t **out_end)
+{
+  bnode_t *node = root;
+
+#if ERROR_CHECKING
+  if (!lookup)
+    return NULL;
+#endif /* #if ERROR_CHECKING  */
+
+  if (lookup_empty(lookup))
+    return NULL;
+
+  if (!node)
+    node = &lookup->order[0];
+
+  while (!BNODE_IS_LEAF(node->right))
+    node = LOOKUP_INDEX_ORDER(lookup, BNODE_GET_REF(node->right));
+
+  WRITE_OUTPUT(out_end, node);
+
+  return LOOKUP_INDEX_VALUE(lookup, BNODE_GET_VALUE(node->value));
+}
+
+const void *lookup_cmin(const lookup_t *lookup, const bnode_t *root, const bnode_t **out_end)
 {
   const bnode_t *node = root;
 
@@ -2172,10 +2247,12 @@ const void *lookup_min(const lookup_t *lookup, const bnode_t *root)
   while (!BNODE_IS_LEAF(node->left))
     node = LOOKUP_INDEX_ORDER(lookup, BNODE_GET_REF(node->left));
 
+  WRITE_OUTPUT(out_end, node);
+
   return LOOKUP_INDEX_VALUE(lookup, BNODE_GET_VALUE(node->value));
 }
 
-const void *lookup_max(const lookup_t *lookup, const bnode_t *root)
+const void *lookup_cmax(const lookup_t *lookup, const bnode_t *root, const bnode_t **out_end)
 {
   const bnode_t *node = root;
 
@@ -2192,6 +2269,8 @@ const void *lookup_max(const lookup_t *lookup, const bnode_t *root)
 
   while (!BNODE_IS_LEAF(node->right))
     node = LOOKUP_INDEX_ORDER(lookup, BNODE_GET_REF(node->right));
+
+  WRITE_OUTPUT(out_end, node);
 
   return LOOKUP_INDEX_VALUE(lookup, BNODE_GET_VALUE(node->value));
 }

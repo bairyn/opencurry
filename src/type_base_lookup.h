@@ -589,10 +589,25 @@ lookup_t *lookup_delete
   , size_t             *out_num_deleted
   );
 
+size_t lookup_delete_limit
+  ( lookup_t           *lookup
+  , const void         *val
+  , size_t              limit
+
+  , callback_compare_t  cmp
+
+  , size_t             *out_num_deleted
+  , void               *out_val
+  , size_t              out_val_num_max
+  );
+
 /* ---------------------------------------------------------------- */
 
-const void *lookup_min(const lookup_t *lookup, const bnode_t *root);
-const void *lookup_max(const lookup_t *lookup, const bnode_t *root);
+const void *lookup_min(lookup_t *lookup, bnode_t *root, bnode_t **out_end);
+const void *lookup_max(lookup_t *lookup, bnode_t *root, bnode_t **out_end);
+
+const void *lookup_cmin(const lookup_t *lookup, const bnode_t *root, const bnode_t **out_end);
+const void *lookup_cmax(const lookup_t *lookup, const bnode_t *root, const bnode_t **out_end);
 
 /* ---------------------------------------------------------------- */
 /* Post-dependencies.                                               */
