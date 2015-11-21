@@ -1142,7 +1142,7 @@ int lookup_height_from(const lookup_t *lookup, const bnode_t *node)
     return lookup_height_from(lookup, LOOKUP_INDEX_ORDER(lookup, BNODE_GET_REF(node->right))) + 1;
   else
     return
-      MAX
+      max_int
         ( lookup_height_from(lookup, LOOKUP_INDEX_ORDER(lookup, BNODE_GET_REF(node->left )))
         , lookup_height_from(lookup, LOOKUP_INDEX_ORDER(lookup, BNODE_GET_REF(node->right)))
         ) + 1;
