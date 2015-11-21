@@ -734,7 +734,7 @@ size_t strlappendz(char *dest, size_t dest_size, const char *src)
        && (         src             < dest + dest_size )
        )
     {
-      size = min_size(size, strlen(src));
+      size = min_size(size, i + strlen(src));
     }
 
     while (i < size)
