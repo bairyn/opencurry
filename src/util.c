@@ -686,6 +686,14 @@ size_t strlappendn(char *dest, size_t dest_size, const char *src, size_t src_siz
 
   if ((src) && (src_size >= 1))
   {
+    /* Handle overlapping memory. */
+    if (  ( dest <= src + size_less_null(src_size)                    )
+       && (         src                            < dest + dest_size )
+       )
+    {
+      src_size = strllen(src, src_size);
+    }
+
     while (i < size_less_null(dest_size))
     {
       if (!*src)
@@ -719,7 +727,17 @@ size_t strlappendz(char *dest, size_t dest_size, const char *src)
 
   if (src)
   {
-    for (; i < size_less_null(dest_size); ++i)
+    size_t size = size_less_null(dest_size);
+
+    /* Handle overlapping memory. */
+    if (  ( dest <= src + dest_size                    )
+       && (         src             < dest + dest_size )
+       )
+    {
+      size = min_size(size, strlen(src));
+    }
+
+    for (; i < size; ++i)
     {
       if (!*src)
         break;
