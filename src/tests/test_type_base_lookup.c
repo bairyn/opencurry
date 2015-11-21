@@ -157,9 +157,9 @@ static size_t lookup_num_nodes_from(const lookup_t *lookup, const bnode_t *node)
   num = 1;
 
   if (!BNODE_IS_LEAF(node->left))
-    num += lookup_num_nodes_from(lookup, LOOKUP_INDEX_ORDER(lookup, BNODE_GET_REF(node->left)));
+    num += lookup_num_nodes_from(lookup, LOOKUP_INDEX_CORDER(lookup, BNODE_GET_REF(node->left)));
   if (!BNODE_IS_LEAF(node->right))
-    num += lookup_num_nodes_from(lookup, LOOKUP_INDEX_ORDER(lookup, BNODE_GET_REF(node->right)));
+    num += lookup_num_nodes_from(lookup, LOOKUP_INDEX_CORDER(lookup, BNODE_GET_REF(node->right)));
 
   return num;
 }
@@ -1113,8 +1113,11 @@ unit_test_result_t lookup_insert_test_run(unit_test_context_t *context)
 
   ENCLOSE()
   {
-    test_set_details_msg(context, "lookup_insert_test_run: #1.");
-    COMPOUND(lookup_insert_tests(context, &lookup_val, &lookup));
+    COMPOUND_TEST
+      ( "lookup_insert_tests"
+      , "lookup_insert_tests: run #1."
+      , lookup_insert_tests(context, &lookup_val, &lookup)
+      );
 
     LOOKUP_DEINIT(lookup);
     LOOKUP_DEINIT(lookup);
@@ -1122,24 +1125,40 @@ unit_test_result_t lookup_insert_test_run(unit_test_context_t *context)
 
     lookup_init_empty(lookup, sizeof(value_type));
 
-    test_set_details_msg(context, "lookup_insert_test_run: #2.");
-    COMPOUND(lookup_insert_tests(context, &lookup_val, &lookup));
+    COMPOUND_TEST
+      ( "lookup_insert_tests #2"
+      , "lookup_insert_tests: run #2."
+      , lookup_insert_tests(context, &lookup_val, &lookup)
+      );
 
     {
       int run;
 
       for (run = 3; run <= 8; ++run)
       {
-        char details[] = "lookup_insert_test_run: #x.";
-        char *numrep = ARRAY_FINAL_REF(details) - 1;
+        char name       [DEFAULT_BUF_SIZE];
+        char description[DEFAULT_BUF_SIZE];
 
-        *numrep = CLAMP_INTERVAL('0' + run, '1', '9');
+        snprintf
+          ( (char *) name, (size_t) terminator_size(sizeof(name))
+          , "lookup_insert_tests #%d"
+          , (int) run
+          );
+
+        snprintf
+          ( (char *) description, (size_t) terminator_size(sizeof(description))
+          , "lookup_insert_tests: run #%d."
+          , (int) run
+          );
 
         LOOKUP_DEINIT(lookup);
         lookup_init_empty(lookup, sizeof(value_type));
 
-        test_set_details_msg(context, details);
-        COMPOUND(lookup_insert_tests(context, &lookup_val, &lookup));
+        COMPOUND_TEST
+          ( name
+          , description
+          , lookup_insert_tests(context, &lookup_val, &lookup)
+          );
       }; BREAKABLE(result);
     }
   }
@@ -1186,8 +1205,11 @@ unit_test_result_t lookup_insert_delete_test_run(unit_test_context_t *context)
 
     /* ---------------------------------------------------------------- */
 
-    test_set_details_msg(context, "lookup_insert_delete_test_run: insertion tests.");
-    COMPOUND(lookup_insert_tests(context, &lookup_val, &lookup));
+    COMPOUND_TEST
+      ( "lookup_insert_tests"
+      , "lookup_insert_tests: deletion tests preparation."
+      , lookup_insert_tests(context, &lookup_val, &lookup)
+      );
 
     /* Make sure "lookup_insert_tests" ends in what we expect. */
 
