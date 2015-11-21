@@ -686,12 +686,12 @@ size_t strlappendn(char *dest, size_t dest_size, const char *src, size_t src_siz
 
   if ((src) && (src_size >= 1))
   {
-    for (; i < size_less_null(dest_size); ++i)
+    while (i < size_less_null(dest_size))
     {
       if (!*src)
         break;
 
-      dest[i] = *src++;
+      dest[i++] = *src++;
 
       if (--src_size <= 0)
         break;
