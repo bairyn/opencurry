@@ -1522,6 +1522,8 @@ lookup_t *lookup_insert
   , int                *out_is_duplicate
   )
 {
+  int empty;
+
   LOOKUP_FIND_VARIABLE_DECLARATIONS;
 
   size_t   child_ref;
@@ -1540,12 +1542,16 @@ lookup_t *lookup_insert
   if (!val)
     return NULL;
 
+  /* ---------------------------------------------------------------- */
+
+  empty = LOOKUP_EMPTY(lookup);
+
   /* Ordered BST traversal to leaf or first duplicate. */
   if (!LOOKUP_FIND_FROM_STD(lookup, NULL, val, cmp))
     return NULL;
 
   /* Is duplicate? */
-  if (!LOOKUP_EMPTY(lookup) && ordering == 0)
+  if (!empty && ordering == 0)
   {
     WRITE_OUTPUT(out_is_duplicate, 1);
 
@@ -1582,7 +1588,7 @@ lookup_t *lookup_insert
   /* Insert the node into the tree. */
 
   /* Is this the first value? */
-  if (LOOKUP_EMPTY(lookup))
+  if (empty)
   {
     BNODE_SET_BLACK(child);
     BNODE_LINK_SET_LEAF(&child->left);
