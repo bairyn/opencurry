@@ -418,6 +418,19 @@ void free_unit_test_context(unit_test_context_t *context)
 }
 
 /* ---------------------------------------------------------------- */
+
+unit_test_t unit_test(unit_test_fun_t run, const char *name, const char *description)
+{
+  unit_test_t unit_test;
+
+  unit_test.run         = run;
+  unit_test.name        = name;
+  unit_test.description = description;
+
+  return unit_test;
+}
+
+/* ---------------------------------------------------------------- */
 /* Running tests. */
 
 /* Run a unit test independently, with a new unit test context state. */
@@ -711,6 +724,8 @@ void process_first_test_failure(unit_test_context_t *context, unit_test_t test, 
   memcpy(context->err_buf + context->err_buf_halfsize, context->err_buf, context->err_buf_len);
   context->err_buf_first_err_len = context->err_buf_len;
 }
+
+/* ---------------------------------------------------------------- */
 
 /*
  * Prints context->group_depth * "| ".
@@ -1137,7 +1152,82 @@ unit_test_result_t run_tests(unit_test_context_t *context, unit_test_t **tests)
 }
 
 /* ---------------------------------------------------------------- */
-/* Default error messages for assertion failures. */
+/* Trivial unit tests.                                              */
+
+unit_test_result_t passing_test(unit_test_context_t *context)
+{
+  return UNIT_TEST_PASS;
+}
+
+unit_test_result_t failing_test(unit_test_context_t *context)
+{
+  return UNIT_TEST_FAIL;
+}
+
+unit_test_result_t skipped_test(unit_test_context_t *context)
+{
+  return UNIT_TEST_SKIP;
+}
+
+unit_test_result_t failing_continue_test(unit_test_context_t *context)
+{
+  return UNIT_TEST_FAIL_CONTINUE;
+}
+
+unit_test_result_t skipped_continue_test(unit_test_context_t *context)
+{
+  return UNIT_TEST_SKIP_CONTINUE;
+}
+
+unit_test_result_t internal_error_test(unit_test_context_t *context)
+{
+  return UNIT_TEST_INTERNAL_ERROR;
+}
+
+const unit_test_fun_t passing_test_fun = passing_test;
+const unit_test_fun_t failing_test_fun = failing_test;
+const unit_test_fun_t skipped_test_fun = skipped_test;
+const unit_test_fun_t failing_continue_test_fun = failing_continue_test;
+const unit_test_fun_t skipped_continue_test_fun = skipped_continue_test;
+const unit_test_fun_t internal_error_test_fun = internal_error_test;
+
+unit_test_fun_t trivial_test(unit_test_t *context, unit_test_result_t result)
+{
+  switch result
+  {
+    case UNIT_TEST_PASS:
+      return passing_test_fun;
+    case UNIT_TEST_FAIL:
+      return failing_test_fun;
+    case UNIT_TEST_SKIP:
+      return skipped_test_fun;
+    case UNIT_TEST_FAIL_CONTINUE:
+      return failing_continue_test_fun;
+    case UNIT_TEST_SKIP_CONTINUE:
+      return skipped_continue_test_fun;
+    default:
+    case UNIT_TEST_INTERNAL_ERROR:
+      return internal_error_test_fun;
+  }
+}
+
+unit_test_t trivial_unit_test(unit_test_t *context, unit_test_result_t result, const char *name, const char *description)
+{
+  return unit_test(trivial_test(result), name, description);
+}
+
+unit_test_result_t run_trivial_test(unit_test_t *context, unit_test_result_t result, const char *name, const char *description)
+{
+  return run_test(context, trivial_unit_test(context, result, name, description));
+}
+
+unit_test_t anonymous_skip_continue_test(unit_test *context)
+{
+  return trivial_unit_test(context, UNIT_TEST_SKIP_CONTINUE, "<anonymous>", "<anonymous: anonymous_skip_continue_test(context)>");
+}
+
+/* ---------------------------------------------------------------- */
+/* Default error messages for assertion failures.                   */
 
 /* Clear the error buffer.
  *

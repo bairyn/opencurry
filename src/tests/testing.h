@@ -210,6 +210,7 @@ struct unit_test_s
 };
 typedef struct unit_test_s unit_test_t;
 
+unit_test_t unit_test(unit_test_fun_t run, const char *name, const char *description);
 
 /* ---------------------------------------------------------------- */
 /* Running tests. */
@@ -264,7 +265,30 @@ unit_test_result_t run_tests_num(unit_test_context_t *context, unit_test_t **tes
 unit_test_result_t run_tests(unit_test_context_t *context, unit_test_t **tests);
 
 /* ---------------------------------------------------------------- */
-/* Default error messages for assertion failures. */
+/* Trivial unit tests.                                              */
+
+unit_test_result_t passing_test(unit_test_context_t *context);
+unit_test_result_t failing_test(unit_test_context_t *context);
+unit_test_result_t skipped_test(unit_test_context_t *context);
+unit_test_result_t failing_continue_test(unit_test_context_t *context);
+unit_test_result_t skipped_continue_test(unit_test_context_t *context);
+unit_test_result_t internal_error_test(unit_test_context_t *context);
+
+extern const unit_test_fun_t passing_test_fun;
+extern const unit_test_fun_t failing_test_fun;
+extern const unit_test_fun_t skipped_test_fun;
+extern const unit_test_fun_t failing_continue_test_fun;
+extern const unit_test_fun_t skipped_continue_test_fun;
+extern const unit_test_fun_t internal_error_test_fun;
+
+unit_test_fun_t trivial_test(unit_test_t *context, unit_test_result_t result);
+unit_test_t trivial_unit_test(unit_test_t *context, unit_test_result_t result, const char *name, const char *description);
+unit_test_result_t run_trivial_test(unit_test_t *context, unit_test_result_t result, const char *name, const char *description);
+
+unit_test_t anonymous_skip_continue_test(unit_test *context);
+
+/* ---------------------------------------------------------------- */
+/* Default error messages for assertion failures.                   */
 
 typedef void *(*tests_funp_t)(void *, ...);
 
@@ -395,6 +419,19 @@ unit_test_result_t assert_not_memeq_continue  (ASSERT_PARAMS, void         *chec
 /* Utilities.                                                       */
 /* ---------------------------------------------------------------- */
 
+/* Adds an individual result value to the composite "result" value. */
+#define ADD_RESULT(result_to_add) ADD_RESULT_COMPLETE(result, result_to_add)
+#define OUT_RESULT(result_to_add)                        \
+  do                                                     \
+  {                                                      \
+    if (out_result)                                      \
+      ADD_RESULT_COMPLETE(*out_result, (result_to_add)); \
+  } while(0)
+#define ADD_RESULT_COMPLETE(result, result_to_add) (result) |= (result_to_add)
+
+#define NEST_TEST(name, description, assertion) NEST_TEST_CONTEXT(context, name, description, assertion)
+#define NEST_TEST_CONTEXT(context, name, description, assertion) run_trivial_test((context), (assertion), (name), (description))
+
 /* If "result" contains an error code indicating non-continuable failure,
  * return it.
  */
@@ -443,7 +480,10 @@ unit_test_result_t assert_not_memeq_continue  (ASSERT_PARAMS, void         *chec
   else                                 \
     do {} while(0)
 
-#define COMPOUND_TRIVIAL(assertion) BREAKABLE((result |= assertion))
+/* COMPOUND: add the result of an assertion, breaking in an enclosure if
+ * unsuccessful.
+ */
+#define COMPOUND_TRIVIAL(assertion) BREAKABLE((ADD_RESULT((assertion))))
 
 /* Allows "result" to be set in the assertion". */
 #define COMPOUND(assertion)              \
@@ -457,6 +497,39 @@ unit_test_result_t assert_not_memeq_continue  (ASSERT_PARAMS, void         *chec
   }                                      \
   else                                   \
     do {} while(0)
+
+/* Run the assertion as a child test. */
+#define COMPOUND_TEST(name, description, assertion) \
+  COMPOUND_TEST_CONTEXT(context, name, description, assertion)
+#define COMPOUND_TEST_CONTEXT(context, name, description, assertion) \
+  COMPOUND(NEST_TEST_CONTEXT(context, name, description, assertion))
+
+/* ASSERT_NEST: Run an assertion as a child test.
+ * This can be composed with the *ASSERTn macros.
+ */
+#define ASSERT_NEST(name, description, assertion) \
+  ASSERT_NEST_CONTEXT(context, name, description, assertion)
+#define ASSERT_NEST_CONTEXT(context, name, description, assertion)           \
+  if (1)                                                                     \
+  {                                                                          \
+    ENCLOSE()                                                                \
+    {                                                                        \
+      COMPOUND((assertion));                                                 \
+    }                                                                        \
+                                                                             \
+    COMPOUND((NEST_TEST_CONTEXT((context), (name), (description), result))); \
+  }                                                                          \
+  else                                                                       \
+    do {} while(0)
+
+#define LNEST_TEST(assertion) \
+  NEST_TEST    (("child test: " LINETAG()), ("LNEST_TEST(assertion): child test: " LINETAG()),     (assertion))
+
+#define LCOMPOUND_TEST(assertion) \
+  COMPOUND_TEST(("child test: " LINETAG()), ("LCOMPOUND_TEST(assertion): child test: " LINETAG()), (assertion))
+
+#define LASSERT_NEST(assertion) \
+  ASSERT_NEST  (("child test: " LINETAG()), ("LASSERT_NEST(assertion): child test: " LINETAG()),   (assertion))
 
 /*
  * n-ary COMPOUND-based assertions.
