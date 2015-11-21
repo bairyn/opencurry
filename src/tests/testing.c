@@ -632,9 +632,6 @@ unit_test_result_t run_test(unit_test_context_t *context, unit_test_t test)
   /* Print the id and name of the test. */
   print_test_prefix(context, test, id);
 
-  /* Reset error and details buffers, run, and obtain result. */
-  reset_err_buf(context);
-  reset_err_msg_details(context);
   /* Call the test procedure. */
 
   /* This might recursively call child tests via "run_test*" procedures
@@ -651,6 +648,8 @@ unit_test_result_t run_test(unit_test_context_t *context, unit_test_t test)
 
   /* Print the result. */
   print_test_result(context, test, id, result, seed_start);
+
+  /* Reset error message buffer. */
   reset_err_buf(context);
 
   /* ---------------------------------------------------------------- */
