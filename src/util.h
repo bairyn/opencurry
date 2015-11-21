@@ -605,10 +605,10 @@ const char *last_bytes(const char *str, size_t num_bytes);
 
 /* Assumes a <= b. */
 #define DISTANCE_MONOTONIC(from, to) ((to) - (from))
-#define DISTANCE(from, to)              \
-  ( ((from) <= (to))                             \
-  ? (DISTANCE_MONOTONIC((from), (to))   \
-  : (DISTANCE_MONOTONIC((to),   (from)) \
+#define DISTANCE(from, to)                   \
+  ( ( ((from) <= (to))                     ) \
+  ? ( (DISTANCE_MONOTONIC((from), (to))  ) ) \
+  : ( (DISTANCE_MONOTONIC((to),   (from))) ) \
   )
 
 #define IS_EVEN(val) (((val) % 2) == 0)
