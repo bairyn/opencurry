@@ -1024,6 +1024,7 @@ static unit_test_result_t lookup_insert_tests(unit_test_context_t *context, look
 
     /* Inserting many values. */
     {
+      static int skip_checks       = 0;
       static int skip_length_check = 0;
 
       int i;
@@ -1043,18 +1044,26 @@ static unit_test_result_t lookup_insert_tests(unit_test_context_t *context, look
 
       for (i = 0; i < num_additional_values; ++i)
       {
-        int should_already_exist;
+        int should_already_exist = -1;
 
         /* Value to insert. */
         value = mul[i % mul_size] * (i + 44);
 
-        /* Does this value already exists? */
-        retrieve = value;
-        should_already_exist = val_or_m1(lookup_retrieve(lookup, ret, cmp, NULL)) != -1;
+        if (!skip_checks)
+        {
+          /* Does this value already exists? */
+          retrieve = value;
+          should_already_exist = val_or_m1(lookup_retrieve(lookup, ret, cmp, NULL)) != -1;
+        }
 
         /* Insert the value. */
         ASSERT2( objpeq, lookup_insert(lookup, val,  1, cmp, dp), lookup_val_ref );
-        ASSERT2( inteq,  is_duplicate, should_already_exist );
+        if (!skip_checks)
+        {
+          ASSERT2( inteq,  is_duplicate, should_already_exist );
+        }
+
+        /* Check length. */
         if (  ( !skip_length_check )
            && (  ( i <= 10                                 )
               || ( DISTANCE(i, num_additional_values) <= 3 )
@@ -1075,11 +1084,15 @@ static unit_test_result_t lookup_insert_tests(unit_test_context_t *context, look
         else
           ASSERT1( true,  lookup_max_capacity(lookup) );
 
-        /* Make sure we can retrieve it. */
-        retrieve = value; LASSERT2( inteq, val_or_m1(lookup_retrieve(lookup, ret, cmp, NULL)), retrieve );
-        retrieve = value; LASSERT2( inteq, val_or_m1(lookup_retrieve(lookup, ret, cmp, NULL)), value    );
+        if (!skip_checks)
+        {
+          /* Make sure we can retrieve it. */
+          retrieve = value; LASSERT2( inteq, val_or_m1(lookup_retrieve(lookup, ret, cmp, NULL)), retrieve );
+          retrieve = value; LASSERT2( inteq, val_or_m1(lookup_retrieve(lookup, ret, cmp, NULL)), value    );
+        }
       }; BREAKABLE(result);
 
+      skip_checks       = 1;
       skip_length_check = 1;
     }
 
