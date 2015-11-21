@@ -350,6 +350,15 @@ size_t digits_buf_size(void)
 const size_t udigits_buf_size_def = UDIGITS_BUF_SIZE;
 const size_t digits_buf_size_def  = DIGITS_BUF_SIZE;
 
+char digit(int digit, int base)
+{
+  base  = CLAMP_INTERVAL(base, MIN_BASE_BASE62, MAX_BASE_BASE62);
+  digit = CLAMP_INTERVAL(digit, 0, SIZE_LESS_NULL(base));
+  digit = CLAMP_INTERVAL(digit, 0, MAX_DIGIT_BASE62);
+
+  return digits_base62_def[digit];
+}
+
 size_t uitoa(char *dest, size_t n, unsigned long num, int base)
 {
   size_t i;
@@ -635,6 +644,93 @@ size_t strlcpy_cycle(char *dest, const char *src, size_t dest_size, size_t num_b
   *dest = 0;
 
   return len;
+}
+
+size_t strlappendc(char *dest, size_t dest_size, char byte)
+{
+  size_t i;
+
+  if (!dest)
+    return 0;
+
+  if (dest_size <= 0)
+    return 0;
+
+  for (i = 0; i < size_less_null(size_less_null(dest_size)); ++i)
+  {
+    if (!dest[i])
+    {
+      dest[i++] = byte;
+      break;
+    }
+  }
+
+  dest[i] = 0;
+
+  return i;
+}
+
+size_t strlappendn(char *dest, size_t dest_size, const char *src, size_t src_size)
+{
+  size_t i;
+
+  if (!dest)
+    return 0;
+
+  if (dest_size <= 0)
+    return 0;
+
+  for (i = 0; i < size_less_null(dest_size); ++i)
+    if (!dest[i])
+      break;
+
+  if ((src) && (src_size >= 1))
+  {
+    for (; i < size_less_null(dest_size); ++i)
+    {
+      if (!*src)
+        break;
+
+      dest[i] = *src++;
+
+      if (--src_size <= 0)
+        break;
+    }
+  }
+
+  dest[i] = 0;
+
+  return i;
+}
+
+size_t strlappendz(char *dest, size_t dest_size, const char *src)
+{
+  size_t i;
+
+  if (!dest)
+    return 0;
+
+  if (dest_size <= 0)
+    return 0;
+
+  for (i = 0; i < size_less_null(dest_size); ++i)
+    if (!dest[i])
+      break;
+
+  if (src)
+  {
+    for (; i < size_less_null(dest_size); ++i)
+    {
+      if (!*src)
+        break;
+
+      dest[i] = *src++;
+    }
+  }
+
+  dest[i] = 0;
+
+  return i;
 }
 
 /*

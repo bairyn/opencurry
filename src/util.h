@@ -516,6 +516,8 @@ size_t digits_buf_size(void);
 extern const size_t udigits_buf_size_def;
 extern const size_t digits_buf_size_def;
 
+char digit(int digit, int base);
+
 size_t uitoa(char *dest, size_t n, unsigned long num, int base);
 size_t itoa (char *dest, size_t n, signed   long num, int base, int force_sign_symbol);
 
@@ -533,6 +535,10 @@ size_t strllen(const char *src, size_t size);
 int strn_has_null_terminator(const char *src, size_t size);
 
 size_t strlcpy_cycle(char *dest, const char *src, size_t dest_size, size_t num_bytes);
+
+size_t strlappendc(char *dest, size_t dest_size, char byte);
+size_t strlappendn(char *dest, size_t dest_size, const char *src, size_t src_size);
+size_t strlappendz(char *dest, size_t dest_size, const char *src);
 
 size_t index_bounds(size_t size, int is_final_byte_out_of_bounds, size_t index);
 size_t strn_index_bounds(const char *str, size_t size, int is_terminator_out_of_bounds, size_t index);
