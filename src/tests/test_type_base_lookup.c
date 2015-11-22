@@ -1145,7 +1145,7 @@ unit_test_result_t lookup_insert_test_run(unit_test_context_t *context)
   ENCLOSE()
   {
     COMPOUND_TEST
-      ( "lookup_insert_tests"
+      ( "lookup_insert_tests #1"
       , "lookup_insert_tests: run #1."
       , lookup_insert_tests(context, &lookup_val, &lookup)
       );
