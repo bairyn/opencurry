@@ -1089,6 +1089,8 @@ lookup_t *lookup_auto_resize
 
   if (capacity < LOOKUP_AUTO_MIN_CAPACITY)
     return lookup_expand(lookup, LOOKUP_AUTO_MIN_CAPACITY, calloc, calloc_context, realloc, realloc_context);
+  else
+    len = MAX(SIZE_LESS_NULL(LOOKUP_AUTO_MIN_CAPACITY), len);
 
   if (len >= capacity)
     return lookup_expand(lookup, LOOKUP_AUTO_EXPAND_CAPACITY(capacity), calloc, calloc_context, realloc, realloc_context);
