@@ -305,6 +305,7 @@ unit_test_context_t *new_unit_test_context
   context->aborting       = 0;
 
   context->group_depth    = 0;
+  context->last_group_depth = 0;
 
   context->next_test_id   = 1;
 
@@ -624,8 +625,35 @@ unit_test_result_t run_test(unit_test_context_t *context, unit_test_t test)
 
   unsigned int       seed_start;
 
+  int group_begin;
+  int group_end;
+
   ++context->group_depth;
   {
+    group_begin = context->group_depth > context->last_group_depth;
+    group_end   = context->group_depth < context->last_group_depth;
+    context->last_group_depth = context->group_depth;
+
+    UNUSED2(group_begin, group_end);
+
+    if (group_begin)
+    {
+#if IS_TRUE(TEST_RESULT_PASS_PRINT_SAME_LINE)
+      if (context->next_test_id >= 2)
+        fprintf(context->out, "\n");
+#endif
+    }
+    else
+    {
+#if IS_TRUE(TEST_RESULT_GROUP_PRINT_INTERSPERSED_LINE)
+      /* Add extra line. */
+      print_test_indent(context, TEST_INDENT_NO_ALERT, TEST_INDENT_NO_PENDING_TEXT);
+      fprintf(context->out, "\n");
+#endif
+    }
+
+    /* ---------------------------------------------------------------- */
+
     /* Set the "id" of this test. */
     id = context->next_test_id++;
 
@@ -1108,22 +1136,6 @@ unit_test_result_t run_tests_num(unit_test_context_t *context, unit_test_t **tes
   for (i = 0; i < num_tests; ++i)
   {
     int individual_result;
-
-#if IS_TRUE(TEST_RESULT_PASS_PRINT_SAME_LINE)
-    if (i == 0)
-    {
-      fprintf(context->out, "\n");
-    }
-#endif
-
-#if IS_TRUE(TEST_RESULT_GROUP_PRINT_INTERSPERSED_LINE)
-    if (i >= 1)
-    {
-      /* Add extra line. */
-      print_test_indent(context, TEST_INDENT_NO_ALERT, TEST_INDENT_NO_PENDING_TEXT);
-      fprintf(context->out, "\n");
-    }
-#endif
 
     individual_result = run_test(context, *tests[i]);
 

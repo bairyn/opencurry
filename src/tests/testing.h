@@ -138,6 +138,7 @@ struct unit_test_context_s
                           * last_pass.  Automatically set on aborting failures.    */
 
   int      group_depth;  /* Group depth. */
+  int      last_group_depth;
 
   int      next_test_id; /* Number of the id of the next test that would be run.   */
                          /* This is incremented immediately before a test is run.  */
