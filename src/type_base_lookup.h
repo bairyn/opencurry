@@ -337,6 +337,27 @@ lookup_t *lookup_resize
   , void   *free_context
   );
 
+#define LOOKUP_AUTO_MIN_CAPACITY               16
+
+/* When recycling. */
+#define LOOKUP_AUTO_EXPAND_THRESHOLD(capacity) (2 * ((capacity) / 3))   /* 2/3 * capacity        */
+#define LOOKUP_AUTO_EXPAND_CAPACITY( capacity) (3 * ((capacity) >> 1))  /* 3/2 * capacity (+50%) */
+
+#define LOOKUP_AUTO_SHRINK_THRESHOLD(capacity) (capacity >> 4)          /* capacity / 8          */
+#define LOOKUP_AUTO_SHRINK_CAPACITY( capacity) (LOOKUP_AUTO_EXPAND_CAPACITY((LOOKUP_AUTO_SHRINK_THRESHOLD((capacity)))))
+lookup_t *lookup_auto_resize
+  ( lookup_t *lookup
+
+  , void *(*calloc)(void *context, size_t nmemb, size_t size)
+  , void   *calloc_context
+
+  , void *(*realloc)(void *context, void *area, size_t size)
+  , void   *realloc_context
+
+  , void  (*free)(void *context, void *area)
+  , void   *free_context
+  );
+
 /* ---------------------------------------------------------------- */
 
 void *lookup_iterate_node_from
@@ -606,6 +627,45 @@ size_t lookup_delete_limit
   , size_t              out_val_num_max
   );
 #endif /* #ifdef TODO */
+
+/* ---------------------------------------------------------------- */
+
+lookup_t *lookup_minsert
+  ( lookup_t           *lookup
+  , const void         *val
+  , int                 add_when_exists
+
+  , callback_compare_t  cmp
+
+  , void *(*calloc)(void *context, size_t nmemb, size_t size)
+  , void   *calloc_context
+
+  , void *(*realloc)(void *context, void *area, size_t size)
+  , void   *realloc_context
+
+  , void  (*free)(void *context, void *area)
+  , void   *free_context
+
+  , int                *out_is_duplicate
+  );
+
+lookup_t *lookup_mdelete
+  ( lookup_t           *lookup
+  , const void         *val
+
+  , callback_compare_t  cmp
+
+  , void *(*calloc)(void *context, size_t nmemb, size_t size)
+  , void   *calloc_context
+
+  , void *(*realloc)(void *context, void *area, size_t size)
+  , void   *realloc_context
+
+  , void  (*free)(void *context, void *area)
+  , void   *free_context
+
+  , size_t             *out_num_deleted
+  );
 
 /* ---------------------------------------------------------------- */
 

@@ -68,7 +68,7 @@ unit_test_t *type_base_lookup_tests[] =
   { &lookup_memory_management_test
   , &lookup_insert_test
   , &lookup_insert_delete_test
-  , &lookup_duplicates_test
+  , &lookup_minsert_test
 
   , NULL
   };
@@ -116,6 +116,12 @@ static void init_memory_methods(void)
 
 #define LOOKUP_DEINIT(lookup) \
   lookup_deinit(lookup, free, free_context)
+
+#define LOOKUP_MINSERT(lookup, val, add_when_exists, cmp, out_is_duplicate) \
+  lookup_minsert(lookup, val, add_when_exists, cmp, calloc, calloc_context, realloc, realloc_context, free, free_context, out_is_duplicate)
+
+#define LOOKUP_MDELETE(lookup, val, cmp, out_num_deleted) \
+  lookup_mdelete(lookup, val, cmp, calloc, calloc_context, realloc, realloc_context, free, free_context, out_num_deleted)
 
 size_t checked_lookup_num_used_values(unit_test_context_t *context, unit_test_result_t *out_result, const lookup_t *lookup)
 {
@@ -1579,13 +1585,13 @@ unit_test_result_t lookup_insert_delete_test_run(unit_test_context_t *context)
 
 #define LOOKUP_DUPLICATES_TEST_CAPACITY 1024
 
-unit_test_t lookup_duplicates_test =
-  {  lookup_duplicates_test_run
-  , "lookup_duplicates_test"
-  , "Testing lookup insertion and deletion with duplicates."
+unit_test_t lookup_minsert_test =
+  {  lookup_minsert_test_run
+  , "lookup_minsert_test"
+  , "Testing insertion and deletion with automatic resizing."
   };
 
-unit_test_result_t lookup_duplicates_test_run(unit_test_context_t *context)
+unit_test_result_t lookup_minsert_test_run(unit_test_context_t *context)
 {
   unit_test_result_t result = assert_success(context);
 

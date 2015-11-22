@@ -899,6 +899,9 @@ void lookup_defragment(lookup_t *lookup)
   if (LOOKUP_EMPTY(lookup))
     return;
 
+  if (!LOOKUP_IS_RECYCLING(lookup))
+    return;
+
   lookup_defragment_step
     ( lookup
     , &lookup->order[0]
@@ -1052,6 +1055,57 @@ lookup_t *lookup_resize
   {
     return lookup;
   }
+}
+
+lookup_t *lookup_auto_resize
+  ( lookup_t *lookup
+
+  , void *(*calloc)(void *context, size_t nmemb, size_t size)
+  , void   *calloc_context
+
+  , void *(*realloc)(void *context, void *area, size_t size)
+  , void   *realloc_context
+
+  , void  (*free)(void *context, void *area)
+  , void   *free_context
+  )
+{
+  size_t len;
+  size_t capacity;
+
+#if ERROR_CHECKING
+  if (!lookup)
+    return NULL;
+  if (!calloc)
+    return NULL;
+  if (!realloc)
+    return NULL;
+  if (!free)
+    return NULL;
+#endif /* #if ERROR_CHECKING  */
+
+  len      = LOOKUP_LEN     (lookup);
+  capacity = LOOKUP_CAPACITY(lookup);
+
+  if (capacity < LOOKUP_AUTO_MIN_CAPACITY)
+    return lookup_expand(lookup, LOOKUP_AUTO_MIN_CAPACITY, calloc, calloc_context, realloc, realloc_context);
+
+  if (len >= capacity)
+    return lookup_expand(lookup, LOOKUP_AUTO_EXPAND_CAPACITY(capacity), calloc, calloc_context, realloc, realloc_context);
+
+  if (LOOKUP_IS_RECYCLING(lookup))
+  {
+    if (len >= LOOKUP_AUTO_EXPAND_THRESHOLD(capacity))
+      return lookup_expand(lookup, LOOKUP_AUTO_EXPAND_CAPACITY(capacity), calloc, calloc_context, realloc, realloc_context);
+
+    if (len <= LOOKUP_AUTO_SHRINK_THRESHOLD(capacity))
+      lookup_defragment(lookup);
+  }
+
+  if (len <= LOOKUP_AUTO_SHRINK_THRESHOLD(capacity))
+    return lookup_shrink(lookup, LOOKUP_AUTO_SHRINK_CAPACITY(capacity), realloc, realloc_context, free, free_context);
+
+  return lookup;
 }
 
 /* ---------------------------------------------------------------- */
@@ -3234,6 +3288,86 @@ void *lookup_iterate
 
       , initial_accumulation
       );
+}
+
+/* ---------------------------------------------------------------- */
+
+lookup_t *lookup_minsert
+  ( lookup_t           *lookup
+  , const void         *val
+  , int                 add_when_exists
+
+  , callback_compare_t  cmp
+
+  , void *(*calloc)(void *context, size_t nmemb, size_t size)
+  , void   *calloc_context
+
+  , void *(*realloc)(void *context, void *area, size_t size)
+  , void   *realloc_context
+
+  , void  (*free)(void *context, void *area)
+  , void   *free_context
+
+  , int                *out_is_duplicate
+  )
+{
+#if ERROR_CHECKING
+  if (!lookup)
+    return NULL;
+#endif /* #if ERROR_CHECKING  */
+
+  lookup = lookup_auto_resize(lookup, calloc, calloc_context, realloc, realloc_context, free, free_context);
+  if (!lookup)
+    return NULL;
+
+  return
+    lookup_insert
+      ( lookup
+      , val
+      , add_when_exists
+
+      , cmp
+
+      , out_is_duplicate
+      );
+}
+
+lookup_t *lookup_mdelete
+  ( lookup_t           *lookup
+  , const void         *val
+
+  , callback_compare_t  cmp
+
+  , void *(*calloc)(void *context, size_t nmemb, size_t size)
+  , void   *calloc_context
+
+  , void *(*realloc)(void *context, void *area, size_t size)
+  , void   *realloc_context
+
+  , void  (*free)(void *context, void *area)
+  , void   *free_context
+
+  , size_t             *out_num_deleted
+  )
+{
+#if ERROR_CHECKING
+  if (!lookup)
+    return NULL;
+#endif /* #if ERROR_CHECKING  */
+
+  lookup =
+    lookup_delete
+      ( lookup
+      , val
+
+      , cmp
+
+      , out_num_deleted
+      );
+  if (!lookup)
+    return NULL;
+
+  return lookup_auto_resize(lookup, calloc, calloc_context, realloc, realloc_context, free, free_context);
 }
 
 /* ---------------------------------------------------------------- */
