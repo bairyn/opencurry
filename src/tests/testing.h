@@ -267,6 +267,9 @@ unit_test_result_t run_test(unit_test_context_t *context, unit_test_t test);
 unit_test_result_t run_tests_num(unit_test_context_t *context, unit_test_t **tests, size_t num_tests);
 unit_test_result_t run_tests(unit_test_context_t *context, unit_test_t **tests);
 
+#define TEST_LEVEL(context) ((context)->group_depth - 1)
+int test_level(unit_test_context_t *context);
+
 /* ---------------------------------------------------------------- */
 /* Trivial unit tests.                                              */
 

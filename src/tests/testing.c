@@ -624,48 +624,52 @@ unit_test_result_t run_test(unit_test_context_t *context, unit_test_t test)
 
   unsigned int       seed_start;
 
-  /* Set the "id" of this test. */
-  id = context->next_test_id++;
-
-  seed_start = context->seed;
-
-  /* Print the id and name of the test. */
-  print_test_prefix(context, test, id);
-
-  /* Call the test procedure. */
-
-  /* This might recursively call child tests via "run_test*" procedures
-   * provided by this API.
-   */
-  result = test.run(context);
-
-  /* ---------------------------------------------------------------- */
-
-  /* This test, and all child tests, are done. */
-
-  /* Update context state. */
-  process_test_result(context, test, id, result, seed_start);
-
-  /* Print the result. */
-  print_test_result(context, test, id, result, seed_start);
-
-  /* Reset error message buffer. */
-  reset_err_buf(context);
-
-  /* ---------------------------------------------------------------- */
-
-  /* If a unit test is skipped, reset the result. */
-
-  if (is_test_result_can_continue(result))
+  ++context->group_depth;
   {
-    if (!is_test_result_success(result) && !is_test_result_failure(result))
+    /* Set the "id" of this test. */
+    id = context->next_test_id++;
+
+    seed_start = context->seed;
+
+    /* Print the id and name of the test. */
+    print_test_prefix(context, test, id);
+
+    /* Call the test procedure. */
+
+    /* This might recursively call child tests via "run_test*" procedures
+     * provided by this API.
+     */
+    result = test.run(context);
+
+    /* ---------------------------------------------------------------- */
+
+    /* This test, and all child tests, are done. */
+
+    /* Update context state. */
+    process_test_result(context, test, id, result, seed_start);
+
+    /* Print the result. */
+    print_test_result(context, test, id, result, seed_start);
+
+    /* Reset error message buffer. */
+    reset_err_buf(context);
+
+    /* ---------------------------------------------------------------- */
+
+    /* If a unit test is skipped, reset the result. */
+
+    if (is_test_result_can_continue(result))
     {
-      if (is_test_result_skip(result))
+      if (!is_test_result_success(result) && !is_test_result_failure(result))
       {
-        result = UNIT_TEST_PASS;
+        if (is_test_result_skip(result))
+        {
+          result = UNIT_TEST_PASS;
+        }
       }
     }
   }
+  --context->group_depth;
 
   return result;
 }
@@ -746,7 +750,7 @@ void print_test_indent(unit_test_context_t *context, int alert, int no_pending_t
 
       /* group_depth times print "| " */
 
-      for (i = 0; i < context->group_depth; ++i)
+      for (i = 0; i < TEST_LEVEL(context); ++i)
       {
         fprintf(context->out, "| ");
       }
@@ -762,7 +766,7 @@ void print_test_indent(unit_test_context_t *context, int alert, int no_pending_t
 
       fprintf(context->out, "*** ");
 
-      for (i = 2; i < context->group_depth; ++i)
+      for (i = 2; i < TEST_LEVEL(context); ++i)
       {
         fprintf(context->out, "| ");
       }
@@ -779,7 +783,7 @@ void print_test_indent(unit_test_context_t *context, int alert, int no_pending_t
       /*                                    */
       /* 2) Remove trailing whitespace.     */
 
-      for (i = 0; i < context->group_depth; ++i)
+      for (i = 0; i < TEST_LEVEL(context); ++i)
       {
         if (i < 1)
           fprintf(context->out, "|");
@@ -800,7 +804,7 @@ void print_test_indent(unit_test_context_t *context, int alert, int no_pending_t
 
       fprintf(context->out, "***");
 
-      for (i = 2; i < context->group_depth; ++i)
+      for (i = 2; i < TEST_LEVEL(context); ++i)
       {
         fprintf(context->out, " |");
       }
@@ -891,18 +895,18 @@ void print_passed_test_result(unit_test_context_t *context, unit_test_t test, in
     #if IS_FALSE(TEST_RESULT_GROUP_REPEAT_ID)
     {
       #if IS_FALSE(TEST_RESULT_PASS_PRINT_DESCRIPTION)
-        fprintf(context->out, "  %*.s   =)\n", 2 * context->group_depth, "");
+        fprintf(context->out, "  %*.s   =)\n", 2 * TEST_LEVEL(context), "");
       #else
-        fprintf(context->out, "  %*.s   =): pass: %s\n", 2 * context->group_depth, "", test.description);
+        fprintf(context->out, "  %*.s   =): pass: %s\n", 2 * TEST_LEVEL(context), "", test.description);
       #endif
     }
 
     #else
     {
       #if IS_FALSE(TEST_RESULT_PASS_PRINT_DESCRIPTION)
-        fprintf(context->out, "  %*.s   =) #%d\n", 2 * context->group_depth, "", (int) id);
+        fprintf(context->out, "  %*.s   =) #%d\n", 2 * TEST_LEVEL(context), "", (int) id);
       #else
-        fprintf(context->out, "  %*.s   =) #%d: pass: %s\n", 2 * context->group_depth, "", (int) id, test.description);
+        fprintf(context->out, "  %*.s   =) #%d: pass: %s\n", 2 * TEST_LEVEL(context), "", (int) id, test.description);
       #endif
     }
     #endif
@@ -953,7 +957,7 @@ void print_failed_test_result(unit_test_context_t *context, unit_test_t test, in
   #endif
 
   print_test_indent(context, TEST_INDENT_ALERT, TEST_INDENT_PENDING_TEXT);
-  fprintf(context->out, "  %*.s   FAILURE - %s\n", 2 * context->group_depth, "", test.description);
+  fprintf(context->out, "  %*.s   FAILURE - %s\n", 2 * TEST_LEVEL(context), "", test.description);
 
   if (!print_details)
     return;
@@ -987,9 +991,9 @@ void print_skipped_test_result(unit_test_context_t *context, unit_test_t test, i
   print_test_indent(context, TEST_INDENT_ALERT, TEST_INDENT_PENDING_TEXT);
 
   #if IS_FALSE(TEST_RESULT_SKIP_PRINT_DESCRIPTION)
-    fprintf(context->out, "  %*.s   SKIPPED\n", 2 * context->group_depth, "");
+    fprintf(context->out, "  %*.s   SKIPPED\n", 2 * TEST_LEVEL(context), "");
   #else
-    fprintf(context->out, "  %*.s   SKIPPED: %s\n", 2 * context->group_depth, "", test.description);
+    fprintf(context->out, "  %*.s   SKIPPED: %s\n", 2 * TEST_LEVEL(context), "", test.description);
   #endif
 }
 
@@ -1101,7 +1105,6 @@ unit_test_result_t run_tests_num(unit_test_context_t *context, unit_test_t **tes
   int                aborting = 0;
   unit_test_result_t result_sum = UNIT_TEST_PASS;
 
-  ++context->group_depth;
   for (i = 0; i < num_tests; ++i)
   {
     int individual_result;
@@ -1133,7 +1136,6 @@ unit_test_result_t run_tests_num(unit_test_context_t *context, unit_test_t **tes
       break;
     }
   }
-  --context->group_depth;
 
   return result_sum;
 }
@@ -1148,6 +1150,11 @@ unit_test_result_t run_tests(unit_test_context_t *context, unit_test_t **tests)
   for (end = tests; *end; ++end);
 
   return run_tests_num(context, tests, end - tests);
+}
+
+int test_level(unit_test_context_t *context)
+{
+  return TEST_LEVEL(context);
 }
 
 /* ---------------------------------------------------------------- */
