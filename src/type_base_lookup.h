@@ -34,7 +34,12 @@
  * type_base_lookup.h
  * ------
  *
+ * Internal use: use "mlookup" API (based on this) for coupled memory
+ * management, etc.
+ *
  * Self-balancing binary search arrays.
+ *
+ * TODO: actually self-balancing.
  */
 
 #ifndef TYPE_BASE_LOOKUP_H
@@ -589,6 +594,7 @@ lookup_t *lookup_delete
   , size_t             *out_num_deleted
   );
 
+#ifdef TODO
 size_t lookup_delete_limit
   ( lookup_t           *lookup
   , const void         *val
@@ -600,6 +606,7 @@ size_t lookup_delete_limit
   , void               *out_val
   , size_t              out_val_num_max
   );
+#endif /* #ifdef TODO */
 
 /* ---------------------------------------------------------------- */
 

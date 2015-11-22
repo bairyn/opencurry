@@ -809,6 +809,9 @@ size_t type_has_unknown_size(const type_t *self, const tval *val);
       );                                                                              \
   } while(0)
 
+#define STRUCT_INFO_LAST_COMPLEX(struct_info) \
+  struct_info_get_last_field_elem_ref(struct_info)
+
 #define STRUCT_INFO_REINIT_WITH_COMPLEX(field_default_value)                                           \
   STRUCT_INFO_INIT_COMPLEX(struct_info, field_default_value, field_template_unused_value_zero)
 
@@ -836,6 +839,9 @@ size_t type_has_unknown_size(const type_t *self, const tval *val);
 
 #define STRUCT_INFO_RADD(field_type_rep, field_name) \
   STRUCT_INFO_ADD(field_name, field_type_rep)
+
+#define STRUCT_INFO_LAST() \
+  STRUCT_INFO_LAST_COMPLEX(struct_info)
 
 #define STRUCT_INFO_DONE() \
   STRUCT_INFO_DONE_COMPLEX(struct_info)

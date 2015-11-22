@@ -50,6 +50,7 @@
 #include "type_base_typed.h"
 #include "type_base_tval.h"
 #include "type_base_compare.h"
+#include "type_base_memory_manager.h"
 #include "type_base_memory_tracker.h"
 #ifdef TODO
 #error "TODO: #include primitive c data types"
@@ -159,6 +160,14 @@ static const char          *lookup_type_name       (const type_t *self);
 static size_t               lookup_type_size       (const type_t *self, const tval *val);
 static const struct_info_t *lookup_type_is_struct  (const type_t *self);
 static const tval          *lookup_type_has_default(const type_t *self);
+static tval                *lookup_type_dup        ( const type_t *self
+                                                   , tval *dest
+                                                   , const tval *src
+                                                   , int defaults_src_unused
+                                                   , int rec_copy
+                                                   , int dup_metadata
+                                                   , ref_traversal_t *ref_traversal
+                                                   );
 
 const type_t lookup_type_def =
   { type_type
@@ -192,7 +201,7 @@ const type_t lookup_type_def =
   , /* mem_free               */ NULL
   , /* default_memory_manager */ NULL
 
-  , /* dup                    */ NULL
+  , /* dup                    */ lookup_type_dup
 
   , /* user                   */ NULL
   , /* cuser                  */ NULL
@@ -238,6 +247,66 @@ static const struct_info_t *lookup_type_is_struct  (const type_t *self)
 
 static const tval          *lookup_type_has_default(const type_t *self)
   { return type_has_default_value(self, &lookup_defaults); }
+
+static tval                *lookup_type_dup        ( const type_t *self
+                                                   , tval *dest
+                                                   , const tval *src
+                                                   , int defaults_src_unused
+                                                   , int rec_copy
+                                                   , int dup_metadata
+                                                   , ref_traversal_t *ref_traversal
+                                                   )
+{
+  lookup_t *from;
+  lookup_t *copy;
+
+  copy =
+    default_type_dup
+      ( self
+      , dest
+      , src
+      , defaults_src_unused
+      , rec_copy
+      , dup_metadata
+      , ref_traversal
+      );
+
+  if (!copy)
+    return copy;
+
+  from = src;
+
+  if (!from)
+    return copy;
+
+  if (rec_copy)
+  {
+    if (  copy->values == from->values
+       && copy->order  == from->order
+       )
+    {
+      const memory_manager_t *manager = type_default_memory_manager(self, from);
+
+      copy->values = memory_manager_calloc(manager, LOOKUP_CAPACITY(from), LOOKUP_VALUE_SIZE(from));
+      if (!copy->values)
+      {
+        lookup_init_empty(copy);
+        return NULL;
+      }
+      copy->order  = memory_manager_calloc(manager, LOOKUP_CAPACITY(from), sizeof(*from->order));
+      if (!copy->order)
+      {
+        lookup_init_empty(copy);
+        return NULL;
+      }
+
+      memmove(copy->values, from->values, LOOKUP_VALUES_SIZE(from) * LOOKUP_CAPACITY(from));
+      memmove(copy->order,  from->order,  sizeof(*from->order)     * LOOKUP_CAPACITY(from));
+    }
+  }
+
+  return copy;
+}
 
 /* ---------------------------------------------------------------- */
 
@@ -815,6 +884,10 @@ lookup_t *lookup_auto_expand_simple
       );
 }
 
+static void lookup_defragment_step(lookup_t *lookup, bnode_t *node)
+{
+}
+
 /* Move elements to remove gaps of free element slots. */
 void lookup_defragment(lookup_t *lookup)
 {
@@ -823,13 +896,15 @@ void lookup_defragment(lookup_t *lookup)
     return;
 #endif /* #if ERROR_CHECKING  */
 
-  /* TODO */
-#ifdef TODO
-#error "TODO: implement lookup_defragment."
-#endif /* #ifdef TODO */
+  if (LOOKUP_EMPTY(lookup))
+    return;
+
+  lookup_defragment_step
+    ( lookup
+    , &lookup->order[0]
+    );
 }
 
-#ifdef TODO /* TODO */
 /* Reallocate less memory for fewer element slots.      */
 /*                                                      */
 /* "capacity" is bounded by the last used element slot. */
@@ -846,7 +921,88 @@ lookup_t *lookup_shrink
 
   , void  (*free)(void *context, void *area)
   , void   *free_context
-  );
+  )
+{
+  size_t old_capacity;
+  size_t new_capacity;
+
+#if ERROR_CHECKING
+  if (!lookup)
+    return NULL;
+#endif /* #if ERROR_CHECKING  */
+
+  if (LOOKUP_NULL(lookup))
+    return lookup;
+
+  new_capacity = capacity;
+  new_capacity = max_size(look->next_value,   new_capacity);
+  new_capacity = max_size(look->next_order,   new_capacity);
+  new_capacity = max_size(LOOKUP_LEN(lookup), new_capacity);
+
+  old_capacity = LOOKUP_CAPACITY(lookup);
+  if (new_capacity >= old_capacity)
+    return lookup;
+
+#if ERROR_CHECKING
+  if (!lookup->values)
+    return NULL;
+  if (!lookup->order)
+    return NULL;
+#endif /* #if ERROR_CHECKING  */
+
+  if (new_capacity <= 0)
+  {
+#if ERROR_CHECKING
+    if (!free)
+      return NULL;
+#endif /* #if ERROR_CHECKING  */
+
+    free(free_context, lookup->values);
+    free(free_context, lookup->order);
+
+    lookup->values = NULL;
+    lookup->order  = NULL;
+
+    lookup->capacity = 0;
+    lookup->len      = 0;
+
+    return lookup;
+  }
+  else
+  {
+#if ERROR_CHECKING
+    if (!free)
+      return NULL;
+    if (!realloc)
+      return NULL;
+#endif /* #if ERROR_CHECKING  */
+
+    lookup->values = realloc(realloc_context, lookup->values, LOOKUP_VALUE_SIZE(lookup) * new_capacity);
+    if (lookup->values)
+      lookup->order = realloc(realloc_context, lookup->values, sizeof(*lookup->order) * new_capacity);
+
+    if (!lookup->values || !lookup->order)
+    {
+      if (lookup->values)
+        free(free_context, lookup->values);
+      if (lookup->order)
+        free(free_context, lookup->order);
+
+      lookup->values = NULL;
+      lookup->order  = NULL;
+
+      lookup->capacity = 0;
+      lookup->len      = 0;
+
+      return NULL;
+    }
+
+    lookup->capacity = new_capacity;
+    lookup->len      = min_size(new_capacity, lookup->len);
+
+    return lookup;
+  }
+}
 
 /* Reallocate more or less memory for free element slots. */
 /*                                                        */
@@ -895,8 +1051,6 @@ lookup_t *lookup_resize
     return lookup;
   }
 }
-
-#endif /* #ifdef TODO /-* TODO *-/ */
 
 /* ---------------------------------------------------------------- */
 
@@ -2809,6 +2963,7 @@ lookup_t *lookup_delete
   return lookup;
 }
 
+#ifdef TODO
 /* Returns the number of deletions, (even when it exceeds out_val_num_max). */
 size_t lookup_delete_limit
   ( lookup_t           *lookup
@@ -2821,6 +2976,7 @@ size_t lookup_delete_limit
   , void               *out_val
   , size_t              out_val_num_max
   );
+#endif /* #ifdef TODO */
 
 /* ---------------------------------------------------------------- */
 
