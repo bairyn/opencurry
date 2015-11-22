@@ -41,14 +41,64 @@
 #define BASE_H
 #include "base.h"
 
+#define DEFAULT_DEBUG          0
+#define DEFAULT_POSIX_PARALLEL 0
+#define DEFAULT_ERROR_CHECKING 1
+
+/* ---------------------------------------------------------------- */
+
+#ifndef DEBUG
+#  define DEBUG DEFAULT_DEBUG
+#endif /* #ifndef DEBUG */
+
 #ifndef POSIX_PARALLEL
-#define POSIX_PARALLEL 0
+#  define POSIX_PARALLEL DEFAULT_POSIX_PARALLEL
 #endif /* #ifndef POSIX_PARALLEL */
 
 /* Flag to check for programmer errors.             */
 /* This does not apply to errors of any other sort. */
 #ifndef ERROR_CHECKING
-#define ERROR_CHECKING 1
+#  define ERROR_CHECKING DEFAULT_ERROR_CHECKING
 #endif /* #ifndef ERROR_CHECKING */
+
+/* ---------------------------------------------------------------- */
+
+#if DEBUG
+#  define WHEN_DEBUG(a)                        a
+#  define WHEN_NDEBUG(a)
+#  define IF_DEBUG(    when_true,  when_false) when_true
+#  define UNLESS_DEBUG(when_false, when_true)  when_true
+#else  /* #if DEBUG */
+#  define WHEN_DEBUG(a)
+#  define WHEN_NDEBUG(a)                       a
+#  define IF_DEBUG(    when_true,  when_false) when_false
+#  define UNLESS_DEBUG(when_false, when_true)  when_false
+#endif /* #if DEBUG */
+
+#if POSIX_PARALLEL
+#  define WHEN_POSIX_PARALLEL(a)                        a
+#  define WHEN_NPOSIX_PARALLEL(a)
+#  define IF_POSIX_PARALLEL(    when_true,  when_false) when_true
+#  define UNLESS_POSIX_PARALLEL(when_false, when_true)  when_true
+#else  /* #if POSIX_PARALLEL */
+#  define WHEN_POSIX_PARALLEL(a)
+#  define WHEN_NPOSIX_PARALLEL(a)                       a
+#  define IF_POSIX_PARALLEL(    when_true,  when_false) when_false
+#  define UNLESS_POSIX_PARALLEL(when_false, when_true)  when_false
+#endif /* #if POSIX_PARALLEL */
+
+#if ERROR_CHECKING
+#  define WHEN_ERROR_CHECKING(a)                        a
+#  define WHEN_NERROR_CHECKING(a)
+#  define IF_ERROR_CHECKING(    when_true,  when_false) when_true
+#  define UNLESS_ERROR_CHECKING(when_false, when_true)  when_true
+#else  /* #if ERROR_CHECKING */
+#  define WHEN_ERROR_CHECKING(a)
+#  define WHEN_NERROR_CHECKING(a)                       a
+#  define IF_ERROR_CHECKING(    when_true,  when_false) when_false
+#  define UNLESS_ERROR_CHECKING(when_false, when_true)  when_false
+#endif /* #if ERROR_CHECKING */
+
+/* ---------------------------------------------------------------- */
 
 #endif /* ifndef BASE_H */

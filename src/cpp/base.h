@@ -1,5 +1,5 @@
 /*
- * opencurry: cpp.h
+ * opencurry: cpp/base.h
  *
  * Copyright (c) 2015, Byron James Johnson
  * All rights reserved.
@@ -31,29 +31,32 @@
  */
 
 /*
- * cpp.h
+ * cpp/base.h
  * -----
  */
 
-#ifndef CPP_H
-#define CPP_H
-#include "base.h"
+#ifndef CPP_BASE_H
+#define CPP_BASE_H
+#include "../base.h"
 
 /* ---------------------------------------------------------------- */
 
-#include "cpp/base.h"
+#define EXPAND1(a) a
+
+#define BLANK
+#define EMPTY()
+
+#define HOLD HOLD
+#define HOLDER() HOLDER()
 
 /* ---------------------------------------------------------------- */
 
-#define CPP_MOD(name) CAT(_CPP_MOD_, name)(name)
-#define _CPP_MOD_base(base) "cpp/base.h"
-#define _CPP_MOD_nop(nop)   "cpp/nop.h"
+#define LSTR(a) #a
+#define STR(a) LSTR(a)
+
+#define LCAT(a, b) a##b
+#define CAT(a, b) LCAT(a, b)
 
 /* ---------------------------------------------------------------- */
 
-#include CPP_MOD(base)
-#include CPP_MOD(nop)
-
-/* ---------------------------------------------------------------- */
-
-#endif /* ifdef CPP_H */
+#endif /* ifndef CPP_BASE_H */

@@ -1,5 +1,5 @@
 /*
- * opencurry: cpp.h
+ * opencurry: cpp/nop.h
  *
  * Copyright (c) 2015, Byron James Johnson
  * All rights reserved.
@@ -31,6 +31,13 @@
  */
 
 /*
- * nop.h
+ * cpp/nop.h
  * -----
  */
+
+#ifndef CPP_NOP_H
+#define CPP_NOP_H
+#include "../base.h"
+#include "base.h"
+
+#endif /* ifndef CPP_NOP_H */
