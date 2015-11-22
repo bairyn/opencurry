@@ -257,8 +257,8 @@ static tval                *lookup_type_dup        ( const type_t *self
                                                    , ref_traversal_t *ref_traversal
                                                    )
 {
-  lookup_t *from;
-  lookup_t *copy;
+  const lookup_t *from;
+  lookup_t       *copy;
 
   copy =
     default_type_dup
@@ -285,23 +285,23 @@ static tval                *lookup_type_dup        ( const type_t *self
        && copy->order  == from->order
        )
     {
-      const memory_manager_t *manager = type_default_memory_manager(self, from);
+      const memory_manager_t *manager = type_default_memory_manager(self, copy);
 
       copy->values = memory_manager_calloc(manager, LOOKUP_CAPACITY(from), LOOKUP_VALUE_SIZE(from));
       if (!copy->values)
       {
-        lookup_init_empty(copy);
+        lookup_init_empty(copy, LOOKUP_VALUE_SIZE(from));
         return NULL;
       }
       copy->order  = memory_manager_calloc(manager, LOOKUP_CAPACITY(from), sizeof(*from->order));
       if (!copy->order)
       {
-        lookup_init_empty(copy);
+        lookup_init_empty(copy, LOOKUP_VALUE_SIZE(from));
         return NULL;
       }
 
-      memmove(copy->values, from->values, LOOKUP_VALUES_SIZE(from) * LOOKUP_CAPACITY(from));
-      memmove(copy->order,  from->order,  sizeof(*from->order)     * LOOKUP_CAPACITY(from));
+      memmove(copy->values, from->values, LOOKUP_VALUE_SIZE(from) * LOOKUP_CAPACITY(from));
+      memmove(copy->order,  from->order,  sizeof(*from->order)    * LOOKUP_CAPACITY(from));
     }
   }
 
@@ -935,8 +935,8 @@ lookup_t *lookup_shrink
     return lookup;
 
   new_capacity = capacity;
-  new_capacity = max_size(look->next_value,   new_capacity);
-  new_capacity = max_size(look->next_order,   new_capacity);
+  new_capacity = max_size(lookup->next_value, new_capacity);
+  new_capacity = max_size(lookup->next_order, new_capacity);
   new_capacity = max_size(LOOKUP_LEN(lookup), new_capacity);
 
   old_capacity = LOOKUP_CAPACITY(lookup);
@@ -979,7 +979,7 @@ lookup_t *lookup_shrink
 
     lookup->values = realloc(realloc_context, lookup->values, LOOKUP_VALUE_SIZE(lookup) * new_capacity);
     if (lookup->values)
-      lookup->order = realloc(realloc_context, lookup->values, sizeof(*lookup->order) * new_capacity);
+      lookup->order = realloc(realloc_context, lookup->order, sizeof(*lookup->order) * new_capacity);
 
     if (!lookup->values || !lookup->order)
     {
@@ -1006,7 +1006,8 @@ lookup_t *lookup_shrink
 
 /* Reallocate more or less memory for free element slots. */
 /*                                                        */
-/* When shrinking, defragmentation is performed.          */
+/* When shrinking, defragmentation is performed when      */
+/* recycling.                                             */
 /*                                                        */
 /* When shrinking, the new number is bounded by           */
 /* the number of elements in use, so no data loss for     */
@@ -1036,7 +1037,8 @@ lookup_t *lookup_resize
 
   if (capacity < old_capacity)
   {
-    lookup_defragment(lookup);
+    if (LOOKUP_IS_RECYCLING(lookup))
+      lookup_defragment(lookup);
 
     return lookup_shrink
       (lookup, capacity, realloc, realloc_context, free,    free_context);

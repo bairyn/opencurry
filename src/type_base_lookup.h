@@ -311,7 +311,7 @@ lookup_t *lookup_auto_expand_simple
   );
 
 void      lookup_defragment(lookup_t *lookup);
-#ifdef TODO /* TODO */
+
 lookup_t *lookup_shrink
   ( lookup_t *lookup
   , size_t    capacity
@@ -336,7 +336,6 @@ lookup_t *lookup_resize
   , void  (*free)(void *context, void *area)
   , void   *free_context
   );
-#endif /* #ifdef TODO /-* TODO *-/ */
 
 /* ---------------------------------------------------------------- */
 
