@@ -47,6 +47,8 @@
 
 #include "bits.h"
 
+#include "cpp.h"
+
 /* TODO: move CPP-specific bits to new module "cpp"! */
 
 /* ---------------------------------------------------------------- */
@@ -89,8 +91,6 @@ size_t max_size(size_t a, size_t b);
 
 /* ---------------------------------------------------------------- */
 
-#define EXPAND1(a) a
-
 #define EXPAND_PARENS(a) EXPAND1 a
 #define CALL_EXPAND_PARENS(f, args) f args
 
@@ -98,9 +98,6 @@ size_t max_size(size_t a, size_t b);
 
 /* Thanks https://github.com/pfultz2/Cloak/wiki/C-Preprocessor-tricks,-tips,-and-idioms ! */
 
-#define BLANK
-
-#define EMPTY()
 #define DEFER(a) a EMPTY()
 
 /* ---------------------------------------------------------------- */
@@ -113,22 +110,8 @@ size_t max_size(size_t a, size_t b);
  * to be expanded by the C preprocessor before being quoted, use
  * "EXPAND_STRINGIFY".
  */
-#define EXPAND_STRINGIFY(a) LITERAL_STRINGIFY(a)
-#define LITERAL_STRINGIFY(a) #a
-
-#define EXPAND_CAT(a, b) LITERAL_CAT(a, b)
-#define LITERAL_CAT(a, b) a##b
 
 /* Shorter names. */
-
-#define XSTR(a) EXPAND_STRINGIFY(a)
-#define LSTR(a) #a /* LITERAL_STRINGIFY(a) */
-
-#define XCAT(a, b) EXPAND_CAT(a, b)
-#define LCAT(a, b) a##b /* LITERAL_CAT(a, b) */
-
-#define STR(a)    XSTR(a)
-#define CAT(a, b) XCAT(a, b)
 
 #define CAT0()
 #define CAT1( a)                                                 a
@@ -385,7 +368,8 @@ void suppress_uninitialized(void *a);
 size_t size_less_null(size_t size);
 
 #define ARRAY_SIZE(array)    (sizeof((array)))
-#define ARRAY_NUM(array)     ((sizeof((array))) / (sizeof((array)[0])))
+#define ELEM_SIZE(array)     (sizeof(((array)[0])))
+#define ARRAY_NUM(array)     ((ARRAY_SIZE((array))) / (ELEM_SIZE((array))))
 /* ARRAY_LEN_ALL treats the last element as a terminator and all other elements as values used in the array even when they are NULL or zero. */
 /* Thus this is just the number of elements in the array minus 1. */
 #define ARRAY_LEN_ALL(array) ((SIZE_LESS_NULL((ARRAY_NUM(array)))))
@@ -529,6 +513,7 @@ size_t strlcpy(char *dest, const char *src, size_t dest_size);
 size_t strlcpy_srcmax(char *dest, const char *src, size_t dest_size, size_t src_max_bytes);
 size_t strlcpy_with_max(char *dest, const char *src, size_t dest_size, size_t src_size, size_t src_max_bytes);
 
+size_t strzlen(const char *src);
 size_t strnlen(const char *src, size_t size);
 size_t strllen(const char *src, size_t size);
 

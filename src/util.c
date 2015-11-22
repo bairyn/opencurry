@@ -554,6 +554,20 @@ size_t strlcpy_with_max(char *dest, const char *src, size_t dest_size, size_t sr
   return strlcpy_srcmax(dest, src, dest_size, min_size(src_size, src_max_bytes));
 }
 
+/* Returns the length of a NULL-terminated string. */
+size_t strzlen(const char *src)
+{
+  const char *p;
+
+  if (!src)
+    return 0;
+
+  for (p = src; *p; ++p)
+    ;
+
+  return p - src;
+}
+
 /* Get the length of the string limited by "size".
  *
  * The string can be at maximum capacity without a null terminator.

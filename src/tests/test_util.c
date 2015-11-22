@@ -897,6 +897,15 @@ unit_test_result_t util_equalities_basic_str_test_run(unit_test_context_t *conte
 
     /* ---------------------------------------------------------------- */
 
+    ASSERT2( sizeeq, strzlen(dest),    4 );
+    ASSERT2( sizeeq, strzlen(love),    4 );
+    ASSERT2( sizeeq, strzlen(peace),   4 );
+    ASSERT2( sizeeq, strzlen(""),      0 );
+    ASSERT2( sizeeq, strzlen("love!"), 5 );
+    ASSERT2( sizeeq, strzlen(NULL),    0 );
+
+    /* ---------------------------------------------------------------- */
+
     ASSERT2( sizeeq, strlcpy(dest, love, sizeof(dest)), 4 );
 
     ASSERT1( true,  strn_has_null_terminator(dest, sizeof(dest)) );
