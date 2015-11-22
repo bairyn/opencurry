@@ -63,6 +63,8 @@
 
 #include "util.h"
 
+#define DEBUG_DELETE
+
 /* ---------------------------------------------------------------- */
 /* lookup_t and children.                                           */
 /* ---------------------------------------------------------------- */
@@ -1724,6 +1726,621 @@ size_t lookup_retrieve_multiple
   return num_child_matches + 1;
 }
 
+#if DEBUG
+  size_t debug_bnode(const lookup_t *lookup, const bnode_t *node, char *out_info, size_t info_size)
+  {
+    size_t written = 0;
+
+    ENCLOSE()
+    {
+      const int *value;
+
+      if (!lookup)
+      {
+        written += snprintf
+          ( (char *) (out_info + written), (size_t) terminator_size(size_minus(info_size, written)), ""
+            "lookup: NULL.\n"
+          );
+
+        break;
+      }
+
+      if (LOOKUP_VALUE_SIZE(lookup) != sizeof(int))
+      {
+        written += snprintf
+          ( (char *) (out_info + written), (size_t) terminator_size(size_minus(info_size, written)), ""
+            "lookup: size differs from ints!\n"
+          );
+
+        break;
+      }
+
+      if (LOOKUP_EMPTY(lookup))
+      {
+        written += snprintf
+          ( (char *) (out_info + written), (size_t) terminator_size(size_minus(info_size, written)), ""
+            "lookup: empty.\n"
+          );
+
+        break;
+      }
+
+      if (!node)
+        node = &lookup->order[0];
+
+      value = LOOKUP_INDEX_VALUE(lookup, BNODE_GET_VALUE(node->value));
+
+      written += snprintf
+        ( (char *) (out_info + written), (size_t) terminator_size(size_minus(info_size, written)), ""
+          "****************************************************************\n"
+          "node #%d: %d:\n"
+          "  value: %d\n"
+          "  left:  %s\n"
+          "  right: %s\n"
+          "\n"
+
+        , (int) (node - lookup->order), (int) *value
+          , (int) *value
+          , (const char *) (BNODE_IS_LEAF(node->left)  ? "<leaf>" : "<Child>")
+          , (const char *) (BNODE_IS_LEAF(node->right) ? "<leaf>" : "<Child>")
+        );
+
+      /* ---------------------------------------------------------------- */
+
+      if      ( BNODE_IS_LEAF(node->left) &&  BNODE_IS_LEAF(node->right))
+      {
+        /*
+         * written += snprintf
+         *  ( (char *) (out_info + written), (size_t) terminator_size(size_minus(info_size, written)), ""
+         *    "        %d                \n"
+         *    "       /  \               \n"
+         *    "      /    \              \n"
+         *    "    LL      LL            \n"
+         *    "   /  \    /  \           \n"
+         *    "  *    *  *    *          \n"
+         *
+         *  , (int) *value
+         *  );
+         */
+
+        written += snprintf
+          ( (char *) (out_info + written), (size_t) terminator_size(size_minus(info_size, written)), ""
+            "       % 03d\n"
+            "       /  \\\n"
+            "      /    \\\n"
+            "    LL      LL\n"
+            "   /  \\    /  \\\n"
+            "  *    *  *    *\n"
+
+          , (int) *value
+          );
+      }
+      /* ---------------------------------------------------------------- */
+      else if (!BNODE_IS_LEAF(node->left) &&  BNODE_IS_LEAF(node->right))
+      {
+        const bnode_t *left       = LOOKUP_INDEX_ORDER(lookup, BNODE_GET_REF  (node->left));
+        const int     *left_value = LOOKUP_INDEX_VALUE(lookup, BNODE_GET_VALUE(left->value));
+
+        if      ( BNODE_IS_LEAF(left->left) &&  BNODE_IS_LEAF(left->right))
+        {
+          /*
+           * written += snprintf
+           *   ( (char *) (out_info + written), (size_t) terminator_size(size_minus(info_size, written)), ""
+           *     "        %d                \n"
+           *     "       /  \               \n"
+           *     "      /    \              \n"
+           *     "    %d      LL            \n"
+           *     "   /  \    /  \           \n"
+           *     "  L    L  *    *          \n"
+           *
+           *   , (int) *value
+           *
+           *   , (int) *left_value
+           *   );
+           */
+
+          written += snprintf
+            ( (char *) (out_info + written), (size_t) terminator_size(size_minus(info_size, written)), ""
+              "       % 03d\n"
+              "       /  \\\n"
+              "      /    \\\n"
+              "   % 03d      LL\n"
+              "   /  \\    /  \\\n"
+              "  L    L  *    *\n"
+
+            , (int) *value
+
+            , (int) *left_value
+            );
+        }
+        else if (!BNODE_IS_LEAF(left->left) &&  BNODE_IS_LEAF(left->right))
+        {
+          const bnode_t *left_left       = LOOKUP_INDEX_ORDER(lookup, BNODE_GET_REF  (left->left));
+          const int     *left_left_value = LOOKUP_INDEX_VALUE(lookup, BNODE_GET_VALUE(left_left->value));
+
+          /*
+           * written += snprintf
+           *   ( (char *) (out_info + written), (size_t) terminator_size(size_minus(info_size, written)), ""
+           *     "        %d                \n"
+           *     "       /  \               \n"
+           *     "      /    \              \n"
+           *     "    %d      LL            \n"
+           *     "   /  \    /  \           \n"
+           *     "  %d   L  *    *          \n"
+           *
+           *   , (int) *value
+           *
+           *   , (int) *left_value
+           *
+           *   , (int) *left_left_value
+           *   );
+           */
+
+          written += snprintf
+            ( (char *) (out_info + written), (size_t) terminator_size(size_minus(info_size, written)), ""
+              "       % 03d\n"
+              "       /  \\\n"
+              "      /    \\\n"
+              "   % 03d      LL\n"
+              "   /  \\    /  \\\n"
+              " % 03d   L  *    *\n"
+
+            , (int) *value
+
+            , (int) *left_value
+
+            , (int) *left_left_value
+            );
+        }
+        else if ( BNODE_IS_LEAF(left->left) && !BNODE_IS_LEAF(left->right))
+        {
+          const bnode_t *left_right       = LOOKUP_INDEX_ORDER(lookup, BNODE_GET_REF  (left->right));
+          const int     *left_right_value = LOOKUP_INDEX_VALUE(lookup, BNODE_GET_VALUE(left_right->value));
+
+          /*
+           * written += snprintf
+           *   ( (char *) (out_info + written), (size_t) terminator_size(size_minus(info_size, written)), ""
+           *     "        %d                \n"
+           *     "       /  \               \n"
+           *     "      /    \              \n"
+           *     "    %d      LL            \n"
+           *     "   /  \    /  \           \n"
+           *     "  L   %d  *    *          \n"
+           *
+           *   , (int) *value
+           *
+           *   , (int) *left_value
+           *
+           *   , (int) *left_right_value
+           *   );
+           */
+
+          written += snprintf
+            ( (char *) (out_info + written), (size_t) terminator_size(size_minus(info_size, written)), ""
+              "       % 03d\n"
+              "       /  \\\n"
+              "      /    \\\n"
+              "   % 03d      LL\n"
+              "   /  \\    /  \\\n"
+              "  L  % 03d  *    *\n"
+
+            , (int) *value
+
+            , (int) *left_value
+
+            , (int) *left_right_value
+            );
+        }
+        else
+        {
+          const bnode_t *left_left       = LOOKUP_INDEX_ORDER(lookup, BNODE_GET_REF  (left->left));
+          const int     *left_left_value = LOOKUP_INDEX_VALUE(lookup, BNODE_GET_VALUE(left_left->value));
+
+          const bnode_t *left_right       = LOOKUP_INDEX_ORDER(lookup, BNODE_GET_REF  (left->right));
+          const int     *left_right_value = LOOKUP_INDEX_VALUE(lookup, BNODE_GET_VALUE(left_right->value));
+
+          /*
+           * written += snprintf
+           *   ( (char *) (out_info + written), (size_t) terminator_size(size_minus(info_size, written)), ""
+           *     "        %d                \n"
+           *     "       /  \               \n"
+           *     "      /    \              \n"
+           *     "    %d      LL            \n"
+           *     "   /  \    /  \           \n"
+           *     "  %d  %d  *    *          \n"
+           *
+           *   , (int) *value
+           *
+           *   , (int) *left_value
+           *
+           *   , (int) *left_left_value
+           *   , (int) *left_right_value
+           *  );
+           */
+
+          written += snprintf
+            ( (char *) (out_info + written), (size_t) terminator_size(size_minus(info_size, written)), ""
+              "       % 03d\n"
+              "       /  \\\n"
+              "      /    \\\n"
+              "   % 03d      LL\n"
+              "   /  \\    /  \\\n"
+              " % 03d % 03d  *    *\n"
+
+            , (int) *value
+
+            , (int) *left_value
+
+            , (int) *left_left_value
+            , (int) *left_right_value
+            );
+        }
+      }
+      /* ---------------------------------------------------------------- */
+      else if ( BNODE_IS_LEAF(node->left) && !BNODE_IS_LEAF(node->right))
+      {
+        const bnode_t *right       = LOOKUP_INDEX_ORDER(lookup, BNODE_GET_REF  (node->right));
+        const int     *right_value = LOOKUP_INDEX_VALUE(lookup, BNODE_GET_VALUE(right->value));
+
+        if      ( BNODE_IS_LEAF(right->left) &&  BNODE_IS_LEAF(right->right) )
+        {
+          /*
+           * written += snprintf
+           *   ( (char *) (out_info + written), (size_t) terminator_size(size_minus(info_size, written)), ""
+           *     "        %d                \n"
+           *     "       /  \               \n"
+           *     "      /    \              \n"
+           *     "    LL      %d            \n"
+           *     "   /  \    /  \           \n"
+           *     "  *    *  L    L          \n"
+           *
+           *   , (int) *value
+           *
+           *   , (int) *right_value
+           *   );
+           */
+
+          written += snprintf
+            ( (char *) (out_info + written), (size_t) terminator_size(size_minus(info_size, written)), ""
+              "       % 03d\n"
+              "       /  \\\n"
+              "      /    \\\n"
+              "    LL     % 03d\n"
+              "   /  \\    /  \\\n"
+              "  *    *  L    L\n"
+
+            , (int) *value
+
+            , (int) *right_value
+            );
+        }
+        else if (!BNODE_IS_LEAF(right->left) &&  BNODE_IS_LEAF(right->right))
+        {
+          const bnode_t *right_left       = LOOKUP_INDEX_ORDER(lookup, BNODE_GET_REF  (right->left));
+          const int     *right_left_value = LOOKUP_INDEX_VALUE(lookup, BNODE_GET_VALUE(right_left->value));
+
+          /*
+           * written += snprintf
+           *   ( (char *) (out_info + written), (size_t) terminator_size(size_minus(info_size, written)), ""
+           *     "        %d                \n"
+           *     "       /  \               \n"
+           *     "      /    \              \n"
+           *     "    LL      %d            \n"
+           *     "   /  \    /  \           \n"
+           *     "  *    *  %d   L          \n"
+           *
+           *   , (int) *value
+           *
+           *   , (int) *right_value
+           *
+           *   , (int) *right_left_value
+           *   );
+           */
+
+          written += snprintf
+            ( (char *) (out_info + written), (size_t) terminator_size(size_minus(info_size, written)), ""
+              "       % 03d\n"
+              "       /  \\\n"
+              "      /    \\\n"
+              "    LL     % 03d\n"
+              "   /  \\    /  \\\n"
+              "  *    * % 03d   L\n"
+
+            , (int) *value
+
+            , (int) *right_value
+
+            , (int) *right_left_value
+            );
+        }
+        else if ( BNODE_IS_LEAF(right->left) && !BNODE_IS_LEAF(right->right))
+        {
+          const bnode_t *right_right       = LOOKUP_INDEX_ORDER(lookup, BNODE_GET_REF  (right->right));
+          const int     *right_right_value = LOOKUP_INDEX_VALUE(lookup, BNODE_GET_VALUE(right_right->value));
+
+          /*
+           * written += snprintf
+           *   ( (char *) (out_info + written), (size_t) terminator_size(size_minus(info_size, written)), ""
+           *     "        %d                \n"
+           *     "       /  \               \n"
+           *     "      /    \              \n"
+           *     "    LL      %d            \n"
+           *     "   /  \    /  \           \n"
+           *     "  *    *  L   %d          \n"
+           *
+           *   , (int) *value
+           *
+           *   , (int) *right_value
+           *
+           *   , (int) *right_right_value
+           *   );
+           */
+
+          written += snprintf
+            ( (char *) (out_info + written), (size_t) terminator_size(size_minus(info_size, written)), ""
+              "       % 03d\n"
+              "       /  \\\n"
+              "      /    \\\n"
+              "    LL     % 03d\n"
+              "   /  \\    /  \\\n"
+              "  *    *  L  % 03d\n"
+
+            , (int) *value
+
+            , (int) *right_value
+
+            , (int) *right_right_value
+            );
+        }
+        else
+        {
+          const bnode_t *right_left       = LOOKUP_INDEX_ORDER(lookup, BNODE_GET_REF  (right->left));
+          const int     *right_left_value = LOOKUP_INDEX_VALUE(lookup, BNODE_GET_VALUE(right_left->value));
+
+          const bnode_t *right_right       = LOOKUP_INDEX_ORDER(lookup, BNODE_GET_REF  (right->right));
+          const int     *right_right_value = LOOKUP_INDEX_VALUE(lookup, BNODE_GET_VALUE(right_right->value));
+
+          /*
+           * written += snprintf
+           *   ( (char *) (out_info + written), (size_t) terminator_size(size_minus(info_size, written)), ""
+           *     "        %d                \n"
+           *     "       /  \               \n"
+           *     "      /    \              \n"
+           *     "    LL      %d            \n"
+           *     "   /  \    /  \           \n"
+           *     "  *    *  %d  %d          \n"
+           *
+           *   , (int) *value
+           *
+           *   , (int) *right_value
+           *
+           *   , (int) *right_left_value
+           *   , (int) *right_right_value
+           *   );
+           */
+
+          written += snprintf
+            ( (char *) (out_info + written), (size_t) terminator_size(size_minus(info_size, written)), ""
+              "       % 03d\n"
+              "       /  \\\n"
+              "      /    \\\n"
+              "    LL     % 03d\n"
+              "   /  \\    /  \\\n"
+              "  *    * % 03d % 03d\n"
+
+            , (int) *value
+
+            , (int) *right_value
+
+            , (int) *right_left_value
+            , (int) *right_right_value
+            );
+        }
+      }
+      /* ---------------------------------------------------------------- */
+      else
+      {
+        const bnode_t *left       = LOOKUP_INDEX_ORDER(lookup, BNODE_GET_REF  (node->left));
+        const int     *left_value = LOOKUP_INDEX_VALUE(lookup, BNODE_GET_VALUE(left->value));
+
+        const bnode_t *right       = LOOKUP_INDEX_ORDER(lookup, BNODE_GET_REF  (node->right));
+        const int     *right_value = LOOKUP_INDEX_VALUE(lookup, BNODE_GET_VALUE(right->value));
+
+        /*
+         * written += snprintf
+         *   ( (char *) (out_info + written), (size_t) terminator_size(size_minus(info_size, written)), ""
+         *     "        %d                \n"
+         *     "       /  \               \n"
+         *     "      /    \              \n"
+         *     "    %d      %d            \n"
+         *     "   /  \    /  \           \n"
+         *     "  xx  xx  xx  xx          \n"
+         *
+         *   , (int) *value
+         *
+         *   , (int) *left_value
+         *   , (int) *right_value
+         *   );
+         */
+
+        /*
+         * written += snprintf
+         *   ( (char *) (out_info + written), (size_t) terminator_size(size_minus(info_size, written)), ""
+         *     "        %d                \n"
+         *     "       /  \               \n"
+         *     "      /    \              \n"
+         *     "    %d      %d            \n"
+         *     "   /  \    /  \           \n"
+         *
+         *   , (int) *value
+         *
+         *   , (int) *left_value
+         *   , (int) *right_value
+         *   );
+         */
+
+        written += snprintf
+          ( (char *) (out_info + written), (size_t) terminator_size(size_minus(info_size, written)), ""
+            "       % 03d\n"
+            "       /  \\\n"
+            "      /    \\\n"
+            "   % 03d     % 03d\n"
+            "   /  \\    /  \\\n"
+
+          , (int) *value
+
+          , (int) *left_value
+          , (int) *right_value
+          );
+
+        /* 4 vals */
+        /*
+        written += snprintf
+          ( (char *) (out_info + written), (size_t) terminator_size(size_minus(info_size, written)), ""
+            "  xx  xx  xx  xx\n"
+
+          , (int) *value
+
+          , (int) *left_value
+          , (int) *right_value
+          );
+        */
+
+        /* ---------------------------------------------------------------- */
+        /* val #1.                                                          */
+
+        if (BNODE_IS_LEAF(left->left))
+        {
+          written += snprintf
+            ( (char *) (out_info + written), (size_t) terminator_size(size_minus(info_size, written)), ""
+              "  LL"
+            );
+        }
+        else
+        {
+          const bnode_t *left_left       = LOOKUP_INDEX_ORDER(lookup, BNODE_GET_REF  (left->left));
+          const int     *left_left_value = LOOKUP_INDEX_VALUE(lookup, BNODE_GET_VALUE(left_left->value));
+
+          written += snprintf
+            ( (char *) (out_info + written), (size_t) terminator_size(size_minus(info_size, written)), ""
+              " % 03d"
+
+            , (int) *left_left_value
+            );
+        }
+
+        /* ---------------------------------------------------------------- */
+        /* val #2.                                                          */
+
+        if (BNODE_IS_LEAF(left->right))
+        {
+          written += snprintf
+            ( (char *) (out_info + written), (size_t) terminator_size(size_minus(info_size, written)), ""
+              "  LL"
+            );
+        }
+        else
+        {
+          const bnode_t *left_right       = LOOKUP_INDEX_ORDER(lookup, BNODE_GET_REF  (left->right));
+          const int     *left_right_value = LOOKUP_INDEX_VALUE(lookup, BNODE_GET_VALUE(left_right->value));
+
+          written += snprintf
+            ( (char *) (out_info + written), (size_t) terminator_size(size_minus(info_size, written)), ""
+              " % 03d"
+
+            , (int) *left_right_value
+            );
+        }
+
+        /* ---------------------------------------------------------------- */
+        /* val #3.                                                          */
+
+        if (BNODE_IS_LEAF(right->left))
+        {
+          written += snprintf
+            ( (char *) (out_info + written), (size_t) terminator_size(size_minus(info_size, written)), ""
+              "  LL"
+            );
+        }
+        else
+        {
+          const bnode_t *right_left       = LOOKUP_INDEX_ORDER(lookup, BNODE_GET_REF  (right->left));
+          const int     *right_left_value = LOOKUP_INDEX_VALUE(lookup, BNODE_GET_VALUE(right_left->value));
+
+          written += snprintf
+            ( (char *) (out_info + written), (size_t) terminator_size(size_minus(info_size, written)), ""
+              " % 03d"
+
+            , (int) *right_left_value
+            );
+        }
+
+        /* ---------------------------------------------------------------- */
+        /* val #4.                                                          */
+
+        if (BNODE_IS_LEAF(right->right))
+        {
+          written += snprintf
+            ( (char *) (out_info + written), (size_t) terminator_size(size_minus(info_size, written)), ""
+              "  LL\n"
+            );
+        }
+        else
+        {
+          const bnode_t *right_right       = LOOKUP_INDEX_ORDER(lookup, BNODE_GET_REF  (right->right));
+          const int     *right_right_value = LOOKUP_INDEX_VALUE(lookup, BNODE_GET_VALUE(right_right->value));
+
+          written += snprintf
+            ( (char *) (out_info + written), (size_t) terminator_size(size_minus(info_size, written)), ""
+              " % 03d\n"
+
+            , (int) *right_right_value
+            );
+        }
+      }
+
+      written += snprintf
+        ( (char *) (out_info + written), (size_t) terminator_size(size_minus(info_size, written)), ""
+          "****************************************************************\n"
+          "\n"
+        );
+    }
+
+    return written;
+  }
+
+# include <stdio.h>  /* fwrite, stderr, fprintf */
+  void debug_lookup_print(FILE *out, const char *str)
+  {
+    if (!str)
+      return;
+
+    if (!out)
+      out = stderr;
+
+    fwrite(str, sizeof(*str), strzlen(str), out);
+  }
+
+  void debug_print_bnode(const lookup_t *lookup, const bnode_t *node, FILE *out)
+  {
+    char buf[DEFAULT_BUF_SIZE];
+    *buf = 0;
+
+    if (!out)
+      out = stderr;
+
+    debug_bnode(lookup, node, buf, sizeof(buf));
+
+    debug_lookup_print(out, buf);
+  }
+#endif /* #if DEBUG */
+
+#if !DEBUG || !defined(DEBUG_DELETE)
+#  define DELETE_DEBUG(a) do {} while(0)
+#else
+#  define DELETE_DEBUG(a) do { if (LOOKUP_VALUE_SIZE(lookup) == sizeof(int)) { a; } } while(0)
+#endif
+
 /* Delete all matches. */
 lookup_t *lookup_delete
   ( lookup_t           *lookup
@@ -1734,6 +2351,9 @@ lookup_t *lookup_delete
   , size_t             *out_num_deleted
   )
 {
+  size_t   num_deleted;
+  bnode_t *next_root;
+
   LOOKUP_FIND_VARIABLE_DECLARATIONS;
 
 #if ERROR_CHECKING
@@ -1751,165 +2371,434 @@ lookup_t *lookup_delete
 
   /* ---------------------------------------------------------------- */
 
+  DELETE_DEBUG
+    ( fprintf
+        ( stderr, ""
+          "\n"
+          "/ ----------------------------------------------------------------\n"
+          "|                                                                 \n"
+          "| ****************************************************************\n"
+          "|                                                                 \n"
+          "| ----------------------------------------------------------------\n"
+          "|\n"
+          "| lookup_delete(lookup, <%d>, ...);\n"
+          "|\n"
+          "|\n"
+          "*\n"
+          "\n"
+
+        , (int) *(const int *) val
+        )
+    );
+
   /* Is the lookup container empty? */
   if (LOOKUP_EMPTY(lookup))
   {
     WRITE_OUTPUT(out_num_deleted, 0);
-    return NULL;
-  }
-
-  /* Ordered BST traversal to leaf or first match. */
-  if (!LOOKUP_FIND_FROM_STD(lookup, NULL, val, cmp))
-    return NULL;
-
-  /* Did we find a match? */
-  if (ordering != 0)
-  {
-    WRITE_OUTPUT(out_num_deleted, 0);
     return lookup;
   }
 
-  /* ---------------------------------------------------------------- */
+  next_root   = &lookup->order[0];
 
-  if (!LOOKUP_IS_RECYCLING(lookup))
+  num_deleted = 0;
+
+  for (;;)
   {
-    --lookup->next_value;
-    --lookup->next_order;
-  }
+    WRITE_OUTPUT(out_num_deleted, num_deleted);
 
-  if      ( BNODE_IS_LEAF(node->left) &&  BNODE_IS_LEAF(node->right))
-  {
-    if (parent_link)
-      BNODE_LINK_SET_LEAF(parent_link);
-
-    LOOKUP_SET_ORDER_IN_USE_BIT(lookup, node - lookup->order,         0);
-    LOOKUP_SET_VALUE_IN_USE_BIT(lookup, BNODE_GET_VALUE(node->value), 0);
-
-    --lookup->len;
-
-    WRITE_OUTPUT(out_num_deleted, 1);
-
-    return lookup;
-  }
-  else if (!BNODE_IS_LEAF(node->left) &&  BNODE_IS_LEAF(node->right))
-  {
-    /* num_children_deleted: TODO: anti-lazify. */
-    size_t num_children_deleted;
-
-    if (parent_link)
-      BNODE_LINK_SET_REF(parent_link, BNODE_GET_REF(node->left));
-
-    LOOKUP_SET_ORDER_IN_USE_BIT(lookup, node - lookup->order,         0);
-    LOOKUP_SET_VALUE_IN_USE_BIT(lookup, BNODE_GET_VALUE(node->value), 0);
-
-    --lookup->len;
-
-    if (!lookup_delete(lookup, val, cmp, &num_children_deleted))
-      return NULL;
-
-    WRITE_OUTPUT(out_num_deleted, num_children_deleted + 1);
-
-    return lookup;
-  }
-  else if ( BNODE_IS_LEAF(node->left) && !BNODE_IS_LEAF(node->right))
-  {
-    if (parent_link)
-      BNODE_LINK_SET_REF(parent_link, BNODE_GET_REF(node->right));
-
-    LOOKUP_SET_ORDER_IN_USE_BIT(lookup, node - lookup->order,         0);
-    LOOKUP_SET_VALUE_IN_USE_BIT(lookup, BNODE_GET_VALUE(node->value), 0);
-
-    --lookup->len;
-
-    WRITE_OUTPUT(out_num_deleted, 1);
-
-    return lookup;
-  }
-  else
-  {
-    /* We need to handle duplicates. */
-
-    bnode_t    *end;
-    const void *end_val;
-
-    bnode_t    *begin;
-
-    LOOKUP_SET_VALUE_IN_USE_BIT(lookup, BNODE_GET_VALUE(node->value), 0);
-
-    /* First, go right, then left until the end.                  */
-    /* Then set end->left to node->left.                          */
-    /* Then go right, then left until the first match with "end". */
-    /* Then set this_first_match->right to node->right.           */
-    /* Replace this node with this first match.                   */
-
-    /* 1) Get end node.                                           */
-    if (!(end_val = lookup_min(lookup, LOOKUP_INDEX_ORDER(lookup, BNODE_GET_REF(node->right)), &end)))
-      return NULL;
-
-    /* 2) Set end->left to node->left.                            */
-    BNODE_LINK_SET_REF(&end->left, BNODE_GET_REF(node->left));
-
-    /* 3) Get first end node with same value. */
-    if
-      (
-        !(
-          lookup_find_from
-            ( /* lookup                   */ lookup
-            , /* root                     */ LOOKUP_INDEX_ORDER(lookup, BNODE_GET_REF(node->right))
-            , /* val                      */ end_val
-
-            , /* cmp                      */ cmp
-
-            , /* out_grandparent          */ NULL
-            , /* out_grandparent_link     */ NULL
-            , /* out_parent               */ NULL
-            , /* out_parent_link          */ NULL
-            , /* out_node                 */ &begin
-            , /* out_node_link            */ NULL
-
-            , /* out_node_val             */ NULL
-
-            , /* out_grandparent_ordering */ NULL
-            , /* out_parent_ordering      */ NULL
-            , /* out_ordering             */ NULL
-            )
-        )
-      )
-      return NULL;
-
-    /* 4) Set begin->right to node->right.                      */
-    BNODE_LINK_SET_REF(&begin->right, BNODE_GET_REF(node->right));
-
-    /* 5) Replace this node with begin.                         */
-    if (parent_link)
+    /* Is the lookup container empty? */
+    if (LOOKUP_EMPTY(lookup))
     {
-      BNODE_LINK_SET_REF(parent_link, BNODE_REF(begin - lookup->order));
+      WRITE_OUTPUT(out_num_deleted, num_deleted);
+      return lookup;
+    }
 
-      LOOKUP_SET_ORDER_IN_USE_BIT(lookup, node - lookup->order, 0);
+    /* Ordered BST traversal to leaf or first match. */
+    if (!LOOKUP_FIND_FROM_STD(lookup, next_root, val, cmp))
+      return NULL;
+
+    /* Set next root. */
+    if (parent)
+      next_root = parent;
+    else
+      next_root = &lookup->order[0];
+
+    /* Did we find no match? */
+    if (ordering != 0)
+    {
+      WRITE_OUTPUT(out_num_deleted, num_deleted);
+      return lookup;
+    }
+
+    /* ---------------------------------------------------------------- */
+
+    if (!LOOKUP_IS_RECYCLING(lookup))
+    {
+      --lookup->next_value;
+      --lookup->next_order;
+    }
+
+    if      ( BNODE_IS_LEAF(node->left) &&  BNODE_IS_LEAF(node->right))
+    {
+      if (parent_link)
+        BNODE_LINK_SET_LEAF(parent_link);
+
+      LOOKUP_SET_ORDER_IN_USE_BIT(lookup, node - lookup->order,         0);
+      LOOKUP_SET_VALUE_IN_USE_BIT(lookup, BNODE_GET_VALUE(node->value), 0);
+      --lookup->len;
+
+      ++num_deleted;
+      WRITE_OUTPUT(out_num_deleted, num_deleted);
+
+      break;
+    }
+    else if (!BNODE_IS_LEAF(node->left) &&  BNODE_IS_LEAF(node->right))
+    {
+      if (parent_link)
+        BNODE_LINK_SET_REF(parent_link, BNODE_GET_REF(node->left));
+
+      LOOKUP_SET_ORDER_IN_USE_BIT(lookup, node - lookup->order,         0);
+      LOOKUP_SET_VALUE_IN_USE_BIT(lookup, BNODE_GET_VALUE(node->value), 0);
+      --lookup->len;
+
+      ++num_deleted;
+      WRITE_OUTPUT(out_num_deleted, num_deleted);
+
+      /*
+       *   n
+       *  / \
+       * l   r
+       *
+       * l <= n < r
+       *
+       * l may be a duplicate; continue.
+       */
+      continue;
+    }
+    else if ( BNODE_IS_LEAF(node->left) && !BNODE_IS_LEAF(node->right))
+    {
+      if (parent_link)
+        BNODE_LINK_SET_REF(parent_link, BNODE_GET_REF(node->right));
+
+      LOOKUP_SET_ORDER_IN_USE_BIT(lookup, node - lookup->order,         0);
+      LOOKUP_SET_VALUE_IN_USE_BIT(lookup, BNODE_GET_VALUE(node->value), 0);
+
+      --lookup->len;
+
+      ++num_deleted;
+      WRITE_OUTPUT(out_num_deleted, num_deleted);
+
+      break;
     }
     else
     {
-      BNODE_SET_VALUE   (node,         BNODE_GET_VALUE(begin->value));
-      BNODE_LINK_SET_REF(&node->left,  BNODE_GET_REF  (begin->left));
-      BNODE_LINK_SET_REF(&node->right, BNODE_GET_REF  (begin->right));
+      /* We need to handle duplicates. */
 
-      LOOKUP_SET_ORDER_IN_USE_BIT(lookup, begin - lookup->order, 0);
-    }
+      bnode_t    *end;              /* node->right->leftmost */
+      const void *end_val;
 
-    --lookup->len;
+      bnode_t    *begin;            /* node->right->leftmost_first_equal */
+      bnode_t    *begin_parent;     /* begin->parent                     */
 
-    /* TODO: anti-lazify */
-    {
-      size_t num_children_deleted;
+      bnode_t    *begin_rightmost;  /* node->right->rightmost */
 
-      if (!lookup_delete(lookup, val, cmp, &num_children_deleted))
+      /* ---------------------------------------------------------------- */
+
+      LOOKUP_SET_VALUE_IN_USE_BIT(lookup, BNODE_GET_VALUE(node->value), 0);
+
+      /* ---------------------------------------------------------------- */
+
+      /* Pivot nodes we'll relink. */
+      /* 1) end:   First, find right->leftmost and its value (end_val).        */
+      /* 2) begin: right->leftmost, stopping at the first equivalent value.    */
+      /*    begin_parent:    Also track begin->parent.                         */
+      /* 3) begin_rightmost: Find right->rightmost.                            */
+
+      /* Relinking. */
+      /* 4) end->left              = node->left                                */
+      /* 5) begin_rightmost->right = node->right unless begin_parent == begin. */
+      /* 6) begin_parent->left     = NULL        unless begin_parent == begin. */
+      /* 7) parent_link            = begin                                     */
+
+      /* Then we can free node.                                                */
+
+      /* ---------------------------------------------------------------- */
+
+      /* Example:                                                            * */
+      /*                                                                     * */
+      /* * ----------------------------------------------------------------- * */
+      /* *                                                                   * */
+      /* *                      p                                            * */
+      /* *                      |                                            * */
+      /* *                      |                                            * */
+      /* *              node-> 07                                            * */
+      /* *                    /  \                                           * */
+      /* *                   /    \                                          * */
+      /* *                 04      10                                        * */
+      /* *                        /  \                                       * */
+      /* *                       /    \                                      * */
+      /* *             begin-> 08      12                                    * */
+      /* *                    /  \                                           * */
+      /* *                   /    \                                          * */
+      /* *                 08      09 <- begin_rightmost                     * */
+      /* *                /                                                  * */
+      /* *               /                                                   * */
+      /* *             08                                                    * */
+      /* *            /                                                      * */
+      /* *           /                                                       * */
+      /* *   end-> 08                                                        * */
+      /* *                                                                   * */
+      /* * ----------------------------------------------------------------- * */
+      /* *                                                                   * */
+      /* * 4) end->left                = node->left                          * */
+      /* * if (begin_parent != node):                                        * */
+      /* *   5) begin_rightmost->right = node->right                         * */
+      /* *   6) begin_parent->left     = NULL                                * */
+      /* * 7) p->parent_link           = begin                               * */
+      /* *                                                                   * */
+      /* * ----------------------------------------------------------------- * */
+      /* *                                                                   * */
+      /* *                     p                                             * */
+      /* *                     |                                             * */
+      /* *                     |                                             * */
+      /* *            begin-> 08                                             * */
+      /* *                   /  \                                            * */
+      /* *                  /    \                                           * */
+      /* *                08      09 <- begin_rightmost                      * */
+      /* *               /          \                                        * */
+      /* *              /            \                                       * */
+      /* *            08              10                                     * */
+      /* *           /                  \                                    * */
+      /* *          /                    \                                   * */
+      /* *  end-> 08                      12                                 * */
+      /* *       /                                                           * */
+      /* *      /                                                            * */
+      /* *    04                                                             * */
+      /* *                                                                   * */
+      /* * ----------------------------------------------------------------- * */
+
+      /* Example:                                                            * */
+      /*                                                                     * */
+      /* * ----------------------------------------------------------------- * */
+      /* *                                                                   * */
+      /* *               p                                                   * */
+      /* *               |                                                   * */
+      /* *               |                                                   * */
+      /* *       node-> 07                                                   * */
+      /* *             /  \                                                  * */
+      /* *            /    \                                                 * */
+      /* *           /      \                                                * */
+      /* *         04        12                                              * */
+      /* *        /  \      /  \                                             * */
+      /* *       /    \    /    \                                            * */
+      /* *      03    05  08    42                                           * */
+      /* *                 ^                                                 * */
+      /* *                 |                                                 * */
+      /* *                 begin = end = begin_rightmost                     * */
+      /* *                                                                   * */
+      /* * ----------------------------------------------------------------- * */
+      /* *                                                                   * */
+      /* * 4) end->left                = node->left                          * */
+      /* * if (begin_parent != node): (true)                                 * */
+      /* *   5) begin_rightmost->right = node->right                         * */
+      /* *   6) begin_parent->left     = NULL                                * */
+      /* * 7) p->parent_link           = begin                               * */
+      /* *                                                                   * */
+      /* * ----------------------------------------------------------------- * */
+      /* *                                                                   * */
+      /* *               p                                                   * */
+      /* *               |                                                   * */
+      /* *               |                                                   * */
+      /* *              08 <- begin = end = begin_rightmost                  * */
+      /* *             /  \                                                  * */
+      /* *            /    \                                                 * */
+      /* *           /      \                                                * */
+      /* *         04        12                                              * */
+      /* *        /  \         \                                             * */
+      /* *       /    \         \                                            * */
+      /* *      03    05         42                                          * */
+      /* *                                                                   * */
+      /* * ----------------------------------------------------------------- * */
+
+      /* Example:                                                            * */
+      /*                                                                     * */
+      /* * ----------------------------------------------------------------- * */
+      /* *                                                                   * */
+      /* *               p                                                   * */
+      /* *               |                                                   * */
+      /* *               |                                                   * */
+      /* *       node-> 07                                                   * */
+      /* *             /  \                                                  * */
+      /* *            /    \                                                 * */
+      /* *           /      \                                                * */
+      /* *         04        12 <- begin                                     * */
+      /* *        /  \      /  \                                             * */
+      /* *       /    \    /    \                                            * */
+      /* *      03    05  12    42 <- begin_rightmost                        * */
+      /* *                 ^                                                 * */
+      /* *                 |                                                 * */
+      /* *                 end                                               * */
+      /* *                                                                   * */
+      /* * ----------------------------------------------------------------- * */
+      /* *                                                                   * */
+      /* * 4) end->left                = node->left                          * */
+      /* * if (begin_parent != node): (false)                                * */
+      /* *   5) begin_rightmost->right = node->right                         * */
+      /* *   6) begin_parent->left     = NULL                                * */
+      /* * 7) p->parent_link           = begin                               * */
+      /* *                                                                   * */
+      /* * ----------------------------------------------------------------- * */
+      /* *                                                                   * */
+      /* *              p                                                    * */
+      /* *              |                                                    * */
+      /* *              |                                                    * */
+      /* *             12 <- begin                                           * */
+      /* *            /  \                                                   * */
+      /* *           /    \                                                  * */
+      /* *   end-> 12     42 <- begin_rightmost                              * */
+      /* *        /                                                          * */
+      /* *       /                                                           * */
+      /* *      04                                                           * */
+      /* *     /  \                                                          * */
+      /* *    /    \                                                         * */
+      /* *   03    05                                                        * */
+      /* *                                                                   * */
+      /* * ----------------------------------------------------------------- * */
+
+      /* ---------------------------------------------------------------- */
+      /* Nodes of interest.                                               */
+
+      /* 1) Get end node.  Sets "end" and "end_val".                      */
+      if (!(end_val = lookup_min(lookup, LOOKUP_INDEX_ORDER(lookup, BNODE_GET_REF(node->right)), &end)))
         return NULL;
 
-      WRITE_OUTPUT(out_num_deleted, num_children_deleted + 1);
-    }
+      /* 2) Get first end node with same value.                           */
+      /*    Sets "begin" and "begin_parent".                              */
+      if
+        (
+          !(
+            lookup_find_from
+              ( /* lookup                   */ lookup
+              , /* root                     */ LOOKUP_INDEX_ORDER(lookup, BNODE_GET_REF(node->right))
+              , /* val                      */ end_val
 
-    return lookup;
+              , /* cmp                      */ cmp
+
+              , /* out_grandparent          */ NULL
+              , /* out_grandparent_link     */ NULL
+              , /* out_parent               */ &begin_parent
+              , /* out_parent_link          */ NULL
+              , /* out_node                 */ &begin
+              , /* out_node_link            */ NULL
+
+              , /* out_node_val             */ NULL
+
+              , /* out_grandparent_ordering */ NULL
+              , /* out_parent_ordering      */ NULL
+              , /* out_ordering             */ NULL
+              )
+          )
+        )
+        return NULL;
+
+      /* 3) Get begin_rightmost node.                                     */
+      if (begin_parent != node)
+        if (!(lookup_max(lookup, begin, &begin_rightmost)))
+          return NULL;
+
+      /* ---------------------------------------------------------------- */
+
+      DELETE_DEBUG(debug_lookup_print(NULL, "/** node:\n"));
+      DELETE_DEBUG(debug_print_bnode(lookup, node, NULL));
+
+      DELETE_DEBUG(debug_lookup_print(NULL, "/** begin:\n"));
+      DELETE_DEBUG(debug_print_bnode(lookup, begin, NULL));
+
+      DELETE_DEBUG(debug_lookup_print(NULL, "/** end:\n"));
+      DELETE_DEBUG(debug_print_bnode(lookup, end, NULL));
+
+      if (begin_parent != node)
+      {
+        DELETE_DEBUG(debug_lookup_print(NULL, "/** begin_rightmost:\n"));
+        DELETE_DEBUG(debug_print_bnode(lookup, begin_rightmost, NULL));
+      }
+
+      /* ---------------------------------------------------------------- */
+      /* Relinking.                                                       */
+
+      /* 4) end->left = node->left                                        */
+      BNODE_LINK_SET_REF(&end->left, BNODE_GET_REF(node->left));
+
+      if (begin_parent != node)
+      {
+        /* 5) begin_rightmost->right = node->right */
+        BNODE_LINK_SET_REF(&begin_rightmost->right, BNODE_GET_REF(node->right));
+
+        /* 6) begin_parent->left     = NULL        */
+        BNODE_LINK_SET_LEAF(&begin_parent->left);
+      }
+
+      /* 7) parent_link            = begin                                */
+      if (parent_link)
+      {
+        BNODE_LINK_SET_REF(parent_link, BNODE_REF(begin - lookup->order));
+      }
+      else
+      {
+        /* Root node: node = begin, then we'll free begin instead. */
+        BNODE_SET_VALUE   (node,         BNODE_GET_VALUE(begin->value));
+        BNODE_LINK_SET_REF(&node->left,  BNODE_GET_REF  (begin->left));
+        BNODE_LINK_SET_REF(&node->right, BNODE_GET_REF  (begin->right));
+      }
+
+      /* ---------------------------------------------------------------- */
+      /* Free node.                                                       */
+
+      if (parent_link)
+      {
+        LOOKUP_SET_ORDER_IN_USE_BIT(lookup, node - lookup->order, 0);
+      }
+      else
+      {
+        /* Root node: we set node to begin, since we're freeing "begin" instead.
+         */
+        LOOKUP_SET_ORDER_IN_USE_BIT(lookup, begin - lookup->order, 0);
+      }
+
+      --lookup->len;
+
+      /* For this node we're done! */
+
+      ++num_deleted;
+      WRITE_OUTPUT(out_num_deleted, num_deleted);
+
+      continue;
+    }
   }
+
+  DELETE_DEBUG
+    ( fprintf
+        ( stderr, ""
+          "\n"
+          "*\n"
+          "|\n"
+          "|\n"
+          "| Finished: lookup_delete(lookup, <%d>, ...);\n"
+          "|\n"
+          "| ----------------------------------------------------------------\n"
+          "|                                                                 \n"
+          "| ****************************************************************\n"
+          "|                                                                 \n"
+          "\\ ----------------------------------------------------------------\n"
+          "\n"
+
+        , (int) *(const int *) val
+        )
+    );
+
+  WRITE_OUTPUT(out_num_deleted, num_deleted);
+
+  return lookup;
 }
 
 /* Returns the number of deletions, (even when it exceeds out_val_num_max). */
