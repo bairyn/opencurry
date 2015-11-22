@@ -541,7 +541,6 @@ void *memory_manager_calloc(const memory_manager_t *memory_manager, size_t nmemb
   }
 }
 
-/* FIXME: uh... the memory contents should be preserved! */
 void *memory_manager_realloc(const memory_manager_t *memory_manager, void *ptr, size_t size)
 {
   if (!memory_manager)
@@ -553,12 +552,12 @@ void *memory_manager_realloc(const memory_manager_t *memory_manager, void *ptr, 
   }
   else
   {
-    if (!memory_manager->malloc || !memory_manager->free)
-      memory_manager = &malloc_manager;
+    memory_manager_on_err
+      ( memory_manager
+      , "error: a memory manager lacks \"realloc\"!"
+      );
 
-    memory_manager_free(memory_manager, ptr);
-
-    return memory_manager_malloc(memory_manager, size);
+    return NULL;
   }
 }
 
