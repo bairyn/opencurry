@@ -1267,8 +1267,9 @@ unit_test_result_t lookup_insert_delete_test_run(unit_test_context_t *context)
 
     value = 7;
     ++num_deletions;
+    ++num_deletions;
     ASSERT2( objpeq, lookup_delete(lookup, val,  cmp, nd), lookup_val_ref );
-    ASSERT2( inteq,  num_deleted, 1 );
+    ASSERT2( inteq,  num_deleted, 2 );
     ASSERT2( inteq,  CHECKED_LOOKUP_INT_LEN(lookup), 9 + LOOKUP_INSERT_TESTS_NUM_ADDITIONAL_VALUES - num_deletions );
     ASSERT1( false,  lookup_max_capacity(lookup) );
 
@@ -1294,7 +1295,7 @@ unit_test_result_t lookup_insert_delete_test_run(unit_test_context_t *context)
     ASSERT2( objpeq, lookup_insert(lookup, val,  1, cmp, dp), lookup_val_ref );
     ASSERT2( inteq,  is_duplicate, 0 );
     ASSERT2( inteq,  CHECKED_LOOKUP_INT_LEN(lookup), 9 + LOOKUP_INSERT_TESTS_NUM_ADDITIONAL_VALUES - num_deletions );
-    ASSERT1( true,   lookup_max_capacity(lookup) );
+    ASSERT1( false,  lookup_max_capacity(lookup) );
 
     retrieve = 7; ASSERT2( inteq, val_or_m1(lookup_retrieve(lookup, ret, cmp)), 7 );
 
@@ -1328,8 +1329,9 @@ unit_test_result_t lookup_insert_delete_test_run(unit_test_context_t *context)
 
     value = 42;
     ++num_deletions;
+    ++num_deletions;
     ASSERT2( objpeq, lookup_delete(lookup, val,  cmp, nd), lookup_val_ref );
-    ASSERT2( inteq,  num_deleted, 1 );
+    ASSERT2( inteq,  num_deleted, 2 );
     ASSERT2( inteq,  CHECKED_LOOKUP_INT_LEN(lookup), 9 + LOOKUP_INSERT_TESTS_NUM_ADDITIONAL_VALUES - num_deletions );
     ASSERT1( false,  lookup_max_capacity(lookup) );
 
@@ -1342,6 +1344,19 @@ unit_test_result_t lookup_insert_delete_test_run(unit_test_context_t *context)
     ASSERT1( false,  lookup_max_capacity(lookup) );
 
     retrieve = 42; ASSERT2( inteq, val_or_m1(lookup_retrieve(lookup, ret, cmp)), -1 );
+
+
+    /* Delete 9. */
+    retrieve = 9; ASSERT2( inteq, val_or_m1(lookup_retrieve(lookup, ret, cmp)), 9 );
+
+    value = 9;
+    ++num_deletions;
+    ASSERT2( objpeq, lookup_delete(lookup, val,  cmp, nd), lookup_val_ref );
+    ASSERT2( inteq,  num_deleted, 1 );
+    ASSERT2( inteq,  CHECKED_LOOKUP_INT_LEN(lookup), 9 + LOOKUP_INSERT_TESTS_NUM_ADDITIONAL_VALUES - num_deletions );
+    ASSERT1( false,  lookup_max_capacity(lookup) );
+
+    retrieve = 9; ASSERT2( inteq, val_or_m1(lookup_retrieve(lookup, ret, cmp)), -1 );
   }
 
   LOOKUP_DEINIT(lookup);
@@ -1395,7 +1410,7 @@ unit_test_result_t lookup_duplicates_test_run(unit_test_context_t *context)
     ASSERT2( objpeq, LOOKUP_EXPAND(lookup, capacity), lookup_val_ref);
     ASSERT2( inteq,  lookup_capacity(lookup), capacity );
     ASSERT1( true,   lookup_empty(lookup));
-    ASSERT1( true,   lookup_max_capacity(lookup) );
+    ASSERT1( false,  lookup_max_capacity(lookup) );
     ASSERT2( inteq,  CHECKED_LOOKUP_INT_LEN(lookup), 0 );
 
     /* ---------------------------------------------------------------- */
