@@ -2732,16 +2732,16 @@ lookup_t *lookup_delete
       if (begin_parent != node)
       {
         /* 5) begin_rightmost->right = node->right */
-        BNODE_LINK_SET_REF(&begin_rightmost->right, BNODE_GET_REF(node->right));
+        BNODE_LINK_SET_REF(&begin_rightmost->right, node->right);
 
         /* 6) begin_parent->left     = NULL        */
         BNODE_LINK_SET_LEAF(&begin_parent->left);
       }
 
       /* 7) parent_link            = begin                                */
-      if (parent_link)
+      if (parent)
       {
-        BNODE_LINK_SET_REF(parent_link, BNODE_REF(begin - lookup->order));
+        BNODE_LINK_SET_REF(parent_link, begin - lookup->order);
       }
       else
       {
@@ -2754,7 +2754,7 @@ lookup_t *lookup_delete
       /* ---------------------------------------------------------------- */
       /* Free node.                                                       */
 
-      if (parent_link)
+      if (parent)
       {
         LOOKUP_SET_ORDER_IN_USE_BIT(lookup, node - lookup->order, 0);
       }
@@ -2766,6 +2766,16 @@ lookup_t *lookup_delete
       }
 
       --lookup->len;
+
+      /* ---------------------------------------------------------------- */
+
+      if (parent)
+      {
+        DELETE_DEBUG(debug_lookup_print(NULL, "/** replacement:\n"));
+        DELETE_DEBUG(debug_print_bnode(lookup, LOOKUP_INDEX_CORDER(lookup, BNODE_GET_REF(*parent_link)), NULL));
+      }
+
+      /* ---------------------------------------------------------------- */
 
       /* For this node we're done! */
 
