@@ -1,5 +1,5 @@
 /*
- * opencurry: tests/test_vector.c
+ * opencurry: tests/test_type_base_vector.c
  *
  * Copyright (c) 2015, Byron James Johnson
  * All rights reserved.
@@ -32,32 +32,32 @@
 
 #include "../base.h"
 #include "testing.h"
-#include "test_vector.h"
+#include "test_type_base_vector.h"
 
-#include "../vector.h"
+#include "../type_base_vector.h"
 
-int test_vector_cli(int argc, char **argv)
+int test_type_base_vector_cli(int argc, char **argv)
 {
-  return run_test_suite(vector_test);
+  return run_test_suite(type_base_vector_test);
 }
 
 /* ---------------------------------------------------------------- */
 
-/* vector tests. */
-unit_test_t vector_test =
-  {  test_vector_run
-  , "test_vector"
-  , "vector tests."
+/* type_base_vector tests. */
+unit_test_t type_base_vector_test =
+  {  test_type_base_vector_run
+  , "test_type_base_vector"
+  , "type_base_vector tests."
   };
 
-/* Array of vector tests. */
-unit_test_t *vector_tests[] =
+/* Array of type_base_vector tests. */
+unit_test_t *type_base_vector_tests[] =
   { NULL
   };
 
-unit_test_result_t test_vector_run(unit_test_context_t *context)
+unit_test_result_t test_type_base_vector_run(unit_test_context_t *context)
 {
-  return run_tests(context, vector_tests);
+  return run_tests(context, type_base_vector_tests);
 }
 
 /* ---------------------------------------------------------------- */
