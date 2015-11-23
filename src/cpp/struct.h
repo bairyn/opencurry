@@ -1,5 +1,5 @@
 /*
- * opencurry: cpp/nop.h
+ * opencurry: cpp/struct.h
  *
  * Copyright (c) 2015, Byron James Johnson
  * All rights reserved.
@@ -31,14 +31,20 @@
  */
 
 /*
- * cpp/nop.h
+ * cpp/struct.h
  * -----
  */
 
-#ifndef CPP_NOP_H
-#define CPP_NOP_H
+#ifndef CPP_STRUCT_H
+#define CPP_STRUCT_H
 #include "../base.h"
 
 #include "base.h"
 
-#endif /* ifndef CPP_NOP_H */
+/* ---------------------------------------------------------------- */
+
+#define ARROW_REF(ptr, member) (((ptr)) ? (&(ptr)->member) : ((ptr)))
+
+/* ---------------------------------------------------------------- */
+
+#endif /* ifndef CPP_STRUCT_H */

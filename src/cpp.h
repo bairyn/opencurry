@@ -46,12 +46,14 @@
 /* ---------------------------------------------------------------- */
 
 #define CPP_MOD(name) CAT(_CPP_MOD_, name)(name)
-#define _CPP_MOD_base(base) "cpp/base.h"
-#define _CPP_MOD_nop(nop)   "cpp/nop.h"
+#define _CPP_MOD_base(  base)   "cpp/base.h"
+#define _CPP_MOD_struct(struct) "cpp/struct.h"
+#define _CPP_MOD_nop(   nop)    "cpp/nop.h"
 
 /* ---------------------------------------------------------------- */
 
 #include CPP_MOD(base)
+#include CPP_MOD(struct)
 #include CPP_MOD(nop)
 
 /* ---------------------------------------------------------------- */

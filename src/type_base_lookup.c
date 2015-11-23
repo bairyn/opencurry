@@ -62,6 +62,8 @@
 #include "bits.h"
 #include "ptrs.h"
 
+#include "cpp.h"
+
 #include "util.h"
 
 /* ---------------------------------------------------------------- */
@@ -904,8 +906,7 @@ static lookup_t *lookup_defragment_step
   if (LOOKUP_EMPTY(lookup))
     return lookup;
 
-  if (!node)
-    node = &lookup->order[0];
+  LOOKUP_OPTIONAL_NODE(lookup, node);
 
   if (defragment_which & (DEFRAGMENT_ORDER))
   {
@@ -946,7 +947,7 @@ lookup_t *lookup_defragment
   return
     lookup_defragment_step
       ( lookup
-      , &lookup->order[0]
+      , LOOKUP_ROOT_NODE(lookup)
       , defragment_which
 
       , on_new_node_index
@@ -1497,7 +1498,7 @@ const void    *lookup_node_cvalue (const lookup_t *lookup, const bnode_t *node)
 }
 
 
-bnode_t *lookup_get_root_node(lookup_t *lookup)
+bnode_t *lookup_root_node(lookup_t *lookup)
 {
 #if ERROR_CHECKING
   if (!lookup)
@@ -1507,10 +1508,10 @@ bnode_t *lookup_get_root_node(lookup_t *lookup)
   if (LOOKUP_NULL(lookup))
     return NULL;
 
-  return LOOKUP_GET_ROOT_NODE(lookup);
+  return LOOKUP_ROOT_NODE(lookup);
 }
 
-const bnode_t *lookup_get_root_cnode(const lookup_t *lookup)
+const bnode_t *lookup_root_cnode(const lookup_t *lookup)
 {
 #if ERROR_CHECKING
   if (!lookup)
@@ -1520,7 +1521,7 @@ const bnode_t *lookup_get_root_cnode(const lookup_t *lookup)
   if (LOOKUP_NULL(lookup))
     return NULL;
 
-  return LOOKUP_GET_ROOT_CNODE(lookup);
+  return LOOKUP_ROOT_CNODE(lookup);
 }
 
 
@@ -1554,6 +1555,51 @@ size_t lookup_get_node_index(const lookup_t *lookup, const bnode_t *node)
     return 0;
 
   return min_size(LOOKUP_CAPACITY(lookup), LOOKUP_GET_NODE_INDEX(lookup, node));
+}
+
+
+bnode_t *lookup_node_or_root(lookup_t *lookup, bnode_t *node, bnode_t **out_node)
+{
+#if ERROR_CHECKING
+  if (!lookup)
+  {
+    WRITE_OUTPUT(out_node, NULL);
+    return NULL;
+  }
+#endif /* #if ERROR_CHECKING  */
+
+  if (LOOKUP_NULL(lookup))
+  {
+    WRITE_OUTPUT(out_node, NULL);
+    return NULL;
+  }
+
+  LOOKUP_NODE_OR_ROOT(lookup, node);
+
+  WRITE_OUTPUT(out_node, node);
+  return node;
+}
+
+const bnode_t *lookup_node_or_croot(const lookup_t *lookup, const bnode_t *node, const bnode_t **out_node)
+{
+#if ERROR_CHECKING
+  if (!lookup)
+  {
+    WRITE_OUTPUT(out_node, NULL);
+    return NULL;
+  }
+#endif /* #if ERROR_CHECKING  */
+
+  if (LOOKUP_NULL(lookup))
+  {
+    WRITE_OUTPUT(out_node, NULL);
+    return NULL;
+  }
+
+  LOOKUP_NODE_OR_CROOT(lookup, node);
+
+  WRITE_OUTPUT(out_node, node);
+  return node;
 }
 
 /* ---------------------------------------------------------------- */
@@ -1764,8 +1810,7 @@ int lookup_height_from(const lookup_t *lookup, const bnode_t *node)
   if (lookup_empty(lookup))
     return -1;
 
-  if (!node)
-    node = &lookup->order[0];
+  LOOKUP_OPTIONAL_CNODE(lookup, node);
 
   if      ( BNODE_IS_LEAF(node->left) &&  BNODE_IS_LEAF(node->right))
     return 0;
@@ -1886,14 +1931,14 @@ lookup_t *lookup_find_from
     return NULL;
 #endif /* #if ERROR_CHECKING  */
 
-  if (lookup_empty(lookup))
+  if (LOOKUP_NULL(lookup))
   {
     WRITE_OUTPUT(out_grandparent,          NULL);
     WRITE_OUTPUT(out_grandparent_link,     NULL);
     WRITE_OUTPUT(out_parent,               NULL);
     WRITE_OUTPUT(out_parent_link,          NULL);
-    WRITE_OUTPUT(out_node,                 &lookup->order[0]);
-    WRITE_OUTPUT(out_node_link,            &lookup->order[0].left);
+    WRITE_OUTPUT(out_node,                 NULL);
+    WRITE_OUTPUT(out_node_link,            NULL);
 
     WRITE_OUTPUT(out_node_val,             NULL);
 
@@ -1904,9 +1949,25 @@ lookup_t *lookup_find_from
     return lookup;
   }
 
-  node = root;
-  if (!node)
-    node = &lookup->order[0];
+  if (LOOKUP_EMPTY(lookup))
+  {
+    WRITE_OUTPUT(out_grandparent,          NULL);
+    WRITE_OUTPUT(out_grandparent_link,     NULL);
+    WRITE_OUTPUT(out_parent,               NULL);
+    WRITE_OUTPUT(out_parent_link,          NULL);
+    WRITE_OUTPUT(out_node,                 (           LOOKUP_ROOT_NODE(lookup))        );
+    WRITE_OUTPUT(out_node_link,            ( ARROW_REF(LOOKUP_ROOT_NODE(lookup), left)) );
+
+    WRITE_OUTPUT(out_node_val,             NULL);
+
+    WRITE_OUTPUT(out_grandparent_ordering, 0);
+    WRITE_OUTPUT(out_parent_ordering,      0);
+    WRITE_OUTPUT(out_ordering,             0);
+
+    return lookup;
+  }
+
+  LOOKUP_OPTIONAL_NODE(lookup, root);
 
   grandparent          = NULL;
   grandparent_link     = NULL;
@@ -1916,7 +1977,7 @@ lookup_t *lookup_find_from
   grandparent_ordering = 0;
   parent_ordering      = 0;
   ordering             = 0;
-  node   = &lookup->order[0];
+  node                 = root;
   for (;;)
   {
     grandparent_ordering = parent_ordering;
@@ -2014,7 +2075,7 @@ const lookup_t *lookup_cfind_from
     return NULL;
 #endif /* #if ERROR_CHECKING  */
 
-  if (lookup_empty(lookup))
+  if (LOOKUP_NULL(lookup))
   {
     WRITE_OUTPUT(out_grandparent,          NULL);
     WRITE_OUTPUT(out_grandparent_link,     NULL);
@@ -2032,9 +2093,25 @@ const lookup_t *lookup_cfind_from
     return lookup;
   }
 
-  node = root;
-  if (!node)
-    node = &lookup->order[0];
+  if (LOOKUP_EMPTY(lookup))
+  {
+    WRITE_OUTPUT(out_grandparent,          NULL);
+    WRITE_OUTPUT(out_grandparent_link,     NULL);
+    WRITE_OUTPUT(out_parent,               NULL);
+    WRITE_OUTPUT(out_parent_link,          NULL);
+    WRITE_OUTPUT(out_node,                 (           LOOKUP_ROOT_CNODE(lookup))        );
+    WRITE_OUTPUT(out_node_link,            ( ARROW_REF(LOOKUP_ROOT_CNODE(lookup), left)) );
+
+    WRITE_OUTPUT(out_node_val,             NULL);
+
+    WRITE_OUTPUT(out_grandparent_ordering, 0);
+    WRITE_OUTPUT(out_parent_ordering,      0);
+    WRITE_OUTPUT(out_ordering,             0);
+
+    return lookup;
+  }
+
+  LOOKUP_OPTIONAL_CNODE(lookup, root);
 
   grandparent          = NULL;
   grandparent_link     = NULL;
@@ -2044,7 +2121,7 @@ const lookup_t *lookup_cfind_from
   grandparent_ordering = 0;
   parent_ordering      = 0;
   ordering             = 0;
-  node   = &lookup->order[0];
+  node                 = root;
   for (;;)
   {
     grandparent_ordering = parent_ordering;
@@ -2372,7 +2449,7 @@ size_t lookup_retrieve_multiple
       }
 
       if (!node)
-        node = &lookup->order[0];
+        node = LOOKUP_ROOT_CNODE(lookup);
 
       value = LOOKUP_INDEX_VALUE(lookup, BNODE_GET_VALUE(node->value));
 
@@ -3004,7 +3081,7 @@ lookup_t *lookup_delete
     return lookup;
   }
 
-  next_root   = &lookup->order[0];
+  next_root   = LOOKUP_ROOT_NODE(lookup);
 
   num_deleted = 0;
 
@@ -3027,7 +3104,7 @@ lookup_t *lookup_delete
     if (parent)
       next_root = parent;
     else
-      next_root = &lookup->order[0];
+      next_root = LOOKUP_ROOT_NODE(lookup);
 
     /* Did we find no match? */
     if (ordering != 0)
@@ -3467,8 +3544,7 @@ static void *lookup_iterate_node_from_step
   if (lookup_empty(lookup))
     return initial_accumulation;
 
-  if (!node)
-    node = &lookup->order[0];
+  LOOKUP_OPTIONAL_NODE(lookup, node);
 
   value = LOOKUP_INDEX_VALUE(lookup, BNODE_GET_VALUE(node->value));
 
@@ -3594,8 +3670,7 @@ static void *lookup_iterate_from_step
   if (lookup_empty(lookup))
     return initial_accumulation;
 
-  if (!node)
-    node = &lookup->order[0];
+  LOOKUP_OPTIONAL_NODE(lookup, node);
 
   value = LOOKUP_INDEX_VALUE(lookup, BNODE_GET_VALUE(node->value));
 
@@ -3782,8 +3857,7 @@ const void *lookup_min(lookup_t *lookup, bnode_t *root, bnode_t **out_end)
   if (lookup_empty(lookup))
     return NULL;
 
-  if (!node)
-    node = &lookup->order[0];
+  LOOKUP_OPTIONAL_NODE(lookup, node);
 
   while (!BNODE_IS_LEAF(node->left))
     node = LOOKUP_INDEX_ORDER(lookup, BNODE_GET_REF(node->left));
@@ -3805,8 +3879,7 @@ const void *lookup_max(lookup_t *lookup, bnode_t *root, bnode_t **out_end)
   if (lookup_empty(lookup))
     return NULL;
 
-  if (!node)
-    node = &lookup->order[0];
+  LOOKUP_OPTIONAL_NODE(lookup, node);
 
   while (!BNODE_IS_LEAF(node->right))
     node = LOOKUP_INDEX_ORDER(lookup, BNODE_GET_REF(node->right));
@@ -3828,8 +3901,7 @@ const void *lookup_cmin(const lookup_t *lookup, const bnode_t *root, const bnode
   if (lookup_empty(lookup))
     return NULL;
 
-  if (!node)
-    node = &lookup->order[0];
+  LOOKUP_OPTIONAL_CNODE(lookup, node);
 
   while (!BNODE_IS_LEAF(node->left))
     node = LOOKUP_INDEX_ORDER(lookup, BNODE_GET_REF(node->left));
@@ -3851,8 +3923,7 @@ const void *lookup_cmax(const lookup_t *lookup, const bnode_t *root, const bnode
   if (lookup_empty(lookup))
     return NULL;
 
-  if (!node)
-    node = &lookup->order[0];
+  LOOKUP_OPTIONAL_CNODE(lookup, node);
 
   while (!BNODE_IS_LEAF(node->right))
     node = LOOKUP_INDEX_ORDER(lookup, BNODE_GET_REF(node->right));

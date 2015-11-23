@@ -516,10 +516,12 @@ const void    *lookup_index_cvalue(const lookup_t *lookup, size_t         index)
 const bnode_t *lookup_index_corder(const lookup_t *lookup, size_t         index);
 const void    *lookup_node_cvalue (const lookup_t *lookup, const bnode_t *node);
 
-#define LOOKUP_GET_ROOT_NODE(lookup)  ((      bnode_t *) (&((lookup)->order[0])) )
-#define LOOKUP_GET_ROOT_CNODE(lookup) ((const bnode_t *) (&((lookup)->order[0])) )
-      bnode_t *lookup_get_root_node (      lookup_t *lookup);
-const bnode_t *lookup_get_root_cnode(const lookup_t *lookup);
+
+#define LOOKUP_ROOT_NODE(lookup)  ((      bnode_t *) (&((lookup)->order[0])) )
+#define LOOKUP_ROOT_CNODE(lookup) ((const bnode_t *) (&((lookup)->order[0])) )
+      bnode_t *lookup_root_node (      lookup_t *lookup);
+const bnode_t *lookup_root_cnode(const lookup_t *lookup);
+
 
 #define LOOKUP_GET_VALUE_INDEX(lookup, value_ref)                                                          \
   ( (size_t)                                                                                               \
@@ -528,13 +530,32 @@ const bnode_t *lookup_get_root_cnode(const lookup_t *lookup);
       )                                                                                                    \
     )                                                                                                      \
   )
-#define LOOKUP_GET_NODE_INDEX(lookup, node)                        \
-  ( (size_t)                                                       \
-    ( (ptrdiff_t) ( ((node)) - (LOOKUP_GET_ROOT_CNODE((lookup))) ) \
-    )                                                              \
+#define LOOKUP_GET_NODE_INDEX(lookup, node)                    \
+  ( (size_t)                                                   \
+    ( (ptrdiff_t) ( ((node)) - (LOOKUP_ROOT_CNODE((lookup))) ) \
+    )                                                          \
   )
 size_t lookup_get_value_index(const lookup_t *lookup, const void    *value_ref);
 size_t lookup_get_node_index (const lookup_t *lookup, const bnode_t *node);
+
+
+#define LOOKUP_NODE_OR_ROOT(lookup, node) \
+  do                                      \
+  {                                       \
+    if (!(node))                          \
+      node = LOOKUP_ROOT_NODE(lookup);    \
+  } while(0)
+#define LOOKUP_NODE_OR_CROOT(lookup, node) \
+  do                                       \
+  {                                        \
+    if (!(node))                           \
+      node = LOOKUP_ROOT_CNODE(lookup);    \
+  } while(0)
+      bnode_t *lookup_node_or_root (      lookup_t *lookup,       bnode_t *node,       bnode_t **out_node);
+const bnode_t *lookup_node_or_croot(const lookup_t *lookup, const bnode_t *node, const bnode_t **out_node);
+
+#define LOOKUP_OPTIONAL_NODE( lookup, node) LOOKUP_NODE_OR_ROOT ((lookup), (node))
+#define LOOKUP_OPTIONAL_CNODE(lookup, node) LOOKUP_NODE_OR_CROOT((lookup), (node))
 
 /* ---------------------------------------------------------------- */
 
