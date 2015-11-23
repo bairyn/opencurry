@@ -502,19 +502,39 @@ int lookup_is_order_recycling(const lookup_t *lookup);
 
 /* ---------------------------------------------------------------- */
 
-#define LOOKUP_INDEX_VALUE(lookup, index) ((void *) (((unsigned char *) ((lookup)->values)) + ((ptrdiff_t) ((lookup)->value_size * (index)))))
+#define LOOKUP_INDEX_VALUE(lookup, index) ((void *) (((unsigned char *) ((lookup)->values)) + ((ptrdiff_t) ((LOOKUP_VALUE_SIZE((lookup))) * (index)))))
 #define LOOKUP_INDEX_ORDER(lookup, index) (&(lookup)->order[(index)])
 #define LOOKUP_NODE_VALUE( lookup, node)  (LOOKUP_INDEX_VALUE((lookup), (BNODE_GET_VALUE((node)->value))))
 void    *lookup_index_value(lookup_t *lookup, size_t         index);
 bnode_t *lookup_index_order(lookup_t *lookup, size_t         index);
 void    *lookup_node_value (lookup_t *lookup, const bnode_t *node);
 
-#define LOOKUP_INDEX_CVALUE(lookup, index) ((const void *) (((const unsigned char *) ((lookup)->values)) + ((ptrdiff_t) ((lookup)->value_size * (index)))))
+#define LOOKUP_INDEX_CVALUE(lookup, index) ((const void *) (((const unsigned char *) ((lookup)->values)) + ((ptrdiff_t) ((LOOKUP_VALUE_SIZE((lookup))) * (index)))))
 #define LOOKUP_INDEX_CORDER(lookup, index) ((const bnode_t *) (&(lookup)->order[(index)]))
 #define LOOKUP_NODE_CVALUE( lookup, node)  (LOOKUP_INDEX_CVALUE((lookup), (BNODE_GET_VALUE((node)->value))))
 const void    *lookup_index_cvalue(const lookup_t *lookup, size_t         index);
 const bnode_t *lookup_index_corder(const lookup_t *lookup, size_t         index);
 const void    *lookup_node_cvalue (const lookup_t *lookup, const bnode_t *node);
+
+#define LOOKUP_GET_ROOT_NODE(lookup)  ((      bnode_t *) (&((lookup)->order[0])) )
+#define LOOKUP_GET_ROOT_CNODE(lookup) ((const bnode_t *) (&((lookup)->order[0])) )
+      bnode_t *lookup_get_root_node (      lookup_t *lookup);
+const bnode_t *lookup_get_root_cnode(const lookup_t *lookup);
+
+#define LOOKUP_GET_VALUE_INDEX(lookup, value_ref)                                                          \
+  ( (size_t)                                                                                               \
+    ( ( ((ptrdiff_t) (((const unsigned char *) (value_ref)) - ((const unsigned char *) (lookup)->values))) \
+      / (LOOKUP_VALUE_SIZE((lookup)))                                                                      \
+      )                                                                                                    \
+    )                                                                                                      \
+  )
+#define LOOKUP_GET_NODE_INDEX(lookup, node)                        \
+  ( (size_t)                                                       \
+    ( (ptrdiff_t) ( ((node)) - (LOOKUP_GET_ROOT_CNODE((lookup))) ) \
+    )                                                              \
+  )
+size_t lookup_get_value_index(const lookup_t *lookup, const void    *value_ref);
+size_t lookup_get_node_index (const lookup_t *lookup, const bnode_t *node);
 
 /* ---------------------------------------------------------------- */
 

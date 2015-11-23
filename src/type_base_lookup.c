@@ -1496,6 +1496,66 @@ const void    *lookup_node_cvalue (const lookup_t *lookup, const bnode_t *node)
   return LOOKUP_NODE_CVALUE(lookup, node);
 }
 
+
+bnode_t *lookup_get_root_node(lookup_t *lookup)
+{
+#if ERROR_CHECKING
+  if (!lookup)
+    return NULL;
+#endif /* #if ERROR_CHECKING  */
+
+  if (LOOKUP_NULL(lookup))
+    return NULL;
+
+  return LOOKUP_GET_ROOT_NODE(lookup);
+}
+
+const bnode_t *lookup_get_root_cnode(const lookup_t *lookup)
+{
+#if ERROR_CHECKING
+  if (!lookup)
+    return NULL;
+#endif /* #if ERROR_CHECKING  */
+
+  if (LOOKUP_NULL(lookup))
+    return NULL;
+
+  return LOOKUP_GET_ROOT_CNODE(lookup);
+}
+
+
+size_t lookup_get_value_index(const lookup_t *lookup, const void *value_ref)
+{
+#if ERROR_CHECKING
+  if (!lookup)
+    return 0;
+#endif /* #if ERROR_CHECKING  */
+
+  if (LOOKUP_NULL(lookup))
+    return 0;
+
+  if (!value_ref)
+    return 0;
+
+  return min_size(LOOKUP_CAPACITY(lookup), LOOKUP_GET_VALUE_INDEX(lookup, value_ref));
+}
+
+size_t lookup_get_node_index(const lookup_t *lookup, const bnode_t *node)
+{
+#if ERROR_CHECKING
+  if (!lookup)
+    return 0;
+#endif /* #if ERROR_CHECKING  */
+
+  if (LOOKUP_NULL(lookup))
+    return 0;
+
+  if (!node)
+    return 0;
+
+  return min_size(LOOKUP_CAPACITY(lookup), LOOKUP_GET_NODE_INDEX(lookup, node));
+}
+
 /* ---------------------------------------------------------------- */
 
 int lookup_is_value_free(const lookup_t *lookup, size_t value)
