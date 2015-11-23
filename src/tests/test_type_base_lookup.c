@@ -1747,7 +1747,7 @@ unit_test_result_t lookup_minsert_test_run(unit_test_context_t *context)
     ASSERT2( inteq,  val_or_m1(lookup_retrieve(lookup, ret, cmp)), -1 );
 
     value = 7;
-    ASSERT2( objpeq, LOOKUP_MINSERT(lookup, val,  0, cmp, dp), NULL );
+    ASSERT2( objpeq, LOOKUP_MINSERT(lookup, val,  0, cmp, dp), lookup_val_ref );
     ASSERT2( inteq,  is_duplicate, 0 );
     ASSERT2( inteq,  CHECKED_LOOKUP_INT_LEN(lookup), 4 );
 
@@ -1760,8 +1760,8 @@ unit_test_result_t lookup_minsert_test_run(unit_test_context_t *context)
 
 
     value = 7;
-    ASSERT2( objpeq, LOOKUP_MINSERT(lookup, val,  1, cmp, dp), NULL );
-    ASSERT2( inteq,  is_duplicate, 0 );
+    ASSERT2( objpeq, LOOKUP_MINSERT(lookup, val,  1, cmp, dp), lookup_val_ref );
+    ASSERT2( inteq,  is_duplicate, 1 );
     ASSERT2( inteq,  CHECKED_LOOKUP_INT_LEN(lookup), 5 );
 
     retrieve = 42;
@@ -1828,7 +1828,7 @@ unit_test_result_t lookup_minsert_test_run(unit_test_context_t *context)
 
     /* Insert 10. */
     value = 10;
-    ASSERT2( objpeq, LOOKUP_MINSERT(lookup, val,  1, cmp, dp), NULL );
+    ASSERT2( objpeq, LOOKUP_MINSERT(lookup, val,  1, cmp, dp), lookup_val_ref );
     ASSERT2( inteq,  is_duplicate, 0 );
     ASSERT2( inteq,  CHECKED_LOOKUP_INT_LEN(lookup), 8 );
 
@@ -1956,7 +1956,7 @@ unit_test_result_t lookup_minsert_test_run(unit_test_context_t *context)
         }
         else
         {
-          ASSERT2( inteq,  lookup_len(lookup), 9 + i + 1 );
+          ASSERT2( inteq,  lookup_len(lookup), 10 + i + 1 );
         }
 
         if (!skip_checks)
