@@ -310,7 +310,32 @@ lookup_t *lookup_auto_expand_simple
   , void   *realloc_context
   );
 
-void      lookup_defragment(lookup_t *lookup);
+#define DEFRAGMENT_NONE    (0)
+#define DEFRAGMENT_ORDER   (1 << 0)
+#define DEFRAGMENT_VALUES  (1 << 1)
+#define DEFRAGMENT_ALL     ((DEFRAGMENT_ORDER) | (DEFRAGMENT_VALUES))
+
+#define DEFRAGMENT_DEFAULT (DEFRAGMENT_ORDER)
+lookup_t *lookup_defragment
+  ( lookup_t *lookup
+  , int       defragment_which
+
+  , void *(*on_new_node_index) (void *on_new_order_index_context, void *last_accumulation, lookup_t *lookup, size_t new_node_index,  size_t old_node_index,  int *out_iteration_break)
+  , void *on_new_node_index_context
+  , void *on_new_node_index_initial_accumulation
+
+  , void *(*on_new_value_index)(void *on_new_value_index_context, void *last_accumulation, lookup_t *lookup, size_t new_value_index, size_t old_value_index, int *out_iteration_break)
+  , void *on_new_value_index_context
+  , void *on_new_value_index_initial_accumulation
+
+  , void **out_on_new_node_index_final_accumulation
+  , void **out_on_new_value_index_final_accumulation
+  );
+
+lookup_t *lookup_defragment_simple
+  ( lookup_t *lookup
+  , int       defragment_which
+  );
 
 lookup_t *lookup_shrink
   ( lookup_t *lookup
@@ -345,17 +370,73 @@ lookup_t *lookup_resize
 
 #define LOOKUP_AUTO_SHRINK_THRESHOLD(capacity) (capacity >> 4)          /* capacity / 8          */
 #define LOOKUP_AUTO_SHRINK_CAPACITY( capacity) (LOOKUP_AUTO_EXPAND_CAPACITY((LOOKUP_AUTO_SHRINK_THRESHOLD((capacity)))))
+
+#define LOOKUP_AUTO_DEFRAGMENT_WHICH           (DEFRAGMENT_ORDER)
 lookup_t *lookup_auto_resize
   ( lookup_t *lookup
 
   , void *(*calloc)(void *context, size_t nmemb, size_t size)
-  , void   *calloc_context
-
+    , void   *calloc_context
   , void *(*realloc)(void *context, void *area, size_t size)
-  , void   *realloc_context
-
+    , void   *realloc_context
   , void  (*free)(void *context, void *area)
-  , void   *free_context
+    , void   *free_context
+  );
+
+typedef size_t (*lookup_capacity_fun_t)(void *context, size_t capacity);
+
+size_t lookup_auto_min_capacity    (void *context);
+size_t lookup_auto_expand_threshold(void *context, size_t capacity);
+size_t lookup_auto_expand_threshold(void *context, size_t capacity);
+size_t lookup_auto_shrink_threshold(void *context, size_t capacity);
+size_t lookup_auto_shrink_threshold(void *context, size_t capacity);
+int lookup_auto_defragment_which   (void *context);
+
+extern void * const lookup_auto_min_capacity_context;
+extern void * const lookup_auto_expand_threshold_context;
+extern void * const lookup_auto_expand_capacity_context;
+extern void * const lookup_auto_shrink_threshold_context;
+extern void * const lookup_auto_shrink_capacity_context;
+extern void * const lookup_auto_defragment_which_context;
+
+lookup_t *lookup_auto_resize_controlled
+  ( lookup_t *lookup
+
+  , void *(*calloc)(void *context, size_t nmemb, size_t size)
+    , void   *calloc_context
+  , void *(*realloc)(void *context, void *area, size_t size)
+    , void   *realloc_context
+  , void  (*free)(void *context, void *area)
+    , void   *free_context
+
+  , int (*min_capacity)(void *context)
+    , void                  *min_capacity_context
+  , lookup_capacity_fun_t  expand_threshold
+    , void                  *expand_threshold_context
+  , lookup_capacity_fun_t  expand_capacity
+    , void                  *expand_capacity_context
+  , lookup_capacity_fun_t  shrink_threshold
+    , void                  *shrink_threshold_context
+  , lookup_capacity_fun_t  shrink_capacity
+    , void                  *shrink_capacity_context
+  , size_t (*defragment_which)(void *context)
+    , void                  *defragment_which_context
+
+  , void *(*on_new_node_index) (void *on_new_order_index_context, void *last_accumulation, lookup_t *lookup, size_t new_node_index,  size_t old_node_index,  int *out_iteration_break)
+    , void *on_new_node_index_context
+    , void *on_new_node_index_initial_accumulation
+
+  , void *(*on_new_value_index)(void *on_new_value_index_context, void *last_accumulation, lookup_t *lookup, size_t new_value_index, size_t old_value_index, int *out_iteration_break)
+    , void *on_new_value_index_context
+    , void *on_new_value_index_initial_accumulation
+
+  , int    *out_expanding
+  , int    *out_shrinking
+  , int    *out_defragmenting
+  , size_t *out_new_capacity
+
+  , void  **out_on_new_node_index_final_accumulation
+  , void  **out_on_new_value_index_final_accumulation
   );
 
 /* ---------------------------------------------------------------- */

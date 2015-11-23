@@ -813,7 +813,7 @@ lookup_t *lookup_auto_expand
   {
     WRITE_OUTPUT(out_defragmented, 1);
 
-    lookup_defragment(lookup);
+    lookup_defragment_simple(lookup, auto_defragment);
 
     /* Are we not using more than half the capacity? */
     if ((LOOKUP_LEN(lookup)) <= ((LOOKUP_CAPACITY(lookup)) >> 1))
@@ -864,7 +864,7 @@ lookup_t *lookup_auto_expand_simple
 
   if (auto_defragment && LOOKUP_IS_RECYCLING(lookup))
   {
-    lookup_defragment(lookup);
+    lookup_defragment_simple(lookup, DEFRAGMENT_DEFAULT);
 
     /* Are we not using more than half the capacity? */
     if ((LOOKUP_LEN(lookup)) <= ((LOOKUP_CAPACITY(lookup)) >> 1))
@@ -884,28 +884,105 @@ lookup_t *lookup_auto_expand_simple
       );
 }
 
-static void lookup_defragment_step(lookup_t *lookup, bnode_t *node)
+static lookup_t *lookup_defragment_step
+  ( lookup_t *lookup
+  , bnode_t  *node
+  , int       defragment_which
+
+  , void *(*on_new_node_index) (void *on_new_order_index_context, void *last_accumulation, lookup_t *lookup, size_t new_node_index,  size_t old_node_index,  int *out_iteration_break)
+  , void *on_new_node_index_context
+  , void *on_new_node_index_initial_accumulation
+
+  , void *(*on_new_value_index)(void *on_new_value_index_context, void *last_accumulation, lookup_t *lookup, size_t new_value_index, size_t old_value_index, int *out_iteration_break)
+  , void *on_new_value_index_context
+  , void *on_new_value_index_initial_accumulation
+
+  , void **out_on_new_node_index_final_accumulation
+  , void **out_on_new_value_index_final_accumulation
+  )
 {
+  if (LOOKUP_EMPTY(lookup))
+    return lookup;
+
+  if (!node)
+    node = &lookup->order[0];
+
+  if (defragment_which & (DEFRAGMENT_ORDER))
+  {
+    if (LOOKUP_IS_ORDER_RECYCLING(lookup))
+    {
+      /* TODO */
+    }
+  }
+  if (defragment_which & (DEFRAGMENT_VALUES))
+  {
+    if (LOOKUP_IS_VALUE_RECYCLING(lookup))
+    {
+      /* TODO */
+    }
+  }
+
+  WRITE_OUTPUT(out_on_new_node_index_final_accumulation,  on_new_node_index_initial_accumulation);
+  WRITE_OUTPUT(out_on_new_value_index_final_accumulation, on_new_value_index_initial_accumulation);
 }
 
 /* Move elements to remove gaps of free element slots. */
-void lookup_defragment(lookup_t *lookup)
+lookup_t *lookup_defragment
+  ( lookup_t *lookup
+  , int       defragment_which
+
+  , void *(*on_new_node_index) (void *on_new_order_index_context, void *last_accumulation, lookup_t *lookup, size_t new_node_index,  size_t old_node_index,  int *out_iteration_break)
+  , void *on_new_node_index_context
+  , void *on_new_node_index_initial_accumulation
+
+  , void *(*on_new_value_index)(void *on_new_value_index_context, void *last_accumulation, lookup_t *lookup, size_t new_value_index, size_t old_value_index, int *out_iteration_break)
+  , void *on_new_value_index_context
+  , void *on_new_value_index_initial_accumulation
+
+  , void **out_on_new_node_index_final_accumulation
+  , void **out_on_new_value_index_final_accumulation
+  )
 {
-#if ERROR_CHECKING
-  if (!lookup)
-    return;
-#endif /* #if ERROR_CHECKING  */
+  return
+    lookup_defragment_step
+      ( lookup
+      , &lookup->order[0]
+      , defragment_which
 
-  if (LOOKUP_EMPTY(lookup))
-    return;
+      , on_new_node_index
+      , on_new_node_index_context
+      , on_new_node_index_initial_accumulation
 
-  if (!LOOKUP_IS_RECYCLING(lookup))
-    return;
+      , on_new_value_index
+      , on_new_value_index_context
+      , on_new_value_index_initial_accumulation
 
-  lookup_defragment_step
-    ( lookup
-    , &lookup->order[0]
-    );
+      , out_on_new_node_index_final_accumulation
+      , out_on_new_value_index_final_accumulation
+      );
+}
+
+lookup_t *lookup_defragment_simple
+  ( lookup_t *lookup
+  , int       defragment_which
+  )
+{
+  return
+    lookup_defragment
+      ( lookup
+      , defragment_which
+
+      , NULL
+      , NULL
+      , NULL
+
+      , NULL
+      , NULL
+      , NULL
+
+      , NULL
+      , NULL
+      );
 }
 
 /* Reallocate less memory for fewer element slots.      */
@@ -1041,7 +1118,7 @@ lookup_t *lookup_resize
   if (capacity < old_capacity)
   {
     if (LOOKUP_IS_RECYCLING(lookup))
-      lookup_defragment(lookup);
+      lookup_defragment_simple(lookup, DEFRAGMENT_DEFAULT);
 
     return lookup_shrink
       (lookup, capacity, realloc, realloc_context, free,    free_context);
@@ -1070,8 +1147,122 @@ lookup_t *lookup_auto_resize
   , void   *free_context
   )
 {
+  return
+    lookup_auto_resize_controlled
+      ( /* lookup                     */ lookup
+
+      , /* calloc                     */ calloc
+        , /* calloc_context           */ calloc_context
+      , /* realloc                    */ realloc
+        , /* realloc_context          */ realloc_context
+      , /* free                       */ free
+        , /* free_context             */ free_context
+
+      , /* min_capacity               */ lookup_auto_min_capacity
+        , /* min_capacity_context     */ lookup_auto_min_capacity_context
+      , /* expand_threshold           */ lookup_auto_expand_threshold
+        , /* expand_threshold_context */ lookup_auto_expand_threshold_context
+      , /* expand_capacity            */ lookup_auto_expand_capacity
+        , /* expand_capacity_context  */ lookup_auto_expand_capacity_context
+      , /* shrink_threshold           */ lookup_auto_shrink_threshold
+        , /* shrink_threshold_context */ lookup_auto_shrink_threshold_context
+      , /* shrink_capacity            */ lookup_auto_shrink_capacity
+        , /* shrink_capacity_context  */ lookup_auto_shrink_capacity_context
+      , /* defragment_which           */ lookup_auto_defragment_which
+        , /* defragment_which_context */ lookup_auto_defragment_which_context
+
+      , /* on_new_node_index          */ NULL
+      , /* on_new_node_index_context  */ NULL
+      , /* on_new_node_index_initial_accumulation    */ NULL
+
+      , /* on_new_value_index         */ NULL
+      , /* on_new_value_index_context */ NULL
+      , /* on_new_value_index_initial_accumulation   */ NULL
+
+      , /* out_expanding              */ NULL
+      , /* out_shrinking              */ NULL
+      , /* out_defragmenting          */ NULL
+      , /* out_new_capacity           */ NULL
+
+      , /* out_on_new_node_index_final_accumulation  */ NULL
+      , /* out_on_new_value_index_final_accumulation */ NULL
+      );
+}
+
+size_t lookup_auto_min_capacity    (void *context)
+  { return LOOKUP_AUTO_MIN_CAPACITY };
+
+size_t lookup_auto_expand_threshold(void *context, size_t capacity)
+  { return LOOKUP_AUTO_EXPAND_THRESHOLD(capacity) };
+
+size_t lookup_auto_expand_threshold(void *context, size_t capacity)
+  { return LOOKUP_AUTO_SHRINK_CAPACITY (capacity) };
+
+size_t lookup_auto_shrink_threshold(void *context, size_t capacity)
+  { return LOOKUP_AUTO_EXPAND_THRESHOLD(capacity) };
+
+size_t lookup_auto_shrink_threshold(void *context, size_t capacity)
+  { return LOOKUP_AUTO_SHRINK_CAPACITY (capacity) };
+
+int lookup_auto_defragment_which   (void *context)
+  { return LOOKUP_AUTO_DEFRAGMENT_WHICH };
+
+void * const lookup_auto_min_capacity_context     = NULL;
+void * const lookup_auto_expand_threshold_context = NULL;
+void * const lookup_auto_expand_capacity_context  = NULL;
+void * const lookup_auto_shrink_threshold_context = NULL;
+void * const lookup_auto_shrink_capacity_context  = NULL;
+void * const lookup_auto_defragment_which_context = NULL;
+
+lookup_t *lookup_auto_resize_controlled
+  ( lookup_t *lookup
+
+  , void *(*calloc)(void *context, size_t nmemb, size_t size)
+    , void   *calloc_context
+  , void *(*realloc)(void *context, void *area, size_t size)
+    , void   *realloc_context
+  , void  (*free)(void *context, void *area)
+    , void   *free_context
+
+  , int (*min_capacity)(void *context)
+    , void                  *min_capacity_context
+  , lookup_capacity_fun_t  expand_threshold
+    , void                  *expand_threshold_context
+  , lookup_capacity_fun_t  expand_capacity
+    , void                  *expand_capacity_context
+  , lookup_capacity_fun_t  shrink_threshold
+    , void                  *shrink_threshold_context
+  , lookup_capacity_fun_t  shrink_capacity
+    , void                  *shrink_capacity_context
+  , size_t (*defragment_which)(void *context)
+    , void                  *defragment_which_context
+
+  , void *(*on_new_node_index) (void *on_new_order_index_context, void *last_accumulation, lookup_t *lookup, size_t new_node_index,  size_t old_node_index,  int *out_iteration_break)
+    , void *on_new_node_index_context
+    , void *on_new_node_index_initial_accumulation
+
+  , void *(*on_new_value_index)(void *on_new_value_index_context, void *last_accumulation, lookup_t *lookup, size_t new_value_index, size_t old_value_index, int *out_iteration_break)
+    , void *on_new_value_index_context
+    , void *on_new_value_index_initial_accumulation
+
+  , int    *out_expanding
+  , int    *out_shrinking
+  , int    *out_defragmenting
+  , size_t *out_new_capacity
+
+  , void  **out_on_new_node_index_final_accumulation
+  , void  **out_on_new_value_index_final_accumulation
+  )
+{
   size_t len;
   size_t capacity;
+
+  int    expanding;
+  int    shrinking;
+  int    defragmenting;
+  size_t new_capacity;
+
+  size_t min_capacity_val;
 
 #if ERROR_CHECKING
   if (!lookup)
@@ -1084,28 +1275,173 @@ lookup_t *lookup_auto_resize
     return NULL;
 #endif /* #if ERROR_CHECKING  */
 
-  len      = LOOKUP_LEN     (lookup);
-  capacity = LOOKUP_CAPACITY(lookup);
+  /* ---------------------------------------------------------------- */
 
-  if (capacity < LOOKUP_AUTO_MIN_CAPACITY)
-    return lookup_expand(lookup, LOOKUP_AUTO_MIN_CAPACITY, calloc, calloc_context, realloc, realloc_context);
-  else
-    len = MAX(SIZE_LESS_NULL(LOOKUP_AUTO_MIN_CAPACITY), len);
-
-  if (len >= capacity)
-    return lookup_expand(lookup, LOOKUP_AUTO_EXPAND_CAPACITY(capacity), calloc, calloc_context, realloc, realloc_context);
-
-  if (LOOKUP_IS_RECYCLING(lookup))
+  if (!min_capacity)
   {
-    if (len >= LOOKUP_AUTO_EXPAND_THRESHOLD(capacity))
-      return lookup_expand(lookup, LOOKUP_AUTO_EXPAND_CAPACITY(capacity), calloc, calloc_context, realloc, realloc_context);
-
-    if (len <= LOOKUP_AUTO_SHRINK_THRESHOLD(capacity))
-      lookup_defragment(lookup);
+    min_capacity         = lookup_auto_min_capacity;
+    min_capacity_context = lookup_auto_min_capacity_context;
   }
 
-  if (len <= LOOKUP_AUTO_SHRINK_THRESHOLD(capacity))
-    return lookup_shrink(lookup, LOOKUP_AUTO_SHRINK_CAPACITY(capacity), realloc, realloc_context, free, free_context);
+  if (!expand_threshold)
+  {
+    expand_threshold         = lookup_auto_expand_threshold;
+    expand_threshold_context = lookup_auto_expand_threshold_context;
+  }
+
+  if (!expand_capacity)
+  {
+    expand_capacity         = lookup_auto_expand_capacity;
+    expand_capacity_context = lookup_auto_expand_capacity_context;
+  }
+
+  if (!shrink_threshold)
+  {
+    shrink_threshold         = lookup_auto_shrink_threshold;
+    shrink_threshold_context = lookup_auto_shrink_threshold_context;
+  }
+
+  if (!shrink_capacity)
+  {
+    shrink_capacity         = lookup_auto_shrink_capacity;
+    shrink_capacity_context = lookup_auto_shrink_capacity_context;
+  }
+
+  if (!defragment_which)
+  {
+    defragment_which         = lookup_auto_defragment_which;
+    defragment_which_context = lookup_auto_defragment_which_context;
+  }
+
+  /* ---------------------------------------------------------------- */
+
+  len       = LOOKUP_LEN     (lookup);
+  capacity  = LOOKUP_CAPACITY(lookup);
+
+  expanding     = 0;
+  shrinking     = 0;
+  defragmenting = 0;
+  new_capacity  = capacity;
+
+  /* ---------------------------------------------------------------- */
+
+  /* 1) Ensure minimum capacity. */
+
+  min_capacity_val = min_capacity(min_capacity_context);
+
+  /* Should we expand to minimum capacity? */
+  if (capacity < min_capacity_val)
+  {
+    expanding     = 1;
+    shrinking     = 0;
+    defragmenting = 0;
+    new_capacity  = min_capacity_val;
+  }
+
+  /* Assume "len" is at least minimum capacity. */
+  if (capacity <= min_capacity_val)
+    len = min_capacity_val;
+
+  /* 2) Maximum capacity => expand. */
+
+  /* Are we at max capacity? */
+  if (len >= capacity)
+  {
+    expanding     = 1;
+    shrinking     = 0;
+    defragmenting = 0;
+    new_capacity  = expand_capacity(expand_capacity_context, new_capacity);
+  }
+  else
+  {
+    /* 3) Expanding and shrinking thresholds. */
+
+    /* If we're recycling,
+     *   1) check expand_threshold, and
+     *   2) defragment if we're shrinking.
+     */
+    if (LOOKUP_IS_RECYCLING(lookup))
+    {
+      if      (len >= expand_threshold(expand_threshold_context, new_capacity))
+      {
+        expanding     = 1;
+        shrinking     = 0;
+        defragmenting = 0;
+        new_capacity  = expand_capacity(expand_capacity_context, new_capacity);
+      }
+      else if (len <= shrink_threshold(shrink_threshold_context, new_capacity))
+      {
+        expanding     = 0;
+        shrinking     = 1;
+        defragmenting = 1;
+        new_capacity  = shrink_capacity(shrink_capacity_context, new_capacity);
+      }
+    }
+    else
+    {
+      /* Is there enough free space to warrant shrinking? */
+      if (len <= shrink_threshold(shrink_threshold_context, new_capacity))
+      {
+        expanding     = 0;
+        shrinking     = 1;
+        defragmenting = 0;
+        new_capacity  = shrink_capacity(shrink_capacity_context, new_capacity);
+      }
+    }
+  }
+
+  /* ---------------------------------------------------------------- */
+
+  if (expanding)
+  {
+    expanding = max_int(1, new_capacity - capacity);
+    shrinking = 0;
+  }
+
+  if (shrinking)
+  {
+    shrinking = max_int(1, capacity     - new_capacity);
+    expanding = 0;
+  }
+
+  WRITE_OUTPUT(out_expanding,     expanding);
+  WRITE_OUTPUT(out_shrinking,     shrinking);
+  WRITE_OUTPUT(out_defragmenting, defragmenting);
+  WRITE_OUTPUT(out_new_capacity,  new_capacity);
+
+  /* ---------------------------------------------------------------- */
+
+  if (expanding > 0 && shrinking <= 0)
+  {
+    if (lookup)
+      lookup = lookup_expand(lookup, new_capacity, calloc, calloc_context, realloc, realloc_context);
+  }
+
+  if (defragmenting)
+  {
+    if (lookup)
+      lookup = lookup_defragment
+        ( lookup
+        , defragment_which(defragment_which_context)
+
+        , on_new_node_index
+        , on_new_node_index_context
+        , on_new_node_index_initial_accumulation
+
+        , on_new_value_index
+        , on_new_value_index_context
+        , on_new_value_index_initial_accumulation
+
+        , out_on_new_node_index_final_accumulation
+        , out_on_new_value_index_final_accumulation
+        );
+  }
+
+  if (shrinking > 0 && shrinking <= 0)
+  {
+    if (lookup)
+      lookup = lookup_shrink(lookup, new_capacity, realloc, realloc_context, free, free_context);
+  }
 
   return lookup;
 }
