@@ -340,6 +340,23 @@ void bnode_init_array(bnode_t *node, size_t num)
   memset(node, 0x00, num * sizeof(bnode_t));
 }
 
+bnode_t *bnode_copy(bnode_t *dest, const bnode_t *src)
+{
+#if ERROR_CHECKING
+  if (!src)
+    return NULL;
+#endif /* #if ERROR_CHECKING  */
+
+  if (!dest)
+    return NULL;
+
+  dest->value = src->value;
+  dest->left  = src->left;
+  dest->right = src->right;
+
+  return dest;
+}
+
 /* ---------------------------------------------------------------- */
 
 /* bnode_t field constructors. */
@@ -565,6 +582,179 @@ void lookup_deinit
   lookup->capacity = 0;
 
   lookup->len      = 0;
+}
+
+size_t lookup_copy_value_buffer(void *dest, size_t dest_size, const lookup_t *lookup, size_t start, size_t num_values)
+{
+  size_t capacity;
+  size_t value_size;
+
+#if ERROR_CHECKING
+  if (!lookup)
+    return 0;
+  if (!dest)
+    return 0;
+#endif /* #if ERROR_CHECKING  */
+
+  if (dest_size <= 0)
+    return 0;
+
+  if (LOOKUP_NULL(lookup))
+    return 0;
+
+  capacity   = LOOKUP_CAPACITY  (lookup);
+  value_size = LOOKUP_VALUE_SIZE(lookup);
+
+  start      = min_size(capacity,                         start);
+  num_values = min_size(size_minus(capacity, start),      num_values);
+  num_values = min_size(DIV_FLOOR(dest_size, value_size), num_values);
+
+  memmove(dest, LOOKUP_INDEX_CVALUE(lookup, start), value_size * num_values);
+
+  return num_values;
+}
+
+size_t lookup_copy_order_buffer(bnode_t *dest, size_t dest_num, const lookup_t *lookup, size_t start, size_t num_values)
+{
+  size_t capacity;
+
+#if ERROR_CHECKING
+  if (!lookup)
+    return 0;
+  if (!dest)
+    return 0;
+#endif /* #if ERROR_CHECKING  */
+
+  if (dest_num <= 0)
+    return 0;
+
+  if (LOOKUP_NULL(lookup))
+    return 0;
+
+  /* TODO */
+  capacity   = LOOKUP_CAPACITY  (lookup);
+  value_size = LOOKUP_VALUE_SIZE(lookup);
+
+  start      = min_size(capacity,                         start);
+  num_values = min_size(size_minus(capacity, start),      num_values);
+  num_values = min_size(DIV_FLOOR(dest_size, value_size), num_values);
+
+  memmove(dest, LOOKUP_INDEX_CVALUE(lookup, start), value_size * num_values);
+
+  return num_values;
+}
+
+lookup_t *lookup_copy
+  (       lookup_t *dest
+  , const lookup_t *src
+
+
+  , void *(*calloc)(void *context, size_t nmemb, size_t size)
+    , void   *calloc_context
+  , void *(*realloc)(void *context, void *area, size_t size)
+    , void   *realloc_context
+  , void  (*free)(void *context, void *area)
+    , void   *free_context
+  )
+{
+  int dest_dynamic;
+
+  size_t capacity;
+  size_t value_size;
+
+#if ERROR_CHECKING
+  if (!src)
+    return NULL;
+  if (!calloc)
+    return NULL;
+  if (!realloc)
+    return NULL;
+  if (!free)
+    return NULL;
+#endif /* #if ERROR_CHECKING  */
+
+  /* ---------------------------------------------------------------- */
+
+  capacity   = LOOKUP_CAPACITY  (src);
+  value_size = LOOKUP_VALUE_SIZE(src);
+
+  /* ---------------------------------------------------------------- */
+  /* Dynamically allocated a copy?                                    */
+
+  if (dest)
+  {
+    dest_dynamic = 0;
+  }
+  else
+  {
+    dest_dynamic = 1;
+
+    if (!(dest = calloc(calloc_context, 1, sizeof(lookup_t))))
+      return NULL;
+  }
+
+  /* ---------------------------------------------------------------- */
+  /* Handle value and order buffer allocation first.                  */
+
+  if (LOOKUP_NULL(src))
+  {
+    dest->values = NULL;
+    dest->order  = NULL;
+  }
+  else
+  {
+    if (!(dest->values = calloc(calloc_context, capacity, value_size)))
+    {
+      if (dest_dynamic)
+        free(free_context, dest);
+
+      return NULL;
+    }
+
+    if (!(dest->order = calloc(calloc_context, capacity, sizeof(*src->order))))
+    {
+      free(free_context, dest->values);
+      dest->values = NULL;
+
+      if (dest_dynamic)
+        free(free_context, dest);
+
+      return NULL;
+    }
+
+    if (!lookup_copy_value_buffer(dest->values, capacity * value_size, src, 0, capacity))
+    {
+      free(free_context, dest->values);
+      dest->values = NULL;
+
+      free(free_context, dest->order);
+      dest->order  = NULL;
+
+      if (dest_dynamic)
+        free(free_context, dest);
+
+      return NULL;
+    }
+  }
+
+  /* ---------------------------------------------------------------- */
+  /* Copy everything else.                                            */
+
+  dest->type       = src->type;
+
+  dest->capacity   = capacity;
+
+  dest->value_size = value_size;
+  dest->next_value = src->next_value;
+
+  dest->next_order = src->next_order;
+
+  dest->len        = src->len;
+
+  /* ---------------------------------------------------------------- */
+  /* Return "dest".                                                   */
+
+  return dest;
 }
 
 /* ---------------------------------------------------------------- */
@@ -1098,13 +1288,11 @@ lookup_t *lookup_resize
   , size_t    capacity
 
   , void *(*calloc)(void *context, size_t nmemb, size_t size)
-  , void   *calloc_context
-
+    , void   *calloc_context
   , void *(*realloc)(void *context, void *area, size_t size)
-  , void   *realloc_context
-
+    , void   *realloc_context
   , void  (*free)(void *context, void *area)
-  , void   *free_context
+    , void   *free_context
   )
 {
   size_t old_capacity;
@@ -3511,6 +3699,473 @@ size_t lookup_delete_limit
 
 /* ---------------------------------------------------------------- */
 
+static void *lookup_iterate_tree_from_step
+  ( const lookup_t *lookup
+  , const bnode_t  *node
+
+  , lookup_iteration_order_t order
+
+  , lookup_iteration_callback_fun_t  with_value
+  , void                            *with_value_context
+
+  , void *initial_accumulation
+
+  , int    *break_iteration
+  , size_t  breadth_level
+  , size_t  building_queue
+  , void   *parent_queue
+  , void   *current_queue
+  )
+{
+  size_t i;
+  const bnode_t *children[2];
+
+  if (node)
+  {
+    children[ !order.right_to_left] = node->left;
+    children[!!order.right_to_left] = node->right;
+  }
+  else
+  {
+    children[ !order.right_to_left] = 0;
+    children[!!order.right_to_left] = 0;
+  }
+
+  if (order.parent_first)
+  {
+    /* Parent. */
+    initial_accumulation = with_value
+      ( with_value_context
+      , initial_accumulation
+
+      , lookup
+      , LOOKUP_NODE_CVALUE(lookup, node)
+      , node
+
+      , iteration_break
+      );
+
+    if (*break_iteration)
+      return initial_accumulation;
+
+    /* Children. */
+    for (i = 0; i < ARRAY_NUM(children); ++i)
+    {
+      if (!BNODE_IS_LEAF(children[i]))
+      {
+        const bnode_t *child = LOOKUP_INDEX_CORDER(lookup, BNODE_GET_REF(children[i]));
+
+        /* Child. */
+        initial_accumulation = with_value
+          ( with_value_context
+          , initial_accumulation
+
+          , lookup
+          , LOOKUP_NODE_CVALUE(lookup, child)
+          , child
+
+          , iteration_break
+          );
+
+        if (*break_iteration)
+          return initial_accumulation;
+
+        /* Grandchildren. */
+        initial_accumulation = lookup_iterate_tree_from_step
+          ( lookup,
+          , child
+
+          , order
+
+          , with_value
+          , with_value_context
+
+          , initial_accumulation
+
+          , break_iteration
+          , 0, 0, NULL, NULL
+          );
+
+        if (*break_iteration)
+          return initial_accumulation;
+      }
+    }
+
+    /* Done. */
+    return initial_accumulation;
+  }
+  /* ---------------------------------------------------------------- */
+  else if (order.leaves_first)
+  {
+    /* Children. */
+    for (i = 0; i < ARRAY_NUM(children); ++i)
+    {
+      if (!BNODE_IS_LEAF(children[i]))
+      {
+        const bnode_t *child = LOOKUP_INDEX_CORDER(lookup, BNODE_GET_REF(children[i]));
+
+        /* Grandchildren. */
+        initial_accumulation = lookup_iterate_tree_from_step
+          ( lookup,
+          , child
+
+          , order
+
+          , with_value
+          , with_value_context
+
+          , initial_accumulation
+
+          , break_iteration
+          , 0, 0, NULL, NULL
+          );
+
+        if (*break_iteration)
+          return initial_accumulation;
+
+        /* Child. */
+        initial_accumulation = with_value
+          ( with_value_context
+          , initial_accumulation
+
+          , lookup
+          , LOOKUP_NODE_CVALUE(lookup, child)
+          , child
+
+          , iteration_break
+          );
+
+        if (*break_iteration)
+          return initial_accumulation;
+      }
+    }
+
+    /* Parent. */
+    initial_accumulation = with_value
+      ( with_value_context
+      , initial_accumulation
+
+      , lookup
+      , LOOKUP_NODE_CVALUE(lookup, node)
+      , node
+
+      , iteration_break
+      );
+
+    return initial_accumulation;
+  }
+  /* ---------------------------------------------------------------- */
+  else if (order.breadth_first)
+  {
+    size_t level_num = 1 << breadth_level;
+
+    /* Creating a queue of each of parent's children? */
+    if (building_queue)
+    {
+      size_t         next_ref;
+      const bnode_t *next;
+
+      void *new_current_queue[] = { (void *) &children[0], (void *) &children[1], (void *) current_queue };
+
+      current_queue = new_current_queue;
+
+      next_ref = *(size_t *) tail_index(2, parent_queue, size_minus(level_num, building_queue))
+
+      if (!BNODE_IS_LEAF(next_ref))
+        next = BNODE_GET_REF(next_ref);
+      else
+        next = NULL;
+
+      initial_accumulation = lookup_iterate_tree_from_step
+        ( lookup,
+        , next
+
+        , order
+
+        , with_value
+        , with_value_context
+
+        , initial_accumulation
+
+        , break_iteration
+
+        , breadth_level
+        , building_queue - 1
+        , parent_queue
+        , current_queue
+        );
+
+      return initial_accumulation;
+    }
+    else
+    {
+      int children_remaining = 0;
+      const bnode_t *next;
+
+      void *new_current_queue[] = { };
+
+      parent_queue = current_queue;
+      current_queue = new_current_queue;
+
+      next = NULL;
+
+      for (i = 0; i < level_num; ++i)
+      {
+        size_t ref = *(size_t *) tail_index(current_queue, i);
+
+        if (!BNODE_IS_LEAF(ref))
+        {
+          const bnode_t *child = LOOKUP_INDEX_CORDER(lookup, BNODE_GET_REF(ref));
+
+          children_remaining = 1;
+
+          if (i == 0)
+            next = child;
+
+          initial_accumulation = with_value
+            ( with_value_context
+            , initial_accumulation
+
+            , lookup
+            , LOOKUP_NODE_CVALUE(lookup, child)
+            , child
+
+            , iteration_break
+            );
+
+          if (*iteration_break)
+            return initial_accumulation;
+        }
+      }
+
+      if (children_remaining)
+        initial_accumulation = lookup_iterate_tree_from_step
+          ( lookup,
+          , next
+
+          , order
+
+          , with_value
+          , with_value_context
+
+          , initial_accumulation
+
+          , break_iteration
+
+          , breadth_level + 1
+          , level_num << 1
+          , parent_queue
+          , current_queue
+          );
+
+      return initial_accumulation;
+    }
+  }
+  /* ---------------------------------------------------------------- */
+  else
+  {
+    /* Children and parent. */
+    for (i = 0; i < ARRAY_NUM(children); ++i)
+    {
+      if (!BNODE_IS_LEAF(children[i]))
+      {
+        const bnode_t *child = LOOKUP_INDEX_CORDER(lookup, BNODE_GET_REF(children[i]));
+
+        /* Child. */
+        initial_accumulation = with_value
+          ( with_value_context
+          , initial_accumulation
+
+          , lookup
+          , LOOKUP_NODE_CVALUE(lookup, child)
+          , child
+
+          , iteration_break
+          );
+
+        if (*break_iteration)
+          return initial_accumulation;
+
+        /* Grandchildren. */
+        initial_accumulation = lookup_iterate_tree_from_step
+          ( lookup,
+          , child
+
+          , order
+
+          , with_value
+          , with_value_context
+
+          , initial_accumulation
+
+          , break_iteration
+          , 0, 0, NULL, NULL
+          );
+
+        if (*break_iteration)
+          return initial_accumulation;
+      }
+
+      /* Parent. */
+      if (i == 0)
+      {
+        initial_accumulation = with_value
+          ( with_value_context
+          , initial_accumulation
+
+          , lookup
+          , LOOKUP_NODE_CVALUE(lookup, node)
+          , node
+
+          , iteration_break
+          , 0, 0, NULL, NULL
+          );
+
+        if (*break_iteration)
+          return initial_accumulation;
+      }
+    }
+
+    return initial_accumulation;
+  }
+}
+
+void *lookup_iterate_tree_from
+  ( const lookup_t *lookup
+  , const bnode_t  *root
+
+  , lookup_iteration_order_t order
+
+  , lookup_iteration_callback_fun_t  with_value
+  , void                            *with_value_context
+
+  , void *initial_accumulation
+  )
+{
+  int iteration_break;
+
+#ifdef ERROR_CHECKING
+  if (!lookup)
+    return  NULL;
+  if (!with_value)
+    return  NULL;
+#endif /* #if ERROR_CHECKING  */
+
+  LOOKUP_OPTIONAL_CNODE(lookup, root);
+
+  iteration_break = 0;
+
+  if (!order.breadth_first)
+  {
+    initial_accumulation =
+      lookup_iterate_tree_from_step
+        ( lookup
+        , root
+
+        , order
+
+        , with_value
+        , context
+
+        , initial_accumulation
+
+        , &iteration_break
+        , 0, 0, NULL, NULL
+        );
+  }
+  else
+  {
+    void *parent_queue[]  = { };
+    void *current_queue[] = { LOOKUP_GET_NODE_INDEX(lookup, root) };
+    initial_accumulation =
+      lookup_iterate_tree_from_step
+        ( lookup
+        , root
+
+        , order
+
+        , with_value
+        , context
+
+        , initial_accumulation
+
+        , &iteration_break
+        , 0
+        , 0
+        , parent_queue
+        , current_queue
+        );
+  }
+
+  return initial_accumulation;
+}
+
+void *lookup_iterate_tree
+  ( const lookup_t *lookup
+
+  , lookup_iteration_order_t order
+
+  , lookup_iteration_callback_fun_t  with_value
+  , void                            *with_value_context
+
+  , void *initial_accumulation
+  )
+{
+  return
+    lookup_iterate_tree_from
+      ( lookup
+      , NULL
+
+      , order
+
+      , with_value
+      , with_value_context
+
+      , initial_accumulation
+      )
+}
+
+void *lookup_iterate_values_unordered
+  ( const lookup_t *lookup
+
+  , void *(*with_value)(void *context, void *last_accumulation, const void *value, int *out_iteration_break)
+  , void *context
+
+  , void *initial_accumulation
+  )
+{
+  size_t i;
+  size_t end;
+
+#ifdef ERROR_CHECKING
+  if (!lookup)
+    return  NULL;
+  if (!with_value)
+    return  NULL;
+#endif /* #if ERROR_CHECKING  */
+
+  if (!LOOKUP_IS_RECYCLING(lookup))
+    end = LOOKUP_LEN(lookup);
+  else
+    end = LOOKUP_CAPACITY(lookup) + 1;
+
+  for (i = 0; i < end; ++i)
+  {
+    if (LOOKUP_GET_VALUE_IN_USE_BIT(lookup, i))
+    {
+      int iteration_break;
+
+      iteration_break = 0;
+      initial_accumulation = with_value(context, initial_accumulation, LOOKUP_INDEX_CVALUE(lookup, i), &iteration_break);
+
+      if (iteration_break)
+        break;
+    }
+  }
+
+  return initial_accumulation;
+}
+
 static void *lookup_iterate_node_from_step
   ( const lookup_t *lookup
   , const bnode_t  *node
@@ -3590,7 +4245,7 @@ static void *lookup_iterate_node_from_step
 
 void *lookup_iterate_node_from
   ( const lookup_t *lookup
-  , const bnode_t  *node
+  , const bnode_t  *root
   , int             reverse_direction
 
   , void *(*with_value)(void *context, void *last_accumulation, const void *value, const bnode_t *node, int *out_iteration_break)
@@ -3602,7 +4257,7 @@ void *lookup_iterate_node_from
   return
     lookup_iterate_node_from_step
       ( lookup
-      , node
+      , root
       , reverse_direction
 
       , with_value
@@ -3716,7 +4371,7 @@ static void *lookup_iterate_from_step
 
 void *lookup_iterate_from
   ( const lookup_t *lookup
-  , const bnode_t  *node
+  , const bnode_t  *root
   , int             reverse_direction
 
   , void *(*with_value)(void *context, void *last_accumulation, const void *value, int *out_iteration_break)
@@ -3728,7 +4383,7 @@ void *lookup_iterate_from
   return
     lookup_iterate_from_step
       ( lookup
-      , node
+      , root
       , reverse_direction
 
       , with_value

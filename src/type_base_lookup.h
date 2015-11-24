@@ -140,6 +140,7 @@ extern const lookup_t lookup_defaults;
 
 void bnode_init(bnode_t *node);
 void bnode_init_array(bnode_t *node, size_t num);
+bnode_t *bnode_copy(bnode_t *dest, const bnode_t *src);
 
 /* ---------------------------------------------------------------- */
 
@@ -234,6 +235,21 @@ void lookup_deinit
 
   , void  (*free)(void *context, void *area)
   , void   *free_context
+  );
+
+size_t lookup_copy_value_buffer(void    *dest, size_t dest_size, const lookup_t *lookup, size_t start, size_t num_values);
+size_t lookup_copy_order_buffer(bnode_t *dest, size_t dest_num,  const lookup_t *lookup, size_t start, size_t num_values);
+lookup_t *lookup_copy
+  (       lookup_t *dest
+  , const lookup_t *src
+
+
+  , void *(*calloc)(void *context, size_t nmemb, size_t size)
+    , void   *calloc_context
+  , void *(*realloc)(void *context, void *area, size_t size)
+    , void   *realloc_context
+  , void  (*free)(void *context, void *area)
+    , void   *free_context
   );
 
 /* ---------------------------------------------------------------- */
@@ -441,9 +457,86 @@ lookup_t *lookup_auto_resize_controlled
 
 /* ---------------------------------------------------------------- */
 
+typedef
+  void *(*lookup_iteration_callback_fun_t)
+            ( void *context
+            , void *last_accumulation
+
+            , const lookup_t *lookup
+            , const void     *value
+            , const bnode_t  *node
+
+            , int *out_iteration_break
+            );
+
+/* N.B.: "breadth_first" recommended only for "mlookup_t" trees.  Without
+ * associated memory management, a recursive function call is made for each
+ * value in the tree, pushing the limits of the stack, which might overflow,
+ * for primitive "lookup_t" trees.
+ */
+const type_t *lookup_iteration_order_type(void);
+extern const type_t lookup_iteration_order_type_def;
+typedef struct lookup_iteration_order_s lookup_iteration_order_t;
+struct lookup_iteration_order_s
+{
+  typed_t type;
+
+  unsigned int right_to_left : 1;
+
+  unsigned int parent_first  : 1;  /* overrides leaves_first  */
+  unsigned int leaves_first  : 1;  /* overrides breadth_first */
+  unsigned int breadth_first : 1;
+  unsigned int               : 8;
+};
+
+#define LOOKUP_ITERATION_ORDER_DEFAULTS \
+  { lookup_iteration_order_type         \
+                                        \
+  , /* right_to_left */ 0               \
+                                        \
+  , /* parent_first  */ 0               \
+  , /* leaves_first  */ 0               \
+  , /* breadth_first */ 0               \
+  }
+extern const lookup_iteration_order_t lookup_iteration_order_defaults;
+
+/* ---------------------------------------------------------------- */
+
+void *lookup_iterate_tree_from
+  ( const lookup_t *lookup
+  , const bnode_t  *root
+
+  , lookup_iteration_order_t order
+
+  , lookup_iteration_callback_fun_t  with_value
+  , void                            *with_value_context
+
+  , void *initial_accumulation
+  );
+
+void *lookup_iterate_tree
+  ( const lookup_t *lookup
+
+  , lookup_iteration_order_t order
+
+  , lookup_iteration_callback_fun_t  with_value
+  , void                            *with_value_context
+
+  , void *initial_accumulation
+  );
+
+void *lookup_iterate_values_unordered
+  ( const lookup_t *lookup
+
+  , void *(*with_value)(void *context, void *last_accumulation, const void *value, int *out_iteration_break)
+  , void *context
+
+  , void *initial_accumulation
+  );
+
 void *lookup_iterate_node_from
   ( const lookup_t *lookup
-  , const bnode_t  *node
+  , const bnode_t  *root
   , int             reverse_direction
 
   , void *(*with_value)(void *context, void *last_accumulation, const void *value, const bnode_t *node, int *out_iteration_break)
@@ -464,7 +557,7 @@ void *lookup_iterate_node
 
 void *lookup_iterate_from
   ( const lookup_t *lookup
-  , const bnode_t  *node
+  , const bnode_t  *root
   , int             reverse_direction
 
   , void *(*with_value)(void *context, void *last_accumulation, const void *value, int *out_iteration_break)
