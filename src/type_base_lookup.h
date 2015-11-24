@@ -457,6 +457,25 @@ lookup_t *lookup_auto_resize_controlled
 
 /* ---------------------------------------------------------------- */
 
+enum lookup_traversal_direction_e
+{
+  ltd_current = 0,
+  ltd_break   = 1,
+  ltd_parent  = 2,
+  ltd_left    = 3,
+  ltd_right   = 4,
+
+  ltd_end,
+
+  /* 1: 0- 1 */
+  /* 2: 0- 3 */
+  /* 3: 0- 7 */
+  /* 4: 0-15 */
+  ltd_bits     = 3,
+  ltd_end_mask = ONE_BIT_REPEAT(ltd_bits)
+};
+typedef enum lookup_traversal_direction_e lookup_traversal_direction_t;
+
 typedef
   void *(*lookup_iteration_callback_fun_t)
             ( void *context
@@ -501,6 +520,15 @@ struct lookup_iteration_order_s
 extern const lookup_iteration_order_t lookup_iteration_order_defaults;
 
 /* ---------------------------------------------------------------- */
+
+void *lookup_traverse_from
+  ( const lookup_t *lookup
+  , const bnode_t  *root
+
+  , lookup_iteration_callback_fun_t  with_value
+  , void                            *with_value_context
+  , void                            *initial_accumulation
+  );
 
 void *lookup_iterate_tree_from
   ( const lookup_t *lookup

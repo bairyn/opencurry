@@ -3699,6 +3699,140 @@ size_t lookup_delete_limit
 
 /* ---------------------------------------------------------------- */
 
+static void *lookup_traverse_from_step
+  ( const lookup_t *lookup
+  , const bnode_t  *node
+
+  , lookup_iteration_callback_fun_t  with_value
+  , void                            *with_value_context
+  , void                            *initial_accumulation
+
+  , lookup_traversal_direction_t *dir
+  )
+{
+  for (;;)
+  {
+    const bnode_t *child;
+
+    switch(*dir)
+    {
+      default:
+      case ltd_break:
+        return initial_accumulation;
+
+      case ltd_current:
+        initial_accumulation = with_value
+          ( with_value_context
+          , initial_accumulation
+
+          , lookup
+          , LOOKUP_NODE_CVALUE(lookup, node)
+          , node
+
+          , dir
+          );
+        break;
+
+      case ltd_parent;
+        *dir = ltd_current;
+        return initial_accumulation;
+
+      case ltd_left:
+        if (BNODE_IS_LEAF(node->left))
+        {
+          *dir = ltd_break;
+          return initial_accumulation;
+        }
+        else
+        {
+          *dir = ltd_current;
+
+          child = LOOKUP_INDEX_CORDER(lookup, BNODE_GET_RED(node->left));
+
+          initial_accumulation = lookup_traverse_from_step
+            ( lookup
+            , child
+
+            , with_value
+            , with_value_context
+            , initial_accumulation
+
+            , dir
+            );
+
+          break;
+        }
+
+      case ltd_right:
+        if (BNODE_IS_LEAF(node->right))
+        {
+          *dir = ltd_break;
+          return initial_accumulation;
+        }
+        else
+        {
+          *dir = ltd_current;
+
+          child = LOOKUP_INDEX_CORDER(lookup, BNODE_GET_RED(node->right));
+
+          initial_accumulation = lookup_traverse_from_step
+            ( lookup
+            , child
+
+            , with_value
+            , with_value_context
+            , initial_accumulation
+
+            , dir
+            );
+
+          break;
+        }
+    }
+  }
+}
+
+/* out_iteration_break should be set to the next direction. */
+void *lookup_traverse_from
+  ( const lookup_t *lookup
+  , const bnode_t  *root
+
+  , lookup_iteration_callback_fun_t  with_value
+  , void                            *with_value_context
+  , void                            *initial_accumulation
+  )
+{
+  int dir;
+
+#if ERROR_CHECKING
+  if (!lookup)
+    return NULL;
+  if (!with_value)
+    return NULL;
+#endif /* #if ERROR_CHECKING  */
+
+  if (LOOKUP_EMPTY(lookup))
+    return initial_accumulation;
+
+  LOOKUP_OPTIONAL_CNODE(lookup, root);
+
+  dir = ltd_current;
+
+  initial_accumulation =
+    lookup_traverse_from_step
+      ( lookup
+      , root
+
+      , with_value
+      , with_value_context
+      , initial_accumulation
+
+      , &dir
+      );
+
+  return initial_accumulation;
+}
+
 static void *lookup_iterate_tree_from_step
   ( const lookup_t *lookup
   , const bnode_t  *node
@@ -4050,6 +4184,9 @@ void *lookup_iterate_tree_from
   if (!with_value)
     return  NULL;
 #endif /* #if ERROR_CHECKING  */
+
+  if (LOOKUP_EMPTY(lookup))
+    return initial_accumulation;
 
   LOOKUP_OPTIONAL_CNODE(lookup, root);
 
