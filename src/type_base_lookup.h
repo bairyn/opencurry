@@ -908,6 +908,7 @@ lookup_t *lookup_insert
 
   , callback_compare_t  cmp
 
+  , size_t             *out_value_index
   , int                *out_is_duplicate
   );
 
@@ -961,14 +962,13 @@ lookup_t *lookup_minsert
   , callback_compare_t  cmp
 
   , void *(*calloc)(void *context, size_t nmemb, size_t size)
-  , void   *calloc_context
-
+    , void   *calloc_context
   , void *(*realloc)(void *context, void *area, size_t size)
-  , void   *realloc_context
-
+    , void   *realloc_context
   , void  (*free)(void *context, void *area)
-  , void   *free_context
+    , void   *free_context
 
+  , size_t             *out_value_index
   , int                *out_is_duplicate
   );
 
@@ -979,13 +979,11 @@ lookup_t *lookup_mdelete
   , callback_compare_t  cmp
 
   , void *(*calloc)(void *context, size_t nmemb, size_t size)
-  , void   *calloc_context
-
+    , void   *calloc_context
   , void *(*realloc)(void *context, void *area, size_t size)
-  , void   *realloc_context
-
+    , void   *realloc_context
   , void  (*free)(void *context, void *area)
-  , void   *free_context
+    , void   *free_context
 
   , size_t             *out_num_deleted
   );

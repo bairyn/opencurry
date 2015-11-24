@@ -218,6 +218,10 @@ extern memory_tracker_t global_typed_dyn_memory_tracker;
 memory_tracker_t *memory_tracker_init(memory_tracker_t *dest, const memory_manager_t *memory_manager, void *dynamic_container);
 void              memory_tracker_free(memory_tracker_t *tracker);
 
+memory_tracker_t *memory_tracker_copy(memory_tracker_t *dest, const memory_tracker_t *src);
+
+memory_tracker_t *memory_tracker_require_containers(memory_tracker_t *tracker);
+
 /* ---------------------------------------------------------------- */
 
 /*   track methods: returns index >= 0 on success.  Duplicates are errors.  */
@@ -235,6 +239,8 @@ int                   track_manual_allocation(      memory_tracker_t *tracker, m
 manual_allocation_t untrack_manual_allocation(      memory_tracker_t *tracker, manual_allocation_t allocation);
 int                 tracked_manual_allocation(const memory_tracker_t *tracker, manual_allocation_t allocation);
 
+/* ---------------------------------------------------------------- */
+
 /* >= 1 when exists. */
 int untrack_allocation(memory_tracker_t *memory_tracker, allocation_type_t type, int index);
 
@@ -245,16 +251,28 @@ int                       track_dependency(      memory_tracker_t *tracker, allo
 allocation_dependency_t untrack_dependency(      memory_tracker_t *tracker, int index);
 int                     tracked_dependency(const memory_tracker_t *tracker, allocation_type_t parent_type, int parent, allocation_type_t *out_dependent_type, int *out_dependent);
 
+/* Returns number of freed allocations. */
+size_t free_allocation  (memory_tracker_t *tracker, allocation_type_t type, int index);
+size_t free_dependencies(memory_tracker_t *tracker, int index);
+
 /* ---------------------------------------------------------------- */
 
 const memory_manager_t *memory_tracker_manager(const memory_tracker_t *tracker);
 
 /* ---------------------------------------------------------------- */
 
-int track_malloc (memory_tracker_t *tracker, size_t  size);
-int track_calloc (memory_tracker_t *tracker, size_t  nmemb, size_t size);
-int track_realloc(memory_tracker_t *tracker, void   *ptr,   size_t size);
-int track_free   (memory_tracker_t *tracker, void   *ptr);
+int    track_malloc (memory_tracker_t *tracker, size_t  size);
+int    track_calloc (memory_tracker_t *tracker, size_t  nmemb, size_t size);
+int    track_realloc(memory_tracker_t *tracker, void   *ptr,   size_t size);
+size_t track_free   (memory_tracker_t *tracker, void   *ptr);
+
+/* ---------------------------------------------------------------- */
+
+size_t track_tval_free(memory_tracker_t *tracker, tval *val);
+
+/* ---------------------------------------------------------------- */
+
+size_t track_manual_allocation_free(memory_tracker_t *tracker, manual_allocation_t allocation);
 
 /* ---------------------------------------------------------------- */
 /* Post-dependencies.                                               */
