@@ -54,18 +54,13 @@
 #include "type_base_prim.h"
 #include "type_base_typed.h"
 #include "type_base_tval.h"
+#include "type_base_compare.h"
 #include "type_base_lookup.h"
 #include "type_base_memory_manager.h"
 
 /* ---------------------------------------------------------------- */
-/* Value allocation management.                                     */
+/* Allocation types.                                                */
 /* ---------------------------------------------------------------- */
-
-/* ---------------------------------------------------------------- */
-/* Individual allocations.                                          */
-/* ---------------------------------------------------------------- */
-
-#ifdef TODO /* TODO */
 
 enum allocation_type_e
 {
@@ -83,171 +78,75 @@ enum allocation_type_e
 };
 typedef enum allocation_type_e allocation_type_t;
 
-/* ---------------------------------------------------------------- */
+typedef void *byte_allocation_t;
 
-#define DEPENDENCIES_HEADER_NUM() \
-  ( sizeof(allocation_dependencies_header_t) / sizeof(size_t) )
-typedef struct allocation_dependencies_header_s allocation_dependencies_header_t;
-struct allocation_dependencies_header_s
-{
-  /* Number of in the array elements for each type of allocation in this chunk.
-   */
-  size_t num_per_type;
-
-  /* Index + 1 of next free element, 0 when this chunk is full. */
-  size_t next_byte_1id;
-  size_t next_tval_1id;
-  size_t next__1id;
-};
-
-#define DEPENDENCIES_NUM(base)                   \
-  ( IS_NONZERO(base) * DEPENDENCIES_HEADER_NUM() \
-  + 3                * (base)                    \
-  )
-typedef struct allocation_dependencies_s allocation_dependencies_t;
-struct allocation_dependencies_s
-{
-  size_t *dependencies;
-  size_t  dependencies_num_base;
-};
-
-size_t dependencies_header_num(void);
-size_t dependencies_body_num  (size_t base);
-size_t dependencies_num       (size_t base);
-
-/* ---------------------------------------------------------------- */
-
-typedef struct byte_allocation_s byte_allocation_t;
-struct byte_allocation_s
-{
-  allocation_dependencies_t dependencies;
-
-  void *area;
-};
-
-typedef struct tval_allocation_s tval_allocation_t;
-struct tval_allocation_s
-{
-  allocation_dependencies_t dependencies;
-
-  tval *val;
-};
+typedef tval *tval_allocation_t;
 
 typedef struct manual_allocation_s manual_allocation_t;
-struct manual_allocation_s
+struct manual_allocation_t
 {
-  allocation_dependencies_t dependencies;
-
   void (*cleanup)(void *context);
   void *context;
 };
 
-typedef struct allocation_s allocation_t;
-struct allocation_s
-{
-  union allocation_u
-  {
-    byte_allocation_t   byte;
-    tval_allocation_t   tval;
-    manual_allocation_t tval;
-  } allocation;
-
-  allocation_type_t allocation_type;
-};
-
-typedef struct allocation_s allocation_t;
-struct allocation_s
-{
-  union allocation_u
-  {
-    byte_allocation_t   byte;
-    tval_allocation_t   tval;
-    manual_allocation_t tval;
-  } allocation;
-}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-const type_t *memory_tracker_type(void);
-extern const type_t memory_tracker_type_def;
-typedef struct memory_tracker_s memory_tracker_t;
-struct memory_tracker_s
-{
-  typed_t type;
-
-  /* ---------------------------------------------------------------- */
-
-  memory_manager_t memory_manager;
-
-  /* ---------------------------------------------------------------- */
-
-  /* Meta tracking. */
-
-  /* Whether this tracker resides in dynamically         */
-  /* allocated memory.                                   */
-  /*                                                     */
-  /* When this memory tracker is freed, this is freed    */
-  /* last.                                               */
-  void *dynamic_container;
-
-  /* ---------------------------------------------------------------- */
-
-  /* TODO: inter-type dependencies */
-  void   **raw_allocations;
-  size_t  *raw_allocation_dependencies;
-
-  tval   **tval_allocations;
-  size_t  *tval_allocation_dependencies;
-
-  void *(**manual_cleanups)(void *context);
-  void   **manual_cleanup_contexts;
-  size_t  *manual_cleanup_dependencies;
-
-#ifdef TODO
-  /* Meta tracking. */
-
-  /* Whether this tracker resides in dynamically         */
-  /* allocated memory.                                   */
-  /*                                                     */
-  /* When this memory tracker is freed, this is freed    */
-  /* last.                                               */
-  void *dynamic_container;
-
-  tval **dynamic_dependents;
-#endif /* #ifdef TODO */
-};
-
-#endif /* #ifdef TODO /-* TODO *-/ */
-
 /*
- * memory_tracker_t:
+ * allocation_dependency_t:
  *
- * A memory tracker is associated with one value, or alternatively a collection
- * of values.
+ * A relation between two allocations of either of the multiple types inside a
+ * lookup_t container for each type.
  *
- * A memory tracker is used primarily to track which values are dynamically
- * allocated, and dynamic allocation dependencies.
- *
- * A memory tracker contains the following information:
- *   - A collection
- *
- * A memory tracker contains the following information:
+ * Both "parent" and "dependent" refer to an allocation in this container:
+ *   1) The 2 (a_t_bits) last, i.e. least significant, bits, encode the
+ *      allocation type, indicating which "lookup_t" container to index.
+ *   2) the remaining bits encode the index to the value within this
+ *      lookup container.
  */
+typedef struct allocation_dependency_s allocation_dependency_t;
+struct allocation_dependency_s
+{
+  /* Last two bits of each reserved for the respective type. */
+  size_t parent;
+  size_t dependent;
+};
 
-/* TODO: Remove "buffers"; just use "allocations". */
+/* ---------------------------------------------------------------- */
+/* Comparers on allocations.                                        */
+
+extern const callback_compare_t compare_callback_byte_allocation;
+extern const callback_compare_t compare_callback_tval_allocation;
+extern const callback_compare_t compare_callback_manual_allocation;
+extern const callback_compare_t compare_callback_allocation_dependency;
+/* Key-based allocation dependency comparer on "parent". */
+extern const callback_compare_t compare_callback_allocation_dependency_parent;
+
+/* ---------------------------------------------------------------- */
+
+/* Given an allocation_dependency_t's "parent" or "dependent", obtain its
+ * allocation type or its index.
+ */
+#define GET_ALLOC_DEP_TYPE( ref) ((ref) & a_t_end_mask)
+#define GET_ALLOC_DEP_INDEX(ref) ((ref) >> a_t_bits)
+allocation_type_t get_alloc_dep_type (size_t ref);
+size_t            get_alloc_dep_index(size_t ref);
+
+/* Create an allocation_dependency "parent" or "dependent" value from an
+ * allocation type and index.
+ */
+#define ALLOC_DEP_REF(type, index) (((type) & a_t_end_mask) | ((index) << a_t_bits))
+size_t alloc_dep_ref(allocation_type_t type, size_t index);
+
+/* "ALLOC_DEP_REF" for each type of allocation. */
+#define ALLOC_DEP_BYTE(  index) (ALLOC_DEP_REF(a_t_byte,   (index)))
+#define ALLOC_DEP_TVAL(  index) (ALLOC_DEP_REF(a_t_tval,   (index)))
+#define ALLOC_DEP_MANUAL(index) (ALLOC_DEP_REF(a_t_manual, (index)))
+size_t alloc_dep_byte  (size_t index);
+size_t alloc_dep_tval  (size_t index);
+size_t alloc_dep_manual(size_t index);
+
+/* ---------------------------------------------------------------- */
+/* Memory and value allocation management.                          */
+/* ---------------------------------------------------------------- */
+
 const type_t *memory_tracker_type(void);
 extern const type_t memory_tracker_type_def;
 typedef struct memory_tracker_s memory_tracker_t;
@@ -255,116 +154,107 @@ struct memory_tracker_s
 {
   typed_t type;
 
+  /* ---------------------------------------------------------------- */
+
   memory_manager_t memory_manager;
 
-  /* If this memory tracker exists in dynamically        */
-  /* allocated memory, this refers to it; otherwise this */
-  /* is NULL.                                            */
-  /*                                                     */
-  /* Most commonly, this could be a reference to a       */
-  /* dynamically allocated value of an associated struct */
-  /* containing a memory_tracker_t, or it could be a     */
-  /* reference to this memory tracker itself if it is    */
-  /* dynamically allocated.                              */
-  /*                                                     */
-  /* This must be freed last.                            */
-  void *dynamically_allocated_container;
+  /* ---------------------------------------------------------------- */
 
-  /* Array of "void *".  NULL elements are unused slots. */
-  /*                                                     */
-  /* This itself may be NULL.                            */
-  /*                                                     */
-  /* Usually, the first element refers to                */
-  /* "dynamically_allocated_buffers" itself, so it       */
-  /* must be freed after all other references in used    */
-  /* slots are.                                          */
-  /*                                                     */
-  /* More generally, this rule applies to every other    */
-  /* slot.  An even-indexed slot cannot be freed until   */
-  /* all even-indexed slots that occur later in the      */
-  /* array are freed.                                    */
-  /*                                                     */
-  /* The last even-indexed slot is reserved for an       */
-  /* internally managed reference to a "tail"            */
-  /* memory_tracker_t as one way to dynamically allocate */
-  /* additional buffer references.                       */
-  void   **dynamically_allocated_buffers;
-  size_t   dynamically_allocated_buffers_num;
-  size_t   dynamically_allocated_buffers_size;
+  /* Meta tracking. */
 
-  /* Index of the last used slots, or 0 if none.         */
-  size_t   dynamically_allocated_buffers_last_even;
-  size_t   dynamically_allocated_buffers_last_odd;
+  /* Whether this tracker resides in dynamically         */
+  /* allocated memory.                                   */
+  /*                                                     */
+  /* When this memory tracker is freed, this is freed    */
+  /* last.                                               */
+  void *dynamic_container;
+
+  /* ---------------------------------------------------------------- */
+
+  /* void * */
+  lookup_t *byte_allocations;
+
+  /* tval  * */
+  lookup_t *tval_allocations;
+
+  /* manual_allocation_t */
+  lookup_t *manual_allocations;
+
+  /* allocation_dependency_t */
+  lookup_t *dependency_graph;
 };
 
-#define MEMORY_TRACKER_DEFAULTS                                           \
-  { memory_tracker_type                                                   \
-                                                                          \
-  /* memory_manager_defaults */                                           \
-  , /* memory_manager                          */ MEMORY_MANAGER_DEFAULTS \
-                                                                          \
-  , /* dynamically_allocated_container         */ NULL                    \
-  , /* dynamically_allocated_buffers           */ NULL                    \
-  , /* dynamically_allocated_buffers_num       */ 0                       \
-  , /* dynamically_allocated_buffers_size      */ 0                       \
-  , /* dynamically_allocated_buffers_last_even */ 0                       \
-  , /* dynamically_allocated_buffers_last_odd  */ 0                       \
+#define MEMORY_TRACKER_DEFAULTS                      \
+  { memory_tracker_type                              \
+                                                     \
+  /* memory_manager_defaults */                      \
+  , /* memory_manager     */ MEMORY_MANAGER_DEFAULTS \
+                                                     \
+  , /* dynamic_container  */ NULL                    \
+  , /* byte_allocations   */ NULL                    \
+  , /* tval_allocations   */ 0                       \
+  , /* manual_allocations */ 0                       \
+  , /* dependency_graph   */ 0                       \
   }
+
+/* ---------------------------------------------------------------- */
 
 /* A default memory tracker appropriate for top-level declarations. */
 /* Uses "default_memory_manager" with a NULL buffer-array pointer.  */
 /* 0 dynamically allocated buffer slots.                            */
 extern const memory_tracker_t memory_tracker_defaults;
 
+/* ---------------------------------------------------------------- */
+
 /* A global memory tracker for general use. */
 extern memory_tracker_t global_memory_tracker;
 
-/* A global memory tracker for dynamic typed-value allocations, for types to use as a default. */
+/* A global memory tracker for dynamic typed-value allocations, */
+/* for types to use as a default.                               */
 extern memory_tracker_t global_typed_dyn_memory_tracker;
 
-/*
- * Initialize a "memory_tracker" with no allocated buffers.
- *
- * If the container is dynamically allocated, e.g. if an associated value, pass
- * it as an argument; otherwise set "dynamically_allocated_container" to NULL.
- *
- * If "memory_manager" is NULL, a reasonable default will be chosen.
- *
- * Returns NULL on success, and a pointer to an error message on failure.
- */
-const char *memory_tracker_initialize_empty_with_container(memory_tracker_t *memory_tracker, const memory_manager_t *memory_manager, void *dynamically_allocated_container);
+/* ---------------------------------------------------------------- */
 
+memory_tracker_t *memory_tracker_init(memory_tracker_t *dest, const memory_manager_t *memory_manager, void *dynamic_container);
+void              memory_tracker_free(memory_tracker_t *tracker);
 
-/* Is this allocation being tracked? */
-int               memory_tracker_is_allocation_tracked  (memory_tracker_t *memory_tracker, const void *buffer_allocation, char *out_err_buf, size_t err_buf_size);
+/* ---------------------------------------------------------------- */
 
-/* Adds an already-malloc'd buffer to the memory tracker, returning NULL on failure, otherwise returning "memory_tracker". */
-memory_tracker_t *memory_tracker_track_allocation       (memory_tracker_t *memory_tracker, void *buffer_allocation, char *out_err_buf, size_t err_buf_size);
+/*   track methods: returns index >= 0 on success.  Duplicates are errors.  */
+/* untrack methods: returns the allocation pointer when it exists.          */
+/* tracked methods: returns index if tracked, -1 if not.                    */
+int                   track_byte_allocation  (      memory_tracker_t *tracker, byte_allocation_t   allocation);
+byte_allocation_t   untrack_byte_allocation  (      memory_tracker_t *tracker, byte_allocation_t   allocation);
+int                 tracked_byte_allocation  (const memory_tracker_t *tracker, byte_allocation_t   allocation);
 
-/* Returns a pointer to the new allocation. */
-void             *memory_tracker_malloc_allocation      (memory_tracker_t *memory_tracker, size_t size, char *out_err_buf, size_t err_buf_size);
-void             *memory_tracker_calloc_allocation      (memory_tracker_t *memory_tracker, size_t nmemb, size_t size, char *out_err_buf, size_t err_buf_size);
-void             *memory_tracker_realloc_allocation     (memory_tracker_t *memory_tracker, void *buffer_allocation, size_t size, char *out_err_buf, size_t err_buf_size);
+int                   track_tval_allocation  (      memory_tracker_t *tracker, tval_allocation_t   allocation);
+tval_allocation_t   untrack_tval_allocation  (      memory_tracker_t *tracker, tval_allocation_t   allocation);
+int                 tracked_tval_allocation  (const memory_tracker_t *tracker, tval_allocation_t   allocation);
 
-/* Returns <= -1 on error, >= 0 on success: 0 if allow_untracked and */
-/* untracked, >=1 otherwise.                                         */
-int               memory_tracker_untrack_allocation     (memory_tracker_t *memory_tracker, void *buffer_allocation, int allow_untracked, char *out_err_buf, size_t err_buf_size);
-int               memory_tracker_untrack_all_allocations(memory_tracker_t *memory_tracker, char *out_err_buf, size_t err_buf_size);
+int                   track_manual_allocation(      memory_tracker_t *tracker, manual_allocation_t allocation);
+manual_allocation_t untrack_manual_allocation(      memory_tracker_t *tracker, manual_allocation_t allocation);
+int                 tracked_manual_allocation(const memory_tracker_t *tracker, manual_allocation_t allocation);
 
-/* Returns <= -1 on error, >= 0 on success: 0 if allow_untracked and */
-/* untracked, >=1 otherwise.                                         */
-int               memory_tracker_free_allocation        (memory_tracker_t *memory_tracker, void *buffer_allocation, int allow_untracked, char *out_err_buf, size_t err_buf_size);
-int               memory_tracker_free_all_allocations   (memory_tracker_t *memory_tracker, char *out_err_buf, size_t err_buf_size);
+/* >= 1 when exists. */
+int untrack_allocation(memory_tracker_t *memory_tracker, allocation_type_t type, int index);
 
-/* Returns <= -1 on error, >= 0 on success: 0 when the tracker itself is not */
-/* dynamically allocated, i.e. its container field value is NULL (all of its */
-/* allocations are still freed), and >= 1 otherwise.                         */
-int               memory_tracker_free_container         (memory_tracker_t *memory_tracker, char *out_err_buf, size_t err_buf_size);
+/* track:   returns index.                                                  */
+/* untrack: takes a dependency index.                                       */
+/* tracked: returns index; sets first dependent.                            */
+int                       track_dependency(      memory_tracker_t *tracker, allocation_type_t parent_type, int parent, allocation_type_t dependent_type, int dependent);
+allocation_dependency_t untrack_dependency(      memory_tracker_t *tracker, int index);
+int                     tracked_dependency(const memory_tracker_t *tracker, allocation_type_t parent_type, int parent, allocation_type_t *out_dependent_type, int *out_dependent);
 
-/* Returns <= -1 on error, >= 0 on success:      */
-/* 0 when no tag is set, >= 1 when a tag is set. */
-int               memory_tracker_get_tag                (memory_tracker_t *memory_tracker, void *buffer_allocation, size_t *out_tag, char *out_err_buf, size_t err_buf_size);
-int               memory_tracker_set_tag                (memory_tracker_t *memory_tracker, void *buffer_allocation, size_t tag,      char *out_err_buf, size_t err_buf_size);
+/* ---------------------------------------------------------------- */
+
+const memory_manager_t *memory_tracker_manager(const memory_tracker_t *tracker);
+
+/* ---------------------------------------------------------------- */
+
+int track_malloc (memory_tracker_t *tracker, size_t  size);
+int track_calloc (memory_tracker_t *tracker, size_t  nmemb, size_t size);
+int track_realloc(memory_tracker_t *tracker, void   *ptr,   size_t size);
+int track_free   (memory_tracker_t *tracker, void   *ptr);
 
 /* ---------------------------------------------------------------- */
 /* Post-dependencies.                                               */
