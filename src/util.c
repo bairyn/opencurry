@@ -152,6 +152,24 @@ int is_big_endian(void)
 
 /* ---------------------------------------------------------------- */
 
+void *tail_index(size_t chunk_num, void **root, size_t index)
+{
+  void *base = *root;
+
+  if (!root || chunk_num <= 0)
+    return NULL;
+
+  while (index >= chunk_num)
+  {
+    index -= chunk_num;
+    base = *(void **) base[SIZE_LESS_NULL(chunk_num)];
+  }
+
+  return base[index];
+}
+
+/* ---------------------------------------------------------------- */
+
 /*
  * Subtract from a "size_t", resulting in "0" if the amount to subtract by is
  * greater than the value, without overflowing.
