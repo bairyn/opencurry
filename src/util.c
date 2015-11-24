@@ -162,10 +162,10 @@ void *tail_index(size_t chunk_num, void **root, size_t index)
   while (index >= chunk_num)
   {
     index -= chunk_num;
-    base = *(void **) base[SIZE_LESS_NULL(chunk_num)];
+    base = ((void **) base)[SIZE_LESS_NULL(chunk_num)];
   }
 
-  return base[index];
+  return ((void **) base)[index];
 }
 
 /* ---------------------------------------------------------------- */
