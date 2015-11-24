@@ -457,24 +457,35 @@ lookup_t *lookup_auto_resize_controlled
 
 /* ---------------------------------------------------------------- */
 
-enum lookup_traversal_direction_e
+enum lookup_tree_traversal_direction_e
 {
-  ltd_current = 0,
-  ltd_break   = 1,
-  ltd_parent  = 2,
-  ltd_left    = 3,
-  ltd_right   = 4,
+  lttd_current = 0,
+  lttd_break   = 1,
+  lttd_parent  = 2,
+  lttd_left    = 3,
+  lttd_right   = 4,
 
-  ltd_end,
+  lttd_end,
 
   /* 1: 0- 1 */
   /* 2: 0- 3 */
   /* 3: 0- 7 */
   /* 4: 0-15 */
-  ltd_bits     = 3,
-  ltd_end_mask = ONE_BIT_REPEAT(ltd_bits)
+  lttd_bits     = 3,
+  lttd_end_mask = ONE_BIT_REPEAT(lttd_bits)
 };
-typedef enum lookup_traversal_direction_e lookup_traversal_direction_t;
+typedef enum lookup_tree_traversal_direction_e lookup_tree_traversal_direction_t;
+
+extern const lookup_tree_traversal_direction_t ltd_current;
+extern const lookup_tree_traversal_direction_t ltd_break;
+extern const lookup_tree_traversal_direction_t ltd_parent;
+extern const lookup_tree_traversal_direction_t ltd_left;
+extern const lookup_tree_traversal_direction_t ltd_right;
+extern const lookup_tree_traversal_direction_t ltd_end;
+extern const lookup_tree_traversal_direction_t ltd_bits;
+extern const lookup_tree_traversal_direction_t ltd_end_mask;
+
+/* ---------------------------------------------------------------- */
 
 typedef
   void *(*lookup_iteration_callback_fun_t)
@@ -521,7 +532,8 @@ extern const lookup_iteration_order_t lookup_iteration_order_defaults;
 
 /* ---------------------------------------------------------------- */
 
-void *lookup_traverse_from
+/* out_iteration_break: Set to lookup_tree_traversal_direction_t. */
+void *lookup_traverse_tree_from
   ( const lookup_t *lookup
   , const bnode_t  *root
 
@@ -529,6 +541,74 @@ void *lookup_traverse_from
   , void                            *with_value_context
   , void                            *initial_accumulation
   );
+
+/* out_iteration_break: Set to lookup_tree_traversal_direction_t. */
+void *lookup_traverse_values_from
+  ( const lookup_t *lookup
+  , const bnode_t  *root
+
+  , int right_to_left
+
+  , lookup_iteration_callback_fun_t  with_value
+  , void                            *with_value_context
+  , void                            *initial_accumulation
+  );
+
+typedef struct lookup_traverser_values_subtree_context_s lookup_traverser_values_subtree_context_t;
+struct lookup_traverser_values_subtree_context_s 
+{
+  const bnode_t *root;
+
+  callback_compare_t cmp;
+
+  int left_to_right;
+
+  lookup_iteration_callback_fun_t  with_value;
+  void                            *with_value_context;
+
+  int         first;
+  int         moving;
+  int         parent;
+  const void *last_value;
+};
+extern const lookup_iteration_callback_fun_t lookup_traverser_values_subtree;
+lookup_traverser_values_subtree_context lookup_traverser_values_subtree_initial_context
+  ( const bnode_t *root
+
+  , callback_compare_t cmp;
+
+  , int left_to_right
+
+  , lookup_iteration_callback_fun_t  with_value;
+  , void                            *with_value_context;
+  );
+
+void *lookup_traverse_values_subtree
+  ( const lookup_t *lookup
+  , const bnode_t  *root
+
+  , callback_compare_t cmp
+
+  , int right_to_left
+
+  , lookup_iteration_callback_fun_t  with_value
+  , void                            *with_value_context
+  , void                            *initial_accumulation
+  );
+
+void *lookup_traverse_values
+  ( const lookup_t *lookup
+
+  , callback_compare_t cmp
+
+  , int right_to_left
+
+  , lookup_iteration_callback_fun_t  with_value
+  , void                            *with_value_context
+  , void                            *initial_accumulation
+  );
+
+/* ---------------------------------------------------------------- */
 
 void *lookup_iterate_tree_from
   ( const lookup_t *lookup

@@ -3699,7 +3699,18 @@ size_t lookup_delete_limit
 
 /* ---------------------------------------------------------------- */
 
-static void *lookup_traverse_from_step
+const lookup_tree_traversal_direction_t ltd_current  = lttd_current;
+const lookup_tree_traversal_direction_t ltd_break    = lttd_break;
+const lookup_tree_traversal_direction_t ltd_parent   = lttd_parent;
+const lookup_tree_traversal_direction_t ltd_left     = lttd_left;
+const lookup_tree_traversal_direction_t ltd_right    = lttd_right;
+const lookup_tree_traversal_direction_t ltd_end      = lttd_end;
+const lookup_tree_traversal_direction_t ltd_bits     = lttd_bits;
+const lookup_tree_traversal_direction_t ltd_end_mask = lttd_end_mask;
+
+/* ---------------------------------------------------------------- */
+
+static void *lookup_traverse_tree_from_step
   ( const lookup_t *lookup
   , const bnode_t  *node
 
@@ -3707,14 +3718,14 @@ static void *lookup_traverse_from_step
   , void                            *with_value_context
   , void                            *initial_accumulation
 
-  , lookup_traversal_direction_t *dir
+  , lookup_tree_traversal_direction_t *dir
   )
 {
   for (;;)
   {
     const bnode_t *child;
 
-    switch(*dir)
+    switch (*dir)
     {
       default:
       case ltd_break:
@@ -3749,7 +3760,7 @@ static void *lookup_traverse_from_step
 
           child = LOOKUP_INDEX_CORDER(lookup, BNODE_GET_RED(node->left));
 
-          initial_accumulation = lookup_traverse_from_step
+          initial_accumulation = lookup_traverse_tree_from_step
             ( lookup
             , child
 
@@ -3775,7 +3786,7 @@ static void *lookup_traverse_from_step
 
           child = LOOKUP_INDEX_CORDER(lookup, BNODE_GET_RED(node->right));
 
-          initial_accumulation = lookup_traverse_from_step
+          initial_accumulation = lookup_traverse_tree_from_step
             ( lookup
             , child
 
@@ -3793,7 +3804,7 @@ static void *lookup_traverse_from_step
 }
 
 /* out_iteration_break should be set to the next direction. */
-void *lookup_traverse_from
+void *lookup_traverse_tree_from
   ( const lookup_t *lookup
   , const bnode_t  *root
 
@@ -3802,7 +3813,7 @@ void *lookup_traverse_from
   , void                            *initial_accumulation
   )
 {
-  int dir;
+  lookup_tree_traversal_direction_t dir;
 
 #if ERROR_CHECKING
   if (!lookup)
@@ -3819,7 +3830,7 @@ void *lookup_traverse_from
   dir = ltd_current;
 
   initial_accumulation =
-    lookup_traverse_from_step
+    lookup_traverse_tree_from_step
       ( lookup
       , root
 
@@ -3832,6 +3843,322 @@ void *lookup_traverse_from
 
   return initial_accumulation;
 }
+
+static void *traverse_values
+  ( void *context
+  , void *last_accumulation
+
+  , const lookup_t *lookup
+  , const void     *value
+  , const bnode_t  *node
+
+  , int *out_dir
+  )
+{
+  lookup_traverser_values_subtree_context_t *tcontext = context;
+
+  if (tcontext->first)
+  {
+    if (left_to_right)
+    {
+      if (!BNODE_IS_LEAF(node->left))
+      {
+        *out_dir = ltd_left;
+        return last_accumulation;
+      }
+      else
+      {
+        tcontext->first = 0;
+        *out_dir = ltd_current;
+        return last_accumulation;
+      }
+    }
+    else
+    {
+      if (!BNODE_IS_LEAF(node->right))
+      {
+        *out_dir = ltd_right;
+        return last_accumulation;
+      }
+      else
+      {
+        tcontext->first = 0;
+        *out_dir = ltd_current;
+        return last_accumulation;
+      }
+    }
+  }
+  else
+  {
+    if (!tcontext->moving)
+    {
+      int break_iteration;
+
+      break_iteration = 0;
+      last_accumulation = with_value
+        ( tcontext->with_value
+        , tcontext->with_value_context
+
+        , lookup
+        , value
+        , node
+
+        , &break_iteration
+        );
+
+      if (break_iteration)
+      {
+        *out_dir = ltd_break;
+        return last_accumulation;
+      }
+
+      *out_dir = ltd_current;
+
+      if (tcontext->left_to_right)
+        tcontext->moving = 1;
+      else
+        tcontext->moving = -1;
+
+      tcontext->last_value = value;
+
+      return last_accumulation;
+    }
+    else
+    {
+      if (!tcontext->parent)
+      {
+        size_t child_ref;
+        lookup_tree_traversal_direction_t child_dir;
+
+        if (tcontext->moving < 0)
+        {
+          child_ref = node->left;
+          child_dir = ltd_left;
+        }
+        else
+        {
+          child_ref = node->right;
+          child_dir = ltd_right;
+        }
+
+        if (tcontext->moving == tcontext->left_to_right)
+        {
+          if (!BNODE_IS_LEAF(child_ref))
+          {
+            tcontext->moving = -tcontext->moving;
+            *out_dir = child_dir;
+            return last_accumulation;
+          }
+          else
+          {
+            /* Started retrieving next value, but no child node, so start going
+             * upwards. */
+            tcontext->parent = 1;
+            *out_dir = ltd_parent;
+            return last_accumulation;
+          }
+        }
+        else
+        {
+          if (!BNODE_IS_LEAF(child_ref))
+          {
+            *out_dir = child_dir;
+            return last_accumulation;
+          }
+          else
+          {
+            tcontext->moving = 0;
+            *out_dir = ltd_current;
+            return last_accumulation;
+          }
+        }
+      }
+      else
+      {
+        /* tcontext->parent */
+        int ordering;
+
+        /* last_value <?= value */
+        ordering = call_callback_compare(cmp, tcontext->last_value, value);
+
+#if ERROR_CHECKING
+        if (IS_ORDERING_ERROR(ordering))
+        {
+          *out_dir = ltd_break;
+          return NULL;
+        }
+#endif /* #if ERROR_CHECKING */
+
+        if (  ( tcontext->left_to_right && ordering < 0)
+           || (!tcontext->left_to_right && ordering > 0)
+           )
+        {
+          /* Keep going upwards. */
+          *out_dir = ltd_parent;
+          return last_accumulation;
+        }
+        else
+        {
+          /* Next node at either this one or a sub-node on the appropriate side. */
+          size_t child_ref;
+          lookup_tree_traversal_direction_t child_dir;
+
+          if (tcontext->left_to_right)
+          {
+            tcontext->moving = 1;
+            child_ref = node->right;
+            child_dir = ltd_right;
+          }
+          else
+          {
+            tcontext->moving = -1;
+            child_ref = node->left;
+            child_dir = ltd_left;
+          }
+
+          if (BNODE_IS_LEAF(child_ref))
+          {
+            /* No child, but iterate and then keep going. */
+            int break_iteration;
+
+            break_iteration = 0;
+            last_accumulation = with_value
+              ( tcontext->with_value
+              , tcontext->with_value_context
+
+              , lookup
+              , value
+              , node
+
+              , &break_iteration
+              );
+
+            if (break_iteration)
+            {
+              *out_dir = ltd_break;
+              return last_accumulation;
+            }
+
+            /* Keep going. */
+            *out_dir = ltd_parent;
+            return last_accumulation;
+          }
+          else
+          {
+            tcontext->parent = 0;
+
+            *out_dir = child_dir;
+            return last_accumulation;
+          }
+        }
+      }
+    }
+  }
+}
+
+const lookup_iteration_callback_fun_t lookup_traverser_values_subtree =
+  (lookup_iteration_callback_fun_t) traverse_values;
+
+lookup_traverser_values_subtree_context lookup_traverser_values_subtree_initial_context
+  ( const bnode_t *root
+
+  , callback_compare_t cmp;
+
+  , int left_to_right
+
+  , lookup_iteration_callback_fun_t  with_value;
+  , void                            *with_value_context;
+  )
+{
+  lookup_traverser_values_subtree_context_t context;
+
+  context.root               = root;
+  context.cmp                = cmp;
+  context.left_to_right      = left_to_right;
+  context.with_value         = with_value;
+  context.with_value_context = with_value_context;
+  context.first              = 1;
+  context.moving             = 0;
+  context.parent             = 0;
+  context.last_value         = NULL;
+}
+
+void *lookup_traverse_values_subtree
+  ( const lookup_t *lookup
+  , const bnode_t  *root
+
+  , callback_compare_t cmp
+
+  , int right_to_left
+
+  , lookup_iteration_callback_fun_t  with_value
+  , void                            *with_value_context
+  , void                            *initial_accumulation
+  )
+{
+  lookup_traverser_values_subtree_context_t context;
+
+#if ERROR_CHECKING
+  if (!lookup)
+    return NULL;
+  if (!with_value)
+    return NULL;
+#endif /* #if ERROR_CHECKING  */
+
+  if (LOOKUP_EMPTY(lookup))
+    return initial_accumulation;
+
+  LOOKUP_OPTIONAL_CNODE(lookup, root);
+
+  context = lookup_traverser_values_subtree_initial_context
+    ( root
+    , cmp
+    , !right_to_left
+    , with_value
+    , with_value_context
+    );
+
+  initial_accumulation =
+    lookup_traverse_tree_from
+      ( lookup
+      , root
+
+      , lookup_traverser_values_subtree 
+      , &context
+      , initial_accumulation
+      );
+
+  return initial_accumulation;
+}
+
+void *lookup_traverse_values
+  ( const lookup_t *lookup
+
+  , callback_compare_t cmp
+
+  , int right_to_left
+
+  , lookup_iteration_callback_fun_t  with_value
+  , void                            *with_value_context
+  , void                            *initial_accumulation
+  )
+{
+  return
+    lookup_traverse_values_subtree
+      ( lookup
+      , NULL
+
+      , cmp
+
+      , right_to_left
+
+      , with_value
+      , with_value_context
+      , initial_accumulation
+      );
+}
+
+/* ---------------------------------------------------------------- */
 
 static void *lookup_iterate_tree_from_step
   ( const lookup_t *lookup
