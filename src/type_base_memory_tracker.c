@@ -280,7 +280,7 @@ memory_tracker_t global_typed_dyn_memory_tracker =
 
 memory_tracker_t *memory_tracker_init(memory_tracker_t *dest, const memory_manager_t *memory_manager, void *dynamic_container);
 
-void              memory_tracker_free(memory_tracker_t *tracker)
+int               memory_tracker_free(memory_tracker_t *tracker)
 {
 #if ERROR_CHECKING
   if (!tracker)

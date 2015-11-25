@@ -879,7 +879,7 @@ memory_tracker_t *type_mem_valueless(const type_t *self, tval *val_raw, memory_t
  *
  * If memory tracking is per-value, "val_memory_manager", or
  * "default_memory_manager" if NULL, is used to initialize the value's memory
- * tracker with "memory_tracker_initialize_empty_with_container".
+ * tracker with "memory_tracker_init".
  *
  * This is a wrapper around "mem_init_type_valueless_or_inside_value".
  *
@@ -945,7 +945,7 @@ void *type_supports_dynamic_allocation
  *
  * If memory tracking is per-value, "val_memory_manager", or
  * "default_memory_manager" if NULL, is used to initialize the value's memory
- * tracker with "memory_tracker_initialize_empty_with_container".
+ * tracker with "memory_tracker_init".
  *
  * This is a wrapper around "mem_init_type_valueless_or_inside_value".
  */
@@ -987,7 +987,7 @@ void *type_supports_dynamic_allocation_only_some_vals
  *
  * If memory tracking is per-value, "val_memory_manager", or
  * "default_memory_manager" if NULL, is used to initialize the value's memory
- * tracker with "memory_tracker_initialize_empty_with_container".
+ * tracker with "memory_tracker_init".
  *
  * This is a wrapper around "mem_init_type_valueless_or_inside_value".
  *
@@ -1068,7 +1068,7 @@ void *type_mem_init_valueless_or_inside_value
  *
  * Otherwise, call "type_mem(type, val_raw)" to get a reference to the value's
  * memory tracker, and initialize it with
- * "memory_tracker_initialize_empty_with_container", with "val_memory_manager",
+ * "memory_tracker_init", with "val_memory_manager",
  * or with the type's "default_memory_manager" if none is provided, otherwise
  * with the global "default_memory_manager".
  *
@@ -1179,24 +1179,27 @@ void *mem_init_type_valueless_or_inside_value
       /* We need to handle memory tracking. */
       if (is_dynamically_allocated)
       {
+        int track_result;
+
         /* The value was dynamically allocated, so track it. */
 
         /* TODO: once snprintf_prepend is written, replace with the following: */
         /* memory_tracker = memory_tracker_track_allocation(memory_tracker, val_raw, out_err_buf, err_buf_size); */
-        memory_tracker = memory_tracker_track_allocation(memory_tracker, val_raw, NULL, 0);
+        track_result = track_byte_allocation(memory_tracker, val_raw);
 
-        if (!memory_tracker)
+        if (track_result < 0)
         {
           /* Failed to track allocation; we'll return NULL. */
           if (out_err_buf)
           {
             /* TODO: snprintf_prepend */
             snprintf
-              ( (char *) out_err_buf, (size_t) terminator_size(err_buf_size)
-              , "Error: mem_init_type_valueless_or_inside_value: failed to track dynamic allocation!\n"
+              ( (char *) out_err_buf, (size_t) terminator_size(err_buf_size), ""
+                "Error: mem_init_type_valueless_or_inside_value: failed to track dynamic allocation!\n"
                 "  Failed to initialize a value's associated memory tracker without successful tracking.\n"
-                "  memory_tracker_track_allocation returned NULL, indicating failure.\n"
-                "TODO Error message returned from \"memory_tracker_initialize_empty_with_container\": "
+                "  memory_tracker_track_allocation returned < 0, indicating failure: %d.\n"
+
+              , (int) track_result
               );
 
             ensure_ascii_ends_in_char
@@ -1271,7 +1274,7 @@ void *mem_init_type_valueless_or_inside_value
       if (memory_tracker)
       {
         /* Track the value. */
-        const char *is_err;
+        memory_tracker_t *tracker_init;
 
         if (!val_memory_manager)
           val_memory_manager = type_default_memory_manager(type, NULL);
@@ -1279,21 +1282,19 @@ void *mem_init_type_valueless_or_inside_value
           val_memory_manager = default_memory_manager;
 
         if (is_dynamically_allocated)
-          is_err = memory_tracker_initialize_empty_with_container(memory_tracker, val_memory_manager, val_raw);
+          tracker_init = memory_tracker_init(memory_tracker, val_memory_manager, val_raw);
         else
-          is_err = memory_tracker_initialize_empty_with_container(memory_tracker, val_memory_manager, NULL);
+          tracker_init = memory_tracker_init(memory_tracker, val_memory_manager, NULL);
 
-        if (is_err)
+        if (!tracker_init)
         {
           /* An error occured. */
           if (out_err_buf)
             snprintf
-              ( (char *) out_err_buf, (size_t) terminator_size(err_buf_size)
-              , "Error: mem_init_type_valueless_or_inside_value: initializing the memory tracker with \"memory_tracker_initialize_empty_with_container\" failed!\n"
+              ( (char *) out_err_buf, (size_t) terminator_size(err_buf_size), ""
+                "Error: mem_init_type_valueless_or_inside_value: initializing the memory tracker with \"memory_tracker_init\" failed!\n"
                 "  Failed to initialize a value's associated memory tracker.\n"
-                "Error message returned from \"memory_tracker_initialize_empty_with_container\": %s%s"
-              , (const char *) is_err
-              , (const char *) (ascii_ends_in_char(is_err, '\n') ? "" : "\n")
+                "  \"memory_tracker_init\" return NULL.\n"
               );
 
           /* Error occurred: return NULL. */
@@ -1302,7 +1303,7 @@ void *mem_init_type_valueless_or_inside_value
         else
         {
           /* We've succesfully tracked the value. */
-          return memory_tracker;
+          return tracker_init;
         }
       }
       else
@@ -1313,8 +1314,8 @@ void *mem_init_type_valueless_or_inside_value
           /* Error: are_all_vals_supported is incorrect! */
           if (out_err_buf)
             snprintf
-              ( (char *) out_err_buf, (size_t) terminator_size(err_buf_size)
-              , "Error: mem_init_type_valueless_or_inside_value: the type doesn't associated a memory_tracker via \"mem\" for this value, contrary to the caller!\n"
+              ( (char *) out_err_buf, (size_t) terminator_size(err_buf_size), ""
+                "Error: mem_init_type_valueless_or_inside_value: the type doesn't associated a memory_tracker via \"mem\" for this value, contrary to the caller!\n"
                 "  The caller invoked \"mem_init_type_valueless_or_inside_value\" with the \"are_all_vals_supported\" incorrect *enabled*.\n"
                 "  But the type doesn't support a memory tracker for this value (\"val_raw\").\n"
                 "  \n"
@@ -1355,6 +1356,7 @@ int type_is_dyn_valueless_or_inside_value
   return mem_is_dyn_valueless_or_inside_value(self, val, NULL, 0);
 }
 
+/* TODO: dynamic_container && dynamic_container != val */
 /*
  * mem_is_dyn_valueless_or_inside_value:
  *
@@ -1409,8 +1411,7 @@ int mem_is_dyn_valueless_or_inside_value
   {
     int is_value_tracked;
 
-    /* TODO use "out_err_buf" once snprintf_prepend is implemented. */
-    is_value_tracked = memory_tracker_is_allocation_tracked(valueless_memory_tracker, val, NULL, 0);
+    is_value_tracked = tracked_byte_allocation(valueless_memory_tracker, val);
 
     if (is_value_tracked < 0)
     {
@@ -1421,15 +1422,13 @@ int mem_is_dyn_valueless_or_inside_value
       if (out_err_buf)
       {
         snprintf
-          ( (char *) out_err_buf, (size_t) terminator_size(err_buf_size)
-          , "Error: mem_is_dyn_valueless_or_inside_value: calling \"memory_tracker_is_allocation_tracked\" failed!\n"
+          ( (char *) out_err_buf, (size_t) terminator_size(err_buf_size), ""
+            "Error: mem_is_dyn_valueless_or_inside_value: calling \"memory_tracker_is_allocation_tracked\" failed!\n"
             "  Failed to determine whether a value was dynamically allocated,\n"
             "  without a successful invocation to \"memory_tracker_is_allocation_tracked\"\n"
             "  for the valuess type-associated memory tracker.\n"
             "\n"
             "  \"memory_tracker_is_allocation_tracked\" returned this error code: %d\n"
-            "\n"
-            "TODO memory_tracker_is_allocation_tracked's error message: "
 
           , (int) is_value_tracked
           );
@@ -1489,7 +1488,7 @@ int mem_is_dyn_valueless_or_inside_value
       return -3;
     }
 
-    memory_tracker_container = memory_tracker->dynamically_allocated_container;
+    memory_tracker_container = memory_tracker->dynamic_container;
 
     if      (!memory_tracker_container)
     {
@@ -1666,13 +1665,13 @@ int mem_free_valueless_or_inside_value_allocation
     valueless_memory_tracker = type_mem(type, NULL);
     if (valueless_memory_tracker)
     {
-      int success_code;
-      int free_allocation_result;
+      int    success_code;
+      size_t num_freed;
 
       /* TODO use "out_err_buf" once snprintf_prepend is implemented. */
-      free_allocation_result = memory_tracker_free_allocation(valueless_memory_tracker, val, 0, NULL, 0);
+      num_freed = track_free(valueless_memory_tracker, val);
 
-      if (free_allocation_result <= -1)
+      if (num_freed <= 0)
       {
         /* "memory_tracker_free_allocation" failed. */
 
@@ -1682,8 +1681,8 @@ int mem_free_valueless_or_inside_value_allocation
         {
           /* TODO use "snprintf_prepend" once snprintf_prepend is implemented. */
           snprintf
-            ( (char *) out_err_buf, (size_t) terminator_size(err_buf_size)
-            , "Error: mem_free_valueless_or_inside_value_allocation: the call to \"memory_tracker_free_allocation\" failed!\n"
+            ( (char *) out_err_buf, (size_t) terminator_size(err_buf_size), ""
+              "Error: mem_free_valueless_or_inside_value_allocation: the call to \"track_free\" failed to free allocation!\n"
               "  Failed to free a value's valueless-type-memory-tracker allocation\n"
               "  of dynamically allocated memory without a successful invocation\n"
               "  of \"memory_tracker_free_allocation\".\n"
@@ -1692,7 +1691,7 @@ int mem_free_valueless_or_inside_value_allocation
               "\n"
               "TODO memory_tracker_free_allocation's error message: "
 
-            , (int) free_allocation_result
+            , (int) num_freed
             );
 
             ensure_ascii_ends_in_char
@@ -1703,14 +1702,14 @@ int mem_free_valueless_or_inside_value_allocation
         }
 
         /* Return failure. */
-        error_code = free_allocation_result - 64;
+        error_code = ((int) num_freed) - 64;
         if (!(error_code <= -1))
           error_code = -64;
         return error_code;
       }
 
       /* Done freeing. */
-      success_code = free_allocation_result + 16 + 1;
+      success_code = ((int) num_freed) + 16 + 1;
       if (!(success_code >= 1))
         success_code = 16;
       return success_code;
@@ -1740,8 +1739,7 @@ int mem_free_valueless_or_inside_value_allocation
 
       /* ---------------------------------------------------------------- */
 
-      /* TODO use "out_err_buf" once snprintf_prepend is implemented. */
-      free_container_result = memory_tracker_free_container(memory_tracker, NULL, 0);
+      free_container_result = memory_tracker_free(memory_tracker);
 
       if (free_container_result <= -1)
       {
@@ -1753,15 +1751,13 @@ int mem_free_valueless_or_inside_value_allocation
         {
           /* TODO use "snprintf_prepend" once snprintf_prepend is implemented. */
           snprintf
-            ( (char *) out_err_buf, (size_t) terminator_size(err_buf_size)
-            , "Error: mem_free_valueless_or_inside_value_allocation: the call to \"memory_tracker_free_container\" failed!\n"
+            ( (char *) out_err_buf, (size_t) terminator_size(err_buf_size), ""
+            , "Error: mem_free_valueless_or_inside_value_allocation: the call to \"memory_tracker_free\" failed!\n"
               "  Failed to free a no-valueless-memory-tracker-typed value's\n"
               "  dynamically allocated memory without a successful invocation\n"
-              "  of \"memory_tracker_free_container\".\n"
+              "  of \"memory_tracker_free\".\n"
               "\n"
-              "  memory_tracker_free_container returned error code: %d\n"
-              "\n"
-              "TODO memory_tracker_free_container's error message: "
+              "  memory_tracker_free error code: %d\n"
 
             , (int) free_container_result
             );
