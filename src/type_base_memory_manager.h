@@ -62,20 +62,47 @@
  * Methods to allocate and free raw bytes of memory.
  */
 
+/* TODO: types! */
+typedef void *(*mmalloc_fun_t) (void *context, size_t  size);
+typedef void  (*mfree_fun_t)   (void *context, void   *ptr);
+typedef void *(*mcalloc_fun_t) (void *context, size_t  nmemb, size_t size);
+typedef void *(*mrealloc_fun_t)(void *context, void   *ptr,   size_t size);
+
+typedef void  (*on_oom_fun_t)  (void *context, size_t      size);
+typedef void  (*on_err_fun_t)  (void *context, const char *msg);
+
+/* Forward declaration: memory_manager_t. */
+typedef struct memory_manager_s memory_manager_t;
+
+
+typedef void *(*manager_mmalloc_fun_t) (const memory_manager_t *self, size_t  size);
+typedef void  (*manager_mfree_fun_t)   (const memory_manager_t *self, void   *ptr);
+typedef void *(*manager_mcalloc_fun_t) (const memory_manager_t *self, size_t  nmemb, size_t size);
+typedef void *(*manager_mrealloc_fun_t)(const memory_manager_t *self, void   *ptr,   size_t size);
+
+typedef void  (*manager_on_oom_fun_t)  (const memory_manager_t *self, size_t      size);
+typedef void  (*manager_on_err_fun_t)  (const memory_manager_t *self, const char *msg);
+
+
 const type_t *memory_manager_type(void);
 extern const type_t memory_manager_type_def;
-typedef struct memory_manager_s memory_manager_t;
+/* Forward declaration: memory_manager_t. */
 struct memory_manager_s
 {
   typed_t type;
 
-  void *(*malloc) (const memory_manager_t *self, size_t  size);
-  void  (*free)   (const memory_manager_t *self, void   *ptr);
-  void *(*calloc) (const memory_manager_t *self, size_t  nmemb, size_t size);
-  void *(*realloc)(const memory_manager_t *self, void   *ptr,   size_t size);
+  /* 4 fields: all NULL, or minimum of: */
+  /*   - mmalloc                        */
+  /*   - mfree                          */
+  /*   - mcalloc                        */
+  /*   - mrealloc                       */
+  manager_mmalloc_fun_t  mmalloc;
+  manager_mfree_fun_t    mfree;
+  manager_mcalloc_fun_t  mcalloc;
+  manager_mrealloc_fun_t mrealloc;
 
-  void  (*on_oom) (const memory_manager_t *self, size_t      size);
-  void  (*on_err) (const memory_manager_t *self, const char *msg);
+  manager_on_oom_fun_t on_oom;
+  manager_on_err_fun_t on_err;
 
   void   *state;
   size_t  state_size;
@@ -99,8 +126,7 @@ struct memory_manager_s
 /* A "memory_manager_t" with NULLS. */
 extern const memory_manager_t memory_manager_defaults;
 
-extern const memory_manager_t * const default_memory_manager;
-extern const memory_manager_t malloc_manager;
+/* ---------------------------------------------------------------- */
 
 /* Print a message to stderr and return. */
 void memory_manager_default_on_oom(const memory_manager_t *self, size_t      size);
@@ -110,6 +136,29 @@ void memory_manager_default_on_err(const memory_manager_t *self, const char *msg
 void on_memory_manager_oom_do_nothing(const memory_manager_t *self, size_t      size);
 void on_memory_manager_err_do_nothing(const memory_manager_t *self, const char *msg);
 
+/* ---------------------------------------------------------------- */
+
+extern const memory_manager_t * const default_memory_manager;
+
+extern const memory_manager_t malloc_manager;
+
+/* ---------------------------------------------------------------- */
+
+memory_manager_t *memory_manager_init
+  ( memory_manager_t *dest
+
+  , manager_mmalloc_fun_t  mmalloc
+  , manager_mfree_fun_t    mfree
+  , manager_mcalloc_fun_t  mcalloc
+  , manager_mrealloc_fun_t mrealloc
+  );
+
+size_t memory_manager_deinit(memory_manager_t *memory_manager);
+
+memory_manager_t *memory_manager_copy(memory_manager_t *dest, const memory_manager_t *src);
+
+/* ---------------------------------------------------------------- */
+
 /* Both the reference and individual function pointers may be NULL. */
 /*                                                                  */
 /* Behaviour in case of NULL "calloc" and "realloc" pointers will   */
@@ -117,13 +166,17 @@ void on_memory_manager_err_do_nothing(const memory_manager_t *self, const char *
 /*                                                                  */
 /* If only one of "malloc" and "free" is NULL, behaviour is         */
 /* undefined.                                                       */
-void *memory_manager_malloc (const memory_manager_t *memory_manager, size_t size);
-void  memory_manager_free   (const memory_manager_t *memory_manager, void   *ptr);
-void *memory_manager_calloc (const memory_manager_t *memory_manager, size_t nmemb, size_t size);
-void *memory_manager_realloc(const memory_manager_t *memory_manager, void   *ptr,  size_t size);
+void *memory_manager_mmalloc (const memory_manager_t *memory_manager, size_t size);
+void  memory_manager_mfree   (const memory_manager_t *memory_manager, void   *ptr);
+void *memory_manager_mcalloc (const memory_manager_t *memory_manager, size_t nmemb, size_t size);
+void *memory_manager_mrealloc(const memory_manager_t *memory_manager, void   *ptr,  size_t size);
 
 void  memory_manager_on_oom (const memory_manager_t *memory_manager, size_t      size);
 void  memory_manager_on_err (const memory_manager_t *memory_manager, const char *msg);
+
+/* ---------------------------------------------------------------- */
+
+const memory_manager_t *require_memory_manager(const memory_manager_t *memory_manager);
 
 /* ---------------------------------------------------------------- */
 /* Post-dependencies.                                               */
