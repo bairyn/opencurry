@@ -627,7 +627,7 @@ int compare_with_type    (void *context, const     void         *check, const   
   return cmp_with_type(type, check, baseline);
 }
 
-int compare_ref_with_type(void *context, const     void        **check, const          void        **baseline)
+int compare_ref_with_type(void *context, const     void * const *check, const          void * const *baseline)
 {
   const type_t *type = context;
 
@@ -664,7 +664,7 @@ int compare_tval    (void *context, const          tval         *check, const   
   return cmp_with_type(type, check, baseline);
 }
 
-int compare_tvalr   (void *context, const          tval        **check, const          tval        **baseline)
+int compare_tvalr   (void *context, const          tval * const *check, const          tval * const *baseline)
 {
   const type_t *type;
 
@@ -829,7 +829,7 @@ int compare_ptrdiff (void *context, const          ptrdiff_t    *check, const   
 }
 
 
-int compare_objp    (void *context, const          void        **check, const          void        **baseline)
+int compare_objp    (void *context, const          void * const *check, const          void * const *baseline)
 {
 #if ERROR_CHECKING
   if (!check || !baseline)
@@ -874,7 +874,7 @@ int compare_mem     (void *context, const          void         *check, const   
   return ORDERING_SUCCESS(memcmp(check, baseline, n));
 }
 
-int compare_memr    (void *context, const          void        **check, const          void        **baseline)
+int compare_memr    (void *context, const          void * const *check, const          void * const *baseline)
 {
   size_t n;
 
@@ -924,7 +924,7 @@ int compare_strz    (void *context, const          char         *check, const   
 
 
 /* Elements are "const char *". */
-int compare_strnr   (void *context, const          char        **check, const          char        **baseline)
+int compare_strnr   (void *context, const          char * const *check, const          char * const *baseline)
 {
   size_t n;
 
@@ -943,7 +943,7 @@ int compare_strnr   (void *context, const          char        **check, const   
   return ORDERING_SUCCESS(strncmp(*check, *baseline, n));
 }
 
-int compare_strzr   (void *context, const          char        **check, const          char        **baseline)
+int compare_strzr   (void *context, const          char * const *check, const          char * const *baseline)
 {
 #if ERROR_CHECKING
   if (!check || !baseline)

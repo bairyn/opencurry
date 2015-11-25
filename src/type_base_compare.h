@@ -236,49 +236,49 @@ int                call_callback_compare(callback_compare_t callback_compare, co
 
 /* with_type:     Elements are in the array.       */
 /* ref_with_type: Elements are pointers to values. */
-int compare_with_type    (void *context, const     void         *check, const          void         *baseline);
-int compare_ref_with_type(void *context, const     void        **check, const          void        **baseline);
+int compare_with_type    (void *context, const    void         *check, const          void         *baseline);
+int compare_ref_with_type(void *context, const    void * const *check, const          void * const *baseline);
 
-int compare_tval    (void *context, const          tval         *check, const          tval         *baseline);
-int compare_tvalr   (void *context, const          tval        **check, const          tval        **baseline);
+int compare_tval   (void *context, const          tval         *check, const          tval         *baseline);
+int compare_tvalr  (void *context, const          tval * const *check, const          tval * const *baseline);
 
-int compare_char    (void *context, const          char         *check, const          char         *baseline);
-int compare_schar   (void *context, const signed   char         *check, const signed   char         *baseline);
-int compare_uchar   (void *context, const unsigned char         *check, const unsigned char         *baseline);
-int compare_short   (void *context, const          short        *check, const          short        *baseline);
-int compare_ushort  (void *context, const unsigned short        *check, const unsigned short        *baseline);
-int compare_int     (void *context, const          int          *check, const          int          *baseline);
-int compare_uint    (void *context, const unsigned int          *check, const unsigned int          *baseline);
-int compare_long    (void *context, const          long         *check, const          long         *baseline);
-int compare_ulong   (void *context, const unsigned long         *check, const unsigned long         *baseline);
-int compare_float   (void *context, const          float        *check, const          float        *baseline);
-int compare_double  (void *context, const          double       *check, const          double       *baseline);
-int compare_ldouble (void *context, const long     double       *check, const long     double       *baseline);
+int compare_char   (void *context, const          char         *check, const          char         *baseline);
+int compare_schar  (void *context, const signed   char         *check, const signed   char         *baseline);
+int compare_uchar  (void *context, const unsigned char         *check, const unsigned char         *baseline);
+int compare_short  (void *context, const          short        *check, const          short        *baseline);
+int compare_ushort (void *context, const unsigned short        *check, const unsigned short        *baseline);
+int compare_int    (void *context, const          int          *check, const          int          *baseline);
+int compare_uint   (void *context, const unsigned int          *check, const unsigned int          *baseline);
+int compare_long   (void *context, const          long         *check, const          long         *baseline);
+int compare_ulong  (void *context, const unsigned long         *check, const unsigned long         *baseline);
+int compare_float  (void *context, const          float        *check, const          float        *baseline);
+int compare_double (void *context, const          double       *check, const          double       *baseline);
+int compare_ldouble(void *context, const long     double       *check, const long     double       *baseline);
 
-int compare_size    (void *context, const          size_t       *check, const          size_t       *baseline);
-int compare_ptrdiff (void *context, const          ptrdiff_t    *check, const          ptrdiff_t    *baseline);
+int compare_size   (void *context, const          size_t       *check, const          size_t       *baseline);
+int compare_ptrdiff(void *context, const          ptrdiff_t    *check, const          ptrdiff_t    *baseline);
 
 /* Elements are pointers. */
-int compare_objp    (void *context, const          void        **check, const          void        **baseline);
-int compare_funp    (void *context, const          funp_cast_t  *check, const          funp_cast_t  *baseline);
+int compare_objp   (void *context, const          void * const *check, const          void * const *baseline);
+int compare_funp   (void *context, const          funp_cast_t  *check, const          funp_cast_t  *baseline);
 
 /* mem:  Directly compare the elements' bytes in memory.                       */
 /* memr: Elements are "void *" pointers; compare the referent areas of memory. */
-int compare_mem     (void *context, const          void         *check, const          void         *baseline);
-int compare_memr    (void *context, const          void        **check, const          void        **baseline);
+int compare_mem    (void *context, const          void         *check, const          void         *baseline);
+int compare_memr   (void *context, const          void * const *check, const          void * const *baseline);
 
 /* The strings are contained in the elements themselves. */
-int compare_strn    (void *context, const          char         *check, const          char         *baseline);
-int compare_strz    (void *context, const          char         *check, const          char         *baseline);
+int compare_strn   (void *context, const          char         *check, const          char         *baseline);
+int compare_strz   (void *context, const          char         *check, const          char         *baseline);
 
 /* Elements are "const char *". */
-int compare_strnr   (void *context, const          char        **check, const          char        **baseline);
-int compare_strzr   (void *context, const          char        **check, const          char        **baseline);
+int compare_strnr  (void *context, const          char * const *check, const          char * const *baseline);
+int compare_strzr  (void *context, const          char * const *check, const          char * const *baseline);
 
 /* Directly compare the pointers, the locations of the values in memory. */
-int compare_mempos  (void *context, const          void         *check, const          void         *baseline);
+int compare_mempos (void *context, const          void         *check, const          void         *baseline);
 
-int compare_invert_stateless(void *context, const  void         *check, const          void         *baseline);
+int compare_invert_stateless(void *context, const void         *check, const          void         *baseline);
 
 /* ---------------------------------------------------------------- */
 

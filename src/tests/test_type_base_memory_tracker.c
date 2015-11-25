@@ -52,7 +52,9 @@ unit_test_t type_base_memory_tracker_test =
 
 /* Array of type_base_memory_tracker tests. */
 unit_test_t *type_base_memory_tracker_tests[] =
-  { NULL
+  { &memory_tracking_test
+
+  , NULL
   };
 
 unit_test_result_t test_type_base_memory_tracker_run(unit_test_context_t *context)
@@ -62,3 +64,29 @@ unit_test_result_t test_type_base_memory_tracker_run(unit_test_context_t *contex
 
 /* ---------------------------------------------------------------- */
 
+unit_test_t memory_tracking_test =
+  {  memory_tracking_test_run
+  , "memory_tracking_test"
+  , "Testing memory tracking."
+  };
+
+unit_test_result_t lookup_memory_management_test_run(unit_test_context_t *context)
+{
+  unit_test_result_t result = assert_success(context);
+
+  memory_tracker_t *tracker;
+
+  tracker = memory_tracker_init(tracker, NULL, NULL);
+
+  ENCLOSE()
+  {
+    COMPOUND(UNIT_TEST_SKIP);
+  }
+
+  ENCLOSE()
+  {
+    ASSERT2( inteq, memory_tracker_free(tracker), 0 );
+  }
+
+  return result;
+}

@@ -51,4 +51,7 @@ unit_test_result_t test_type_base_memory_tracker_run(unit_test_context_t *contex
 
 /* ---------------------------------------------------------------- */
 
+extern unit_test_t memory_tracking_test;
+unit_test_result_t memory_tracking_test_run(unit_test_context_t *context);
+
 #endif /* ifndef TESTS_TEST_TYPE_BASE_MEMORY_TRACKER_H */

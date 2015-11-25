@@ -83,7 +83,7 @@ typedef void *byte_allocation_t;
 typedef tval *tval_allocation_t;
 
 typedef struct manual_allocation_s manual_allocation_t;
-struct manual_allocation_t
+struct manual_allocation_s
 {
   void (*cleanup)(void *context);
   void *context;

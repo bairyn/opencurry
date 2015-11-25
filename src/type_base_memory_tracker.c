@@ -45,7 +45,6 @@
 #include "type_base_memory_manager.h"
 #include "type_base_type.h"
 
-#ifdef TODO
 /* ---------------------------------------------------------------- */
 /* Allocation types.                                                */
 /* ---------------------------------------------------------------- */
@@ -69,10 +68,10 @@ static int compare_manual_allocation(void *context, const manual_allocation_t *c
 {
   int ordering;
 
-  if (!(ordering = compare_funp(compare_funp_context(), &check->cleanup, &baseline->context)))
+  if (!(ordering = compare_funp(compare_funp_context(), (const funp_cast_t *) &check->cleanup, (const funp_cast_t *) &baseline->cleanup)))
     return ordering;
 
-  return compare_objp(compare_objp_context(), &check->context, &baseline->context);
+  return compare_objp(compare_objp_context(), (const objpc_cast_t *) &check->context, (const objpc_cast_t *) &baseline->context);
 }
 
 static int compare_allocation_dependency(void *context, const allocation_dependency_t *check, const allocation_dependency_t *baseline)
@@ -276,6 +275,7 @@ memory_tracker_t global_memory_tracker =
 memory_tracker_t global_typed_dyn_memory_tracker =
   MEMORY_TRACKER_DEFAULTS;
 
+#ifdef TODO
 /* ---------------------------------------------------------------- */
 
 memory_tracker_t *memory_tracker_init(memory_tracker_t *dest, const memory_manager_t *memory_manager, void *dynamic_container);
