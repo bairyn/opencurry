@@ -41,6 +41,8 @@
 #define TESTS_TESTING_H
 
 /* stddef.h:
+ *   - NULL
+ *   - ptrdiff_t
  *   - size_t
  */
 #include <stddef.h>
@@ -316,38 +318,62 @@ size_t assert_msg_append_details(unit_test_context_t *context, size_t len, char 
 
 /* ---------------------------------------------------------------- */
 
-size_t assert_failure_msg       (unit_test_context_t *context, char *msg_out, size_t msg_out_size, const char *tag);
+size_t assert_failure_msg      (unit_test_context_t *context, char *msg_out, size_t msg_out_size, const char *tag);
 
-size_t assert_true_msg          (unit_test_context_t *context, char *msg_out, size_t msg_out_size, const char *tag, int            condition);
+size_t assert_true_msg         (unit_test_context_t *context, char *msg_out, size_t msg_out_size, const char *tag, int            condition);
 
-size_t assert_inteq_msg         (unit_test_context_t *context, char *msg_out, size_t msg_out_size, const char *tag, int            check,     int            model);
-size_t assert_uinteq_msg        (unit_test_context_t *context, char *msg_out, size_t msg_out_size, const char *tag, unsigned int   check,     unsigned int   model);
-size_t assert_ulongeq_msg       (unit_test_context_t *context, char *msg_out, size_t msg_out_size, const char *tag, unsigned long  check,     unsigned long  model);
-size_t assert_sizeeq_msg        (unit_test_context_t *context, char *msg_out, size_t msg_out_size, const char *tag, size_t         check,     size_t         model);
+size_t assert_inteq_msg        (unit_test_context_t *context, char *msg_out, size_t msg_out_size, const char *tag, int            check,     int            model);
+size_t assert_uinteq_msg       (unit_test_context_t *context, char *msg_out, size_t msg_out_size, const char *tag, unsigned int   check,     unsigned int   model);
+size_t assert_longeq_msg       (unit_test_context_t *context, char *msg_out, size_t msg_out_size, const char *tag, long           check,     long           model);
+size_t assert_ulongeq_msg      (unit_test_context_t *context, char *msg_out, size_t msg_out_size, const char *tag, unsigned long  check,     unsigned long  model);
+size_t assert_sizeeq_msg       (unit_test_context_t *context, char *msg_out, size_t msg_out_size, const char *tag, size_t         check,     size_t         model);
+size_t assert_ptrdiffeq_msg    (unit_test_context_t *context, char *msg_out, size_t msg_out_size, const char *tag, ptrdiff_t      check,     ptrdiff_t      model);
 
-size_t assert_objpeq_msg        (unit_test_context_t *context, char *msg_out, size_t msg_out_size, const char *tag, const void    *check,     const void    *model);
-size_t assert_funpeq_msg        (unit_test_context_t *context, char *msg_out, size_t msg_out_size, const char *tag, tests_funp_t   check,     tests_funp_t   model);
+size_t assert_objpeq_msg       (unit_test_context_t *context, char *msg_out, size_t msg_out_size, const char *tag, const void    *check,     const void    *model);
+size_t assert_funpeq_msg       (unit_test_context_t *context, char *msg_out, size_t msg_out_size, const char *tag, tests_funp_t   check,     tests_funp_t   model);
 
-size_t assert_streqz_msg        (unit_test_context_t *context, char *msg_out, size_t msg_out_size, const char *tag, const char    *check,     const char    *model);
-size_t assert_streqn_msg        (unit_test_context_t *context, char *msg_out, size_t msg_out_size, const char *tag, const char    *check,     const char    *model, size_t max_len);
+size_t assert_intle_msg        (unit_test_context_t *context, char *msg_out, size_t msg_out_size, const char *tag, int            check,     int            baseline);
+size_t assert_uintle_msg       (unit_test_context_t *context, char *msg_out, size_t msg_out_size, const char *tag, unsigned int   check,     unsigned int   baseline);
+size_t assert_longle_msg       (unit_test_context_t *context, char *msg_out, size_t msg_out_size, const char *tag, long           check,     long           baseline);
+size_t assert_ulongle_msg      (unit_test_context_t *context, char *msg_out, size_t msg_out_size, const char *tag, unsigned long  check,     unsigned long  baseline);
+size_t assert_sizele_msg       (unit_test_context_t *context, char *msg_out, size_t msg_out_size, const char *tag, size_t         check,     size_t         baseline);
+size_t assert_ptrdiffle_msg    (unit_test_context_t *context, char *msg_out, size_t msg_out_size, const char *tag, ptrdiff_t      check,     ptrdiff_t      baseline);
 
-size_t assert_memeq_msg         (unit_test_context_t *context, char *msg_out, size_t msg_out_size, const char *tag, void          *check,     void          *model, size_t n);
+size_t assert_objple_msg       (unit_test_context_t *context, char *msg_out, size_t msg_out_size, const char *tag, const void    *check,     const void    *baseline);
+size_t assert_funple_msg       (unit_test_context_t *context, char *msg_out, size_t msg_out_size, const char *tag, tests_funp_t   check,     tests_funp_t   baseline);
+
+size_t assert_streqz_msg       (unit_test_context_t *context, char *msg_out, size_t msg_out_size, const char *tag, const char    *check,     const char    *baseline);
+size_t assert_streqn_msg       (unit_test_context_t *context, char *msg_out, size_t msg_out_size, const char *tag, const char    *check,     const char    *baseline, size_t max_len);
+
+size_t assert_memeq_msg        (unit_test_context_t *context, char *msg_out, size_t msg_out_size, const char *tag, void          *check,     void          *model, size_t n);
 
 
-size_t assert_false_msg         (unit_test_context_t *context, char *msg_out, size_t msg_out_size, const char *tag, int            condition);
+size_t assert_false_msg        (unit_test_context_t *context, char *msg_out, size_t msg_out_size, const char *tag, int            condition);
 
-size_t assert_not_inteq_msg     (unit_test_context_t *context, char *msg_out, size_t msg_out_size, const char *tag, int            check,     int            model);
-size_t assert_not_uinteq_msg    (unit_test_context_t *context, char *msg_out, size_t msg_out_size, const char *tag, unsigned int   check,     unsigned int   model);
-size_t assert_not_ulongeq_msg   (unit_test_context_t *context, char *msg_out, size_t msg_out_size, const char *tag, unsigned long  check,     unsigned long  model);
-size_t assert_not_sizeeq_msg    (unit_test_context_t *context, char *msg_out, size_t msg_out_size, const char *tag, size_t         check,     size_t         model);
+size_t assert_not_inteq_msg    (unit_test_context_t *context, char *msg_out, size_t msg_out_size, const char *tag, int            check,     int            model);
+size_t assert_not_longeq_msg   (unit_test_context_t *context, char *msg_out, size_t msg_out_size, const char *tag, long           check,     long           model);
+size_t assert_not_uinteq_msg   (unit_test_context_t *context, char *msg_out, size_t msg_out_size, const char *tag, unsigned int   check,     unsigned int   model);
+size_t assert_not_ulongeq_msg  (unit_test_context_t *context, char *msg_out, size_t msg_out_size, const char *tag, unsigned long  check,     unsigned long  model);
+size_t assert_not_sizeeq_msg   (unit_test_context_t *context, char *msg_out, size_t msg_out_size, const char *tag, size_t         check,     size_t         model);
+size_t assert_not_ptrdiffeq_msg(unit_test_context_t *context, char *msg_out, size_t msg_out_size, const char *tag, ptrdiff_t      check,     ptrdiff_t      model);
 
-size_t assert_not_objpeq_msg    (unit_test_context_t *context, char *msg_out, size_t msg_out_size, const char *tag, const void    *check,     const void    *model);
-size_t assert_not_funpeq_msg    (unit_test_context_t *context, char *msg_out, size_t msg_out_size, const char *tag, tests_funp_t   check,     tests_funp_t   model);
+size_t assert_not_objpeq_msg   (unit_test_context_t *context, char *msg_out, size_t msg_out_size, const char *tag, const void    *check,     const void    *model);
+size_t assert_not_funpeq_msg   (unit_test_context_t *context, char *msg_out, size_t msg_out_size, const char *tag, tests_funp_t   check,     tests_funp_t   model);
 
-size_t assert_not_streqz_msg    (unit_test_context_t *context, char *msg_out, size_t msg_out_size, const char *tag, const char    *check,     const char    *model);
-size_t assert_not_streqn_msg    (unit_test_context_t *context, char *msg_out, size_t msg_out_size, const char *tag, const char    *check,     const char    *model, size_t max_len);
+size_t assert_not_intle_msg    (unit_test_context_t *context, char *msg_out, size_t msg_out_size, const char *tag, int            check,     int            baseline);
+size_t assert_not_uintle_msg   (unit_test_context_t *context, char *msg_out, size_t msg_out_size, const char *tag, unsigned int   check,     unsigned int   baseline);
+size_t assert_not_longle_msg   (unit_test_context_t *context, char *msg_out, size_t msg_out_size, const char *tag, long           check,     long           baseline);
+size_t assert_not_ulongle_msg  (unit_test_context_t *context, char *msg_out, size_t msg_out_size, const char *tag, unsigned long  check,     unsigned long  baseline);
+size_t assert_not_sizele_msg   (unit_test_context_t *context, char *msg_out, size_t msg_out_size, const char *tag, size_t         check,     size_t         baseline);
+size_t assert_not_ptrdiffle_msg(unit_test_context_t *context, char *msg_out, size_t msg_out_size, const char *tag, ptrdiff_t      check,     ptrdiff_t      baseline);
 
-size_t assert_not_memeq_msg     (unit_test_context_t *context, char *msg_out, size_t msg_out_size, const char *tag, void          *check,     void          *model, size_t n);
+size_t assert_not_objple_msg   (unit_test_context_t *context, char *msg_out, size_t msg_out_size, const char *tag, const void    *check,     const void    *baseline);
+size_t assert_not_funple_msg   (unit_test_context_t *context, char *msg_out, size_t msg_out_size, const char *tag, tests_funp_t   check,     tests_funp_t   baseline);
+
+size_t assert_not_streqz_msg   (unit_test_context_t *context, char *msg_out, size_t msg_out_size, const char *tag, const char    *check,     const char    *model);
+size_t assert_not_streqn_msg   (unit_test_context_t *context, char *msg_out, size_t msg_out_size, const char *tag, const char    *check,     const char    *model, size_t max_len);
+
+size_t assert_not_memeq_msg    (unit_test_context_t *context, char *msg_out, size_t msg_out_size, const char *tag, void          *check,     void          *model, size_t n);
 
 /* ---------------------------------------------------------------- */
 /* Assertions with default error messages; non-zero on failure. */
@@ -362,65 +388,102 @@ size_t assert_not_memeq_msg     (unit_test_context_t *context, char *msg_out, si
 #define ASSERT_ARGS_CONTEXT( context, tag)          ASSERT_ARGS_COMPLETE(context, NULL, tag)
 #define ASSERT_ARGS_COMPLETE(context, err_msg, tag) context, err_msg, tag
 
-unit_test_result_t assert_success             (unit_test_context_t *context);
-unit_test_result_t assert_successful          (ASSERT_PARAMS);
-unit_test_result_t assert_failure             (ASSERT_PARAMS);
-unit_test_result_t assert_failure_continue    (ASSERT_PARAMS);
-
-unit_test_result_t assert_true                (ASSERT_PARAMS, int           condition);
-unit_test_result_t assert_true_continue       (ASSERT_PARAMS, int           condition);
-
-unit_test_result_t assert_inteq               (ASSERT_PARAMS, int           check,     int            model);
-unit_test_result_t assert_inteq_continue      (ASSERT_PARAMS, int           check,     int            model);
-unit_test_result_t assert_uinteq              (ASSERT_PARAMS, unsigned int  check,     unsigned int   model);
-unit_test_result_t assert_uinteq_continue     (ASSERT_PARAMS, unsigned int  check,     unsigned int   model);
-unit_test_result_t assert_ulongeq             (ASSERT_PARAMS, unsigned long check,     unsigned long  model);
-unit_test_result_t assert_ulongeq_continue    (ASSERT_PARAMS, unsigned long check,     unsigned long  model);
-unit_test_result_t assert_sizeeq              (ASSERT_PARAMS, size_t        check,     size_t         model);
-unit_test_result_t assert_sizeeq_continue     (ASSERT_PARAMS, size_t        check,     size_t         model);
-
-unit_test_result_t assert_objpeq              (ASSERT_PARAMS, const void   *check,     const void    *model);
-unit_test_result_t assert_objpeq_continue     (ASSERT_PARAMS, const void   *check,     const void    *model);
-unit_test_result_t assert_funpeq              (ASSERT_PARAMS, tests_funp_t  check,     tests_funp_t   model);
-unit_test_result_t assert_funpeq_continue     (ASSERT_PARAMS, tests_funp_t  check,     tests_funp_t   model);
-
-unit_test_result_t assert_streqz              (ASSERT_PARAMS, const char   *check,     const char    *model);
-unit_test_result_t assert_streqz_continue     (ASSERT_PARAMS, const char   *check,     const char    *model);
-unit_test_result_t assert_streqn              (ASSERT_PARAMS, const char   *check,     const char    *model, size_t max_len);
-unit_test_result_t assert_streqn_continue     (ASSERT_PARAMS, const char   *check,     const char    *model, size_t max_len);
-unit_test_result_t assert_nstreq              (ASSERT_PARAMS, size_t max_len, const char   *check,     const char    *model);
-unit_test_result_t assert_nstreq_continue     (ASSERT_PARAMS, size_t max_len, const char   *check,     const char    *model);
-
-unit_test_result_t assert_memeq               (ASSERT_PARAMS, void         *check,     void          *model, size_t n);
-unit_test_result_t assert_memeq_continue      (ASSERT_PARAMS, void         *check,     void          *model, size_t n);
+unit_test_result_t assert_success                (unit_test_context_t *context);
+unit_test_result_t assert_successful             (ASSERT_PARAMS);
+unit_test_result_t assert_failure                (ASSERT_PARAMS);
+unit_test_result_t assert_failure_continue       (ASSERT_PARAMS);
 
 
-unit_test_result_t assert_false               (ASSERT_PARAMS, int           condition);
-unit_test_result_t assert_false_continue      (ASSERT_PARAMS, int           condition);
+unit_test_result_t assert_true                   (ASSERT_PARAMS, int           condition);
+unit_test_result_t assert_true_continue          (ASSERT_PARAMS, int           condition);
 
-unit_test_result_t assert_not_inteq           (ASSERT_PARAMS, int           check,     int            model);
-unit_test_result_t assert_not_inteq_continue  (ASSERT_PARAMS, int           check,     int            model);
-unit_test_result_t assert_not_uinteq          (ASSERT_PARAMS, unsigned int  check,     unsigned int   model);
-unit_test_result_t assert_not_uinteq_continue (ASSERT_PARAMS, unsigned int  check,     unsigned int   model);
-unit_test_result_t assert_not_ulongeq         (ASSERT_PARAMS, unsigned long check,     unsigned long  model);
-unit_test_result_t assert_not_ulongeq_continue(ASSERT_PARAMS, unsigned long check,     unsigned long  model);
-unit_test_result_t assert_not_sizeeq          (ASSERT_PARAMS, size_t        check,     size_t         model);
-unit_test_result_t assert_not_sizeeq_continue (ASSERT_PARAMS, size_t        check,     size_t         model);
+unit_test_result_t assert_inteq                  (ASSERT_PARAMS, int           check,     int            model);
+unit_test_result_t assert_inteq_continue         (ASSERT_PARAMS, int           check,     int            model);
+unit_test_result_t assert_uinteq                 (ASSERT_PARAMS, unsigned int  check,     unsigned int   model);
+unit_test_result_t assert_uinteq_continue        (ASSERT_PARAMS, unsigned int  check,     unsigned int   model);
+unit_test_result_t assert_ulongeq                (ASSERT_PARAMS, unsigned long check,     unsigned long  model);
+unit_test_result_t assert_ulongeq_continue       (ASSERT_PARAMS, unsigned long check,     unsigned long  model);
+unit_test_result_t assert_sizeeq                 (ASSERT_PARAMS, size_t        check,     size_t         model);
+unit_test_result_t assert_sizeeq_continue        (ASSERT_PARAMS, size_t        check,     size_t         model);
+unit_test_result_t assert_ptrdiffeq              (ASSERT_PARAMS, ptrdiff_t     check,     ptrdiff_t      model);
+unit_test_result_t assert_ptrdiffeq_continue     (ASSERT_PARAMS, ptrdiff_t     check,     ptrdiff_t      model);
 
-unit_test_result_t assert_not_objpeq          (ASSERT_PARAMS, const void   *check,     const void    *model);
-unit_test_result_t assert_not_objpeq_continue (ASSERT_PARAMS, const void   *check,     const void    *model);
-unit_test_result_t assert_not_funpeq          (ASSERT_PARAMS, tests_funp_t  check,     tests_funp_t   model);
-unit_test_result_t assert_not_funpeq_continue (ASSERT_PARAMS, tests_funp_t  check,     tests_funp_t   model);
+unit_test_result_t assert_objpeq                 (ASSERT_PARAMS, const void   *check,     const void    *model);
+unit_test_result_t assert_objpeq_continue        (ASSERT_PARAMS, const void   *check,     const void    *model);
+unit_test_result_t assert_funpeq                 (ASSERT_PARAMS, tests_funp_t  check,     tests_funp_t   model);
+unit_test_result_t assert_funpeq_continue        (ASSERT_PARAMS, tests_funp_t  check,     tests_funp_t   model);
 
-unit_test_result_t assert_not_streqz          (ASSERT_PARAMS, const char   *check,     const char    *model);
-unit_test_result_t assert_not_streqz_continue (ASSERT_PARAMS, const char   *check,     const char    *model);
-unit_test_result_t assert_not_streqn          (ASSERT_PARAMS, const char   *check,     const char    *model, size_t max_len);
-unit_test_result_t assert_not_streqn_continue (ASSERT_PARAMS, const char   *check,     const char    *model, size_t max_len);
-unit_test_result_t assert_not_nstreq          (ASSERT_PARAMS, size_t max_len, const char   *check,     const char    *model);
-unit_test_result_t assert_not_nstreq_continue (ASSERT_PARAMS, size_t max_len, const char   *check,     const char    *model);
+unit_test_result_t assert_intle                  (ASSERT_PARAMS, int           check,     int            baseline);
+unit_test_result_t assert_intle_continue         (ASSERT_PARAMS, int           check,     int            baseline);
+unit_test_result_t assert_uintle                 (ASSERT_PARAMS, unsigned int  check,     unsigned int   baseline);
+unit_test_result_t assert_uintle_continue        (ASSERT_PARAMS, unsigned int  check,     unsigned int   baseline);
+unit_test_result_t assert_ulongle                (ASSERT_PARAMS, unsigned long check,     unsigned long  baseline);
+unit_test_result_t assert_ulongle_continue       (ASSERT_PARAMS, unsigned long check,     unsigned long  baseline);
+unit_test_result_t assert_sizele                 (ASSERT_PARAMS, size_t        check,     size_t         baseline);
+unit_test_result_t assert_sizele_continue        (ASSERT_PARAMS, size_t        check,     size_t         baseline);
+unit_test_result_t assert_ptrdiffle              (ASSERT_PARAMS, ptrdiff_t     check,     ptrdiff_t      baseline);
+unit_test_result_t assert_ptrdiffle_continue     (ASSERT_PARAMS, ptrdiff_t     check,     ptrdiff_t      baseline);
 
-unit_test_result_t assert_not_memeq           (ASSERT_PARAMS, void         *check,     void          *model, size_t n);
-unit_test_result_t assert_not_memeq_continue  (ASSERT_PARAMS, void         *check,     void          *model, size_t n);
+unit_test_result_t assert_objple                 (ASSERT_PARAMS, const void   *check,     const void    *baseline);
+unit_test_result_t assert_objple_continue        (ASSERT_PARAMS, const void   *check,     const void    *baseline);
+unit_test_result_t assert_funple                 (ASSERT_PARAMS, tests_funp_t  check,     tests_funp_t   baseline);
+unit_test_result_t assert_funple_continue        (ASSERT_PARAMS, tests_funp_t  check,     tests_funp_t   baseline);
+
+unit_test_result_t assert_streqz                 (ASSERT_PARAMS, const char   *check,     const char    *model);
+unit_test_result_t assert_streqz_continue        (ASSERT_PARAMS, const char   *check,     const char    *model);
+unit_test_result_t assert_streqn                 (ASSERT_PARAMS, const char   *check,     const char    *model, size_t max_len);
+unit_test_result_t assert_streqn_continue        (ASSERT_PARAMS, const char   *check,     const char    *model, size_t max_len);
+unit_test_result_t assert_nstreq                 (ASSERT_PARAMS, size_t max_len, const char   *check,     const char    *model);
+unit_test_result_t assert_nstreq_continue        (ASSERT_PARAMS, size_t max_len, const char   *check,     const char    *model);
+
+unit_test_result_t assert_memeq                  (ASSERT_PARAMS, void         *check,     void          *model, size_t n);
+unit_test_result_t assert_memeq_continue         (ASSERT_PARAMS, void         *check,     void          *model, size_t n);
+
+
+unit_test_result_t assert_false                  (ASSERT_PARAMS, int           condition);
+unit_test_result_t assert_false_continue         (ASSERT_PARAMS, int           condition);
+
+unit_test_result_t assert_not_inteq              (ASSERT_PARAMS, int           check,     int            model);
+unit_test_result_t assert_not_inteq_continue     (ASSERT_PARAMS, int           check,     int            model);
+unit_test_result_t assert_not_uinteq             (ASSERT_PARAMS, unsigned int  check,     unsigned int   model);
+unit_test_result_t assert_not_uinteq_continue    (ASSERT_PARAMS, unsigned int  check,     unsigned int   model);
+unit_test_result_t assert_not_ulongeq            (ASSERT_PARAMS, unsigned long check,     unsigned long  model);
+unit_test_result_t assert_not_ulongeq_continue   (ASSERT_PARAMS, unsigned long check,     unsigned long  model);
+unit_test_result_t assert_not_sizeeq             (ASSERT_PARAMS, size_t        check,     size_t         model);
+unit_test_result_t assert_not_sizeeq_continue    (ASSERT_PARAMS, size_t        check,     size_t         model);
+unit_test_result_t assert_not_ptrdiffeq          (ASSERT_PARAMS, ptrdiff_t     check,     ptrdiff_t      model);
+unit_test_result_t assert_not_ptrdiffeq_continue (ASSERT_PARAMS, ptrdiff_t     check,     ptrdiff_t      model);
+
+unit_test_result_t assert_not_objpeq             (ASSERT_PARAMS, const void   *check,     const void    *model);
+unit_test_result_t assert_not_objpeq_continue    (ASSERT_PARAMS, const void   *check,     const void    *model);
+unit_test_result_t assert_not_funpeq             (ASSERT_PARAMS, tests_funp_t  check,     tests_funp_t   model);
+unit_test_result_t assert_not_funpeq_continue    (ASSERT_PARAMS, tests_funp_t  check,     tests_funp_t   model);
+
+unit_test_result_t assert_not_intle              (ASSERT_PARAMS, int           check,     int            baseline);
+unit_test_result_t assert_not_intle_continue     (ASSERT_PARAMS, int           check,     int            baseline);
+unit_test_result_t assert_not_uintle             (ASSERT_PARAMS, unsigned int  check,     unsigned int   baseline);
+unit_test_result_t assert_not_uintle_continue    (ASSERT_PARAMS, unsigned int  check,     unsigned int   baseline);
+unit_test_result_t assert_not_ulongle            (ASSERT_PARAMS, unsigned long check,     unsigned long  baseline);
+unit_test_result_t assert_not_ulongle_continue   (ASSERT_PARAMS, unsigned long check,     unsigned long  baseline);
+unit_test_result_t assert_not_sizele             (ASSERT_PARAMS, size_t        check,     size_t         baseline);
+unit_test_result_t assert_not_sizele_continue    (ASSERT_PARAMS, size_t        check,     size_t         baseline);
+unit_test_result_t assert_not_ptrdiffle          (ASSERT_PARAMS, ptrdiff_t     check,     ptrdiff_t      baseline);
+unit_test_result_t assert_not_ptrdiffle_continue (ASSERT_PARAMS, ptrdiff_t     check,     ptrdiff_t      baseline);
+
+unit_test_result_t assert_not_objple             (ASSERT_PARAMS, const void   *check,     const void    *baseline);
+unit_test_result_t assert_not_objple_continue    (ASSERT_PARAMS, const void   *check,     const void    *baseline);
+unit_test_result_t assert_not_funple             (ASSERT_PARAMS, tests_funp_t  check,     tests_funp_t   baseline);
+unit_test_result_t assert_not_funple_continue    (ASSERT_PARAMS, tests_funp_t  check,     tests_funp_t   baseline);
+
+unit_test_result_t assert_not_streqz             (ASSERT_PARAMS, const char   *check,     const char    *model);
+unit_test_result_t assert_not_streqz_continue    (ASSERT_PARAMS, const char   *check,     const char    *model);
+unit_test_result_t assert_not_streqn             (ASSERT_PARAMS, const char   *check,     const char    *model, size_t max_len);
+unit_test_result_t assert_not_streqn_continue    (ASSERT_PARAMS, const char   *check,     const char    *model, size_t max_len);
+unit_test_result_t assert_not_nstreq             (ASSERT_PARAMS, size_t max_len, const char   *check,     const char    *model);
+unit_test_result_t assert_not_nstreq_continue    (ASSERT_PARAMS, size_t max_len, const char   *check,     const char    *model);
+
+unit_test_result_t assert_not_memeq              (ASSERT_PARAMS, void         *check,     void          *model, size_t n);
+unit_test_result_t assert_not_memeq_continue     (ASSERT_PARAMS, void         *check,     void          *model, size_t n);
 
 /* ---------------------------------------------------------------- */
 /* Utilities.                                                       */

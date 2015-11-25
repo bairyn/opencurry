@@ -31,8 +31,9 @@
  */
 
 /* stddef.h:
- *   - size_t
  *   - NULL
+ *   - ptrdiff_t
+ *   - size_t
  */
 #include <stddef.h>
 
@@ -1363,8 +1364,8 @@ size_t assert_msg_check_snprintf(unit_test_context_t *context, int snprintf_resu
     strncpy(buf, msg_out, size_terminator);
 
     len = snprintf
-      ( (char *) msg_out, (size_t) size_terminator
-      , "assert_msg_check_snprintf:\n"
+      ( (char *) msg_out, (size_t) size_terminator, ""
+        "assert_msg_check_snprintf:\n"
         "  Error generating error message!\n"
         "  A call to \"snprintf\" failed with error code '%d'.\n"
         "\n"
@@ -1372,6 +1373,7 @@ size_t assert_msg_check_snprintf(unit_test_context_t *context, int snprintf_resu
         "\n"
         "Original error buffer, with trailing newline:\n"
         "%s\n"
+
       , snprintf_result
       , tag ? "tag: " : "(no tag provided)"
       , tag ? tag     : ""
@@ -1428,8 +1430,12 @@ size_t assert_msg_append_details(unit_test_context_t *context, size_t len, char 
   context->details_buf[context->details_buf_len] = 0;
 
   l = snprintf
-    ( (char *) (msg_out + len), (size_t) (terminator_size(size_minus(msg_out_size, len)))
-    , "\n\n%s"
+    ( (char *) (msg_out + len), (size_t) (terminator_size(size_minus(msg_out_size, len))), ""
+      "%s"
+      "%s"
+      "%s"
+
+    , context->err_buf_len >= 1 && context->err_buf[context->err_buf_len - 1] == '\n' ? "" : "\n"
     , context->err_buf_len >= 1 && context->err_buf[context->err_buf_len - 1] == '\n' ? "" : "\n"
     , (const char *) context->details_buf
     );
@@ -1444,8 +1450,9 @@ size_t assert_failure_msg(unit_test_context_t *context, char *msg_out, size_t ms
   int    l;
 
   l = snprintf
-    ( (char *) msg_out, (size_t) terminator_size(msg_out_size)
-    , "Assertion '%s' failed - no details provided.\n"
+    ( (char *) msg_out, (size_t) terminator_size(msg_out_size), ""
+      "Assertion '%s' failed - no details provided.\n"
+
     , (const char *) tag
     );
   if (l < 0) return assert_msg_check_snprintf(context, l, msg_out, msg_out_size, tag, &context->is_snprintf_err);
@@ -1458,8 +1465,9 @@ size_t assert_true_msg(unit_test_context_t *context, char *msg_out, size_t msg_o
   int    l;
 
   l = snprintf
-    ( (char *) msg_out, (size_t) terminator_size(msg_out_size)
-    , "Boolean assertion '%s' failed - the condition be true, but it is false: %d (bool: %d)\n"
+    ( (char *) msg_out, (size_t) terminator_size(msg_out_size), ""
+      "Boolean assertion '%s' failed - the condition be true, but it is false: %d (bool: %d)\n"
+
     , (const char *) tag
     , (int) condition
     , (int) !!condition
@@ -1474,8 +1482,11 @@ size_t assert_inteq_msg(unit_test_context_t *context, char *msg_out, size_t msg_
   int    l;
 
   l = snprintf
-    ( (char *) msg_out, (size_t) terminator_size(msg_out_size)
-    , "Assertion '%s' failed - integers must be equal, but differ:\n  should be:   % d\n  actually is: % d\n"
+    ( (char *) msg_out, (size_t) terminator_size(msg_out_size), ""
+      "Assertion '%s' failed - integers must be equal, but differ:\n"
+      "  should be:   % d\n"
+      "  actually is: % d\n"
+
     , (const char *) tag
     , (int) model
     , (int) check
@@ -1490,11 +1501,33 @@ size_t assert_uinteq_msg(unit_test_context_t *context, char *msg_out, size_t msg
   int    l;
 
   l = snprintf
-    ( (char *) msg_out, (size_t) terminator_size(msg_out_size)
-    , "Assertion '%s' failed - unsigned integers must be equal, but differ:\n  should be:   % u\n  actually is: % u\n"
+    ( (char *) msg_out, (size_t) terminator_size(msg_out_size), ""
+      "Assertion '%s' failed - unsigned integers must be equal, but differ:\n"
+      "  should be:   %u\n"
+      "  actually is: %u\n"
+
     , (const char *) tag
     , (unsigned int) model
     , (unsigned int) check
+    );
+  if (l < 0) return assert_msg_check_snprintf(context, l, msg_out, msg_out_size, tag, &context->is_snprintf_err);
+
+  return assert_msg_append_details(context, (size_t) l, msg_out, msg_out_size, tag);
+}
+
+size_t assert_longeq_msg(unit_test_context_t *context, char *msg_out, size_t msg_out_size, const char *tag, long check, long model)
+{
+  int    l;
+
+  l = snprintf
+    ( (char *) msg_out, (size_t) terminator_size(msg_out_size), ""
+      "Assertion '%s' failed - long integers must be equal, but differ:\n"
+      "  should be:   % l\n"
+      "  actually is: % l\n"
+
+    , (const char *) tag
+    , (long) model
+    , (long) check
     );
   if (l < 0) return assert_msg_check_snprintf(context, l, msg_out, msg_out_size, tag, &context->is_snprintf_err);
 
@@ -1506,8 +1539,11 @@ size_t assert_ulongeq_msg(unit_test_context_t *context, char *msg_out, size_t ms
   int    l;
 
   l = snprintf
-    ( (char *) msg_out, (size_t) terminator_size(msg_out_size)
-    , "Assertion '%s' failed - unsigned long integers must be equal, but differ:\n  should be:   %lu\n  actually is: %lu\n"
+    ( (char *) msg_out, (size_t) terminator_size(msg_out_size), ""
+      "Assertion '%s' failed - unsigned long integers must be equal, but differ:\n"
+      "  should be:   %lu\n"
+      "  actually is: %lu\n"
+
     , (const char *) tag
     , (unsigned long) model
     , (unsigned long) check
@@ -1522,11 +1558,33 @@ size_t assert_sizeeq_msg(unit_test_context_t *context, char *msg_out, size_t msg
   int    l;
 
   l = snprintf
-    ( (char *) msg_out, (size_t) terminator_size(msg_out_size)
-    , "Assertion '%s' failed - size_t integers must be equal, but differ:\n  should be:   %zu\n  actually is: %zu\n"
+    ( (char *) msg_out, (size_t) terminator_size(msg_out_size), ""
+      "Assertion '%s' failed - size_t integers must be equal, but differ:\n"
+      "  should be:   %zu\n"
+      "  actually is: %zu\n"
+
     , (const char *) tag
     , (size_t) model
     , (size_t) check
+    );
+  if (l < 0) return assert_msg_check_snprintf(context, l, msg_out, msg_out_size, tag, &context->is_snprintf_err);
+
+  return assert_msg_append_details(context, (size_t) l, msg_out, msg_out_size, tag);
+}
+
+size_t assert_ptrdiffeq_msg(unit_test_context_t *context, char *msg_out, size_t msg_out_size, const char *tag, ptrdiff_t check, ptrdiff_t model)
+{
+  int    l;
+
+  l = snprintf
+    ( (char *) msg_out, (size_t) terminator_size(msg_out_size), ""
+      "Assertion '%s' failed - ptrdiff_t integers must be equal, but differ:\n"
+      "  should be:   % t\n"
+      "  actually is: % t\n"
+
+    , (const char *) tag
+    , (ptrdiff_t) model
+    , (ptrdiff_t) check
     );
   if (l < 0) return assert_msg_check_snprintf(context, l, msg_out, msg_out_size, tag, &context->is_snprintf_err);
 
@@ -1538,8 +1596,11 @@ size_t assert_objpeq_msg(unit_test_context_t *context, char *msg_out, size_t msg
   int    l;
 
   l = snprintf
-    ( (char *) msg_out, (size_t) terminator_size(msg_out_size)
-    , "Assertion '%s' failed - object pointers must be equal, but differ:\n  should be:   %p\n  actually is: %p\n"
+    ( (char *) msg_out, (size_t) terminator_size(msg_out_size), ""
+      "Assertion '%s' failed - object pointers must be equal, but differ:\n"
+      "  should be:   %p\n"
+      "  actually is: %p\n"
+
     , (const char *) tag
     , (void *) model
     , (void *) check
@@ -1554,8 +1615,11 @@ size_t assert_funpeq_msg(unit_test_context_t *context, char *msg_out, size_t msg
   int    l;
 
   l = snprintf
-    ( (char *) msg_out, (size_t) terminator_size(msg_out_size)
-    , "Assertion '%s' failed - function pointers must be equal, but differ:\n  should be:   %p\n  actually is: %p\n"
+    ( (char *) msg_out, (size_t) terminator_size(msg_out_size), ""
+      "Assertion '%s' failed - function pointers must be equal, but differ:\n"
+      "  should be:   %p\n"
+      "  actually is: %p\n"
+
     , (const char *) tag
     , (void *) *((void **) &model)
     , (void *) *((void **) &check)
@@ -1565,13 +1629,189 @@ size_t assert_funpeq_msg(unit_test_context_t *context, char *msg_out, size_t msg
   return assert_msg_append_details(context, (size_t) l, msg_out, msg_out_size, tag);
 }
 
+
+size_t assert_intle_msg(unit_test_context_t *context, char *msg_out, size_t msg_out_size, const char *tag, int check, int baseline)
+{
+  int    l;
+
+  l = snprintf
+    ( (char *) msg_out, (size_t) terminator_size(msg_out_size), ""
+      "Assertion '%s' failed - integers must be equal or increasing, but are decreasing:\n"
+      "  check:       % d\n"
+      "    should be: %s<=\n"
+      "  baseline:    % d\n"
+      "    but isn't.\n"
+
+    , (const char *) tag
+    , (int) check
+    , (const char *) (((check < 0) || (baseline < 0)) ? " " : "")
+    , (int) baseline
+    );
+  if (l < 0) return assert_msg_check_snprintf(context, l, msg_out, msg_out_size, tag, &context->is_snprintf_err);
+
+  return assert_msg_append_details(context, (size_t) l, msg_out, msg_out_size, tag);
+}
+
+size_t assert_uintle_msg(unit_test_context_t *context, char *msg_out, size_t msg_out_size, const char *tag, unsigned int check, unsigned int baseline)
+{
+  int    l;
+
+  l = snprintf
+    ( (char *) msg_out, (size_t) terminator_size(msg_out_size), ""
+      "Assertion '%s' failed - unsigned integers must be equal or increasing, but are decreasing:\n"
+      "  check:       %u\n"
+      "    should be: <=\n"
+      "  baseline:    %u\n"
+      "    but isn't.\n"
+
+    , (const char *) tag
+    , (unsigned int) check
+    , (unsigned int) baseline
+    );
+  if (l < 0) return assert_msg_check_snprintf(context, l, msg_out, msg_out_size, tag, &context->is_snprintf_err);
+
+  return assert_msg_append_details(context, (size_t) l, msg_out, msg_out_size, tag);
+}
+
+size_t assert_longle_msg(unit_test_context_t *context, char *msg_out, size_t msg_out_size, const char *tag, long check, long baseline)
+{
+  int    l;
+
+  l = snprintf
+    ( (char *) msg_out, (size_t) terminator_size(msg_out_size), ""
+      "Assertion '%s' failed - long integers must be equal or increasing, but are decreasing:\n"
+      "  check:       % l\n"
+      "    should be: %s<=\n"
+      "  baseline:    % l\n"
+      "    but isn't.\n"
+
+    , (const char *) tag
+    , (long) check
+    , (const char *) (((check < 0) || (baseline < 0)) ? " " : "")
+    , (long) baseline
+    );
+  if (l < 0) return assert_msg_check_snprintf(context, l, msg_out, msg_out_size, tag, &context->is_snprintf_err);
+
+  return assert_msg_append_details(context, (size_t) l, msg_out, msg_out_size, tag);
+}
+
+size_t assert_ulongle_msg(unit_test_context_t *context, char *msg_out, size_t msg_out_size, const char *tag, unsigned long check, unsigned long baseline)
+{
+  int    l;
+
+  l = snprintf
+    ( (char *) msg_out, (size_t) terminator_size(msg_out_size), ""
+      "Assertion '%s' failed - unsigned long integers must be equal or increasing, but are decreasing:\n"
+      "  check:       %lu\n"
+      "    should be: <=\n"
+      "  baseline:    %lu\n"
+      "    but isn't.\n"
+
+    , (const char *) tag
+    , (unsigned long) check
+    , (unsigned long) baseline
+    );
+  if (l < 0) return assert_msg_check_snprintf(context, l, msg_out, msg_out_size, tag, &context->is_snprintf_err);
+
+  return assert_msg_append_details(context, (size_t) l, msg_out, msg_out_size, tag);
+}
+
+size_t assert_sizele_msg(unit_test_context_t *context, char *msg_out, size_t msg_out_size, const char *tag, size_t check, size_t baseline)
+{
+  int    l;
+
+  l = snprintf
+    ( (char *) msg_out, (size_t) terminator_size(msg_out_size), ""
+      "Assertion '%s' failed - size_t integers must be equal or increasing, but are decreasing:\n"
+      "  check:       %zu\n"
+      "    should be: <=\n"
+      "  baseline:    %zu\n"
+      "    but isn't.\n"
+
+    , (const char *) tag
+    , (size_t) check
+    , (size_t) baseline
+    );
+  if (l < 0) return assert_msg_check_snprintf(context, l, msg_out, msg_out_size, tag, &context->is_snprintf_err);
+
+  return assert_msg_append_details(context, (size_t) l, msg_out, msg_out_size, tag);
+}
+
+size_t assert_ptrdiffle_msg(unit_test_context_t *context, char *msg_out, size_t msg_out_size, const char *tag, ptrdiff_t check, ptrdiff_t baseline)
+{
+  int    l;
+
+  l = snprintf
+    ( (char *) msg_out, (size_t) terminator_size(msg_out_size), ""
+      "Assertion '%s' failed - ptrdiff_t integers must be equal or increasing, but are decreasing:\n"
+      "  check:       % t\n"
+      "    should be: %s<=\n"
+      "  baseline:    % t\n"
+      "    but isn't.\n"
+
+    , (const char *) tag
+    , (ptrdiff_t) check
+    , (const char *) (((check < 0) || (baseline < 0)) ? " " : "")
+    , (ptrdiff_t) baseline
+    );
+  if (l < 0) return assert_msg_check_snprintf(context, l, msg_out, msg_out_size, tag, &context->is_snprintf_err);
+
+  return assert_msg_append_details(context, (size_t) l, msg_out, msg_out_size, tag);
+}
+
+size_t assert_objple_msg(unit_test_context_t *context, char *msg_out, size_t msg_out_size, const char *tag, const void *check, const void *baseline)
+{
+  int    l;
+
+  l = snprintf
+    ( (char *) msg_out, (size_t) terminator_size(msg_out_size), ""
+      "Assertion '%s' failed - object pointers must be equal or increasing, but are decreasing:\n"
+      "  check:       %p\n"
+      "    should be: <=\n"
+      "  baseline:    %p\n"
+      "    but isn't.\n"
+
+    , (const char *) tag
+    , (void *) check
+    , (void *) baseline
+    );
+  if (l < 0) return assert_msg_check_snprintf(context, l, msg_out, msg_out_size, tag, &context->is_snprintf_err);
+
+  return assert_msg_append_details(context, (size_t) l, msg_out, msg_out_size, tag);
+}
+
+size_t assert_funple_msg(unit_test_context_t *context, char *msg_out, size_t msg_out_size, const char *tag, tests_funp_t check, tests_funp_t baseline)
+{
+  int    l;
+
+  l = snprintf
+    ( (char *) msg_out, (size_t) terminator_size(msg_out_size), ""
+      "Assertion '%s' failed - function pointers must be equal or increasing, but are decreasing:\n"
+      "  check:       %p\n"
+      "    should be: <=\n"
+      "  baseline:    %p\n"
+      "    but isn't.\n"
+
+    , (const char *) tag
+    , (void *) *((void **) &check)
+    , (void *) *((void **) &baseline)
+    );
+  if (l < 0) return assert_msg_check_snprintf(context, l, msg_out, msg_out_size, tag, &context->is_snprintf_err);
+
+  return assert_msg_append_details(context, (size_t) l, msg_out, msg_out_size, tag);
+}
+
+
 size_t assert_streqz_msg(unit_test_context_t *context, char *msg_out, size_t msg_out_size, const char *tag, const char *check, const char *model)
 {
   int    l;
 
   l = snprintf
-    ( (char *) msg_out, (size_t) terminator_size(msg_out_size)
-    , "Assertion '%s' failed - strings must be equal, but differ:\n  should be:   %s\n  actually is: %s\n"
+    ( (char *) msg_out, (size_t) terminator_size(msg_out_size), ""
+      "Assertion '%s' failed - strings must be equal, but differ:\n"
+      "  should be:   %s\n"
+      "  actually is: %s\n"
+
     , (const char *) tag
     , (const char*) model
     , (const char*) check
@@ -1597,8 +1837,11 @@ size_t assert_streqn_msg(unit_test_context_t *context, char *msg_out, size_t msg
     modelz[max_len] = 0;
 
     l = snprintf
-      ( (char *) msg_out, (size_t) terminator_size(msg_out_size)
-      , "Assertion '%s' failed - strings must be equal, but differ:\n  should be:   %s\n  actually is: %s\n"
+      ( (char *) msg_out, (size_t) terminator_size(msg_out_size), ""
+        "Assertion '%s' failed - strings must be equal, but differ:\n"
+        "  should be:   %s\n"
+        "  actually is: %s\n"
+
       , (const char *) tag
       , (const char *) modelz
       , (const char *) checkz
@@ -1626,8 +1869,9 @@ size_t assert_memeq_msg(unit_test_context_t *context, char *msg_out, size_t msg_
   /* ---------------------------------------------------------------- */
   /* Start writing error message. */
   l = snprintf
-    ( (char *) (msg_out + written), (size_t) terminator_size(size_minus(msg_out_size, written))
-    , "Assertion '%s' failed - '%d' bytes of memory must be equal, but differ:"
+    ( (char *) (msg_out + written), (size_t) terminator_size(size_minus(msg_out_size, written)), ""
+      "Assertion '%s' failed - '%d' bytes of memory must be equal, but differ:"
+
     , (const char *) tag
     , (int) n
     );
@@ -1638,15 +1882,15 @@ size_t assert_memeq_msg(unit_test_context_t *context, char *msg_out, size_t msg_
   /* Hex dump of model: write what the memory should be equal to. */
 
   l = snprintf
-    ( (char *) (msg_out + written), (size_t) terminator_size(size_minus(msg_out_size, written))
-    , "\n"
+    ( (char *) (msg_out + written), (size_t) terminator_size(size_minus(msg_out_size, written)), ""
+      "\n"
     );
   if (l < 0) return assert_msg_check_snprintf(context, l, msg_out, msg_out_size, tag, &context->is_snprintf_err);
   written += l;
 
   l = hexdump_indent_spaces = snprintf
-    ( (char *) (msg_out + written), (size_t) terminator_size(size_minus(msg_out_size, written))
-    , "  should be:"  /* A: Print two extra spaces below only without a newline. */
+    ( (char *) (msg_out + written), (size_t) terminator_size(size_minus(msg_out_size, written)), ""
+      "  should be:"  /* A: Print two extra spaces below only without a newline. */
     );
   if (l < 0) return assert_msg_check_snprintf(context, l, msg_out, msg_out_size, tag, &context->is_snprintf_err);
   written += l;
@@ -1663,15 +1907,15 @@ size_t assert_memeq_msg(unit_test_context_t *context, char *msg_out, size_t msg_
     need_multiple_lines = 1;
 
     l = snprintf
-      ( (char *) (msg_out + written), (size_t) terminator_size(size_minus(msg_out_size, written))
-      , "\n"
+      ( (char *) (msg_out + written), (size_t) terminator_size(size_minus(msg_out_size, written)), ""
+        "\n"
       );
     if (l < 0) return assert_msg_check_snprintf(context, l, msg_out, msg_out_size, tag, &context->is_snprintf_err);
     written += l;
 
     l = hexdump_indent_spaces = snprintf
-      ( (char *) (msg_out + written), (size_t) terminator_size(size_minus(msg_out_size, written))
-      , "    "
+      ( (char *) (msg_out + written), (size_t) terminator_size(size_minus(msg_out_size, written)), ""
+        "    "
       );
     if (l < 0) return assert_msg_check_snprintf(context, l, msg_out, msg_out_size, tag, &context->is_snprintf_err);
     written += l;
@@ -1679,8 +1923,8 @@ size_t assert_memeq_msg(unit_test_context_t *context, char *msg_out, size_t msg_
   else
   {
     l = snprintf
-      ( (char *) (msg_out + written), (size_t) terminator_size(size_minus(msg_out_size, written))
-      , "  "  /* A: No newline, so print two extra spaces for alignment. */
+      ( (char *) (msg_out + written), (size_t) terminator_size(size_minus(msg_out_size, written)), ""
+        "  "  /* A: No newline, so print two extra spaces for alignment. */
       );
     if (l < 0) return assert_msg_check_snprintf(context, l, msg_out, msg_out_size, tag, &context->is_snprintf_err);
     written += l;
@@ -1698,8 +1942,8 @@ size_t assert_memeq_msg(unit_test_context_t *context, char *msg_out, size_t msg_
       cols_printed = hexdump_indent_spaces + byte_print_width;
 
       l = snprintf
-        ( (char *) (msg_out + written), (size_t) terminator_size(size_minus(msg_out_size, written))
-        , "\n"
+        ( (char *) (msg_out + written), (size_t) terminator_size(size_minus(msg_out_size, written)), ""
+          "\n"
         );
       if (l < 0) return assert_msg_check_snprintf(context, l, msg_out, msg_out_size, tag, &context->is_snprintf_err);
       written += l;
@@ -1707,8 +1951,8 @@ size_t assert_memeq_msg(unit_test_context_t *context, char *msg_out, size_t msg_
       for (j = 0; j < hexdump_indent_spaces; ++j)
       {
         l = snprintf
-          ( (char *) (msg_out + written), (size_t) terminator_size(size_minus(msg_out_size, written))
-          , " "
+          ( (char *) (msg_out + written), (size_t) terminator_size(size_minus(msg_out_size, written)), ""
+            " "
           );
         if (l < 0) return assert_msg_check_snprintf(context, l, msg_out, msg_out_size, tag, &context->is_snprintf_err);
         written += l;
@@ -1717,8 +1961,9 @@ size_t assert_memeq_msg(unit_test_context_t *context, char *msg_out, size_t msg_
 
     /* Print the byte. */
     l = snprintf
-      ( (char *) (msg_out + written), (size_t) terminator_size(size_minus(msg_out_size, written))
-      , " 0x%.2X"
+      ( (char *) (msg_out + written), (size_t) terminator_size(size_minus(msg_out_size, written)), ""
+        " 0x%.2X"
+
       , (unsigned int) (((unsigned char *) model)[i])
       );
     if (l < 0) return assert_msg_check_snprintf(context, l, msg_out, msg_out_size, tag, &context->is_snprintf_err);
@@ -1729,15 +1974,15 @@ size_t assert_memeq_msg(unit_test_context_t *context, char *msg_out, size_t msg_
   /* Hex dump of check: write what the memory should be equal to. */
 
   l = snprintf
-    ( (char *) (msg_out + written), (size_t) terminator_size(size_minus(msg_out_size, written))
-    , "\n"
+    ( (char *) (msg_out + written), (size_t) terminator_size(size_minus(msg_out_size, written)), ""
+      "\n"
     );
   if (l < 0) return assert_msg_check_snprintf(context, l, msg_out, msg_out_size, tag, &context->is_snprintf_err);
   written += l;
 
   l = snprintf
-    ( (char *) (msg_out + written), (size_t) terminator_size(size_minus(msg_out_size, written))
-    , "  actually is:"
+    ( (char *) (msg_out + written), (size_t) terminator_size(size_minus(msg_out_size, written)), ""
+      "  actually is:"
     );
   if (l < 0) return assert_msg_check_snprintf(context, l, msg_out, msg_out_size, tag, &context->is_snprintf_err);
   written += l;
@@ -1746,15 +1991,15 @@ size_t assert_memeq_msg(unit_test_context_t *context, char *msg_out, size_t msg_
   if (need_multiple_lines)
   {
     l = snprintf
-      ( (char *) (msg_out + written), (size_t) terminator_size(size_minus(msg_out_size, written))
-      , "\n"
+      ( (char *) (msg_out + written), (size_t) terminator_size(size_minus(msg_out_size, written)), ""
+        "\n"
       );
     if (l < 0) return assert_msg_check_snprintf(context, l, msg_out, msg_out_size, tag, &context->is_snprintf_err);
     written += l;
 
     l = snprintf
-      ( (char *) (msg_out + written), (size_t) terminator_size(size_minus(msg_out_size, written))
-      , "    "
+      ( (char *) (msg_out + written), (size_t) terminator_size(size_minus(msg_out_size, written)), ""
+        "    "
       );
     if (l < 0) return assert_msg_check_snprintf(context, l, msg_out, msg_out_size, tag, &context->is_snprintf_err);
     written += l;
@@ -1771,8 +2016,8 @@ size_t assert_memeq_msg(unit_test_context_t *context, char *msg_out, size_t msg_
       cols_printed = hexdump_indent_spaces + byte_print_width;
 
       l = snprintf
-        ( (char *) (msg_out + written), (size_t) terminator_size(size_minus(msg_out_size, written))
-        , "\n"
+        ( (char *) (msg_out + written), (size_t) terminator_size(size_minus(msg_out_size, written)), ""
+          "\n"
         );
       if (l < 0) return assert_msg_check_snprintf(context, l, msg_out, msg_out_size, tag, &context->is_snprintf_err);
       written += l;
@@ -1780,8 +2025,8 @@ size_t assert_memeq_msg(unit_test_context_t *context, char *msg_out, size_t msg_
       for (j = 0; j < hexdump_indent_spaces; ++j)
       {
         l = snprintf
-          ( (char *) (msg_out + written), (size_t) terminator_size(size_minus(msg_out_size, written))
-          , " "
+          ( (char *) (msg_out + written), (size_t) terminator_size(size_minus(msg_out_size, written)), ""
+            " "
           );
         if (l < 0) return assert_msg_check_snprintf(context, l, msg_out, msg_out_size, tag, &context->is_snprintf_err);
         written += l;
@@ -1790,8 +2035,9 @@ size_t assert_memeq_msg(unit_test_context_t *context, char *msg_out, size_t msg_
 
     /* Print the byte. */
     l = snprintf
-      ( (char *) (msg_out + written), (size_t) terminator_size(size_minus(msg_out_size, written))
-      , " 0x%.2X"
+      ( (char *) (msg_out + written), (size_t) terminator_size(size_minus(msg_out_size, written)), ""
+        " 0x%.2X"
+
       , (unsigned int) (((unsigned char *) check)[i])
       );
     if (l < 0) return assert_msg_check_snprintf(context, l, msg_out, msg_out_size, tag, &context->is_snprintf_err);
@@ -1799,8 +2045,8 @@ size_t assert_memeq_msg(unit_test_context_t *context, char *msg_out, size_t msg_
   }
 
   l = snprintf
-    ( (char *) (msg_out + written), (size_t) terminator_size(size_minus(msg_out_size, written))
-    , "\n"
+    ( (char *) (msg_out + written), (size_t) terminator_size(size_minus(msg_out_size, written)), ""
+      "\n"
     );
   if (l < 0) return assert_msg_check_snprintf(context, l, msg_out, msg_out_size, tag, &context->is_snprintf_err);
   written += l;
@@ -1814,8 +2060,9 @@ size_t assert_false_msg(unit_test_context_t *context, char *msg_out, size_t msg_
   int    l;
 
   l = snprintf
-    ( (char *) msg_out, (size_t) terminator_size(msg_out_size)
-    , "Inverse boolean assertion '%s' failed - the condition be false, but it is true: %d (bool: %d)\n"
+    ( (char *) msg_out, (size_t) terminator_size(msg_out_size), ""
+      "Inverse boolean assertion '%s' failed - the condition be false, but it is true: %d (bool: %d)\n"
+
     , (const char *) tag
     , (int) condition
     , (int) !!condition
@@ -1825,13 +2072,17 @@ size_t assert_false_msg(unit_test_context_t *context, char *msg_out, size_t msg_
   return assert_msg_append_details(context, (size_t) l, msg_out, msg_out_size, tag);
 }
 
+
 size_t assert_not_inteq_msg(unit_test_context_t *context, char *msg_out, size_t msg_out_size, const char *tag, int check, int model)
 {
   int    l;
 
   l = snprintf
-    ( (char *) msg_out, (size_t) terminator_size(msg_out_size)
-    , "Inverse assertion '%s' failed - integers must differ, but they are the same:\n  should differ from:  % d\n  but still is:        % d\n"
+    ( (char *) msg_out, (size_t) terminator_size(msg_out_size), ""
+      "Inverse assertion '%s' failed - integers must differ, but they are the same:\n"
+      "  should differ from:  % d\n"
+      "  but still is:        % d\n"
+
     , (const char *) tag
     , (int) model
     , (int) check
@@ -1846,11 +2097,33 @@ size_t assert_not_uinteq_msg(unit_test_context_t *context, char *msg_out, size_t
   int    l;
 
   l = snprintf
-    ( (char *) msg_out, (size_t) terminator_size(msg_out_size)
-    , "Inverse assertion '%s' failed - unsigned integers must differ, but they are the same:\n  should differ from:  % d\n  but still is:        % d\n"
+    ( (char *) msg_out, (size_t) terminator_size(msg_out_size), ""
+      "Inverse assertion '%s' failed - unsigned integers must differ, but they are the same:\n"
+      "  should differ from:  %u\n"
+      "  but still is:        %u\n"
+
     , (const char *) tag
     , (unsigned int) model
     , (unsigned int) check
+    );
+  if (l < 0) return assert_msg_check_snprintf(context, l, msg_out, msg_out_size, tag, &context->is_snprintf_err);
+
+  return assert_msg_append_details(context, (size_t) l, msg_out, msg_out_size, tag);
+}
+
+size_t assert_not_longeq_msg(unit_test_context_t *context, char *msg_out, size_t msg_out_size, const char *tag, long check, long model)
+{
+  int    l;
+
+  l = snprintf
+    ( (char *) msg_out, (size_t) terminator_size(msg_out_size), ""
+      "Inverse assertion '%s' failed - long integers must differ, but they are the same:\n"
+      "  should differ from:  % l\n"
+      "  but still is:        % l\n"
+
+    , (const char *) tag
+    , (long) model
+    , (long) check
     );
   if (l < 0) return assert_msg_check_snprintf(context, l, msg_out, msg_out_size, tag, &context->is_snprintf_err);
 
@@ -1862,8 +2135,11 @@ size_t assert_not_ulongeq_msg(unit_test_context_t *context, char *msg_out, size_
   int    l;
 
   l = snprintf
-    ( (char *) msg_out, (size_t) terminator_size(msg_out_size)
-    , "Inverse assertion '%s' failed - unsigned long integers must differ, but they are the same:\n  should differ from:  %lu\n  but still is:        %lu\n"
+    ( (char *) msg_out, (size_t) terminator_size(msg_out_size), ""
+      "Inverse assertion '%s' failed - unsigned long integers must differ, but they are the same:\n"
+      "  should differ from:  %lu\n"
+      "  but still is:        %lu\n"
+
     , (const char *) tag
     , (unsigned long) model
     , (unsigned long) check
@@ -1878,11 +2154,33 @@ size_t assert_not_sizeeq_msg(unit_test_context_t *context, char *msg_out, size_t
   int    l;
 
   l = snprintf
-    ( (char *) msg_out, (size_t) terminator_size(msg_out_size)
-    , "Inverse assertion '%s' failed - size_t integers must differ, but they are the same:\n  should differ from:  %zu\n  but still is:        %zu\n"
+    ( (char *) msg_out, (size_t) terminator_size(msg_out_size), ""
+      "Inverse assertion '%s' failed - size_t integers must differ, but they are the same:\n"
+      "  should differ from:  %zu\n"
+      "  but still is:        %zu\n"
+
     , (const char *) tag
     , (size_t) model
     , (size_t) check
+    );
+  if (l < 0) return assert_msg_check_snprintf(context, l, msg_out, msg_out_size, tag, &context->is_snprintf_err);
+
+  return assert_msg_append_details(context, (size_t) l, msg_out, msg_out_size, tag);
+}
+
+size_t assert_not_ptrdiffeq_msg(unit_test_context_t *context, char *msg_out, size_t msg_out_size, const char *tag, ptrdiff_t check, ptrdiff_t model)
+{
+  int    l;
+
+  l = snprintf
+    ( (char *) msg_out, (size_t) terminator_size(msg_out_size), ""
+      "Inverse assertion '%s' failed - ptrdiff_t integers must differ, but they are the same:\n"
+      "  should differ from:  % t\n"
+      "  but still is:        % t\n"
+
+    , (const char *) tag
+    , (ptrdiff_t) model
+    , (ptrdiff_t) check
     );
   if (l < 0) return assert_msg_check_snprintf(context, l, msg_out, msg_out_size, tag, &context->is_snprintf_err);
 
@@ -1894,8 +2192,11 @@ size_t assert_not_objpeq_msg(unit_test_context_t *context, char *msg_out, size_t
   int    l;
 
   l = snprintf
-    ( (char *) msg_out, (size_t) terminator_size(msg_out_size)
-    , "Inverse assertion '%s' failed - object pointers must differ, but they are the same:\n  should differ from:  %p\n  but still is:        %p\n"
+    ( (char *) msg_out, (size_t) terminator_size(msg_out_size), ""
+      "Inverse assertion '%s' failed - object pointers must differ, but they are the same:\n"
+      "  should differ from:  %p\n"
+      "  but still is:        %p\n"
+
     , (const char *) tag
     , (void *) model
     , (void *) check
@@ -1910,8 +2211,11 @@ size_t assert_not_funpeq_msg(unit_test_context_t *context, char *msg_out, size_t
   int    l;
 
   l = snprintf
-    ( (char *) msg_out, (size_t) terminator_size(msg_out_size)
-    , "Inverse assertion '%s' failed - function pointers must differ, but they are the same:\n  should differ from:  %p\n  but still is:        %p\n"
+    ( (char *) msg_out, (size_t) terminator_size(msg_out_size), ""
+      "Inverse assertion '%s' failed - function pointers must differ, but they are the same:\n"
+      "  should differ from:  %p\n"
+      "  but still is:        %p\n"
+
     , (const char *) tag
     , (void *) *((void **) &model)
     , (void *) *((void **) &check)
@@ -1921,13 +2225,185 @@ size_t assert_not_funpeq_msg(unit_test_context_t *context, char *msg_out, size_t
   return assert_msg_append_details(context, (size_t) l, msg_out, msg_out_size, tag);
 }
 
+
+size_t assert_not_intle_msg(unit_test_context_t *context, char *msg_out, size_t msg_out_size, const char *tag, int check, int baseline)
+{
+  int    l;
+
+  l = snprintf
+    ( (char *) msg_out, (size_t) terminator_size(msg_out_size), ""
+      "Inverse assertion '%s' failed - integers must be decreasing, but they are equal or increasing:\n"
+      "  check:       % d\n"
+      "    should be: %s>\n"
+      "  baseline:    % d\n"
+      "    but isn't.\n"
+
+    , (const char *) tag
+    , (int) check
+    , (const char *) (((check < 0) || (baseline < 0)) ? " " : "")
+    , (int) baseline
+    );
+  if (l < 0) return assert_msg_check_snprintf(context, l, msg_out, msg_out_size, tag, &context->is_snprintf_err);
+
+  return assert_msg_append_details(context, (size_t) l, msg_out, msg_out_size, tag);
+}
+
+size_t assert_not_uintle_msg(unit_test_context_t *context, char *msg_out, size_t msg_out_size, const char *tag, unsigned int check, unsigned int baseline)
+{
+  int    l;
+
+  l = snprintf
+    ( (char *) msg_out, (size_t) terminator_size(msg_out_size), ""
+      "Inverse assertion '%s' failed - unsigned integers must be decreasing, but they are equal or increasing:\n"
+      "  check:       %u\n"
+      "    should be: >\n"
+      "  baseline:    %u\n"
+      "    but isn't.\n"
+
+    , (const char *) tag
+    , (unsigned int) check
+    , (unsigned int) baseline
+    );
+  if (l < 0) return assert_msg_check_snprintf(context, l, msg_out, msg_out_size, tag, &context->is_snprintf_err);
+
+  return assert_msg_append_details(context, (size_t) l, msg_out, msg_out_size, tag);
+}
+
+size_t assert_not_longle_msg(unit_test_context_t *context, char *msg_out, size_t msg_out_size, const char *tag, long check, long baseline)
+{
+  int    l;
+
+  l = snprintf
+    ( (char *) msg_out, (size_t) terminator_size(msg_out_size), ""
+      "Inverse assertion '%s' failed - long integers must be decreasing, but they are equal or increasing:\n"
+      "  check:       % l\n"
+      "    should be: %s>\n"
+      "  baseline:    % l\n"
+      "    but isn't.\n"
+
+    , (const char *) tag
+    , (long) check
+    , (const char *) (((check < 0) || (baseline < 0)) ? " " : "")
+    , (long) baseline
+    );
+  if (l < 0) return assert_msg_check_snprintf(context, l, msg_out, msg_out_size, tag, &context->is_snprintf_err);
+
+  return assert_msg_append_details(context, (size_t) l, msg_out, msg_out_size, tag);
+}
+
+size_t assert_not_ulongle_msg(unit_test_context_t *context, char *msg_out, size_t msg_out_size, const char *tag, unsigned long check, unsigned long baseline)
+{
+  int    l;
+
+  l = snprintf
+    ( (char *) msg_out, (size_t) terminator_size(msg_out_size), ""
+      "Inverse assertion '%s' failed - unsigned long integers must be decreasing, but they are equal or increasing:\n"
+      "  check:       %lu\n"
+      "    should be: >\n"
+      "  baseline:    %lu\n"
+      "    but isn't.\n"
+
+    , (const char *) tag
+    , (unsigned long) check
+    , (unsigned long) baseline
+    );
+  if (l < 0) return assert_msg_check_snprintf(context, l, msg_out, msg_out_size, tag, &context->is_snprintf_err);
+
+  return assert_msg_append_details(context, (size_t) l, msg_out, msg_out_size, tag);
+}
+
+size_t assert_not_sizele_msg(unit_test_context_t *context, char *msg_out, size_t msg_out_size, const char *tag, size_t check, size_t baseline)
+{
+  int    l;
+
+  l = snprintf
+    ( (char *) msg_out, (size_t) terminator_size(msg_out_size), ""
+      "Inverse assertion '%s' failed - size_t integers must be decreasing, but they are equal or increasing:\n"
+      "  check:       %zu\n"
+      "    should be: >\n"
+      "  baseline:    %zu\n"
+      "    but isn't.\n"
+
+    , (const char *) tag
+    , (size_t) check
+    , (size_t) baseline
+    );
+  if (l < 0) return assert_msg_check_snprintf(context, l, msg_out, msg_out_size, tag, &context->is_snprintf_err);
+
+  return assert_msg_append_details(context, (size_t) l, msg_out, msg_out_size, tag);
+}
+
+size_t assert_not_ptrdiffle_msg(unit_test_context_t *context, char *msg_out, size_t msg_out_size, const char *tag, ptrdiff_t check, ptrdiff_t baseline)
+{
+  int    l;
+
+  l = snprintf
+    ( (char *) msg_out, (size_t) terminator_size(msg_out_size), ""
+      "Inverse assertion '%s' failed - ptrdiff_t integers must be decreasing, but they are equal or increasing:\n"
+      "  check:       % t\n"
+      "    should be: %s>\n"
+      "  baseline:    % t\n"
+      "    but isn't.\n"
+
+    , (const char *) tag
+    , (ptrdiff_t) check
+    , (const char *) (((check < 0) || (baseline < 0)) ? " " : "")
+    , (ptrdiff_t) baseline
+    );
+  if (l < 0) return assert_msg_check_snprintf(context, l, msg_out, msg_out_size, tag, &context->is_snprintf_err);
+
+  return assert_msg_append_details(context, (size_t) l, msg_out, msg_out_size, tag);
+}
+
+size_t assert_not_objple_msg(unit_test_context_t *context, char *msg_out, size_t msg_out_size, const char *tag, const void *check, const void *baseline)
+{
+  int    l;
+
+  l = snprintf
+    ( (char *) msg_out, (size_t) terminator_size(msg_out_size), ""
+      "Inverse assertion '%s' failed - object pointers must be decreasing, but they are equal or increasing:\n"
+      "  should differ from:  %p\n"
+      "  but still is:        %p\n"
+
+    , (const char *) tag
+    , (void *) check
+    , (void *) baseline
+    );
+  if (l < 0) return assert_msg_check_snprintf(context, l, msg_out, msg_out_size, tag, &context->is_snprintf_err);
+
+  return assert_msg_append_details(context, (size_t) l, msg_out, msg_out_size, tag);
+}
+
+size_t assert_not_funple_msg(unit_test_context_t *context, char *msg_out, size_t msg_out_size, const char *tag, tests_funp_t check, tests_funp_t baseline)
+{
+  int    l;
+
+  l = snprintf
+    ( (char *) msg_out, (size_t) terminator_size(msg_out_size), ""
+      "Inverse assertion '%s' failed - function pointers must be decreasing, but they are equal or increasing:\n"
+      "  should differ from:  %p\n"
+      "  but still is:        %p\n"
+
+    , (const char *) tag
+    , (void *) *((void **) &check)
+    , (void *) *((void **) &baseline)
+    );
+  if (l < 0) return assert_msg_check_snprintf(context, l, msg_out, msg_out_size, tag, &context->is_snprintf_err);
+
+  return assert_msg_append_details(context, (size_t) l, msg_out, msg_out_size, tag);
+}
+
+
 size_t assert_not_streqz_msg(unit_test_context_t *context, char *msg_out, size_t msg_out_size, const char *tag, const char *check, const char *model)
 {
   int    l;
 
   l = snprintf
-    ( (char *) msg_out, (size_t) terminator_size(msg_out_size)
-    , "Inverse assertion '%s' failed - strings must duffer, but they are the same:\n  should differ from:  %s\n  but still is:        %s\n"
+    ( (char *) msg_out, (size_t) terminator_size(msg_out_size), ""
+      "Inverse assertion '%s' failed - strings must duffer, but they are the same:\n"
+      "  should differ from:  %s\n"
+      "  but still is:        %s\n"
+
     , (const char *) tag
     , (const char*) model
     , (const char*) check
@@ -1953,8 +2429,11 @@ size_t assert_not_streqn_msg(unit_test_context_t *context, char *msg_out, size_t
     modelz[max_len] = 0;
 
     l = snprintf
-      ( (char *) msg_out, (size_t) terminator_size(msg_out_size)
-      , "Inverse assertion '%s' failed - strings must duffer, but they are the same:\n  should differ from:  %s\n  but still is:        %s\n"
+      ( (char *) msg_out, (size_t) terminator_size(msg_out_size), ""
+        "Inverse assertion '%s' failed - strings must duffer, but they are the same:\n"
+        "  should differ from:  %s\n"
+        "  but still is:        %s\n"
+
       , (const char *) tag
       , (const char *) modelz
       , (const char *) checkz
@@ -1982,8 +2461,9 @@ size_t assert_not_memeq_msg(unit_test_context_t *context, char *msg_out, size_t 
   /* ---------------------------------------------------------------- */
   /* Start writing error message. */
   l = snprintf
-    ( (char *) (msg_out + written), (size_t) terminator_size(size_minus(msg_out_size, written))
-    , "Inverse assertion '%s' failed - '%d' bytes of memory must differ, but they are the same:"
+    ( (char *) (msg_out + written), (size_t) terminator_size(size_minus(msg_out_size, written)), ""
+      "Inverse assertion '%s' failed - '%d' bytes of memory must differ, but they are the same:"
+
     , (const char *) tag
     , (int) n
     );
@@ -1994,15 +2474,15 @@ size_t assert_not_memeq_msg(unit_test_context_t *context, char *msg_out, size_t 
   /* Hex dump of model: write what the memory should be equal to. */
 
   l = snprintf
-    ( (char *) (msg_out + written), (size_t) terminator_size(size_minus(msg_out_size, written))
-    , "\n"
+    ( (char *) (msg_out + written), (size_t) terminator_size(size_minus(msg_out_size, written)), ""
+      "\n"
     );
   if (l < 0) return assert_msg_check_snprintf(context, l, msg_out, msg_out_size, tag, &context->is_snprintf_err);
   written += l;
 
   l = hexdump_indent_spaces = snprintf
-    ( (char *) (msg_out + written), (size_t) terminator_size(size_minus(msg_out_size, written))
-    , "  should differ from:"
+    ( (char *) (msg_out + written), (size_t) terminator_size(size_minus(msg_out_size, written)), ""
+      "  should differ from:"
     );
   if (l < 0) return assert_msg_check_snprintf(context, l, msg_out, msg_out_size, tag, &context->is_snprintf_err);
   written += l;
@@ -2017,15 +2497,15 @@ size_t assert_not_memeq_msg(unit_test_context_t *context, char *msg_out, size_t 
     need_multiple_lines = 1;
 
     l = snprintf
-      ( (char *) (msg_out + written), (size_t) terminator_size(size_minus(msg_out_size, written))
-      , "\n"
+      ( (char *) (msg_out + written), (size_t) terminator_size(size_minus(msg_out_size, written)), ""
+        "\n"
       );
     if (l < 0) return assert_msg_check_snprintf(context, l, msg_out, msg_out_size, tag, &context->is_snprintf_err);
     written += l;
 
     l = hexdump_indent_spaces = snprintf
-      ( (char *) (msg_out + written), (size_t) terminator_size(size_minus(msg_out_size, written))
-      , "    "
+      ( (char *) (msg_out + written), (size_t) terminator_size(size_minus(msg_out_size, written)), ""
+        "    "
       );
     if (l < 0) return assert_msg_check_snprintf(context, l, msg_out, msg_out_size, tag, &context->is_snprintf_err);
     written += l;
@@ -2043,8 +2523,8 @@ size_t assert_not_memeq_msg(unit_test_context_t *context, char *msg_out, size_t 
       cols_printed = hexdump_indent_spaces + byte_print_width;
 
       l = snprintf
-        ( (char *) (msg_out + written), (size_t) terminator_size(size_minus(msg_out_size, written))
-        , "\n"
+        ( (char *) (msg_out + written), (size_t) terminator_size(size_minus(msg_out_size, written)), ""
+          "\n"
         );
       if (l < 0) return assert_msg_check_snprintf(context, l, msg_out, msg_out_size, tag, &context->is_snprintf_err);
       written += l;
@@ -2052,8 +2532,8 @@ size_t assert_not_memeq_msg(unit_test_context_t *context, char *msg_out, size_t 
       for (j = 0; j < hexdump_indent_spaces; ++j)
       {
         l = snprintf
-          ( (char *) (msg_out + written), (size_t) terminator_size(size_minus(msg_out_size, written))
-          , " "
+          ( (char *) (msg_out + written), (size_t) terminator_size(size_minus(msg_out_size, written)), ""
+            " "
           );
         if (l < 0) return assert_msg_check_snprintf(context, l, msg_out, msg_out_size, tag, &context->is_snprintf_err);
         written += l;
@@ -2062,8 +2542,9 @@ size_t assert_not_memeq_msg(unit_test_context_t *context, char *msg_out, size_t 
 
     /* Print the byte. */
     l = snprintf
-      ( (char *) (msg_out + written), (size_t) terminator_size(size_minus(msg_out_size, written))
-      , " 0x%.2X"
+      ( (char *) (msg_out + written), (size_t) terminator_size(size_minus(msg_out_size, written)), ""
+        " 0x%.2X"
+
       , (unsigned int) (((unsigned char *) model)[i])
       );
     if (l < 0) return assert_msg_check_snprintf(context, l, msg_out, msg_out_size, tag, &context->is_snprintf_err);
@@ -2074,15 +2555,15 @@ size_t assert_not_memeq_msg(unit_test_context_t *context, char *msg_out, size_t 
   /* Hex dump of check: write what the memory should be equal to. */
 
   l = snprintf
-    ( (char *) (msg_out + written), (size_t) terminator_size(size_minus(msg_out_size, written))
-    , "\n"
+    ( (char *) (msg_out + written), (size_t) terminator_size(size_minus(msg_out_size, written)), ""
+      "\n"
     );
   if (l < 0) return assert_msg_check_snprintf(context, l, msg_out, msg_out_size, tag, &context->is_snprintf_err);
   written += l;
 
   l = snprintf
-    ( (char *) (msg_out + written), (size_t) terminator_size(size_minus(msg_out_size, written))
-    , "  but still is:"  /* A: Print six extra spaces below only without a newline. */
+    ( (char *) (msg_out + written), (size_t) terminator_size(size_minus(msg_out_size, written)), ""
+      "  but still is:"  /* A: Print six extra spaces below only without a newline. */
     );
   if (l < 0) return assert_msg_check_snprintf(context, l, msg_out, msg_out_size, tag, &context->is_snprintf_err);
   written += l;
@@ -2091,15 +2572,15 @@ size_t assert_not_memeq_msg(unit_test_context_t *context, char *msg_out, size_t 
   if (need_multiple_lines)
   {
     l = snprintf
-      ( (char *) (msg_out + written), (size_t) terminator_size(size_minus(msg_out_size, written))
-      , "\n"
+      ( (char *) (msg_out + written), (size_t) terminator_size(size_minus(msg_out_size, written)), ""
+        "\n"
       );
     if (l < 0) return assert_msg_check_snprintf(context, l, msg_out, msg_out_size, tag, &context->is_snprintf_err);
     written += l;
 
     l = snprintf
-      ( (char *) (msg_out + written), (size_t) terminator_size(size_minus(msg_out_size, written))
-      , "    "
+      ( (char *) (msg_out + written), (size_t) terminator_size(size_minus(msg_out_size, written)), ""
+        "    "
       );
     if (l < 0) return assert_msg_check_snprintf(context, l, msg_out, msg_out_size, tag, &context->is_snprintf_err);
     written += l;
@@ -2107,8 +2588,8 @@ size_t assert_not_memeq_msg(unit_test_context_t *context, char *msg_out, size_t 
   else
   {
     l = snprintf
-      ( (char *) (msg_out + written), (size_t) terminator_size(size_minus(msg_out_size, written))
-      , "      "  /* A: No newline, so print six extra spaces for alignment. */
+      ( (char *) (msg_out + written), (size_t) terminator_size(size_minus(msg_out_size, written)), ""
+        "      "  /* A: No newline, so print six extra spaces for alignment. */
       );
     if (l < 0) return assert_msg_check_snprintf(context, l, msg_out, msg_out_size, tag, &context->is_snprintf_err);
     written += l;
@@ -2125,8 +2606,8 @@ size_t assert_not_memeq_msg(unit_test_context_t *context, char *msg_out, size_t 
       cols_printed = hexdump_indent_spaces + byte_print_width;
 
       l = snprintf
-        ( (char *) (msg_out + written), (size_t) terminator_size(size_minus(msg_out_size, written))
-        , "\n"
+        ( (char *) (msg_out + written), (size_t) terminator_size(size_minus(msg_out_size, written)), ""
+          "\n"
         );
       if (l < 0) return assert_msg_check_snprintf(context, l, msg_out, msg_out_size, tag, &context->is_snprintf_err);
       written += l;
@@ -2134,8 +2615,8 @@ size_t assert_not_memeq_msg(unit_test_context_t *context, char *msg_out, size_t 
       for (j = 0; j < hexdump_indent_spaces; ++j)
       {
         l = snprintf
-          ( (char *) (msg_out + written), (size_t) terminator_size(size_minus(msg_out_size, written))
-          , " "
+          ( (char *) (msg_out + written), (size_t) terminator_size(size_minus(msg_out_size, written)), ""
+            " "
           );
         if (l < 0) return assert_msg_check_snprintf(context, l, msg_out, msg_out_size, tag, &context->is_snprintf_err);
         written += l;
@@ -2144,8 +2625,9 @@ size_t assert_not_memeq_msg(unit_test_context_t *context, char *msg_out, size_t 
 
     /* Print the byte. */
     l = snprintf
-      ( (char *) (msg_out + written), (size_t) terminator_size(size_minus(msg_out_size, written))
-      , " 0x%.2X"
+      ( (char *) (msg_out + written), (size_t) terminator_size(size_minus(msg_out_size, written)), ""
+        " 0x%.2X"
+
       , (unsigned int) (((unsigned char *) check)[i])
       );
     if (l < 0) return assert_msg_check_snprintf(context, l, msg_out, msg_out_size, tag, &context->is_snprintf_err);
@@ -2153,8 +2635,8 @@ size_t assert_not_memeq_msg(unit_test_context_t *context, char *msg_out, size_t 
   }
 
   l = snprintf
-    ( (char *) (msg_out + written), (size_t) terminator_size(size_minus(msg_out_size, written))
-    , "\n"
+    ( (char *) (msg_out + written), (size_t) terminator_size(size_minus(msg_out_size, written)), ""
+      "\n"
     );
   if (l < 0) return assert_msg_check_snprintf(context, l, msg_out, msg_out_size, tag, &context->is_snprintf_err);
   written += l;
@@ -2294,6 +2776,40 @@ unit_test_result_t assert_uinteq_continue(unit_test_context_t *context, const ch
   }
 }
 
+unit_test_result_t assert_longeq(unit_test_context_t *context, const char *err_msg, const char *tag, long check, long model)
+{
+  if (check == model)
+  {
+    return UNIT_TEST_PASS;
+  }
+  else
+  {
+    if (err_msg)
+      strncpy(context->err_buf, err_msg, context->err_buf_halfsize);
+    else
+      context->err_buf_len = assert_longeq_msg(context, context->err_buf, context->err_buf_halfsize, tag, check, model);
+
+    return UNIT_TEST_FAIL;
+  }
+}
+
+unit_test_result_t assert_longeq_continue(unit_test_context_t *context, const char *err_msg, const char *tag, long check, long model)
+{
+  if (check == model)
+  {
+    return UNIT_TEST_PASS;
+  }
+  else
+  {
+    if (err_msg)
+      strncpy(context->err_buf, err_msg, context->err_buf_halfsize);
+    else
+      context->err_buf_len = assert_longeq_msg(context, context->err_buf, context->err_buf_halfsize, tag, check, model);
+
+    return UNIT_TEST_FAIL_CONTINUE;
+  }
+}
+
 unit_test_result_t assert_ulongeq(unit_test_context_t *context, const char *err_msg, const char *tag, unsigned long check, unsigned long model)
 {
   if (check == model)
@@ -2357,6 +2873,40 @@ unit_test_result_t assert_sizeeq_continue(unit_test_context_t *context, const ch
       strncpy(context->err_buf, err_msg, context->err_buf_halfsize);
     else
       context->err_buf_len = assert_sizeeq_msg(context, context->err_buf, context->err_buf_halfsize, tag, check, model);
+
+    return UNIT_TEST_FAIL_CONTINUE;
+  }
+}
+
+unit_test_result_t assert_ptrdiffeq(unit_test_context_t *context, const char *err_msg, const char *tag, ptrdiff_t check, ptrdiff_t model)
+{
+  if (check == model)
+  {
+    return UNIT_TEST_PASS;
+  }
+  else
+  {
+    if (err_msg)
+      strncpy(context->err_buf, err_msg, context->err_buf_halfsize);
+    else
+      context->err_buf_len = assert_ptrdiffeq_msg(context, context->err_buf, context->err_buf_halfsize, tag, check, model);
+
+    return UNIT_TEST_FAIL;
+  }
+}
+
+unit_test_result_t assert_ptrdiffeq_continue(unit_test_context_t *context, const char *err_msg, const char *tag, ptrdiff_t check, ptrdiff_t model)
+{
+  if (check == model)
+  {
+    return UNIT_TEST_PASS;
+  }
+  else
+  {
+    if (err_msg)
+      strncpy(context->err_buf, err_msg, context->err_buf_halfsize);
+    else
+      context->err_buf_len = assert_ptrdiffeq_msg(context, context->err_buf, context->err_buf_halfsize, tag, check, model);
 
     return UNIT_TEST_FAIL_CONTINUE;
   }
@@ -2429,6 +2979,288 @@ unit_test_result_t assert_funpeq_continue(unit_test_context_t *context, const ch
     return UNIT_TEST_FAIL_CONTINUE;
   }
 }
+
+
+unit_test_result_t assert_intle(unit_test_context_t *context, const char *err_msg, const char *tag, int check, int baseline)
+{
+  if (check <= baseline)
+  {
+    return UNIT_TEST_PASS;
+  }
+  else
+  {
+    if (err_msg)
+      strncpy(context->err_buf, err_msg, context->err_buf_halfsize);
+    else
+      context->err_buf_len = assert_intle_msg(context, context->err_buf, context->err_buf_halfsize, tag, check, baseline);
+
+    return UNIT_TEST_FAIL;
+  }
+}
+
+unit_test_result_t assert_intle_continue(unit_test_context_t *context, const char *err_msg, const char *tag, int check, int baseline)
+{
+  if (check <= baseline)
+  {
+    return UNIT_TEST_PASS;
+  }
+  else
+  {
+    if (err_msg)
+      strncpy(context->err_buf, err_msg, context->err_buf_halfsize);
+    else
+      context->err_buf_len = assert_intle_msg(context, context->err_buf, context->err_buf_halfsize, tag, check, baseline);
+
+    return UNIT_TEST_FAIL_CONTINUE;
+  }
+}
+
+unit_test_result_t assert_uintle(unit_test_context_t *context, const char *err_msg, const char *tag, unsigned int check, unsigned int baseline)
+{
+  if (check <= baseline)
+  {
+    return UNIT_TEST_PASS;
+  }
+  else
+  {
+    if (err_msg)
+      strncpy(context->err_buf, err_msg, context->err_buf_halfsize);
+    else
+      context->err_buf_len = assert_uintle_msg(context, context->err_buf, context->err_buf_halfsize, tag, check, baseline);
+
+    return UNIT_TEST_FAIL;
+  }
+}
+
+unit_test_result_t assert_uintle_continue(unit_test_context_t *context, const char *err_msg, const char *tag, unsigned int check, unsigned int baseline)
+{
+  if (check <= baseline)
+  {
+    return UNIT_TEST_PASS;
+  }
+  else
+  {
+    if (err_msg)
+      strncpy(context->err_buf, err_msg, context->err_buf_halfsize);
+    else
+      context->err_buf_len = assert_uintle_msg(context, context->err_buf, context->err_buf_halfsize, tag, check, baseline);
+
+    return UNIT_TEST_FAIL_CONTINUE;
+  }
+}
+
+unit_test_result_t assert_longle(unit_test_context_t *context, const char *err_msg, const char *tag, long check, long baseline)
+{
+  if (check <= baseline)
+  {
+    return UNIT_TEST_PASS;
+  }
+  else
+  {
+    if (err_msg)
+      strncpy(context->err_buf, err_msg, context->err_buf_halfsize);
+    else
+      context->err_buf_len = assert_longle_msg(context, context->err_buf, context->err_buf_halfsize, tag, check, baseline);
+
+    return UNIT_TEST_FAIL;
+  }
+}
+
+unit_test_result_t assert_longle_continue(unit_test_context_t *context, const char *err_msg, const char *tag, long check, long baseline)
+{
+  if (check <= baseline)
+  {
+    return UNIT_TEST_PASS;
+  }
+  else
+  {
+    if (err_msg)
+      strncpy(context->err_buf, err_msg, context->err_buf_halfsize);
+    else
+      context->err_buf_len = assert_longle_msg(context, context->err_buf, context->err_buf_halfsize, tag, check, baseline);
+
+    return UNIT_TEST_FAIL_CONTINUE;
+  }
+}
+
+unit_test_result_t assert_ulongle(unit_test_context_t *context, const char *err_msg, const char *tag, unsigned long check, unsigned long baseline)
+{
+  if (check <= baseline)
+  {
+    return UNIT_TEST_PASS;
+  }
+  else
+  {
+    if (err_msg)
+      strncpy(context->err_buf, err_msg, context->err_buf_halfsize);
+    else
+      context->err_buf_len = assert_ulongle_msg(context, context->err_buf, context->err_buf_halfsize, tag, check, baseline);
+
+    return UNIT_TEST_FAIL;
+  }
+}
+
+unit_test_result_t assert_ulongle_continue(unit_test_context_t *context, const char *err_msg, const char *tag, unsigned long check, unsigned long baseline)
+{
+  if (check <= baseline)
+  {
+    return UNIT_TEST_PASS;
+  }
+  else
+  {
+    if (err_msg)
+      strncpy(context->err_buf, err_msg, context->err_buf_halfsize);
+    else
+      context->err_buf_len = assert_ulongle_msg(context, context->err_buf, context->err_buf_halfsize, tag, check, baseline);
+
+    return UNIT_TEST_FAIL_CONTINUE;
+  }
+}
+
+unit_test_result_t assert_sizele(unit_test_context_t *context, const char *err_msg, const char *tag, size_t check, size_t baseline)
+{
+  if (check <= baseline)
+  {
+    return UNIT_TEST_PASS;
+  }
+  else
+  {
+    if (err_msg)
+      strncpy(context->err_buf, err_msg, context->err_buf_halfsize);
+    else
+      context->err_buf_len = assert_sizele_msg(context, context->err_buf, context->err_buf_halfsize, tag, check, baseline);
+
+    return UNIT_TEST_FAIL;
+  }
+}
+
+unit_test_result_t assert_sizele_continue(unit_test_context_t *context, const char *err_msg, const char *tag, size_t check, size_t baseline)
+{
+  if (check <= baseline)
+  {
+    return UNIT_TEST_PASS;
+  }
+  else
+  {
+    if (err_msg)
+      strncpy(context->err_buf, err_msg, context->err_buf_halfsize);
+    else
+      context->err_buf_len = assert_sizele_msg(context, context->err_buf, context->err_buf_halfsize, tag, check, baseline);
+
+    return UNIT_TEST_FAIL_CONTINUE;
+  }
+}
+
+unit_test_result_t assert_ptrdiffle(unit_test_context_t *context, const char *err_msg, const char *tag, ptrdiff_t check, ptrdiff_t baseline)
+{
+  if (check <= baseline)
+  {
+    return UNIT_TEST_PASS;
+  }
+  else
+  {
+    if (err_msg)
+      strncpy(context->err_buf, err_msg, context->err_buf_halfsize);
+    else
+      context->err_buf_len = assert_ptrdiffle_msg(context, context->err_buf, context->err_buf_halfsize, tag, check, baseline);
+
+    return UNIT_TEST_FAIL;
+  }
+}
+
+unit_test_result_t assert_ptrdiffle_continue(unit_test_context_t *context, const char *err_msg, const char *tag, ptrdiff_t check, ptrdiff_t baseline)
+{
+  if (check <= baseline)
+  {
+    return UNIT_TEST_PASS;
+  }
+  else
+  {
+    if (err_msg)
+      strncpy(context->err_buf, err_msg, context->err_buf_halfsize);
+    else
+      context->err_buf_len = assert_ptrdiffle_msg(context, context->err_buf, context->err_buf_halfsize, tag, check, baseline);
+
+    return UNIT_TEST_FAIL_CONTINUE;
+  }
+}
+
+unit_test_result_t assert_objple(unit_test_context_t *context, const char *err_msg, const char *tag, const void *check, const void *baseline)
+{
+  if (check <= baseline)
+  {
+    return UNIT_TEST_PASS;
+  }
+  else
+  {
+    if (err_msg)
+      strncpy(context->err_buf, err_msg, context->err_buf_halfsize);
+    else
+      context->err_buf_len = assert_objple_msg(context, context->err_buf, context->err_buf_halfsize, tag, check, baseline);
+
+    return UNIT_TEST_FAIL;
+  }
+}
+
+unit_test_result_t assert_objple_continue(unit_test_context_t *context, const char *err_msg, const char *tag, const void *check, const void *baseline)
+{
+  if (check <= baseline)
+  {
+    return UNIT_TEST_PASS;
+  }
+  else
+  {
+    if (err_msg)
+      strncpy(context->err_buf, err_msg, context->err_buf_halfsize);
+    else
+      context->err_buf_len = assert_objple_msg(context, context->err_buf, context->err_buf_halfsize, tag, check, baseline);
+
+    return UNIT_TEST_FAIL_CONTINUE;
+  }
+}
+
+unit_test_result_t assert_funple(unit_test_context_t *context, const char *err_msg, const char *tag, tests_funp_t check, tests_funp_t baseline)
+{
+  if
+    ( ( (void *) *((void **) &check)    )
+      <=
+      ( (void *) *((void **) &baseline) )
+    )
+  {
+    return UNIT_TEST_PASS;
+  }
+  else
+  {
+    if (err_msg)
+      strncpy(context->err_buf, err_msg, context->err_buf_halfsize);
+    else
+      context->err_buf_len = assert_funple_msg(context, context->err_buf, context->err_buf_halfsize, tag, check, baseline);
+
+    return UNIT_TEST_FAIL;
+  }
+}
+
+unit_test_result_t assert_funple_continue(unit_test_context_t *context, const char *err_msg, const char *tag, tests_funp_t check, tests_funp_t baseline)
+{
+  if
+    ( ( (void *) *((void **) &check)    )
+      <=
+      ( (void *) *((void **) &baseline) )
+    )
+  {
+    return UNIT_TEST_PASS;
+  }
+  else
+  {
+    if (err_msg)
+      strncpy(context->err_buf, err_msg, context->err_buf_halfsize);
+    else
+      context->err_buf_len = assert_funple_msg(context, context->err_buf, context->err_buf_halfsize, tag, check, baseline);
+
+    return UNIT_TEST_FAIL_CONTINUE;
+  }
+}
+
 
 unit_test_result_t assert_streqz(unit_test_context_t *context, const char *err_msg, const char *tag, const char *check, const char *model)
 {
@@ -2578,9 +3410,10 @@ unit_test_result_t assert_false_continue(unit_test_context_t *context, const cha
   }
 }
 
-unit_test_result_t assert_not_inteq(unit_test_context_t *context, const char *err_msg, const char *tag, int check, int model)
+
+unit_test_result_t assert_not_intle(unit_test_context_t *context, const char *err_msg, const char *tag, int check, int baseline)
 {
-  if (!(check == model))
+  if (!(check <= baseline))
   {
     return UNIT_TEST_PASS;
   }
@@ -2589,15 +3422,15 @@ unit_test_result_t assert_not_inteq(unit_test_context_t *context, const char *er
     if (err_msg)
       strncpy(context->err_buf, err_msg, context->err_buf_halfsize);
     else
-      context->err_buf_len = assert_not_inteq_msg(context, context->err_buf, context->err_buf_halfsize, tag, check, model);
+      context->err_buf_len = assert_not_inteq_msg(context, context->err_buf, context->err_buf_halfsize, tag, check, baseline);
 
     return UNIT_TEST_FAIL;
   }
 }
 
-unit_test_result_t assert_not_inteq_continue(unit_test_context_t *context, const char *err_msg, const char *tag, int check, int model)
+unit_test_result_t assert_not_intle_continue(unit_test_context_t *context, const char *err_msg, const char *tag, int check, int baseline)
 {
-  if (!(check == model))
+  if (!(check <= baseline))
   {
     return UNIT_TEST_PASS;
   }
@@ -2606,15 +3439,15 @@ unit_test_result_t assert_not_inteq_continue(unit_test_context_t *context, const
     if (err_msg)
       strncpy(context->err_buf, err_msg, context->err_buf_halfsize);
     else
-      context->err_buf_len = assert_not_inteq_msg(context, context->err_buf, context->err_buf_halfsize, tag, check, model);
+      context->err_buf_len = assert_not_inteq_msg(context, context->err_buf, context->err_buf_halfsize, tag, check, baseline);
 
     return UNIT_TEST_FAIL_CONTINUE;
   }
 }
 
-unit_test_result_t assert_not_uinteq(unit_test_context_t *context, const char *err_msg, const char *tag, unsigned int check, unsigned int model)
+unit_test_result_t assert_not_uintle(unit_test_context_t *context, const char *err_msg, const char *tag, unsigned int check, unsigned int baseline)
 {
-  if (!(check == model))
+  if (!(check <= baseline))
   {
     return UNIT_TEST_PASS;
   }
@@ -2623,15 +3456,15 @@ unit_test_result_t assert_not_uinteq(unit_test_context_t *context, const char *e
     if (err_msg)
       strncpy(context->err_buf, err_msg, context->err_buf_halfsize);
     else
-      context->err_buf_len = assert_not_uinteq_msg(context, context->err_buf, context->err_buf_halfsize, tag, check, model);
+      context->err_buf_len = assert_not_uinteq_msg(context, context->err_buf, context->err_buf_halfsize, tag, check, baseline);
 
     return UNIT_TEST_FAIL;
   }
 }
 
-unit_test_result_t assert_not_uinteq_continue(unit_test_context_t *context, const char *err_msg, const char *tag, unsigned int check, unsigned int model)
+unit_test_result_t assert_not_uintle_continue(unit_test_context_t *context, const char *err_msg, const char *tag, unsigned int check, unsigned int baseline)
 {
-  if (!(check == model))
+  if (!(check <= baseline))
   {
     return UNIT_TEST_PASS;
   }
@@ -2640,15 +3473,15 @@ unit_test_result_t assert_not_uinteq_continue(unit_test_context_t *context, cons
     if (err_msg)
       strncpy(context->err_buf, err_msg, context->err_buf_halfsize);
     else
-      context->err_buf_len = assert_not_uinteq_msg(context, context->err_buf, context->err_buf_halfsize, tag, check, model);
+      context->err_buf_len = assert_not_uinteq_msg(context, context->err_buf, context->err_buf_halfsize, tag, check, baseline);
 
     return UNIT_TEST_FAIL_CONTINUE;
   }
 }
 
-unit_test_result_t assert_not_ulongeq(unit_test_context_t *context, const char *err_msg, const char *tag, unsigned long check, unsigned long model)
+unit_test_result_t assert_not_ulongle(unit_test_context_t *context, const char *err_msg, const char *tag, unsigned long check, unsigned long baseline)
 {
-  if (!(check == model))
+  if (!(check <= baseline))
   {
     return UNIT_TEST_PASS;
   }
@@ -2657,15 +3490,15 @@ unit_test_result_t assert_not_ulongeq(unit_test_context_t *context, const char *
     if (err_msg)
       strncpy(context->err_buf, err_msg, context->err_buf_halfsize);
     else
-      context->err_buf_len = assert_not_ulongeq_msg(context, context->err_buf, context->err_buf_halfsize, tag, check, model);
+      context->err_buf_len = assert_not_ulongeq_msg(context, context->err_buf, context->err_buf_halfsize, tag, check, baseline);
 
     return UNIT_TEST_FAIL;
   }
 }
 
-unit_test_result_t assert_not_ulongeq_continue(unit_test_context_t *context, const char *err_msg, const char *tag, unsigned long check, unsigned long model)
+unit_test_result_t assert_not_ulongle_continue(unit_test_context_t *context, const char *err_msg, const char *tag, unsigned long check, unsigned long baseline)
 {
-  if (!(check == model))
+  if (!(check <= baseline))
   {
     return UNIT_TEST_PASS;
   }
@@ -2674,15 +3507,15 @@ unit_test_result_t assert_not_ulongeq_continue(unit_test_context_t *context, con
     if (err_msg)
       strncpy(context->err_buf, err_msg, context->err_buf_halfsize);
     else
-      context->err_buf_len = assert_not_ulongeq_msg(context, context->err_buf, context->err_buf_halfsize, tag, check, model);
+      context->err_buf_len = assert_not_ulongeq_msg(context, context->err_buf, context->err_buf_halfsize, tag, check, baseline);
 
     return UNIT_TEST_FAIL_CONTINUE;
   }
 }
 
-unit_test_result_t assert_not_objpeq(unit_test_context_t *context, const char *err_msg, const char *tag, const void *check, const void *model)
+unit_test_result_t assert_not_sizele(unit_test_context_t *context, const char *err_msg, const char *tag, size_t check, size_t baseline)
 {
-  if (!(check == model))
+  if (!(check <= baseline))
   {
     return UNIT_TEST_PASS;
   }
@@ -2691,15 +3524,15 @@ unit_test_result_t assert_not_objpeq(unit_test_context_t *context, const char *e
     if (err_msg)
       strncpy(context->err_buf, err_msg, context->err_buf_halfsize);
     else
-      context->err_buf_len = assert_not_objpeq_msg(context, context->err_buf, context->err_buf_halfsize, tag, check, model);
+      context->err_buf_len = assert_not_sizeeq_msg(context, context->err_buf, context->err_buf_halfsize, tag, check, baseline);
 
     return UNIT_TEST_FAIL;
   }
 }
 
-unit_test_result_t assert_not_objpeq_continue(unit_test_context_t *context, const char *err_msg, const char *tag, const void *check, const void *model)
+unit_test_result_t assert_not_sizele_continue(unit_test_context_t *context, const char *err_msg, const char *tag, size_t check, size_t baseline)
 {
-  if (!(check == model))
+  if (!(check <= baseline))
   {
     return UNIT_TEST_PASS;
   }
@@ -2708,15 +3541,15 @@ unit_test_result_t assert_not_objpeq_continue(unit_test_context_t *context, cons
     if (err_msg)
       strncpy(context->err_buf, err_msg, context->err_buf_halfsize);
     else
-      context->err_buf_len = assert_not_objpeq_msg(context, context->err_buf, context->err_buf_halfsize, tag, check, model);
+      context->err_buf_len = assert_not_sizeeq_msg(context, context->err_buf, context->err_buf_halfsize, tag, check, baseline);
 
     return UNIT_TEST_FAIL_CONTINUE;
   }
 }
 
-unit_test_result_t assert_not_funpeq(unit_test_context_t *context, const char *err_msg, const char *tag, tests_funp_t check, tests_funp_t model)
+unit_test_result_t assert_not_ptrdiffle(unit_test_context_t *context, const char *err_msg, const char *tag, ptrdiff_t check, ptrdiff_t baseline)
 {
-  if (!(check == model))
+  if (!(check <= baseline))
   {
     return UNIT_TEST_PASS;
   }
@@ -2725,15 +3558,15 @@ unit_test_result_t assert_not_funpeq(unit_test_context_t *context, const char *e
     if (err_msg)
       strncpy(context->err_buf, err_msg, context->err_buf_halfsize);
     else
-      context->err_buf_len = assert_not_funpeq_msg(context, context->err_buf, context->err_buf_halfsize, tag, check, model);
+      context->err_buf_len = assert_not_ptrdiffeq_msg(context, context->err_buf, context->err_buf_halfsize, tag, check, baseline);
 
     return UNIT_TEST_FAIL;
   }
 }
 
-unit_test_result_t assert_not_funpeq_continue(unit_test_context_t *context, const char *err_msg, const char *tag, tests_funp_t check, tests_funp_t model)
+unit_test_result_t assert_not_ptrdiffle_continue(unit_test_context_t *context, const char *err_msg, const char *tag, ptrdiff_t check, ptrdiff_t baseline)
 {
-  if (!(check == model))
+  if (!(check <= baseline))
   {
     return UNIT_TEST_PASS;
   }
@@ -2742,15 +3575,15 @@ unit_test_result_t assert_not_funpeq_continue(unit_test_context_t *context, cons
     if (err_msg)
       strncpy(context->err_buf, err_msg, context->err_buf_halfsize);
     else
-      context->err_buf_len = assert_not_funpeq_msg(context, context->err_buf, context->err_buf_halfsize, tag, check, model);
+      context->err_buf_len = assert_not_ptrdiffeq_msg(context, context->err_buf, context->err_buf_halfsize, tag, check, baseline);
 
     return UNIT_TEST_FAIL_CONTINUE;
   }
 }
 
-unit_test_result_t assert_not_sizeeq(unit_test_context_t *context, const char *err_msg, const char *tag, size_t check, size_t model)
+unit_test_result_t assert_not_objple(unit_test_context_t *context, const char *err_msg, const char *tag, const void *check, const void *baseline)
 {
-  if (!(check == model))
+  if (!(check <= baseline))
   {
     return UNIT_TEST_PASS;
   }
@@ -2759,15 +3592,15 @@ unit_test_result_t assert_not_sizeeq(unit_test_context_t *context, const char *e
     if (err_msg)
       strncpy(context->err_buf, err_msg, context->err_buf_halfsize);
     else
-      context->err_buf_len = assert_not_sizeeq_msg(context, context->err_buf, context->err_buf_halfsize, tag, check, model);
+      context->err_buf_len = assert_not_objpeq_msg(context, context->err_buf, context->err_buf_halfsize, tag, check, baseline);
 
     return UNIT_TEST_FAIL;
   }
 }
 
-unit_test_result_t assert_not_sizeeq_continue(unit_test_context_t *context, const char *err_msg, const char *tag, size_t check, size_t model)
+unit_test_result_t assert_not_objple_continue(unit_test_context_t *context, const char *err_msg, const char *tag, const void *check, const void *baseline)
 {
-  if (!(check == model))
+  if (!(check <= baseline))
   {
     return UNIT_TEST_PASS;
   }
@@ -2776,11 +3609,297 @@ unit_test_result_t assert_not_sizeeq_continue(unit_test_context_t *context, cons
     if (err_msg)
       strncpy(context->err_buf, err_msg, context->err_buf_halfsize);
     else
-      context->err_buf_len = assert_not_sizeeq_msg(context, context->err_buf, context->err_buf_halfsize, tag, check, model);
+      context->err_buf_len = assert_not_objpeq_msg(context, context->err_buf, context->err_buf_halfsize, tag, check, baseline);
 
     return UNIT_TEST_FAIL_CONTINUE;
   }
 }
+
+unit_test_result_t assert_not_funple(unit_test_context_t *context, const char *err_msg, const char *tag, tests_funp_t check, tests_funp_t baseline)
+{
+  if (!(check <= baseline))
+  {
+    return UNIT_TEST_PASS;
+  }
+  else
+  {
+    if (err_msg)
+      strncpy(context->err_buf, err_msg, context->err_buf_halfsize);
+    else
+      context->err_buf_len = assert_not_funpeq_msg(context, context->err_buf, context->err_buf_halfsize, tag, check, baseline);
+
+    return UNIT_TEST_FAIL;
+  }
+}
+
+unit_test_result_t assert_not_funple_continue(unit_test_context_t *context, const char *err_msg, const char *tag, tests_funp_t check, tests_funp_t baseline)
+{
+  if (!(check <= baseline))
+  {
+    return UNIT_TEST_PASS;
+  }
+  else
+  {
+    if (err_msg)
+      strncpy(context->err_buf, err_msg, context->err_buf_halfsize);
+    else
+      context->err_buf_len = assert_not_funpeq_msg(context, context->err_buf, context->err_buf_halfsize, tag, check, baseline);
+
+    return UNIT_TEST_FAIL_CONTINUE;
+  }
+}
+
+
+unit_test_result_t assert_not_intle(unit_test_context_t *context, const char *err_msg, const char *tag, int check, int baseline)
+{
+  if (!(check <= baseline))
+  {
+    return UNIT_TEST_PASS;
+  }
+  else
+  {
+    if (err_msg)
+      strncpy(context->err_buf, err_msg, context->err_buf_halfsize);
+    else
+      context->err_buf_len = assert_not_inteq_msg(context, context->err_buf, context->err_buf_halfsize, tag, check, baseline);
+
+    return UNIT_TEST_FAIL;
+  }
+}
+
+unit_test_result_t assert_not_intle_continue(unit_test_context_t *context, const char *err_msg, const char *tag, int check, int baseline)
+{
+  if (!(check <= baseline))
+  {
+    return UNIT_TEST_PASS;
+  }
+  else
+  {
+    if (err_msg)
+      strncpy(context->err_buf, err_msg, context->err_buf_halfsize);
+    else
+      context->err_buf_len = assert_not_inteq_msg(context, context->err_buf, context->err_buf_halfsize, tag, check, baseline);
+
+    return UNIT_TEST_FAIL_CONTINUE;
+  }
+}
+
+unit_test_result_t assert_not_uintle(unit_test_context_t *context, const char *err_msg, const char *tag, unsigned int check, unsigned int baseline)
+{
+  if (!(check <= baseline))
+  {
+    return UNIT_TEST_PASS;
+  }
+  else
+  {
+    if (err_msg)
+      strncpy(context->err_buf, err_msg, context->err_buf_halfsize);
+    else
+      context->err_buf_len = assert_not_uinteq_msg(context, context->err_buf, context->err_buf_halfsize, tag, check, baseline);
+
+    return UNIT_TEST_FAIL;
+  }
+}
+
+unit_test_result_t assert_not_uintle_continue(unit_test_context_t *context, const char *err_msg, const char *tag, unsigned int check, unsigned int baseline)
+{
+  if (!(check <= baseline))
+  {
+    return UNIT_TEST_PASS;
+  }
+  else
+  {
+    if (err_msg)
+      strncpy(context->err_buf, err_msg, context->err_buf_halfsize);
+    else
+      context->err_buf_len = assert_not_uinteq_msg(context, context->err_buf, context->err_buf_halfsize, tag, check, baseline);
+
+    return UNIT_TEST_FAIL_CONTINUE;
+  }
+}
+
+unit_test_result_t assert_not_ulongle(unit_test_context_t *context, const char *err_msg, const char *tag, unsigned long check, unsigned long baseline)
+{
+  if (!(check <= baseline))
+  {
+    return UNIT_TEST_PASS;
+  }
+  else
+  {
+    if (err_msg)
+      strncpy(context->err_buf, err_msg, context->err_buf_halfsize);
+    else
+      context->err_buf_len = assert_not_ulongeq_msg(context, context->err_buf, context->err_buf_halfsize, tag, check, baseline);
+
+    return UNIT_TEST_FAIL;
+  }
+}
+
+unit_test_result_t assert_not_ulongle_continue(unit_test_context_t *context, const char *err_msg, const char *tag, unsigned long check, unsigned long baseline)
+{
+  if (!(check <= baseline))
+  {
+    return UNIT_TEST_PASS;
+  }
+  else
+  {
+    if (err_msg)
+      strncpy(context->err_buf, err_msg, context->err_buf_halfsize);
+    else
+      context->err_buf_len = assert_not_ulongeq_msg(context, context->err_buf, context->err_buf_halfsize, tag, check, baseline);
+
+    return UNIT_TEST_FAIL_CONTINUE;
+  }
+}
+
+unit_test_result_t assert_not_sizele(unit_test_context_t *context, const char *err_msg, const char *tag, size_t check, size_t baseline)
+{
+  if (!(check <= baseline))
+  {
+    return UNIT_TEST_PASS;
+  }
+  else
+  {
+    if (err_msg)
+      strncpy(context->err_buf, err_msg, context->err_buf_halfsize);
+    else
+      context->err_buf_len = assert_not_sizeeq_msg(context, context->err_buf, context->err_buf_halfsize, tag, check, baseline);
+
+    return UNIT_TEST_FAIL;
+  }
+}
+
+unit_test_result_t assert_not_sizele_continue(unit_test_context_t *context, const char *err_msg, const char *tag, size_t check, size_t baseline)
+{
+  if (!(check <= baseline))
+  {
+    return UNIT_TEST_PASS;
+  }
+  else
+  {
+    if (err_msg)
+      strncpy(context->err_buf, err_msg, context->err_buf_halfsize);
+    else
+      context->err_buf_len = assert_not_sizeeq_msg(context, context->err_buf, context->err_buf_halfsize, tag, check, baseline);
+
+    return UNIT_TEST_FAIL_CONTINUE;
+  }
+}
+
+unit_test_result_t assert_not_ptrdiffle(unit_test_context_t *context, const char *err_msg, const char *tag, ptrdiff_t check, ptrdiff_t baseline)
+{
+  if (!(check <= baseline))
+  {
+    return UNIT_TEST_PASS;
+  }
+  else
+  {
+    if (err_msg)
+      strncpy(context->err_buf, err_msg, context->err_buf_halfsize);
+    else
+      context->err_buf_len = assert_not_ptrdiffeq_msg(context, context->err_buf, context->err_buf_halfsize, tag, check, baseline);
+
+    return UNIT_TEST_FAIL;
+  }
+}
+
+unit_test_result_t assert_not_ptrdiffle_continue(unit_test_context_t *context, const char *err_msg, const char *tag, ptrdiff_t check, ptrdiff_t baseline)
+{
+  if (!(check <= baseline))
+  {
+    return UNIT_TEST_PASS;
+  }
+  else
+  {
+    if (err_msg)
+      strncpy(context->err_buf, err_msg, context->err_buf_halfsize);
+    else
+      context->err_buf_len = assert_not_ptrdiffeq_msg(context, context->err_buf, context->err_buf_halfsize, tag, check, baseline);
+
+    return UNIT_TEST_FAIL_CONTINUE;
+  }
+}
+
+unit_test_result_t assert_not_objple(unit_test_context_t *context, const char *err_msg, const char *tag, const void *check, const void *baseline)
+{
+  if (!(check <= baseline))
+  {
+    return UNIT_TEST_PASS;
+  }
+  else
+  {
+    if (err_msg)
+      strncpy(context->err_buf, err_msg, context->err_buf_halfsize);
+    else
+      context->err_buf_len = assert_not_objpeq_msg(context, context->err_buf, context->err_buf_halfsize, tag, check, baseline);
+
+    return UNIT_TEST_FAIL;
+  }
+}
+
+unit_test_result_t assert_not_objple_continue(unit_test_context_t *context, const char *err_msg, const char *tag, const void *check, const void *baseline)
+{
+  if (!(check <= baseline))
+  {
+    return UNIT_TEST_PASS;
+  }
+  else
+  {
+    if (err_msg)
+      strncpy(context->err_buf, err_msg, context->err_buf_halfsize);
+    else
+      context->err_buf_len = assert_not_objpeq_msg(context, context->err_buf, context->err_buf_halfsize, tag, check, baseline);
+
+    return UNIT_TEST_FAIL_CONTINUE;
+  }
+}
+
+unit_test_result_t assert_not_funple(unit_test_context_t *context, const char *err_msg, const char *tag, tests_funp_t check, tests_funp_t baseline)
+{
+  if
+    (!
+      ( ( (void *) *((void **) &check)    )
+        <=
+        ( (void *) *((void **) &baseline) )
+      )
+    )
+  {
+    return UNIT_TEST_PASS;
+  }
+  else
+  {
+    if (err_msg)
+      strncpy(context->err_buf, err_msg, context->err_buf_halfsize);
+    else
+      context->err_buf_len = assert_not_funpeq_msg(context, context->err_buf, context->err_buf_halfsize, tag, check, baseline);
+
+    return UNIT_TEST_FAIL;
+  }
+}
+
+unit_test_result_t assert_not_funple_continue(unit_test_context_t *context, const char *err_msg, const char *tag, tests_funp_t check, tests_funp_t baseline)
+{
+  if
+    (!
+      ( ( (void *) *((void **) &check)    )
+        <=
+        ( (void *) *((void **) &baseline) )
+      )
+    )
+  {
+    return UNIT_TEST_PASS;
+  }
+  else
+  {
+    if (err_msg)
+      strncpy(context->err_buf, err_msg, context->err_buf_halfsize);
+    else
+      context->err_buf_len = assert_not_funpeq_msg(context, context->err_buf, context->err_buf_halfsize, tag, check, baseline);
+
+    return UNIT_TEST_FAIL_CONTINUE;
+  }
+}
+
 
 unit_test_result_t assert_not_streqz(unit_test_context_t *context, const char *err_msg, const char *tag, const char *check, const char *model)
 {
