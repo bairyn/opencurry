@@ -289,13 +289,13 @@ static tval                *lookup_type_dup        ( const type_t *self
     {
       const memory_manager_t *manager = type_default_memory_manager(self, copy);
 
-      copy->values = memory_manager_calloc(manager, LOOKUP_CAPACITY(from), LOOKUP_VALUE_SIZE(from));
+      copy->values = memory_manager_mcalloc(manager, LOOKUP_CAPACITY(from), LOOKUP_VALUE_SIZE(from));
       if (!copy->values)
       {
         lookup_init_empty(copy, LOOKUP_VALUE_SIZE(from));
         return NULL;
       }
-      copy->order  = memory_manager_calloc(manager, LOOKUP_CAPACITY(from), sizeof(*from->order));
+      copy->order  = memory_manager_mcalloc(manager, LOOKUP_CAPACITY(from), sizeof(*from->order));
       if (!copy->order)
       {
         lookup_init_empty(copy, LOOKUP_VALUE_SIZE(from));
@@ -553,8 +553,7 @@ void lookup_init_empty(lookup_t *lookup, size_t value_size)
 void lookup_deinit
   ( lookup_t *lookup
 
-  , void  (*free)(void *context, void *area)
-    , void   *free_context
+  , const memory_manager_t *memory_manager
   )
 {
 #if ERROR_CHECKING
@@ -570,12 +569,10 @@ void lookup_deinit
     return;
   if (!lookup->order)
     return;
-  if (!free)
-    return;
 #endif /* #if ERROR_CHECKING  */
 
-  free(free_context, lookup->values);
-  free(free_context, lookup->order);
+  memory_manager_mfree(memory_manager, lookup->values);
+  memory_manager_mfree(memory_manager, lookup->order);
   lookup->values   = NULL;
   lookup->order    = NULL;
 
@@ -646,12 +643,7 @@ lookup_t *lookup_copy
   (       lookup_t *dest
   , const lookup_t *src
 
-  , void *(*calloc)(void *context, size_t nmemb, size_t size)
-    , void   *calloc_context
-  , void *(*realloc)(void *context, void *area, size_t size)
-    , void   *realloc_context
-  , void  (*free)(void *context, void *area)
-    , void   *free_context
+  , const memory_manager_t *memory_manager
   )
 {
   int dest_dynamic;
@@ -661,12 +653,6 @@ lookup_t *lookup_copy
 
 #if ERROR_CHECKING
   if (!src)
-    return NULL;
-  if (!calloc)
-    return NULL;
-  if (!realloc)
-    return NULL;
-  if (!free)
     return NULL;
 #endif /* #if ERROR_CHECKING  */
 
@@ -686,7 +672,7 @@ lookup_t *lookup_copy
   {
     dest_dynamic = 1;
 
-    if (!(dest = calloc(calloc_context, 1, sizeof(lookup_t))))
+    if (!(dest = memory_manager_mmalloc(memory_manager, sizeof(*dest))))
       return NULL;
   }
 
@@ -700,35 +686,35 @@ lookup_t *lookup_copy
   }
   else
   {
-    if (!(dest->values = calloc(calloc_context, capacity, value_size)))
+    if (!(dest->values = memory_manager_mcalloc(memory_manager, capacity, value_size)))
     {
       if (dest_dynamic)
-        free(free_context, dest);
+        memory_manager_mfree(memory_manager, dest);
 
       return NULL;
     }
 
-    if (!(dest->order = calloc(calloc_context, capacity, sizeof(*src->order))))
+    if (!(dest->order = memory_manager_mcalloc(memory_manager, capacity, sizeof(*dest->order))))
     {
-      free(free_context, dest->values);
+      memory_manager_mfree(memory_manager, dest->values);
       dest->values = NULL;
 
       if (dest_dynamic)
-        free(free_context, dest);
+        memory_manager_mfree(memory_manager, dest);
 
       return NULL;
     }
 
     if (!lookup_copy_value_buffer(dest->values, capacity * value_size, src, 0, capacity))
     {
-      free(free_context, dest->values);
+      memory_manager_mfree(memory_manager, dest->values);
       dest->values = NULL;
 
-      free(free_context, dest->order);
+      memory_manager_mfree(memory_manager, dest->order);
       dest->order  = NULL;
 
       if (dest_dynamic)
-        free(free_context, dest);
+        memory_manager_mfree(memory_manager, dest);
 
       return NULL;
     }
@@ -874,10 +860,7 @@ lookup_t *lookup_expand
   ( lookup_t *lookup
   , size_t    capacity
 
-  , void *(*calloc)(void *context, size_t nmemb, size_t size)
-    , void   *calloc_context
-  , void *(*realloc)(void *context, void *area, size_t size)
-    , void   *realloc_context
+  , const memory_manager_t *memory_manager
   )
 {
   size_t old_capacity;
@@ -894,15 +877,13 @@ lookup_t *lookup_expand
   if (old_capacity <= 0)
   {
 #if ERROR_CHECKING
-    if (!calloc)
-      return NULL;
     if (lookup->values)
       return NULL;
     if (lookup->order)
       return NULL;
 #endif /* #if ERROR_CHECKING  */
 
-    lookup->values = calloc(calloc_context, capacity, lookup->value_size);
+    lookup->values = memory_manager_mcalloc(memory_manager, capacity, lookup->value_size);
     if (!lookup->values)
     {
       lookup->order    = NULL;
@@ -911,7 +892,7 @@ lookup_t *lookup_expand
       return NULL;
     }
 
-    lookup->order  = calloc(calloc_context, capacity, sizeof(bnode_t));
+    lookup->order  = memory_manager_mcalloc(memory_manager, capacity, sizeof(bnode_t));
     if (!lookup->order)
     {
       lookup->values   = NULL;
@@ -931,15 +912,13 @@ lookup_t *lookup_expand
   else
   {
 #if ERROR_CHECKING
-    if (!realloc)
-      return NULL;
     if (!lookup->values)
       return NULL;
     if (!lookup->order)
       return NULL;
 #endif /* #if ERROR_CHECKING  */
 
-    lookup->values = realloc(realloc_context, lookup->values, capacity * lookup->value_size);
+    lookup->values = memory_manager_mrealloc(memory_manager, lookup->values, capacity * lookup->value_size);
     if (!lookup->values)
     {
       lookup->order    = NULL;
@@ -948,7 +927,7 @@ lookup_t *lookup_expand
       return NULL;
     }
 
-    lookup->order  = realloc(realloc_context, lookup->order,  capacity * sizeof(bnode_t));
+    lookup->order  = memory_manager_mrealloc(memory_manager, lookup->order,  capacity * sizeof(bnode_t));
     if (!lookup->order)
     {
       lookup->values   = NULL;
@@ -974,10 +953,7 @@ lookup_t *lookup_auto_expand
   ( lookup_t *lookup
   , int       auto_defragment
 
-  , void *(*calloc)(void *context, size_t nmemb, size_t size)
-    , void   *calloc_context
-  , void *(*realloc)(void *context, void *area, size_t size)
-    , void   *realloc_context
+  , const memory_manager_t *memory_manager
 
   , int *out_expanded
   , int *out_defragmented
@@ -1021,10 +997,7 @@ lookup_t *lookup_auto_expand
       ( lookup
       , LOOKUP_CAPACITY(lookup) << 1
 
-      , calloc
-        , calloc_context
-      , realloc
-        , realloc_context
+      , memory_manager
       );
 }
 
@@ -1033,10 +1006,7 @@ lookup_t *lookup_auto_expand_simple
   ( lookup_t *lookup
   , int       auto_defragment
 
-  , void *(*calloc)(void *context, size_t nmemb, size_t size)
-    , void   *calloc_context
-  , void *(*realloc)(void *context, void *area, size_t size)
-    , void   *realloc_context
+  , const memory_manager_t *memory_manager
   )
 {
 #if ERROR_CHECKING
@@ -1061,10 +1031,7 @@ lookup_t *lookup_auto_expand_simple
       ( lookup
       , LOOKUP_CAPACITY(lookup) << 1
 
-      , calloc
-        , calloc_context
-      , realloc
-        , realloc_context
+      , memory_manager
       );
 }
 
@@ -1181,10 +1148,7 @@ lookup_t *lookup_shrink
   ( lookup_t *lookup
   , size_t    capacity
 
-  , void *(*realloc)(void *context, void *area, size_t size)
-    , void   *realloc_context
-  , void  (*free)(void *context, void *area)
-    , void   *free_context
+  , const memory_manager_t *memory_manager
   )
 {
   size_t old_capacity;
@@ -1216,13 +1180,8 @@ lookup_t *lookup_shrink
 
   if (new_capacity <= 0)
   {
-#if ERROR_CHECKING
-    if (!free)
-      return NULL;
-#endif /* #if ERROR_CHECKING  */
-
-    free(free_context, lookup->values);
-    free(free_context, lookup->order);
+    memory_manager_mfree(memory_manager, lookup->values);
+    memory_manager_mfree(memory_manager, lookup->order);
 
     lookup->values = NULL;
     lookup->order  = NULL;
@@ -1235,22 +1194,22 @@ lookup_t *lookup_shrink
   else
   {
 #if ERROR_CHECKING
-    if (!free)
+    if (lookup->values)
       return NULL;
-    if (!realloc)
+    if (lookup->order)
       return NULL;
 #endif /* #if ERROR_CHECKING  */
 
-    lookup->values = realloc(realloc_context, lookup->values, LOOKUP_VALUE_SIZE(lookup) * new_capacity);
+    lookup->values = memory_manager_mrealloc(memory_manager, lookup->values, LOOKUP_VALUE_SIZE(lookup) * new_capacity);
     if (lookup->values)
-      lookup->order = realloc(realloc_context, lookup->order, sizeof(*lookup->order) * new_capacity);
+      lookup->order = memory_manager_mrealloc(memory_manager, lookup->order, sizeof(*lookup->order) * new_capacity);
 
     if (!lookup->values || !lookup->order)
     {
       if (lookup->values)
-        free(free_context, lookup->values);
+        memory_manager_mfree(memory_manager, lookup->values);
       if (lookup->order)
-        free(free_context, lookup->order);
+        memory_manager_mfree(memory_manager, lookup->order);
 
       lookup->values = NULL;
       lookup->order  = NULL;
@@ -1280,12 +1239,7 @@ lookup_t *lookup_resize
   ( lookup_t *lookup
   , size_t    capacity
 
-  , void *(*calloc)(void *context, size_t nmemb, size_t size)
-    , void   *calloc_context
-  , void *(*realloc)(void *context, void *area, size_t size)
-    , void   *realloc_context
-  , void  (*free)(void *context, void *area)
-    , void   *free_context
+  , const memory_manager_t *memory_manager
   )
 {
   size_t old_capacity;
@@ -1300,15 +1254,17 @@ lookup_t *lookup_resize
   if (capacity < old_capacity)
   {
     if (LOOKUP_IS_RECYCLING(lookup))
-      lookup_defragment_simple(lookup, DEFRAGMENT_DEFAULT);
+    {
+      lookup = lookup_defragment_simple(lookup, DEFRAGMENT_DEFAULT);
+      if (!lookup)
+        return NULL;
+    }
 
-    return lookup_shrink
-      (lookup, capacity, realloc, realloc_context, free,    free_context);
+    return lookup_shrink(lookup, capacity, memory_manager);
   }
   else if (capacity > old_capacity)
   {
-    return lookup_expand
-      (lookup, capacity, calloc,  calloc_context,  realloc, realloc_context);
+    return lookup_expand(lookup, capacity, memory_manager);
   }
   else
   {
@@ -1319,24 +1275,14 @@ lookup_t *lookup_resize
 lookup_t *lookup_auto_resize
   ( lookup_t *lookup
 
-  , void *(*calloc)(void *context, size_t nmemb, size_t size)
-    , void   *calloc_context
-  , void *(*realloc)(void *context, void *area, size_t size)
-    , void   *realloc_context
-  , void  (*free)(void *context, void *area)
-    , void   *free_context
+  , const memory_manager_t *memory_manager
   )
 {
   return
     lookup_auto_resize_controlled
       ( /* lookup                     */ lookup
 
-      , /* calloc                     */ calloc
-        , /* calloc_context           */ calloc_context
-      , /* realloc                    */ realloc
-        , /* realloc_context          */ realloc_context
-      , /* free                       */ free
-        , /* free_context             */ free_context
+      , /* memory_manager             */ memory_manager
 
       , /* min_capacity               */ lookup_auto_min_capacity
         , /* min_capacity_context     */ lookup_auto_min_capacity_context
@@ -1397,12 +1343,7 @@ void * const lookup_auto_defragment_which_context = NULL;
 lookup_t *lookup_auto_resize_controlled
   ( lookup_t *lookup
 
-  , void *(*calloc)(void *context, size_t nmemb, size_t size)
-    , void   *calloc_context
-  , void *(*realloc)(void *context, void *area, size_t size)
-    , void   *realloc_context
-  , void  (*free)(void *context, void *area)
-    , void   *free_context
+  , const memory_manager_t *memory_manager
 
   , size_t (*min_capacity)(void *context)
     , void                  *min_capacity_context
@@ -1446,12 +1387,6 @@ lookup_t *lookup_auto_resize_controlled
 
 #if ERROR_CHECKING
   if (!lookup)
-    return NULL;
-  if (!calloc)
-    return NULL;
-  if (!realloc)
-    return NULL;
-  if (!free)
     return NULL;
 #endif /* #if ERROR_CHECKING  */
 
@@ -1594,7 +1529,7 @@ lookup_t *lookup_auto_resize_controlled
   if (expanding > 0 && shrinking <= 0)
   {
     if (lookup)
-      lookup = lookup_expand(lookup, new_capacity, calloc, calloc_context, realloc, realloc_context);
+      lookup = lookup_expand(lookup, new_capacity, memory_manager);
   }
 
   if (defragmenting)
@@ -1620,7 +1555,7 @@ lookup_t *lookup_auto_resize_controlled
   if (shrinking > 0 && shrinking <= 0)
   {
     if (lookup)
-      lookup = lookup_shrink(lookup, new_capacity, realloc, realloc_context, free, free_context);
+      lookup = lookup_shrink(lookup, new_capacity, memory_manager);
   }
 
   return lookup;
@@ -4898,12 +4833,7 @@ lookup_t *lookup_minsert
 
   , callback_compare_t  cmp
 
-  , void *(*calloc)(void *context, size_t nmemb, size_t size)
-    , void   *calloc_context
-  , void *(*realloc)(void *context, void *area, size_t size)
-    , void   *realloc_context
-  , void  (*free)(void *context, void *area)
-    , void   *free_context
+  , const memory_manager_t *memory_manager
 
   , size_t             *out_value_index
   , int                *out_is_duplicate
@@ -4914,7 +4844,7 @@ lookup_t *lookup_minsert
     return NULL;
 #endif /* #if ERROR_CHECKING  */
 
-  lookup = lookup_auto_resize(lookup, calloc, calloc_context, realloc, realloc_context, free, free_context);
+  lookup = lookup_auto_resize(lookup, memory_manager);
   if (!lookup)
     return NULL;
 
@@ -4937,12 +4867,7 @@ lookup_t *lookup_mdelete
 
   , callback_compare_t  cmp
 
-  , void *(*calloc)(void *context, size_t nmemb, size_t size)
-    , void   *calloc_context
-  , void *(*realloc)(void *context, void *area, size_t size)
-    , void   *realloc_context
-  , void  (*free)(void *context, void *area)
-    , void   *free_context
+  , const memory_manager_t *memory_manager
 
   , size_t             *out_num_deleted
   )
@@ -4964,7 +4889,7 @@ lookup_t *lookup_mdelete
   if (!lookup)
     return NULL;
 
-  return lookup_auto_resize(lookup, calloc, calloc_context, realloc, realloc_context, free, free_context);
+  return lookup_auto_resize(lookup, memory_manager);
 }
 
 /* ---------------------------------------------------------------- */

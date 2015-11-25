@@ -54,8 +54,6 @@ int test_type_base_lookup_cli(int argc, char **argv)
 
 /* ---------------------------------------------------------------- */
 
-static void init_memory_methods(void);
-
 /* type_base_lookup tests. */
 unit_test_t type_base_lookup_test =
   {  test_type_base_lookup_run
@@ -75,56 +73,34 @@ unit_test_t *type_base_lookup_tests[] =
 
 unit_test_result_t test_type_base_lookup_run(unit_test_context_t *context)
 {
-  init_memory_methods();
-
   return run_tests(context, type_base_lookup_tests);
 }
 
 /* ---------------------------------------------------------------- */
 
-static void *(*calloc)(void *context, size_t nmemb, size_t size);
-static void   *calloc_context;
-
-static void *(*realloc)(void *context, void *area, size_t size);
-static void   *realloc_context;
-
-static void  (*free)(void *context, void *area);
-static void   *free_context;
-
-static void init_memory_methods(void)
-{
-  calloc  = (void *(*)(void *context, size_t nmemb, size_t size))
-    default_memory_manager->calloc;
-  realloc = (void *(*)(void *context, void *area, size_t size))
-    default_memory_manager->realloc;
-  free    = (void  (*)(void *context, void *area))
-    default_memory_manager->free;
-
-  calloc_context  = (void *) default_memory_manager;
-  realloc_context = (void *) default_memory_manager;
-  free_context    = (void *) default_memory_manager;
-}
-
 #define LOOKUP_EXPAND(lookup, num) \
-  lookup_expand(lookup, num, calloc, calloc_context, realloc, realloc_context)
+  lookup_expand(lookup, num, NULL)
 
 #define LOOKUP_SHRINK(lookup, num) \
-  lookup_shrink(lookup, num, realloc, realloc_context, free, free_context)
+  lookup_shrink(lookup, num, NULL)
 
 #define LOOKUP_RESIZE(lookup, num) \
-  lookup_resize(lookup, num, calloc, calloc_context, realloc, realloc_context, free, free_context)
+  lookup_resize(lookup, num, NULL)
 
 #define LOOKUP_DEINIT(lookup) \
-  lookup_deinit(lookup, free, free_context)
+  lookup_deinit(lookup, NULL)
 
 #define LOOKUP_INSERT(lookup, val, add_when_exists, cmp, out_is_duplicate) \
   lookup_minsert(lookup, val, add_when_exists, cmp, NULL, out_is_duplicate)
 
 #define LOOKUP_MINSERT(lookup, val, add_when_exists, cmp, out_is_duplicate) \
-  lookup_minsert(lookup, val, add_when_exists, cmp, calloc, calloc_context, realloc, realloc_context, free, free_context, NULL, out_is_duplicate)
+  lookup_minsert(lookup, val, add_when_exists, cmp, NULL, NULL, out_is_duplicate)
+
+#define LOOKUP_DELETE(lookup, val, cmp, out_num_deleted) \
+  lookup_delete(lookup, val, cmp, out_num_deleted)
 
 #define LOOKUP_MDELETE(lookup, val, cmp, out_num_deleted) \
-  lookup_mdelete(lookup, val, cmp, calloc, calloc_context, realloc, realloc_context, free, free_context, out_num_deleted)
+  lookup_mdelete(lookup, val, cmp, NULL, out_num_deleted)
 
 size_t checked_lookup_num_used_values(unit_test_context_t *context, unit_test_result_t *out_result, const lookup_t *lookup)
 {
@@ -478,8 +454,6 @@ unit_test_result_t lookup_memory_management_test_run(unit_test_context_t *contex
   lookup_t lookup_val;
   lookup_t *lookup = &lookup_val;
 
-  init_memory_methods();
-
   lookup_init_empty(lookup, sizeof(value_type));
 
   ENCLOSE()
@@ -563,8 +537,6 @@ static unit_test_result_t lookup_insert_tests(unit_test_context_t *context, look
   typedef int value_type;
 
   lookup_t *lookup = *lookup_ref;
-
-  init_memory_methods();
 
   ENCLOSE()
   {
@@ -1358,8 +1330,6 @@ unit_test_result_t lookup_insert_test_run(unit_test_context_t *context)
   lookup_t lookup_val;
   lookup_t *lookup = &lookup_val;
 
-  init_memory_methods();
-
   lookup_init_empty(lookup, sizeof(value_type));
 
   ENCLOSE()
@@ -1438,8 +1408,6 @@ unit_test_result_t lookup_insert_delete_test_run(unit_test_context_t *context)
   lookup_t *lookup         = &lookup_val;
   lookup_t *lookup_val_ref = &lookup_val;
 
-  init_memory_methods();
-
   lookup_init_empty(lookup, sizeof(value_type));
 
   ENCLOSE()
@@ -1488,7 +1456,7 @@ unit_test_result_t lookup_insert_delete_test_run(unit_test_context_t *context)
     value = 7;
     ++num_deletions;
     ++num_deletions;
-    ASSERT2( objpeq, lookup_delete(lookup, val,  cmp, nd), lookup_val_ref );
+    ASSERT2( objpeq, LOOKUP_DELETE(lookup, val,  cmp, nd), lookup_val_ref );
     ASSERT2( inteq,  num_deleted, 2 );
     ASSERT2( inteq,  CHECKED_LOOKUP_INT_LEN(lookup), 9 + LOOKUP_INSERT_TESTS_NUM_ADDITIONAL_VALUES - num_deletions );
     ASSERT1( false,  lookup_max_capacity(lookup) );
@@ -1499,7 +1467,7 @@ unit_test_result_t lookup_insert_delete_test_run(unit_test_context_t *context)
     retrieve = 7; ASSERT2( inteq, val_or_m1(lookup_retrieve(lookup, ret, cmp)), -1 );
 
     value = 7;
-    ASSERT2( objpeq, lookup_delete(lookup, val,  cmp, nd), lookup_val_ref );
+    ASSERT2( objpeq, LOOKUP_DELETE(lookup, val,  cmp, nd), lookup_val_ref );
     ASSERT2( inteq,  num_deleted, 0 );
     ASSERT2( inteq,  CHECKED_LOOKUP_INT_LEN(lookup), 9 + LOOKUP_INSERT_TESTS_NUM_ADDITIONAL_VALUES - num_deletions );
     ASSERT1( false,  lookup_max_capacity(lookup) );
@@ -1525,7 +1493,7 @@ unit_test_result_t lookup_insert_delete_test_run(unit_test_context_t *context)
 
     value = 7;
     ++num_deletions;
-    ASSERT2( objpeq, lookup_delete(lookup, val,  cmp, nd), lookup_val_ref );
+    ASSERT2( objpeq, LOOKUP_DELETE(lookup, val,  cmp, nd), lookup_val_ref );
     ASSERT2( inteq,  num_deleted, 1 );
     ASSERT2( inteq,  CHECKED_LOOKUP_INT_LEN(lookup), 9 + LOOKUP_INSERT_TESTS_NUM_ADDITIONAL_VALUES - num_deletions );
     ASSERT1( false,  lookup_max_capacity(lookup) );
@@ -1536,7 +1504,7 @@ unit_test_result_t lookup_insert_delete_test_run(unit_test_context_t *context)
     retrieve = 7; ASSERT2( inteq, val_or_m1(lookup_retrieve(lookup, ret, cmp)), -1 );
 
     value = 7;
-    ASSERT2( objpeq, lookup_delete(lookup, val,  cmp, nd), lookup_val_ref );
+    ASSERT2( objpeq, LOOKUP_DELETE(lookup, val,  cmp, nd), lookup_val_ref );
     ASSERT2( inteq,  num_deleted, 0 );
     ASSERT2( inteq,  CHECKED_LOOKUP_INT_LEN(lookup), 9 + LOOKUP_INSERT_TESTS_NUM_ADDITIONAL_VALUES - num_deletions );
     ASSERT1( false,  lookup_max_capacity(lookup) );
@@ -1550,7 +1518,7 @@ unit_test_result_t lookup_insert_delete_test_run(unit_test_context_t *context)
     value = 42;
     ++num_deletions;
     ++num_deletions;
-    ASSERT2( objpeq, lookup_delete(lookup, val,  cmp, nd), lookup_val_ref );
+    ASSERT2( objpeq, LOOKUP_DELETE(lookup, val,  cmp, nd), lookup_val_ref );
     ASSERT2( inteq,  num_deleted, 2 );
     ASSERT2( inteq,  CHECKED_LOOKUP_INT_LEN(lookup), 9 + LOOKUP_INSERT_TESTS_NUM_ADDITIONAL_VALUES - num_deletions );
     ASSERT1( false,  lookup_max_capacity(lookup) );
@@ -1558,7 +1526,7 @@ unit_test_result_t lookup_insert_delete_test_run(unit_test_context_t *context)
     retrieve = 42; ASSERT2( inteq, val_or_m1(lookup_retrieve(lookup, ret, cmp)), -1 );
 
     value = 42;
-    ASSERT2( objpeq, lookup_delete(lookup, val,  cmp, nd), lookup_val_ref );
+    ASSERT2( objpeq, LOOKUP_DELETE(lookup, val,  cmp, nd), lookup_val_ref );
     ASSERT2( inteq,  num_deleted, 0 );
     ASSERT2( inteq,  CHECKED_LOOKUP_INT_LEN(lookup), 9 + LOOKUP_INSERT_TESTS_NUM_ADDITIONAL_VALUES - num_deletions );
     ASSERT1( false,  lookup_max_capacity(lookup) );
@@ -1571,7 +1539,7 @@ unit_test_result_t lookup_insert_delete_test_run(unit_test_context_t *context)
 
     value = 9;
     ++num_deletions;
-    ASSERT2( objpeq, lookup_delete(lookup, val,  cmp, nd), lookup_val_ref );
+    ASSERT2( objpeq, LOOKUP_DELETE(lookup, val,  cmp, nd), lookup_val_ref );
     ASSERT2( inteq,  num_deleted, 1 );
     ASSERT2( inteq,  CHECKED_LOOKUP_INT_LEN(lookup), 9 + LOOKUP_INSERT_TESTS_NUM_ADDITIONAL_VALUES - num_deletions );
     ASSERT1( false,  lookup_max_capacity(lookup) );
@@ -1602,8 +1570,6 @@ unit_test_result_t lookup_minsert_test_run(unit_test_context_t *context)
 
   lookup_t *lookup         = &lookup_val;
   lookup_t *lookup_val_ref = &lookup_val;
-
-  init_memory_methods();
 
   lookup_init_empty(lookup, sizeof(value_type));
 

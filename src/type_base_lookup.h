@@ -55,6 +55,9 @@
 
 #include "ptrs.h"
 #include "bits.h"
+#include "cpp.h"
+
+#include "util.h"
 
 /* ---------------------------------------------------------------- */
 /* Dependencies.                                                    */
@@ -64,6 +67,7 @@
 #include "type_base_typed.h"
 #include "type_base_tval.h"
 #include "type_base_compare.h"
+#include "type_base_memory_manager.h"
 
 /* ---------------------------------------------------------------- */
 /* lookup_t and children.                                           */
@@ -233,8 +237,7 @@ void lookup_init_empty(lookup_t *lookup, size_t value_size);
 void lookup_deinit
   ( lookup_t *lookup
 
-  , void  (*free)(void *context, void *area)
-    , void   *free_context
+  , const memory_manager_t *memory_manager
   );
 
 size_t lookup_copy_value_buffer(void    *dest, size_t dest_size, const lookup_t *lookup, size_t start, size_t num_values);
@@ -243,12 +246,7 @@ lookup_t *lookup_copy
   (       lookup_t *dest
   , const lookup_t *src
 
-  , void *(*calloc)(void *context, size_t nmemb, size_t size)
-    , void   *calloc_context
-  , void *(*realloc)(void *context, void *area, size_t size)
-    , void   *realloc_context
-  , void  (*free)(void *context, void *area)
-    , void   *free_context
+  , const memory_manager_t *memory_manager
   );
 
 /* ---------------------------------------------------------------- */
@@ -292,10 +290,7 @@ lookup_t *lookup_expand
   ( lookup_t *lookup
   , size_t    capacity
 
-  , void *(*calloc)(void *context, size_t nmemb, size_t size)
-    , void   *calloc_context
-  , void *(*realloc)(void *context, void *area, size_t size)
-    , void   *realloc_context
+  , const memory_manager_t *memory_manager
   );
 
 /* If we're either at max capacity or recycling, then double the capacity. */
@@ -303,10 +298,7 @@ lookup_t *lookup_auto_expand
   ( lookup_t *lookup
   , int       auto_defragment
 
-  , void *(*calloc)(void *context, size_t nmemb, size_t size)
-    , void   *calloc_context
-  , void *(*realloc)(void *context, void *area, size_t size)
-    , void   *realloc_context
+  , const memory_manager_t *memory_manager
 
   , int *out_expanded
   , int *out_defragmented
@@ -316,10 +308,7 @@ lookup_t *lookup_auto_expand_simple
   ( lookup_t *lookup
   , int       auto_defragment
 
-  , void *(*calloc)(void *context, size_t nmemb, size_t size)
-    , void   *calloc_context
-  , void *(*realloc)(void *context, void *area, size_t size)
-    , void   *realloc_context
+  , const memory_manager_t *memory_manager
   );
 
 #define DEFRAGMENT_NONE    (0)
@@ -353,22 +342,14 @@ lookup_t *lookup_shrink
   ( lookup_t *lookup
   , size_t    capacity
 
-  , void *(*realloc)(void *context, void *area, size_t size)
-    , void   *realloc_context
-  , void  (*free)(void *context, void *area)
-    , void   *free_context
+  , const memory_manager_t *memory_manager
   );
 
 lookup_t *lookup_resize
   ( lookup_t *lookup
   , size_t    capacity
 
-  , void *(*calloc)(void *context, size_t nmemb, size_t size)
-    , void   *calloc_context
-  , void *(*realloc)(void *context, void *area, size_t size)
-    , void   *realloc_context
-  , void  (*free)(void *context, void *area)
-    , void   *free_context
+  , const memory_manager_t *memory_manager
   );
 
 #define LOOKUP_AUTO_MIN_CAPACITY               16
@@ -384,12 +365,7 @@ lookup_t *lookup_resize
 lookup_t *lookup_auto_resize
   ( lookup_t *lookup
 
-  , void *(*calloc)(void *context, size_t nmemb, size_t size)
-    , void   *calloc_context
-  , void *(*realloc)(void *context, void *area, size_t size)
-    , void   *realloc_context
-  , void  (*free)(void *context, void *area)
-    , void   *free_context
+  , const memory_manager_t *memory_manager
   );
 
 typedef size_t (*lookup_capacity_fun_t)(void *context, size_t capacity);
@@ -411,12 +387,7 @@ extern void * const lookup_auto_defragment_which_context;
 lookup_t *lookup_auto_resize_controlled
   ( lookup_t *lookup
 
-  , void *(*calloc)(void *context, size_t nmemb, size_t size)
-    , void   *calloc_context
-  , void *(*realloc)(void *context, void *area, size_t size)
-    , void   *realloc_context
-  , void  (*free)(void *context, void *area)
-    , void   *free_context
+  , const memory_manager_t *memory_manager
 
   , size_t (*min_capacity)(void *context)
     , void                  *min_capacity_context
@@ -947,38 +918,30 @@ size_t lookup_delete_limit
 
 /* ---------------------------------------------------------------- */
 
+#define LOOKUP_ADD_DUPLICATES    TRUE()
+#define LOOKUP_NO_ADD_DUPLICATES FALSE()
 lookup_t *lookup_minsert
-  ( lookup_t           *lookup
-  , const void         *val
-  , int                 add_when_exists
+  ( lookup_t               *lookup
+  , const void             *val
+  , int                     add_when_exists
 
-  , callback_compare_t  cmp
+  , callback_compare_t      cmp
 
-  , void *(*calloc)(void *context, size_t nmemb, size_t size)
-    , void   *calloc_context
-  , void *(*realloc)(void *context, void *area, size_t size)
-    , void   *realloc_context
-  , void  (*free)(void *context, void *area)
-    , void   *free_context
+  , const memory_manager_t *memory_manager
 
-  , size_t             *out_value_index
-  , int                *out_is_duplicate
+  , size_t                 *out_value_index
+  , int                    *out_is_duplicate
   );
 
 lookup_t *lookup_mdelete
-  ( lookup_t           *lookup
-  , const void         *val
+  ( lookup_t               *lookup
+  , const void             *val
 
-  , callback_compare_t  cmp
+  , callback_compare_t      cmp
 
-  , void *(*calloc)(void *context, size_t nmemb, size_t size)
-    , void   *calloc_context
-  , void *(*realloc)(void *context, void *area, size_t size)
-    , void   *realloc_context
-  , void  (*free)(void *context, void *area)
-    , void   *free_context
+  , const memory_manager_t *memory_manager
 
-  , size_t             *out_num_deleted
+  , size_t                 *out_num_deleted
   );
 
 /* ---------------------------------------------------------------- */
