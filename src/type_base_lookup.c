@@ -554,7 +554,7 @@ void lookup_deinit
   ( lookup_t *lookup
 
   , void  (*free)(void *context, void *area)
-  , void   *free_context
+    , void   *free_context
   )
 {
 #if ERROR_CHECKING
@@ -631,15 +631,13 @@ size_t lookup_copy_order_buffer(bnode_t *dest, size_t dest_num, const lookup_t *
   if (LOOKUP_NULL(lookup))
     return 0;
 
-  /* TODO */
   capacity   = LOOKUP_CAPACITY  (lookup);
-  value_size = LOOKUP_VALUE_SIZE(lookup);
 
-  start      = min_size(capacity,                         start);
-  num_values = min_size(size_minus(capacity, start),      num_values);
-  num_values = min_size(DIV_FLOOR(dest_size, value_size), num_values);
+  start      = min_size(capacity,                    start);
+  num_values = min_size(size_minus(capacity, start), num_values);
+  num_values = min_size(dest_num,                    num_values);
 
-  memmove(dest, LOOKUP_INDEX_CVALUE(lookup, start), value_size * num_values);
+  memmove(dest, LOOKUP_INDEX_CVALUE(lookup, start), sizeof(*lookup->order) * num_values);
 
   return num_values;
 }
@@ -647,7 +645,6 @@ size_t lookup_copy_order_buffer(bnode_t *dest, size_t dest_num, const lookup_t *
 lookup_t *lookup_copy
   (       lookup_t *dest
   , const lookup_t *src
-
 
   , void *(*calloc)(void *context, size_t nmemb, size_t size)
     , void   *calloc_context
@@ -878,10 +875,9 @@ lookup_t *lookup_expand
   , size_t    capacity
 
   , void *(*calloc)(void *context, size_t nmemb, size_t size)
-  , void   *calloc_context
-
+    , void   *calloc_context
   , void *(*realloc)(void *context, void *area, size_t size)
-  , void   *realloc_context
+    , void   *realloc_context
   )
 {
   size_t old_capacity;
@@ -979,10 +975,9 @@ lookup_t *lookup_auto_expand
   , int       auto_defragment
 
   , void *(*calloc)(void *context, size_t nmemb, size_t size)
-  , void   *calloc_context
-
+    , void   *calloc_context
   , void *(*realloc)(void *context, void *area, size_t size)
-  , void   *realloc_context
+    , void   *realloc_context
 
   , int *out_expanded
   , int *out_defragmented
@@ -1027,10 +1022,9 @@ lookup_t *lookup_auto_expand
       , LOOKUP_CAPACITY(lookup) << 1
 
       , calloc
-      , calloc_context
-
+        , calloc_context
       , realloc
-      , realloc_context
+        , realloc_context
       );
 }
 
@@ -1040,10 +1034,9 @@ lookup_t *lookup_auto_expand_simple
   , int       auto_defragment
 
   , void *(*calloc)(void *context, size_t nmemb, size_t size)
-  , void   *calloc_context
-
+    , void   *calloc_context
   , void *(*realloc)(void *context, void *area, size_t size)
-  , void   *realloc_context
+    , void   *realloc_context
   )
 {
 #if ERROR_CHECKING
@@ -1069,10 +1062,9 @@ lookup_t *lookup_auto_expand_simple
       , LOOKUP_CAPACITY(lookup) << 1
 
       , calloc
-      , calloc_context
-
+        , calloc_context
       , realloc
-      , realloc_context
+        , realloc_context
       );
 }
 
@@ -1081,13 +1073,13 @@ static lookup_t *lookup_defragment_step
   , bnode_t  *node
   , int       defragment_which
 
-  , void *(*on_new_node_index) (void *on_new_order_index_context, void *last_accumulation, lookup_t *lookup, size_t new_node_index,  size_t old_node_index,  int *out_iteration_break)
-  , void *on_new_node_index_context
-  , void *on_new_node_index_initial_accumulation
+  , void *(*on_new_node_index) (void *on_new_order_index_context, void *last_accumulation, lookup_t *lookup, size_t new_node_index,  size_t old_node_index,  int *out_break_iteration)
+    , void *on_new_node_index_context
+    , void *on_new_node_index_initial_accumulation
 
-  , void *(*on_new_value_index)(void *on_new_value_index_context, void *last_accumulation, lookup_t *lookup, size_t new_value_index, size_t old_value_index, int *out_iteration_break)
-  , void *on_new_value_index_context
-  , void *on_new_value_index_initial_accumulation
+  , void *(*on_new_value_index)(void *on_new_value_index_context, void *last_accumulation, lookup_t *lookup, size_t new_value_index, size_t old_value_index, int *out_break_iteration)
+    , void *on_new_value_index_context
+    , void *on_new_value_index_initial_accumulation
 
   , void **out_on_new_node_index_final_accumulation
   , void **out_on_new_value_index_final_accumulation
@@ -1115,6 +1107,8 @@ static lookup_t *lookup_defragment_step
 
   WRITE_OUTPUT(out_on_new_node_index_final_accumulation,  on_new_node_index_initial_accumulation);
   WRITE_OUTPUT(out_on_new_value_index_final_accumulation, on_new_value_index_initial_accumulation);
+
+  return lookup;
 }
 
 /* Move elements to remove gaps of free element slots. */
@@ -1122,13 +1116,13 @@ lookup_t *lookup_defragment
   ( lookup_t *lookup
   , int       defragment_which
 
-  , void *(*on_new_node_index) (void *on_new_order_index_context, void *last_accumulation, lookup_t *lookup, size_t new_node_index,  size_t old_node_index,  int *out_iteration_break)
-  , void *on_new_node_index_context
-  , void *on_new_node_index_initial_accumulation
+  , void *(*on_new_node_index) (void *on_new_order_index_context, void *last_accumulation, lookup_t *lookup, size_t new_node_index,  size_t old_node_index,  int *out_break_iteration)
+    , void *on_new_node_index_context
+    , void *on_new_node_index_initial_accumulation
 
-  , void *(*on_new_value_index)(void *on_new_value_index_context, void *last_accumulation, lookup_t *lookup, size_t new_value_index, size_t old_value_index, int *out_iteration_break)
-  , void *on_new_value_index_context
-  , void *on_new_value_index_initial_accumulation
+  , void *(*on_new_value_index)(void *on_new_value_index_context, void *last_accumulation, lookup_t *lookup, size_t new_value_index, size_t old_value_index, int *out_break_iteration)
+    , void *on_new_value_index_context
+    , void *on_new_value_index_initial_accumulation
 
   , void **out_on_new_node_index_final_accumulation
   , void **out_on_new_value_index_final_accumulation
@@ -1141,12 +1135,12 @@ lookup_t *lookup_defragment
       , defragment_which
 
       , on_new_node_index
-      , on_new_node_index_context
-      , on_new_node_index_initial_accumulation
+        , on_new_node_index_context
+        , on_new_node_index_initial_accumulation
 
       , on_new_value_index
-      , on_new_value_index_context
-      , on_new_value_index_initial_accumulation
+        , on_new_value_index_context
+        , on_new_value_index_initial_accumulation
 
       , out_on_new_node_index_final_accumulation
       , out_on_new_value_index_final_accumulation
@@ -1164,12 +1158,12 @@ lookup_t *lookup_defragment_simple
       , defragment_which
 
       , NULL
-      , NULL
-      , NULL
+        , NULL
+        , NULL
 
       , NULL
-      , NULL
-      , NULL
+        , NULL
+        , NULL
 
       , NULL
       , NULL
@@ -1188,10 +1182,9 @@ lookup_t *lookup_shrink
   , size_t    capacity
 
   , void *(*realloc)(void *context, void *area, size_t size)
-  , void   *realloc_context
-
+    , void   *realloc_context
   , void  (*free)(void *context, void *area)
-  , void   *free_context
+    , void   *free_context
   )
 {
   size_t old_capacity;
@@ -1327,13 +1320,11 @@ lookup_t *lookup_auto_resize
   ( lookup_t *lookup
 
   , void *(*calloc)(void *context, size_t nmemb, size_t size)
-  , void   *calloc_context
-
+    , void   *calloc_context
   , void *(*realloc)(void *context, void *area, size_t size)
-  , void   *realloc_context
-
+    , void   *realloc_context
   , void  (*free)(void *context, void *area)
-  , void   *free_context
+    , void   *free_context
   )
 {
   return
@@ -1379,22 +1370,22 @@ lookup_t *lookup_auto_resize
 }
 
 size_t lookup_auto_min_capacity    (void *context)
-  { return LOOKUP_AUTO_MIN_CAPACITY };
+  { return LOOKUP_AUTO_MIN_CAPACITY; }
 
 size_t lookup_auto_expand_threshold(void *context, size_t capacity)
-  { return LOOKUP_AUTO_EXPAND_THRESHOLD(capacity) };
+  { return LOOKUP_AUTO_EXPAND_THRESHOLD(capacity); }
 
-size_t lookup_auto_expand_threshold(void *context, size_t capacity)
-  { return LOOKUP_AUTO_SHRINK_CAPACITY (capacity) };
-
-size_t lookup_auto_shrink_threshold(void *context, size_t capacity)
-  { return LOOKUP_AUTO_EXPAND_THRESHOLD(capacity) };
+size_t lookup_auto_expand_capacity (void *context, size_t capacity)
+  { return LOOKUP_AUTO_SHRINK_CAPACITY (capacity); }
 
 size_t lookup_auto_shrink_threshold(void *context, size_t capacity)
-  { return LOOKUP_AUTO_SHRINK_CAPACITY (capacity) };
+  { return LOOKUP_AUTO_EXPAND_THRESHOLD(capacity); }
+
+size_t lookup_auto_shrink_capacity (void *context, size_t capacity)
+  { return LOOKUP_AUTO_SHRINK_CAPACITY (capacity); }
 
 int lookup_auto_defragment_which   (void *context)
-  { return LOOKUP_AUTO_DEFRAGMENT_WHICH };
+  { return LOOKUP_AUTO_DEFRAGMENT_WHICH; }
 
 void * const lookup_auto_min_capacity_context     = NULL;
 void * const lookup_auto_expand_threshold_context = NULL;
@@ -1413,7 +1404,7 @@ lookup_t *lookup_auto_resize_controlled
   , void  (*free)(void *context, void *area)
     , void   *free_context
 
-  , int (*min_capacity)(void *context)
+  , size_t (*min_capacity)(void *context)
     , void                  *min_capacity_context
   , lookup_capacity_fun_t  expand_threshold
     , void                  *expand_threshold_context
@@ -1423,14 +1414,14 @@ lookup_t *lookup_auto_resize_controlled
     , void                  *shrink_threshold_context
   , lookup_capacity_fun_t  shrink_capacity
     , void                  *shrink_capacity_context
-  , size_t (*defragment_which)(void *context)
+  , int    (*defragment_which)(void *context)
     , void                  *defragment_which_context
 
-  , void *(*on_new_node_index) (void *on_new_order_index_context, void *last_accumulation, lookup_t *lookup, size_t new_node_index,  size_t old_node_index,  int *out_iteration_break)
+  , void *(*on_new_node_index) (void *on_new_order_index_context, void *last_accumulation, lookup_t *lookup, size_t new_node_index,  size_t old_node_index,  int *out_break_iteration)
     , void *on_new_node_index_context
     , void *on_new_node_index_initial_accumulation
 
-  , void *(*on_new_value_index)(void *on_new_value_index_context, void *last_accumulation, lookup_t *lookup, size_t new_value_index, size_t old_value_index, int *out_iteration_break)
+  , void *(*on_new_value_index)(void *on_new_value_index_context, void *last_accumulation, lookup_t *lookup, size_t new_value_index, size_t old_value_index, int *out_break_iteration)
     , void *on_new_value_index_context
     , void *on_new_value_index_initial_accumulation
 
@@ -2392,6 +2383,7 @@ lookup_t *lookup_insert
 
   , callback_compare_t  cmp
 
+  , size_t             *out_value_index
   , int                *out_is_duplicate
   )
 {
@@ -2409,6 +2401,7 @@ lookup_t *lookup_insert
     return NULL;
 #endif /* #if ERROR_CHECKING  */
 
+  WRITE_OUTPUT(out_value_index,   0);
   WRITE_OUTPUT(out_is_duplicate, -1);
 
   /* Is a value provided? */
@@ -2429,7 +2422,10 @@ lookup_t *lookup_insert
     WRITE_OUTPUT(out_is_duplicate, 1);
 
     if (!add_when_exists)
+    {
+      WRITE_OUTPUT(out_value_index, LOOKUP_GET_VALUE_INDEX(lookup, node_val));
       return lookup;
+    }
   }
   else
   {
@@ -2455,6 +2451,9 @@ lookup_t *lookup_insert
   /* Set in use. */
   LOOKUP_SET_ORDER_IN_USE_BIT(lookup, child_ref, 1);
   LOOKUP_SET_VALUE_IN_USE_BIT(lookup, value_ref, 1);
+
+  /* Write out index. */
+  WRITE_OUTPUT(out_value_index, value_ref);
 
   /* ---------------------------------------------------------------- */
 
@@ -3699,14 +3698,14 @@ size_t lookup_delete_limit
 
 /* ---------------------------------------------------------------- */
 
-const lookup_tree_traversal_direction_t ltd_current  = lttd_current;
-const lookup_tree_traversal_direction_t ltd_break    = lttd_break;
-const lookup_tree_traversal_direction_t ltd_parent   = lttd_parent;
-const lookup_tree_traversal_direction_t ltd_left     = lttd_left;
-const lookup_tree_traversal_direction_t ltd_right    = lttd_right;
-const lookup_tree_traversal_direction_t ltd_end      = lttd_end;
-const lookup_tree_traversal_direction_t ltd_bits     = lttd_bits;
-const lookup_tree_traversal_direction_t ltd_end_mask = lttd_end_mask;
+const lookup_tree_traversal_direction_t lttd_current  = ltd_current;
+const lookup_tree_traversal_direction_t lttd_break    = ltd_break;
+const lookup_tree_traversal_direction_t lttd_parent   = ltd_parent;
+const lookup_tree_traversal_direction_t lttd_left     = ltd_left;
+const lookup_tree_traversal_direction_t lttd_right    = ltd_right;
+const lookup_tree_traversal_direction_t lttd_end      = ltd_end;
+const lookup_tree_traversal_direction_t lttd_bits     = ltd_bits;
+const lookup_tree_traversal_direction_t lttd_end_mask = ltd_end_mask;
 
 /* ---------------------------------------------------------------- */
 
@@ -3740,11 +3739,11 @@ static void *lookup_traverse_tree_from_step
           , LOOKUP_NODE_CVALUE(lookup, node)
           , node
 
-          , dir
+          , (int *) dir
           );
         break;
 
-      case ltd_parent;
+      case ltd_parent:
         *dir = ltd_current;
         return initial_accumulation;
 
@@ -3758,7 +3757,7 @@ static void *lookup_traverse_tree_from_step
         {
           *dir = ltd_current;
 
-          child = LOOKUP_INDEX_CORDER(lookup, BNODE_GET_RED(node->left));
+          child = LOOKUP_INDEX_CORDER(lookup, BNODE_GET_REF(node->left));
 
           initial_accumulation = lookup_traverse_tree_from_step
             ( lookup
@@ -3784,7 +3783,7 @@ static void *lookup_traverse_tree_from_step
         {
           *dir = ltd_current;
 
-          child = LOOKUP_INDEX_CORDER(lookup, BNODE_GET_RED(node->right));
+          child = LOOKUP_INDEX_CORDER(lookup, BNODE_GET_REF(node->right));
 
           initial_accumulation = lookup_traverse_tree_from_step
             ( lookup
@@ -3803,7 +3802,7 @@ static void *lookup_traverse_tree_from_step
   }
 }
 
-/* out_iteration_break should be set to the next direction. */
+/* out_break_iteration should be set to the next direction. */
 void *lookup_traverse_tree_from
   ( const lookup_t *lookup
   , const bnode_t  *root
@@ -3859,7 +3858,7 @@ static void *traverse_values
 
   if (tcontext->first)
   {
-    if (left_to_right)
+    if (tcontext->left_to_right)
     {
       if (!BNODE_IS_LEAF(node->left))
       {
@@ -3895,9 +3894,9 @@ static void *traverse_values
       int break_iteration;
 
       break_iteration = 0;
-      last_accumulation = with_value
-        ( tcontext->with_value
-        , tcontext->with_value_context
+      last_accumulation = tcontext->with_value
+        ( tcontext->with_value_context
+        , last_accumulation
 
         , lookup
         , value
@@ -3979,7 +3978,7 @@ static void *traverse_values
         int ordering;
 
         /* last_value <?= value */
-        ordering = call_callback_compare(cmp, tcontext->last_value, value);
+        ordering = call_callback_compare(tcontext->cmp, tcontext->last_value, value);
 
 #if ERROR_CHECKING
         if (IS_ORDERING_ERROR(ordering))
@@ -4022,9 +4021,9 @@ static void *traverse_values
             int break_iteration;
 
             break_iteration = 0;
-            last_accumulation = with_value
-              ( tcontext->with_value
-              , tcontext->with_value_context
+            last_accumulation = tcontext->with_value
+              ( tcontext->with_value_context
+              , last_accumulation
 
               , lookup
               , value
@@ -4059,15 +4058,15 @@ static void *traverse_values
 const lookup_iteration_callback_fun_t lookup_traverser_values_subtree =
   (lookup_iteration_callback_fun_t) traverse_values;
 
-lookup_traverser_values_subtree_context lookup_traverser_values_subtree_initial_context
+lookup_traverser_values_subtree_context_t lookup_traverser_values_subtree_initial_context
   ( const bnode_t *root
 
-  , callback_compare_t cmp;
+  , callback_compare_t cmp
 
   , int left_to_right
 
-  , lookup_iteration_callback_fun_t  with_value;
-  , void                            *with_value_context;
+  , lookup_iteration_callback_fun_t  with_value
+  , void                            *with_value_context
   )
 {
   lookup_traverser_values_subtree_context_t context;
@@ -4081,6 +4080,8 @@ lookup_traverser_values_subtree_context lookup_traverser_values_subtree_initial_
   context.moving             = 0;
   context.parent             = 0;
   context.last_value         = NULL;
+
+  return context;
 }
 
 void *lookup_traverse_values_subtree
@@ -4179,7 +4180,7 @@ static void *lookup_iterate_tree_from_step
   )
 {
   size_t i;
-  const bnode_t *children[2];
+  size_t children[2];
 
   if (node)
   {
@@ -4203,7 +4204,7 @@ static void *lookup_iterate_tree_from_step
       , LOOKUP_NODE_CVALUE(lookup, node)
       , node
 
-      , iteration_break
+      , break_iteration
       );
 
     if (*break_iteration)
@@ -4225,7 +4226,7 @@ static void *lookup_iterate_tree_from_step
           , LOOKUP_NODE_CVALUE(lookup, child)
           , child
 
-          , iteration_break
+          , break_iteration
           );
 
         if (*break_iteration)
@@ -4233,7 +4234,7 @@ static void *lookup_iterate_tree_from_step
 
         /* Grandchildren. */
         initial_accumulation = lookup_iterate_tree_from_step
-          ( lookup,
+          ( lookup
           , child
 
           , order
@@ -4267,7 +4268,7 @@ static void *lookup_iterate_tree_from_step
 
         /* Grandchildren. */
         initial_accumulation = lookup_iterate_tree_from_step
-          ( lookup,
+          ( lookup
           , child
 
           , order
@@ -4293,7 +4294,7 @@ static void *lookup_iterate_tree_from_step
           , LOOKUP_NODE_CVALUE(lookup, child)
           , child
 
-          , iteration_break
+          , break_iteration
           );
 
         if (*break_iteration)
@@ -4310,7 +4311,7 @@ static void *lookup_iterate_tree_from_step
       , LOOKUP_NODE_CVALUE(lookup, node)
       , node
 
-      , iteration_break
+      , break_iteration
       );
 
     return initial_accumulation;
@@ -4326,19 +4327,22 @@ static void *lookup_iterate_tree_from_step
       size_t         next_ref;
       const bnode_t *next;
 
-      void *new_current_queue[] = { (void *) &children[0], (void *) &children[1], (void *) current_queue };
+      void *new_current_queue[3];
+      new_current_queue[0] = (void *) &children[0];
+      new_current_queue[1] = (void *) &children[1];
+      new_current_queue[2] = (void *) current_queue;
 
       current_queue = new_current_queue;
 
-      next_ref = *(size_t *) tail_index(2, parent_queue, size_minus(level_num, building_queue))
+      next_ref = *(size_t *) tail_index(2, parent_queue, size_minus(level_num, building_queue));
 
       if (!BNODE_IS_LEAF(next_ref))
-        next = BNODE_GET_REF(next_ref);
+        next = LOOKUP_INDEX_CORDER(lookup, BNODE_GET_REF(next_ref));
       else
         next = NULL;
 
       initial_accumulation = lookup_iterate_tree_from_step
-        ( lookup,
+        ( lookup
         , next
 
         , order
@@ -4363,7 +4367,7 @@ static void *lookup_iterate_tree_from_step
       int children_remaining = 0;
       const bnode_t *next;
 
-      void *new_current_queue[] = { };
+      void *new_current_queue[] = { NULL };
 
       parent_queue = current_queue;
       current_queue = new_current_queue;
@@ -4372,7 +4376,7 @@ static void *lookup_iterate_tree_from_step
 
       for (i = 0; i < level_num; ++i)
       {
-        size_t ref = *(size_t *) tail_index(current_queue, i);
+        size_t ref = *(size_t *) tail_index(2, (void **) parent_queue, i);
 
         if (!BNODE_IS_LEAF(ref))
         {
@@ -4391,17 +4395,17 @@ static void *lookup_iterate_tree_from_step
             , LOOKUP_NODE_CVALUE(lookup, child)
             , child
 
-            , iteration_break
+            , break_iteration
             );
 
-          if (*iteration_break)
+          if (*break_iteration)
             return initial_accumulation;
         }
       }
 
       if (children_remaining)
         initial_accumulation = lookup_iterate_tree_from_step
-          ( lookup,
+          ( lookup
           , next
 
           , order
@@ -4441,7 +4445,7 @@ static void *lookup_iterate_tree_from_step
           , LOOKUP_NODE_CVALUE(lookup, child)
           , child
 
-          , iteration_break
+          , break_iteration
           );
 
         if (*break_iteration)
@@ -4449,7 +4453,7 @@ static void *lookup_iterate_tree_from_step
 
         /* Grandchildren. */
         initial_accumulation = lookup_iterate_tree_from_step
-          ( lookup,
+          ( lookup
           , child
 
           , order
@@ -4478,8 +4482,7 @@ static void *lookup_iterate_tree_from_step
           , LOOKUP_NODE_CVALUE(lookup, node)
           , node
 
-          , iteration_break
-          , 0, 0, NULL, NULL
+          , break_iteration
           );
 
         if (*break_iteration)
@@ -4498,12 +4501,12 @@ void *lookup_iterate_tree_from
   , lookup_iteration_order_t order
 
   , lookup_iteration_callback_fun_t  with_value
-  , void                            *with_value_context
+    , void                          *with_value_context
 
   , void *initial_accumulation
   )
 {
-  int iteration_break;
+  int break_iteration;
 
 #ifdef ERROR_CHECKING
   if (!lookup)
@@ -4517,7 +4520,7 @@ void *lookup_iterate_tree_from
 
   LOOKUP_OPTIONAL_CNODE(lookup, root);
 
-  iteration_break = 0;
+  break_iteration = 0;
 
   if (!order.breadth_first)
   {
@@ -4529,18 +4532,22 @@ void *lookup_iterate_tree_from
         , order
 
         , with_value
-        , context
+        , with_value_context
 
         , initial_accumulation
 
-        , &iteration_break
+        , &break_iteration
         , 0, 0, NULL, NULL
         );
   }
   else
   {
-    void *parent_queue[]  = { };
-    void *current_queue[] = { LOOKUP_GET_NODE_INDEX(lookup, root) };
+    size_t root_index;
+    void *parent_queue[]  = { NULL };
+    void *current_queue[2];
+    root_index = LOOKUP_GET_NODE_INDEX(lookup, root);
+    current_queue[0] = &root_index;
+    current_queue[1] = NULL;
     initial_accumulation =
       lookup_iterate_tree_from_step
         ( lookup
@@ -4549,11 +4556,11 @@ void *lookup_iterate_tree_from
         , order
 
         , with_value
-        , context
+        , with_value_context
 
         , initial_accumulation
 
-        , &iteration_break
+        , &break_iteration
         , 0
         , 0
         , parent_queue
@@ -4586,13 +4593,13 @@ void *lookup_iterate_tree
       , with_value_context
 
       , initial_accumulation
-      )
+      );
 }
 
 void *lookup_iterate_values_unordered
   ( const lookup_t *lookup
 
-  , void *(*with_value)(void *context, void *last_accumulation, const void *value, int *out_iteration_break)
+  , void *(*with_value)(void *context, void *last_accumulation, const void *value, int *out_break_iteration)
   , void *context
 
   , void *initial_accumulation
@@ -4617,12 +4624,12 @@ void *lookup_iterate_values_unordered
   {
     if (LOOKUP_GET_VALUE_IN_USE_BIT(lookup, i))
     {
-      int iteration_break;
+      int break_iteration;
 
-      iteration_break = 0;
-      initial_accumulation = with_value(context, initial_accumulation, LOOKUP_INDEX_CVALUE(lookup, i), &iteration_break);
+      break_iteration = 0;
+      initial_accumulation = with_value(context, initial_accumulation, LOOKUP_INDEX_CVALUE(lookup, i), &break_iteration);
 
-      if (iteration_break)
+      if (break_iteration)
         break;
     }
   }
@@ -4635,17 +4642,17 @@ static void *lookup_iterate_node_from_step
   , const bnode_t  *node
   , int             reverse_direction
 
-  , void *(*with_value)(void *context, void *last_accumulation, const void *value, const bnode_t *node, int *out_iteration_break)
+  , void *(*with_value)(void *context, void *last_accumulation, const void *value, const bnode_t *node, int *out_break_iteration)
   , void *context
 
   , void *initial_accumulation
 
-  , int *iteration_break
+  , int *break_iteration
   )
 {
   void *value;
 
-  int   iteration_break_working;
+  int   break_iteration_working;
 
 
   int i;
@@ -4667,13 +4674,13 @@ static void *lookup_iterate_node_from_step
 
   value = LOOKUP_INDEX_VALUE(lookup, BNODE_GET_VALUE(node->value));
 
-  if (!iteration_break)
+  if (!break_iteration)
   {
-    iteration_break = &iteration_break_working;
-    *iteration_break = 0;
+    break_iteration = &break_iteration_working;
+    *break_iteration = 0;
   }
 
-  if (*iteration_break)
+  if (*break_iteration)
     return initial_accumulation;
 
   reverse_direction = IS_TRUE(reverse_direction);
@@ -4681,7 +4688,7 @@ static void *lookup_iterate_node_from_step
   children[ reverse_direction] = node->left;
   children[!reverse_direction] = node->right;
 
-  for (i = 0; i < ARRAY_NUM(children) && !*iteration_break; ++i)
+  for (i = 0; i < ARRAY_NUM(children) && !*break_iteration; ++i)
   {
     size_t child = children[i];
 
@@ -4697,11 +4704,11 @@ static void *lookup_iterate_node_from_step
 
           , accumulation
 
-          , iteration_break
+          , break_iteration
           );
 
-    if (i == 0 && !*iteration_break)
-      accumulation = with_value(context, accumulation, value, node, iteration_break);
+    if (i == 0 && !*break_iteration)
+      accumulation = with_value(context, accumulation, value, node, break_iteration);
   }
 
   return accumulation;
@@ -4712,7 +4719,7 @@ void *lookup_iterate_node_from
   , const bnode_t  *root
   , int             reverse_direction
 
-  , void *(*with_value)(void *context, void *last_accumulation, const void *value, const bnode_t *node, int *out_iteration_break)
+  , void *(*with_value)(void *context, void *last_accumulation, const void *value, const bnode_t *node, int *out_break_iteration)
   , void *context
 
   , void *initial_accumulation
@@ -4737,7 +4744,7 @@ void *lookup_iterate_node
   ( const lookup_t *lookup
   , int             reverse_direction
 
-  , void *(*with_value)(void *context, void *last_accumulation, const void *value, const bnode_t *node, int *out_iteration_break)
+  , void *(*with_value)(void *context, void *last_accumulation, const void *value, const bnode_t *node, int *out_break_iteration)
   , void *context
 
   , void *initial_accumulation
@@ -4761,17 +4768,17 @@ static void *lookup_iterate_from_step
   , const bnode_t  *node
   , int             reverse_direction
 
-  , void *(*with_value)(void *context, void *last_accumulation, const void *value, int *out_iteration_break)
+  , void *(*with_value)(void *context, void *last_accumulation, const void *value, int *out_break_iteration)
   , void *context
 
   , void *initial_accumulation
 
-  , int *iteration_break
+  , int *break_iteration
   )
 {
   void *value;
 
-  int   iteration_break_working;
+  int   break_iteration_working;
 
 
   int i;
@@ -4793,13 +4800,13 @@ static void *lookup_iterate_from_step
 
   value = LOOKUP_INDEX_VALUE(lookup, BNODE_GET_VALUE(node->value));
 
-  if (!iteration_break)
+  if (!break_iteration)
   {
-    iteration_break = &iteration_break_working;
-    *iteration_break = 0;
+    break_iteration = &break_iteration_working;
+    *break_iteration = 0;
   }
 
-  if (*iteration_break)
+  if (*break_iteration)
     return initial_accumulation;
 
   reverse_direction = IS_TRUE(reverse_direction);
@@ -4807,7 +4814,7 @@ static void *lookup_iterate_from_step
   children[ reverse_direction] = node->left;
   children[!reverse_direction] = node->right;
 
-  for (i = 0; i < ARRAY_NUM(children) && !*iteration_break; ++i)
+  for (i = 0; i < ARRAY_NUM(children) && !*break_iteration; ++i)
   {
     size_t child = children[i];
 
@@ -4823,11 +4830,11 @@ static void *lookup_iterate_from_step
 
           , accumulation
 
-          , iteration_break
+          , break_iteration
           );
 
-    if (i == 0 && !*iteration_break)
-      accumulation = with_value(context, accumulation, value, iteration_break);
+    if (i == 0 && !*break_iteration)
+      accumulation = with_value(context, accumulation, value, break_iteration);
   }
 
   return accumulation;
@@ -4838,7 +4845,7 @@ void *lookup_iterate_from
   , const bnode_t  *root
   , int             reverse_direction
 
-  , void *(*with_value)(void *context, void *last_accumulation, const void *value, int *out_iteration_break)
+  , void *(*with_value)(void *context, void *last_accumulation, const void *value, int *out_break_iteration)
   , void *context
 
   , void *initial_accumulation
@@ -4863,7 +4870,7 @@ void *lookup_iterate
   ( const lookup_t *lookup
   , int             reverse_direction
 
-  , void *(*with_value)(void *context, void *last_accumulation, const void *value, int *out_iteration_break)
+  , void *(*with_value)(void *context, void *last_accumulation, const void *value, int *out_break_iteration)
   , void *context
 
   , void *initial_accumulation
@@ -4892,14 +4899,13 @@ lookup_t *lookup_minsert
   , callback_compare_t  cmp
 
   , void *(*calloc)(void *context, size_t nmemb, size_t size)
-  , void   *calloc_context
-
+    , void   *calloc_context
   , void *(*realloc)(void *context, void *area, size_t size)
-  , void   *realloc_context
-
+    , void   *realloc_context
   , void  (*free)(void *context, void *area)
-  , void   *free_context
+    , void   *free_context
 
+  , size_t             *out_value_index
   , int                *out_is_duplicate
   )
 {
@@ -4920,6 +4926,7 @@ lookup_t *lookup_minsert
 
       , cmp
 
+      , out_value_index
       , out_is_duplicate
       );
 }
@@ -4931,13 +4938,11 @@ lookup_t *lookup_mdelete
   , callback_compare_t  cmp
 
   , void *(*calloc)(void *context, size_t nmemb, size_t size)
-  , void   *calloc_context
-
+    , void   *calloc_context
   , void *(*realloc)(void *context, void *area, size_t size)
-  , void   *realloc_context
-
+    , void   *realloc_context
   , void  (*free)(void *context, void *area)
-  , void   *free_context
+    , void   *free_context
 
   , size_t             *out_num_deleted
   )

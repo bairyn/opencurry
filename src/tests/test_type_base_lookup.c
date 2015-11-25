@@ -121,7 +121,7 @@ static void init_memory_methods(void)
   lookup_minsert(lookup, val, add_when_exists, cmp, NULL, out_is_duplicate)
 
 #define LOOKUP_MINSERT(lookup, val, add_when_exists, cmp, out_is_duplicate) \
-  lookup_minsert(lookup, val, add_when_exists, cmp, calloc, calloc_context, realloc, realloc_context, free, free_context, out_is_duplicate)
+  lookup_minsert(lookup, val, add_when_exists, cmp, calloc, calloc_context, realloc, realloc_context, free, free_context, NULL, out_is_duplicate)
 
 #define LOOKUP_MDELETE(lookup, val, cmp, out_num_deleted) \
   lookup_mdelete(lookup, val, cmp, calloc, calloc_context, realloc, realloc_context, free, free_context, out_num_deleted)

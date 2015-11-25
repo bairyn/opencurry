@@ -137,6 +137,10 @@ size_t max_size(size_t a, size_t b);
 
 /* ---------------------------------------------------------------- */
 
+#define ARROW_REF(ptr, member) (((ptr)) ? (&(ptr)->member) : ((NULL)))
+
+/* ---------------------------------------------------------------- */
+
 #define NOP() \
   do          \
   {           \
@@ -391,6 +395,11 @@ int proc_false_context(void *context);
 
 int are_bytes_reversed(void);
 int is_big_endian(void);
+
+/* ---------------------------------------------------------------- */
+
+/* TODO: unit tests! */
+void *tail_index(size_t chunk_num, void **root, size_t index);
 
 /* ---------------------------------------------------------------- */
 
