@@ -59,9 +59,9 @@
 
 #include "type_base_compare.h"
 
-#include "type_base_lookup.h"
-
 #include "type_base_memory_manager.h"
+
+#include "type_base_lookup.h"
 
 #include "type_base_memory_tracker.h"
 
