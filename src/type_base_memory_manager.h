@@ -65,8 +65,8 @@
 /* TODO: types! */
 typedef void *(*mmalloc_fun_t) (void *context, size_t  size);
 typedef void  (*mfree_fun_t)   (void *context, void   *ptr);
-typedef void *(*mcalloc_fun_t) (void *context, size_t  nmemb, size_t size);
 typedef void *(*mrealloc_fun_t)(void *context, void   *ptr,   size_t size);
+typedef void *(*mcalloc_fun_t) (void *context, size_t  nmemb, size_t size);
 
 typedef void  (*on_oom_fun_t)  (void *context, size_t      size);
 typedef void  (*on_err_fun_t)  (void *context, const char *msg);
@@ -77,8 +77,8 @@ typedef struct memory_manager_s memory_manager_t;
 
 typedef void *(*manager_mmalloc_fun_t) (const memory_manager_t *self, size_t  size);
 typedef void  (*manager_mfree_fun_t)   (const memory_manager_t *self, void   *ptr);
-typedef void *(*manager_mcalloc_fun_t) (const memory_manager_t *self, size_t  nmemb, size_t size);
 typedef void *(*manager_mrealloc_fun_t)(const memory_manager_t *self, void   *ptr,   size_t size);
+typedef void *(*manager_mcalloc_fun_t) (const memory_manager_t *self, size_t  nmemb, size_t size);
 
 typedef void  (*manager_on_oom_fun_t)  (const memory_manager_t *self, size_t      size);
 typedef void  (*manager_on_err_fun_t)  (const memory_manager_t *self, const char *msg);
@@ -94,12 +94,12 @@ struct memory_manager_s
   /* 4 fields: all NULL, or minimum of: */
   /*   - mmalloc                        */
   /*   - mfree                          */
-  /*   - mcalloc                        */
   /*   - mrealloc                       */
+  /*   - mcalloc                        */
   manager_mmalloc_fun_t  mmalloc;
   manager_mfree_fun_t    mfree;
-  manager_mcalloc_fun_t  mcalloc;
   manager_mrealloc_fun_t mrealloc;
+  manager_mcalloc_fun_t  mcalloc;
 
   manager_on_oom_fun_t on_oom;
   manager_on_err_fun_t on_err;
@@ -149,8 +149,8 @@ memory_manager_t *memory_manager_init
 
   , manager_mmalloc_fun_t  mmalloc
   , manager_mfree_fun_t    mfree
-  , manager_mcalloc_fun_t  mcalloc
   , manager_mrealloc_fun_t mrealloc
+  , manager_mcalloc_fun_t  mcalloc
   );
 
 size_t memory_manager_deinit(memory_manager_t *memory_manager);
@@ -168,8 +168,8 @@ memory_manager_t *memory_manager_copy(memory_manager_t *dest, const memory_manag
 /* undefined.                                                       */
 void *memory_manager_mmalloc (const memory_manager_t *memory_manager, size_t size);
 void  memory_manager_mfree   (const memory_manager_t *memory_manager, void   *ptr);
-void *memory_manager_mcalloc (const memory_manager_t *memory_manager, size_t nmemb, size_t size);
 void *memory_manager_mrealloc(const memory_manager_t *memory_manager, void   *ptr,  size_t size);
+void *memory_manager_mcalloc (const memory_manager_t *memory_manager, size_t nmemb, size_t size);
 
 void  memory_manager_on_oom (const memory_manager_t *memory_manager, size_t      size);
 void  memory_manager_on_err (const memory_manager_t *memory_manager, const char *msg);
