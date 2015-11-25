@@ -1356,7 +1356,6 @@ int type_is_dyn_valueless_or_inside_value
   return mem_is_dyn_valueless_or_inside_value(self, val, NULL, 0);
 }
 
-/* TODO: dynamic_container && dynamic_container != val */
 /*
  * mem_is_dyn_valueless_or_inside_value:
  *
