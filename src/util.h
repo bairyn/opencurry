@@ -41,6 +41,8 @@
 #include "base.h"
 
 /* stddef.h:
+ *   - NULL
+ *   - ptrdiff_t
  *   - size_t
  */
 #include <stddef.h>
@@ -137,7 +139,14 @@ size_t max_size(size_t a, size_t b);
 
 /* ---------------------------------------------------------------- */
 
-#define ARROW_REF(ptr, member) (((ptr)) ? (&(ptr)->member) : ((NULL)))
+/* TODO: unit tests! */
+#define ARROW_REF(ptr, member)    ( ((ptr)) ? (&(ptr)->member) : (NULL) )
+#define OFFSET_REF( base, offset) ((      void *) ( ((ptr)) ? (((      unsigned char *) (ptr)) + ((ptrdiff_t) (offset))) : (NULL) ))
+#define OFFSET_CREF(base, offset) ((const void *) ( ((ptr)) ? (((const unsigned char *) (ptr)) + ((ptrdiff_t) (offset))) : (NULL) ))
+#define DEREF_PTR(ptr)            ( ((ptr)) ? (*(ptr)) : (NULL) )
+      void *offset_ref(      void *base, ptrdiff_t offset);
+const void *offset_ref(const void *base, ptrdiff_t offset);
+void *deref_ptr(void **ptr);
 
 /* ---------------------------------------------------------------- */
 

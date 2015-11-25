@@ -30,6 +30,13 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+/* stddef.h:
+ *   - NULL
+ *   - ptrdiff_t
+ *   - size_t
+ */
+#include <stddef.h>
+
 /*
  * stdio.h:
  *  - fprintf
@@ -72,6 +79,23 @@ size_t min_size(size_t a, size_t b)
 size_t max_size(size_t a, size_t b)
 {
   return MAX(a, b);
+}
+
+/* ---------------------------------------------------------------- */
+
+void *offset_ref(void *base, ptrdiff_t offset)
+{
+  return OFFSET_REF(base, offset);
+}
+
+const void *offset_ref(const void *base, ptrdiff_t offset)
+{
+  return OFFSET_CREF(base, offset);
+}
+
+void *deref_ptr(void **ptr)
+{
+  return DEREF_PTR(ptr);
 }
 
 /* ---------------------------------------------------------------- */
