@@ -747,4 +747,39 @@ unit_test_result_t assert_not_memeq_continue  (ASSERT_PARAMS, void         *chec
 #define MASSERT10(assert_method, tag, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10) \
   TASSERT10(assert_method, tag ": " STR(assert_method) STR((..., arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10)), arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10)
 
+/* Assertion macros with arguments reversed. */
+
+#define RASSERT0( assert_method) \
+  ASSERT0        (assert_method)
+
+#define RASSERT1( assert_method, arg1) \
+  ASSERT1        (assert_method, arg1)
+
+#define RASSERT2( assert_method, arg1,  arg2) \
+  ASSERT2        (assert_method, arg2,  arg1)
+
+#define RASSERT3( assert_method, arg1,  arg2,  arg3) \
+  ASSERT3        (assert_method, arg3,  arg2,  arg1)
+
+#define RASSERT4( assert_method, arg1,  arg2,  arg3,  arg4) \
+  ASSERT4        (assert_method, arg4,  arg3,  arg2,  arg1)
+
+#define RASSERT5( assert_method, arg1,  arg2,  arg3,  arg4,  arg5) \
+  ASSERT5        (assert_method, arg5,  arg4,  arg3,  arg2,  arg1)
+
+#define RASSERT6( assert_method, arg1,  arg2,  arg3,  arg4,  arg5,  arg6) \
+  ASSERT6        (assert_method, arg6,  arg5,  arg4,  arg3,  arg2,  arg1)
+
+#define RASSERT7( assert_method, arg1,  arg2,  arg3,  arg4,  arg5,  arg6,  arg7) \
+  ASSERT7        (assert_method, arg7,  arg6,  arg5,  arg4,  arg3,  arg2,  arg1)
+
+#define RASSERT8( assert_method, arg1,  arg2,  arg3,  arg4,  arg5,  arg6,  arg7,  arg8) \
+  ASSERT8        (assert_method, arg8,  arg7,  arg6,  arg5,  arg4,  arg3,  arg2,  arg1)
+
+#define RASSERT9( assert_method, arg1,  arg2,  arg3,  arg4,  arg5,  arg6,  arg7,  arg8,  arg9) \
+  ASSERT9        (assert_method, arg9,  arg8,  arg7,  arg6,  arg5,  arg4,  arg3,  arg2,  arg1)
+
+#define RASSERT10(assert_method, arg1,  arg2,  arg3,  arg4,  arg5,  arg6,  arg7,  arg8,  arg9, arg10) \
+  ASSERT10       (assert_method, arg10, arg9,  arg8,  arg7,  arg6,  arg5,  arg4,  arg3,  arg2, arg1)
+
 #endif /* ifndef TESTS_TESTING_H */
