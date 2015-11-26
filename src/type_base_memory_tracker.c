@@ -45,21 +45,27 @@
 #include "type_base_memory_manager.h"
 #include "type_base_type.h"
 
+#include "cpp.h"
+#include "util.h"
+
 /* ---------------------------------------------------------------- */
 /* Allocation types.                                                */
 /* ---------------------------------------------------------------- */
 
 /* TODO: types */
 
+const manual_allocation_t manual_allocation_defaults =
+  MANUAL_ALLOCATION_DEFAULTS;
+
 /* ---------------------------------------------------------------- */
 /* Comparers on allocations.                                        */
 
-static int compare_byte_allocation(void *context, const void **check, const void **baseline)
+static int compare_byte_allocation(void *context, const void * const *check, const void * const *baseline)
 {
   return compare_objp(compare_objp_context(), check, baseline);
 }
 
-static int compare_tval_allocation(void *context, const tval **check, const void **baseline)
+static int compare_tval_allocation(void *context, const tval * const *check, const void * const *baseline)
 {
   return compare_objp(compare_objp_context(), check, baseline);
 }
@@ -89,35 +95,35 @@ static int compare_allocation_dependency_parent(void *context, const allocation_
   return compare_size(compare_size_context(), &check->parent, &baseline->parent);
 }
 
-const callback_compare_t compare_callback_byte_allocation =
+const callback_compare_t cmp_byte_allocation =
   { callback_compare_type
 
   , /* comparer         */ (comparer_t) compare_byte_allocation
   , /* comparer_context */ NULL
   };
 
-const callback_compare_t compare_callback_tval_allocation =
+const callback_compare_t cmp_tval_allocation =
   { callback_compare_type
 
   , /* comparer         */ (comparer_t) compare_tval_allocation
   , /* comparer_context */ NULL
   };
 
-const callback_compare_t compare_callback_manual_allocation =
+const callback_compare_t cmp_manual_allocation =
   { callback_compare_type
 
   , /* comparer         */ (comparer_t) compare_manual_allocation
   , /* comparer_context */ NULL
   };
 
-const callback_compare_t compare_callback_allocation_dependency =
+const callback_compare_t cmp_allocation_dependency =
   { callback_compare_type
 
   , /* comparer         */ (comparer_t) compare_allocation_dependency
   , /* comparer_context */ NULL
   };
 
-const callback_compare_t compare_callback_allocation_dependency_parent =
+const callback_compare_t cmp_allocation_dependency_parent =
   { callback_compare_type
 
   , /* comparer         */ (comparer_t) compare_allocation_dependency_parent
@@ -275,29 +281,170 @@ memory_tracker_t global_memory_tracker =
 memory_tracker_t global_typed_dyn_memory_tracker =
   MEMORY_TRACKER_DEFAULTS;
 
-#ifdef TODO
 /* ---------------------------------------------------------------- */
 
-memory_tracker_t *memory_tracker_init(memory_tracker_t *dest, const memory_manager_t *memory_manager, void *dynamic_container);
-
-int               memory_tracker_free(memory_tracker_t *tracker)
+memory_tracker_t *memory_tracker_init(memory_tracker_t *dest, const memory_manager_t *memory_manager, void *dynamic_container)
 {
-#if ERROR_CHECKING
-  if (!tracker)
-    return;
-#endif /* #if ERROR_CHECKING */
+  int dynamically_allocated;
 
-  /* TODO */
+  UNUSED(dynamically_allocated);
 
-  if (tracker->dynamic_container)
+  memory_manager = require_memory_manager(memory_manager);
+
+  if (!dest)
   {
-    /* TODO: free dependencies first! */
+    dynamically_allocated = TRUE();
 
-    /* Then manager->free dynamic_container! */
+    if (dynamic_container)
+    {
+      /* Error: Cannot dynamically allocate a memory           */
+      /* tracker with an existing "dynamic_container" present. */
+      return NULL;
+    }
+
+    dest = memory_manager_mmalloc(memory_manager, sizeof(*dest));
+
+    if (!dest)
+    {
+      /* Error: failed to allocate memory! */
+      return NULL;
+    }
   }
+  else
+  {
+    dynamically_allocated = FALSE();
+
+    dest->dynamic_container = dynamic_container;
+  }
+
+  dest->type = memory_tracker_type;
+
+  dest->memory_manager     = *memory_manager;
+  /* dest->dynamic_container */
+  dest->byte_allocations   = NULL;
+  dest->tval_allocations   = NULL;
+  dest->manual_allocations = NULL;
+  dest->dependency_graph   = NULL;
+
+  dest = memory_tracker_require_containers(dest);
+
+  if (!dest)
+  {
+    /* Error: failed to allocate memory for trackers. */
+    return NULL;
+  }
+
+  /* Success! =) */
+  return dest;
 }
 
-memory_tracker_t *memory_tracker_copy(memory_tracker_t *dest, const memory_tracker_t *src);
+size_t memory_tracker_free(memory_tracker_t *tracker)
+{
+  size_t num_freed;
+
+  memory_manager_t  manager;
+  void             *dynamic_container;
+
+#if ERROR_CHECKING
+  if (!tracker)
+    return 0;
+#endif /* #if ERROR_CHECKING */
+
+  num_freed = 0;
+
+  memory_manager_copy(&manager, require_memory_manager(MEMORY_TRACKER_CMANAGER(tracker)));
+  dynamic_container = MEMORY_TRACKER_DYNAMIC_CONTAINER(tracker);
+
+  /* ---------------------------------------------------------------- */
+
+  /* Free containers. */
+  num_freed += memory_tracker_free_containers(tracker);
+
+  /* Cleanup memory_manager. */
+  num_freed += memory_manager_deinit(&tracker->memory_manager);
+
+  /* ---------------------------------------------------------------- */
+
+  tracker->dependency_graph   = NULL;
+  tracker->manual_allocations = NULL;
+  tracker->tval_allocations   = NULL;
+  tracker->byte_allocations   = NULL;
+  tracker->dynamic_container  = NULL;
+  /* tracker->memory_manager */
+
+  tracker->type = NULL;
+
+  ++num_freed;
+
+  /* ---------------------------------------------------------------- */
+
+  if (dynamic_container)
+  {
+    memory_manager_mfree(&manager, dynamic_container);
+      ++num_freed;
+  }
+
+  return num_freed;
+}
+
+/* Special case: can dynamically allocate "dest" if "src" lacks a dynamic
+ * container; then "dest"'s dynamic container refers to the newly allocated
+ * "dest".
+ *
+ * N.B. Otherwise, "dest->dynamic_container" is copied from "src"!
+ */
+memory_tracker_t *memory_tracker_copy(memory_tracker_t *dest, const memory_tracker_t *src)
+{
+  int dynamically_allocated;
+
+  UNUSED(dynamically_allocated);
+
+#if ERROR_CHECKING
+  if (!src)
+    return NULL;
+#endif /* #if ERROR_CHECKING */
+
+  if (!dest)
+  {
+    dynamically_allocated = TRUE();
+
+    if (src->dynamic_container)
+    {
+      /* Error: Cannot dynamically allocate a memory             */
+      /* when "src" has an existing "dynamic_container" present. */
+      return NULL;
+    }
+
+    dest = memory_manager_mmalloc(MEMORY_TRACKER_CMANAGER(src), sizeof(*dest));
+
+    if (!dest)
+    {
+      /* Error: failed to allocate memory! */
+      return NULL;
+    }
+
+    /* Special case: assign dest->dynamic_container. */
+
+    dest->dynamic_container = dest;
+  }
+  else
+  {
+    dynamically_allocated = FALSE();
+
+    dest->dynamic_container = src->dynamic_container;
+  }
+
+  dest->type = src->type;
+
+  memory_manager_copy(&dest->memory_manager, &src->memory_manager);
+  /* dest->dynamic_container */
+  dest->byte_allocations   = NULL;
+  dest->tval_allocations   = NULL;
+  dest->manual_allocations = NULL;
+  dest->dependency_graph   = NULL;
+
+  return dest;
+}
 
 memory_tracker_t *memory_tracker_require_containers(memory_tracker_t *tracker)
 {
@@ -308,9 +455,469 @@ memory_tracker_t *memory_tracker_require_containers(memory_tracker_t *tracker)
 
   if (!tracker->byte_allocations)
   {
+    int is_duplicate = -1;
+
+    lookup_t     *lookup;
+    const size_t  value_size = sizeof(byte_allocation_t);
+
+    const memory_manager_t *memory_manager = MEMORY_TRACKER_CMANAGER(tracker);
+
+    tracker->byte_allocations =
+      lookup = memory_manager_mmalloc(memory_manager, sizeof(*tracker->byte_allocations));
+
+    if (lookup)
+      lookup = lookup_init_empty(lookup, value_size);
+
+    if (lookup)
+      lookup = lookup_minsert
+        ( tracker->byte_allocations
+        , &lookup
+        , LOOKUP_NO_ADD_DUPLICATES
+
+        , cmp_byte_allocation
+
+        , memory_manager
+
+        , NULL
+        , &is_duplicate
+        );
+
+    if (is_duplicate)
+      lookup = NULL;
+
+    if (!lookup)
+    {
+      /* Error: failed to initialize lookup container! */
+
+      if (tracker->byte_allocations)
+      {
+        lookup_deinit(tracker->byte_allocations, memory_manager);
+        memory_manager_mfree
+          ( memory_manager
+          , tracker->byte_allocations
+          );
+        tracker->byte_allocations = NULL;
+      }
+
+      return NULL;
+    }
+
+    tracker->byte_allocations = lookup;
   }
+
+  if (!tracker->tval_allocations)
+  {
+    int is_duplicate = -1;
+
+    lookup_t     *lookup;
+    const size_t  value_size = sizeof(tval_allocation_t);
+
+    const memory_manager_t *memory_manager = MEMORY_TRACKER_CMANAGER(tracker);
+
+    tracker->tval_allocations =
+      lookup = memory_manager_mmalloc(memory_manager, sizeof(*tracker->tval_allocations));
+
+    if (lookup)
+      lookup = lookup_init_empty(lookup, value_size);
+
+    if (lookup)
+      if (!lookup_minsert
+            ( tracker->byte_allocations
+            , &lookup
+            , LOOKUP_NO_ADD_DUPLICATES
+
+            , cmp_byte_allocation
+
+            , memory_manager
+
+            , NULL
+            , &is_duplicate
+            )
+         )
+        lookup = NULL;
+
+    if (is_duplicate)
+      lookup = NULL;
+
+    if (!lookup)
+    {
+      /* Error: failed to initialize lookup container! */
+
+      lookup_deinit(tracker->byte_allocations, memory_manager);
+      memory_manager_mfree
+        ( memory_manager
+        , tracker->byte_allocations
+        );
+      tracker->byte_allocations = NULL;
+
+      if (tracker->tval_allocations)
+      {
+        lookup_deinit(tracker->tval_allocations, memory_manager);
+        memory_manager_mfree
+          ( memory_manager
+          , tracker->tval_allocations
+          );
+        tracker->tval_allocations = NULL;
+      }
+
+      return NULL;
+    }
+
+    tracker->tval_allocations = lookup;
+  }
+
+  if (!tracker->manual_allocations)
+  {
+    int is_duplicate = -1;
+
+    lookup_t     *lookup;
+    const size_t  value_size = sizeof(manual_allocation_t);
+
+    const memory_manager_t *memory_manager = MEMORY_TRACKER_CMANAGER(tracker);
+
+    tracker->manual_allocations =
+      lookup = memory_manager_mmalloc(memory_manager, sizeof(*tracker->manual_allocations));
+
+    if (lookup)
+      lookup = lookup_init_empty(lookup, value_size);
+
+    if (lookup)
+      if (!lookup_minsert
+            ( tracker->byte_allocations
+            , &lookup
+            , LOOKUP_NO_ADD_DUPLICATES
+
+            , cmp_byte_allocation
+
+            , memory_manager
+
+            , NULL
+            , &is_duplicate
+            )
+         )
+        lookup = NULL;
+
+    if (is_duplicate)
+      lookup = NULL;
+
+    if (!lookup)
+    {
+      /* Error: failed to initialize lookup container! */
+
+      lookup_deinit(tracker->byte_allocations, memory_manager);
+      memory_manager_mfree
+        ( memory_manager
+        , tracker->byte_allocations
+        );
+      tracker->byte_allocations = NULL;
+
+      lookup_deinit(tracker->tval_allocations, memory_manager);
+      memory_manager_mfree
+        ( memory_manager
+        , tracker->tval_allocations
+        );
+      tracker->tval_allocations = NULL;
+
+      if (tracker->manual_allocations)
+      {
+        lookup_deinit(tracker->manual_allocations, memory_manager);
+        memory_manager_mfree
+          ( memory_manager
+          , tracker->manual_allocations
+          );
+        tracker->manual_allocations = NULL;
+      }
+
+      return NULL;
+    }
+
+    tracker->tval_allocations = lookup;
+  }
+
+  if (!tracker->dependency_graph)
+  {
+    int is_duplicate = -1;
+
+    lookup_t     *lookup;
+    const size_t  value_size = sizeof(allocation_dependency_t);
+
+    const memory_manager_t *memory_manager = MEMORY_TRACKER_CMANAGER(tracker);
+
+    tracker->dependency_graph =
+      lookup = memory_manager_mmalloc(memory_manager, sizeof(*tracker->dependency_graph));
+
+    if (lookup)
+      lookup = lookup_init_empty(lookup, value_size);
+
+    if (lookup)
+      if (!lookup_minsert
+            ( tracker->byte_allocations
+            , &lookup
+            , LOOKUP_NO_ADD_DUPLICATES
+
+            , cmp_byte_allocation
+
+            , memory_manager
+
+            , NULL
+            , &is_duplicate
+            )
+         )
+        lookup = NULL;
+
+    if (is_duplicate)
+      lookup = NULL;
+
+    if (!lookup)
+    {
+      /* Error: failed to initialize lookup container! */
+
+      lookup_deinit(tracker->byte_allocations, memory_manager);
+      memory_manager_mfree
+        ( memory_manager
+        , tracker->byte_allocations
+        );
+      tracker->byte_allocations = NULL;
+
+      lookup_deinit(tracker->tval_allocations, memory_manager);
+      memory_manager_mfree
+        ( memory_manager
+        , tracker->tval_allocations
+        );
+      tracker->tval_allocations = NULL;
+
+      lookup_deinit(tracker->manual_allocations, memory_manager);
+      memory_manager_mfree
+        ( memory_manager
+        , tracker->manual_allocations
+        );
+      tracker->manual_allocations = NULL;
+
+      if (tracker->dependency_graph)
+      {
+        lookup_deinit(tracker->dependency_graph, memory_manager);
+        memory_manager_mfree
+          ( memory_manager
+          , tracker->dependency_graph
+          );
+        tracker->dependency_graph = NULL;
+      }
+
+      return NULL;
+    }
+
+    tracker->tval_allocations = lookup;
+  }
+
+  return tracker;
 }
 
+size_t memory_tracker_free_containers(memory_tracker_t *tracker)
+{
+  size_t num_freed;
+
+  const memory_manager_t *manager;
+
+  void *free_byte_allocations   = NULL;
+  void *free_tval_allocations   = NULL;
+  void *free_manual_allocations = NULL;
+  void *free_dependency_graph   = NULL;
+
+  lookup_t            *lookup;
+  const bnode_t       *root;
+
+  byte_allocation_t    byte_value;
+  tval_allocation_t    tval_value;
+  manual_allocation_t  manual_value;
+
+  size_t               result_num;
+  byte_allocation_t    result_byte;
+
+#if ERROR_CHECKING
+  if (!tracker)
+    return 0;
+#endif /* #if ERROR_CHECKING */
+
+  num_freed = 0;
+
+  manager = MEMORY_TRACKER_CMANAGER(tracker);
+
+  /* ---------------------------------------------------------------- */
+  /* Free all non--container allocations.                             */
+
+  if (tracker->byte_allocations)
+  {
+    lookup = tracker->byte_allocations;
+
+    while(!LOOKUP_EMPTY(tracker->byte_allocations))
+    {
+      root       =
+        ( (LOOKUP_ROOT_CNODE(lookup)) );
+      byte_value = DEREF_PTR
+        ( (const byte_allocation_t *)
+          (LOOKUP_NODE_VALUE(lookup, root))
+        );
+
+      if      (byte_value == tracker->byte_allocations   && !free_byte_allocations)
+      {
+        free_byte_allocations   = byte_value;
+      }
+      else if (byte_value == tracker->tval_allocations   && !free_tval_allocations)
+      {
+        free_tval_allocations   = byte_value;
+      }
+      else if (byte_value == tracker->manual_allocations && !free_manual_allocations)
+      {
+        free_manual_allocations = byte_value;
+      }
+      else if (byte_value == tracker->dependency_graph   && !free_dependency_graph)
+      {
+        free_dependency_graph   = byte_value;
+      }
+      else
+      {
+        /* Standard allocation.  Free it. */
+
+        result_num = free_byte_allocation(tracker, byte_value);
+        if (!result_num)
+        {
+          /* Error: failed to free a byte allocation! */
+#if ERROR_CHECKING
+          report_bug
+            ( "Error: memory_tracker_free_containers: line #"
+              CURRENT_LINE_STR
+              "failed to free a byte allocation!\n"
+            );
+#endif /* #if ERROR_CHECKING */
+          break;
+        }
+
+        num_freed += result_num;
+        continue;
+      }
+
+      /* Just remove the allocation container reference. */
+      /*                                                 */
+      /* We'll free the container once we're done        */
+      /* freeing all non-container allocations.          */
+
+      result_byte = untrack_byte_allocation(tracker, byte_value);
+      if (!result_byte)
+      {
+          /* Error: failed to untrack a container! */
+#if ERROR_CHECKING
+          report_bug
+            ( "Error: memory_tracker_free_containers: line #"
+              CURRENT_LINE_STR
+              "failed to untrack container!\n"
+            );
+#endif /* #if ERROR_CHECKING */
+          break;
+      }
+
+      continue;
+    }
+  }
+
+  if (tracker->tval_allocations)
+  {
+    lookup = tracker->tval_allocations;
+
+    while(!LOOKUP_EMPTY(tracker->tval_allocations))
+    {
+      root       =
+        ( (LOOKUP_ROOT_CNODE(lookup)) );
+      tval_value = DEREF_PTR
+        ( (const tval_allocation_t *)
+          (LOOKUP_NODE_VALUE(lookup, root))
+        );
+
+      result_num = free_tval_allocation(tracker, tval_value);
+      if (!result_num)
+      {
+        /* Error: failed to free a tval allocation! */
+#if ERROR_CHECKING
+        report_bug
+          ( "Error: memory_tracker_free_containers: line #"
+            CURRENT_LINE_STR
+            "failed to free a tval allocation!\n"
+          );
+#endif /* #if ERROR_CHECKING */
+        break;
+      }
+
+      num_freed += result_num;
+    }
+  }
+
+  if (tracker->manual_allocations)
+  {
+    lookup = tracker->manual_allocations;
+
+    while(!LOOKUP_EMPTY(tracker->manual_allocations))
+    {
+      root         =
+        ( (LOOKUP_ROOT_CNODE(lookup)) );
+      manual_value = DEREF_DEFAULT
+        ( (const manual_allocation_t *)
+          (LOOKUP_NODE_VALUE(lookup, root))
+        , manual_allocation_defaults
+        );
+
+      result_num = free_manual_allocation(tracker, manual_value);
+      if (!result_num)
+      {
+        /* Error: failed to free a manual allocation! */
+#if ERROR_CHECKING
+        report_bug
+          ( "Error: memory_tracker_free_containers: line #"
+            CURRENT_LINE_STR
+            "failed to free a manual allocation!\n"
+          );
+#endif /* #if ERROR_CHECKING */
+        break;
+      }
+
+      num_freed += result_num;
+    }
+  }
+
+  /* ---------------------------------------------------------------- */
+  /* Free containers.                                                 */
+
+  if ((lookup = tracker->byte_allocations))
+    num_freed += lookup_deinit(lookup, manager);
+  if ((lookup = tracker->tval_allocations))
+    num_freed += lookup_deinit(lookup, manager);
+  if ((lookup = tracker->manual_allocations))
+    num_freed += lookup_deinit(lookup, manager);
+  if ((lookup = tracker->dependency_graph))
+    num_freed += lookup_deinit(lookup, manager);
+
+  if (free_byte_allocations)
+    num_freed += memory_manager_mfree(manager, free_byte_allocations);
+  if (free_tval_allocations)
+    num_freed += memory_manager_mfree(manager, free_tval_allocations);
+  if (free_manual_allocations)
+    num_freed += memory_manager_mfree(manager, free_manual_allocations);
+  if (free_dependency_graph)
+    num_freed += memory_manager_mfree(manager, free_dependency_graph);
+
+  /* ---------------------------------------------------------------- */
+  /* Unset containers.                                                */
+
+  tracker->byte_allocations   = NULL;
+  tracker->tval_allocations   = NULL;
+  tracker->manual_allocations = NULL;
+  tracker->dependency_graph   = NULL;
+
+  /* ---------------------------------------------------------------- */
+  /* Success!                                                         */
+
+  return num_freed;
+}
+
+#ifdef TODO
 /* ---------------------------------------------------------------- */
 
 /* ---------------------------------------------------------------- */

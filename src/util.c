@@ -98,6 +98,11 @@ void *deref_ptr(void **ptr)
   return DEREF_PTR(ptr);
 }
 
+void *deref_default(void **ptr, void *when_default)
+{
+  return DEREF_DEFAULT(ptr, when_default);
+}
+
 /* ---------------------------------------------------------------- */
 
 size_t size_less_null(size_t size)

@@ -145,13 +145,15 @@ size_t max_size(size_t a, size_t b);
 /* ---------------------------------------------------------------- */
 
 /* TODO: unit tests! */
-#define ARROW_REF(ptr, member)    ( ((ptr)) ? (&(ptr)->member) : (NULL) )
-#define OFFSET_REF( base, offset) ((      void *) ( ((base)) ? (((      unsigned char *) (base)) + ((ptrdiff_t) (offset))) : (NULL) ))
-#define OFFSET_CREF(base, offset) ((const void *) ( ((base)) ? (((const unsigned char *) (base)) + ((ptrdiff_t) (offset))) : (NULL) ))
-#define DEREF_PTR(ptr)            ( ((ptr)) ? (*(ptr)) : (NULL) )
+#define ARROW_REF(ptr, member)        ( ((ptr)) ? (&(ptr)->member) : (NULL) )
+#define OFFSET_REF( base, offset)     ((      void *) ( ((base)) ? (((      unsigned char *) (base)) + ((ptrdiff_t) (offset))) : (NULL) ))
+#define OFFSET_CREF(base, offset)     ((const void *) ( ((base)) ? (((const unsigned char *) (base)) + ((ptrdiff_t) (offset))) : (NULL) ))
+#define DEREF_PTR(    ptr)            ( ((ptr)) ? (*(ptr)) : (NULL) )
+#define DEREF_DEFAULT(ptr, when_null) ( ((ptr)) ? (*(ptr)) : (when_null) )
       void *offset_ref (      void *base, ptrdiff_t offset);
 const void *offset_cref(const void *base, ptrdiff_t offset);
-void *deref_ptr(void **ptr);
+void *deref_ptr    (void **ptr);
+void *deref_default(void **ptr, void *when_default);
 
 /* ---------------------------------------------------------------- */
 
