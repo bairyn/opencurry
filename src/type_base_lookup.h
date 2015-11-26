@@ -233,8 +233,14 @@ size_t bnode_get_value_in_use_bit(const bnode_t *node);
 /* lookup_t methods.                                                */
 /* ---------------------------------------------------------------- */
 
-void lookup_init_empty(lookup_t *lookup, size_t value_size);
-void lookup_deinit
+lookup_t *lookup_init_empty(lookup_t *lookup, size_t value_size);
+size_t lookup_deinit
+  ( lookup_t *lookup
+
+  , const memory_manager_t *memory_manager
+  );
+
+size_t lookup_free_buffers
   ( lookup_t *lookup
 
   , const memory_manager_t *memory_manager

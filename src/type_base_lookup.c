@@ -528,11 +528,11 @@ size_t bnode_get_value_in_use_bit(const bnode_t *node)
 /*
  * Initialize a lookup value with zero element slots.
  */
-void lookup_init_empty(lookup_t *lookup, size_t value_size)
+lookup_t *lookup_init_empty(lookup_t *lookup, size_t value_size)
 {
 #if ERROR_CHECKING
   if (!lookup)
-    return;
+    return NULL;
 #endif /* #if ERROR_CHECKING  */
 
   lookup->type       = lookup_type;
@@ -547,38 +547,83 @@ void lookup_init_empty(lookup_t *lookup, size_t value_size)
   lookup->next_order = 0;
 
   lookup->len        = 0;
+
+  return lookup;
 }
 
-/* Free memory allocated inside the lookup value. */
-void lookup_deinit
+size_t lookup_deinit
   ( lookup_t *lookup
 
   , const memory_manager_t *memory_manager
   )
 {
+  size_t num_freed;
+
 #if ERROR_CHECKING
   if (!lookup)
-    return;
+    return 0;
 #endif /* #if ERROR_CHECKING  */
 
-  if (lookup->capacity <= 0)
-    return;
+  num_freed = 0;
+
+  num_freed += lookup_free_buffers(lookup, memory_manager);
+
+  lookup->len        = 0;
+
+  lookup->next_order = 0;
+  lookup->order      = NULL;
+
+  lookup->next_value = 0;
+  lookup->value_size = 0;
+  lookup->values     = NULL;
+
+  lookup->capacity   = 0;
+
+  lookup->type       = NULL;
+
+  ++num_freed;
+
+  return num_freed;
+}
+
+/* Free memory allocated inside the lookup value. */
+size_t lookup_free_buffers
+  ( lookup_t *lookup
+
+  , const memory_manager_t *memory_manager
+  )
+{
+  size_t num_freed;
+
+#if ERROR_CHECKING
+  if (!lookup)
+    return 0;
+#endif /* #if ERROR_CHECKING  */
+
+  num_freed = 0;
+
+  if (LOOKUP_NULL(lookup))
+    return num_freed;
 
 #if ERROR_CHECKING
   if (!lookup->values)
-    return;
+    return 0;
   if (!lookup->order)
-    return;
+    return 0;
 #endif /* #if ERROR_CHECKING  */
 
   memory_manager_mfree(memory_manager, lookup->values);
+    ++num_freed;
   memory_manager_mfree(memory_manager, lookup->order);
+    ++num_freed;
   lookup->values   = NULL;
   lookup->order    = NULL;
 
   lookup->capacity = 0;
 
   lookup->len      = 0;
+
+  return num_freed;
 }
 
 size_t lookup_copy_value_buffer(void *dest, size_t dest_size, const lookup_t *lookup, size_t start, size_t num_values)

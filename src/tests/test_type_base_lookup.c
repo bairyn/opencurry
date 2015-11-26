@@ -90,6 +90,9 @@ unit_test_result_t test_type_base_lookup_run(unit_test_context_t *context)
 #define LOOKUP_DEINIT(lookup) \
   lookup_deinit(lookup, NULL)
 
+#define LOOKUP_FREE_BUFFERS(lookup) \
+  lookup_free_buffers(lookup, NULL)
+
 #define LOOKUP_INSERT(lookup, val, add_when_exists, cmp, out_is_duplicate) \
   lookup_minsert(lookup, val, add_when_exists, cmp, NULL, out_is_duplicate)
 
@@ -490,7 +493,7 @@ unit_test_result_t lookup_memory_management_test_run(unit_test_context_t *contex
     ASSERT1( true,   lookup_empty(lookup) );
 
 
-    LOOKUP_DEINIT(lookup);
+    LOOKUP_FREE_BUFFERS(lookup);
     ASSERT2( inteq, lookup_capacity(lookup), 0 );
     ASSERT1( true,  lookup_empty(lookup));
 
@@ -1340,9 +1343,9 @@ unit_test_result_t lookup_insert_test_run(unit_test_context_t *context)
       , lookup_insert_tests(context, &lookup_val, &lookup)
       );
 
-    LOOKUP_DEINIT(lookup);
-    LOOKUP_DEINIT(lookup);
-    LOOKUP_DEINIT(lookup);
+    LOOKUP_FREE_BUFFERS(lookup);
+    LOOKUP_FREE_BUFFERS(lookup);
+    LOOKUP_FREE_BUFFERS(lookup);
 
     lookup_init_empty(lookup, sizeof(value_type));
 
@@ -1372,7 +1375,7 @@ unit_test_result_t lookup_insert_test_run(unit_test_context_t *context)
           , (int) run
           );
 
-        LOOKUP_DEINIT(lookup);
+        LOOKUP_FREE_BUFFERS(lookup);
         lookup_init_empty(lookup, sizeof(value_type));
 
         COMPOUND_TEST
