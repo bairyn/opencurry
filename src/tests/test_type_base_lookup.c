@@ -100,10 +100,10 @@ unit_test_result_t test_type_base_lookup_run(unit_test_context_t *context)
   lookup_minsert(lookup, val, add_when_exists, cmp, NULL, NULL, out_is_duplicate)
 
 #define LOOKUP_DELETE(lookup, val, cmp, out_num_deleted) \
-  lookup_delete(lookup, val, cmp, out_num_deleted)
+  lookup_delete(lookup, val, LOOKUP_UNLIMITED, cmp, out_num_deleted)
 
 #define LOOKUP_MDELETE(lookup, val, cmp, out_num_deleted) \
-  lookup_mdelete(lookup, val, cmp, NULL, out_num_deleted)
+  lookup_mdelete(lookup, LOOKUP_UNLIMITED, val, cmp, NULL, out_num_deleted)
 
 size_t checked_lookup_num_used_values(unit_test_context_t *context, unit_test_result_t *out_result, const lookup_t *lookup)
 {

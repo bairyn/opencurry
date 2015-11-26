@@ -117,6 +117,11 @@ struct allocation_dependency_s
 };
 
 /* ---------------------------------------------------------------- */
+
+allocation_dependency_t allocation_dependency    (size_t parent, size_t dependent);
+allocation_dependency_t allocation_dependency_key(size_t parent);
+
+/* ---------------------------------------------------------------- */
 /* Comparers on allocations.                                        */
 
 extern const callback_compare_t cmp_byte_allocation;
@@ -124,7 +129,7 @@ extern const callback_compare_t cmp_tval_allocation;
 extern const callback_compare_t cmp_manual_allocation;
 extern const callback_compare_t cmp_allocation_dependency;
 /* Key-based allocation dependency comparer on "parent". */
-extern const callback_compare_t cmp_allocation_dependency_parent;
+extern const callback_compare_t cmp_allocation_dependency_key;
 
 /* ---------------------------------------------------------------- */
 
@@ -232,12 +237,16 @@ size_t            memory_tracker_free_containers   (memory_tracker_t *tracker);
 
 /* ---------------------------------------------------------------- */
 
-/*   track methods: returns index >= 0 on success.  Duplicates are errors.  */
+/*   track methods: returns index >= 0 on success.  Duplicates are nops.    */
 /* untrack methods: returns the allocation pointer when it exists.          */
 /* tracked methods: returns index if tracked, -1 if not.                    */
 /*    free methods: returns number of allocations freed.                    */
 
 /* untrack methods ignore dependencies! */
+
+/* TODO: free_dependencies: handle loops! */
+
+#define UNTRACKED -1
 
 int                   track_byte_allocation  (      memory_tracker_t *tracker, byte_allocation_t   allocation);
 byte_allocation_t   untrack_byte_allocation  (      memory_tracker_t *tracker, byte_allocation_t   allocation);
@@ -287,10 +296,12 @@ void *memory_tracker_dynamic_container (const memory_tracker_t *tracker);
 
 /* ---------------------------------------------------------------- */
 
-int    track_malloc (memory_tracker_t *tracker, size_t  size);
-int    track_calloc (memory_tracker_t *tracker, size_t  nmemb, size_t size);
-int    track_realloc(memory_tracker_t *tracker, void   *ptr,   size_t size);
-size_t track_free   (memory_tracker_t *tracker, void   *ptr);
+void   *track_mmalloc  (memory_tracker_t *tracker, size_t        size,                int *out_index);
+void   *track_mcalloc  (memory_tracker_t *tracker, size_t        nmemb, size_t  size, int *out_index);
+void   *track_mrealloc (memory_tracker_t *tracker, void         *ptr,   size_t  size, int *out_index);
+size_t  track_mfree    (memory_tracker_t *tracker, void         *ptr,                 int *out_index);
+
+tval   *track_tval_init(memory_tracker_t *tracker, const type_t *type,  tval   *cons, int *out_index);
 
 /* ---------------------------------------------------------------- */
 

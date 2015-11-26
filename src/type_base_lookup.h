@@ -871,6 +871,8 @@ const lookup_t *lookup_cfind_from
 
 /* ---------------------------------------------------------------- */
 
+#define LOOKUP_ADD_DUPLICATES    TRUE()
+#define LOOKUP_NO_ADD_DUPLICATES FALSE()
 lookup_t *lookup_insert
   ( lookup_t           *lookup
   , const void         *val
@@ -899,33 +901,20 @@ size_t lookup_retrieve_multiple
   , size_t              out_val_num_max
   );
 
+#define LOOKUP_UNLIMITED ((size_t) 0)
+#define LOOKUP_LIMIT_ONE ((size_t) 1)
 lookup_t *lookup_delete
   ( lookup_t           *lookup
   , const void         *val
+  , size_t              is_limit_num
 
   , callback_compare_t  cmp
 
   , size_t             *out_num_deleted
   );
-
-#ifdef TODO
-size_t lookup_delete_limit
-  ( lookup_t           *lookup
-  , const void         *val
-  , size_t              limit
-
-  , callback_compare_t  cmp
-
-  , size_t             *out_num_deleted
-  , void               *out_val
-  , size_t              out_val_num_max
-  );
-#endif /* #ifdef TODO */
 
 /* ---------------------------------------------------------------- */
 
-#define LOOKUP_ADD_DUPLICATES    TRUE()
-#define LOOKUP_NO_ADD_DUPLICATES FALSE()
 lookup_t *lookup_minsert
   ( lookup_t               *lookup
   , const void             *val
@@ -942,6 +931,7 @@ lookup_t *lookup_minsert
 lookup_t *lookup_mdelete
   ( lookup_t               *lookup
   , const void             *val
+  , size_t                  is_limit_num
 
   , callback_compare_t      cmp
 

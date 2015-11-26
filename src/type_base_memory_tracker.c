@@ -90,7 +90,7 @@ static int compare_allocation_dependency(void *context, const allocation_depende
   return compare_size(compare_size_context(), &check->dependent, &baseline->dependent);
 }
 
-static int compare_allocation_dependency_parent(void *context, const allocation_dependency_t *check, const allocation_dependency_t *baseline)
+static int compare_allocation_dependency_key(void *context, const allocation_dependency_t *check, const allocation_dependency_t *baseline)
 {
   return compare_size(compare_size_context(), &check->parent, &baseline->parent);
 }
@@ -123,10 +123,10 @@ const callback_compare_t cmp_allocation_dependency =
   , /* comparer_context */ NULL
   };
 
-const callback_compare_t cmp_allocation_dependency_parent =
+const callback_compare_t cmp_allocation_dependency_key =
   { callback_compare_type
 
-  , /* comparer         */ (comparer_t) compare_allocation_dependency_parent
+  , /* comparer         */ (comparer_t) compare_allocation_dependency_key
   , /* comparer_context */ NULL
   };
 
@@ -917,8 +917,447 @@ size_t memory_tracker_free_containers(memory_tracker_t *tracker)
   return num_freed;
 }
 
+/* ---------------------------------------------------------------- */
+/* byte_allocation tracking.                                        */
+
+int track_byte_allocation(memory_tracker_t *tracker, byte_allocation_t allocation)
+{
+  size_t value_index  = (size_t) -1;
+  int    is_duplicate =          -1;
+
+  lookup_t *lookup;
+
+  UNUSED(is_duplicate);
+
+#if ERROR_CHECKING
+  if (!tracker)
+    return -2;
+#endif /* #if ERROR_CHECKING */
+
+  if (!memory_tracker_require_containers(tracker))
+    return -3;
+
+  lookup = tracker->byte_allocations;
+
+  if (!allocation)
+    return -4;
+
+  lookup =
+    lookup_minsert
+      ( lookup
+      , (void *) &allocation
+      , LOOKUP_NO_ADD_DUPLICATES
+
+      , cmp_byte_allocation
+
+      , MEMORY_TRACKER_CMANAGER(tracker)
+
+      , &value_index
+      , &is_duplicate
+      );
+
+  if (!lookup)
+    return -5;
+
+  return (int) value_index;
+}
+
+byte_allocation_t untrack_byte_allocation(memory_tracker_t *tracker, byte_allocation_t allocation)
+{
+  size_t num_deleted;
+
+  lookup_t *lookup;
+
+#if ERROR_CHECKING
+  if (!tracker)
+    return NULL;
+#endif /* #if ERROR_CHECKING */
+
+  if (!memory_tracker_require_containers(tracker))
+    return NULL;
+
+  lookup = tracker->byte_allocations;
+
+  if (!allocation)
+    return NULL;
+
+  lookup =
+    lookup_mdelete
+      ( lookup
+      , (void *) &allocation
+      , LOOKUP_UNLIMITED
+
+      , cmp_byte_allocation
+
+      , MEMORY_TRACKER_CMANAGER(tracker)
+
+      , &num_deleted
+      );
+
+  if (!lookup)
+    return NULL;
+
+  if (num_deleted <= 0)
+    return NULL;
+
+  return allocation;
+}
+
+int tracked_byte_allocation(const memory_tracker_t *tracker, byte_allocation_t allocation)
+{
+  int         index;
+  const void *value;
+
+  const lookup_t *lookup;
+
+#if ERROR_CHECKING
+  if (!tracker)
+    return UNTRACKED - 1;
+#endif /* #if ERROR_CHECKING */
+
+  lookup = tracker->byte_allocations;
+
+  if (!lookup)
+    return UNTRACKED - 2;
+
+  if (!allocation)
+    return UNTRACKED - 3;
+
+  value =
+    lookup_retrieve
+      ( lookup
+      , (void *) &allocation
+
+      , cmp_byte_allocation
+      );
+
+  if (!value)
+    return UNTRACKED;
+
+  index = (int) LOOKUP_GET_VALUE_INDEX(lookup, value);
+
+  return index;
+}
+
+size_t free_byte_allocation(memory_tracker_t *tracker, byte_allocation_t allocation)
+{
+  size_t num_freed;
+
+  size_t            result_num             = 0;
+  byte_allocation_t result_byte_allocation = NULL;
+
+  const memory_manager_t *manager;
+
+#if ERROR_CHECKING
+  if (!tracker)
+    return 0;
+#endif /* #if ERROR_CHECKING */
+
+  if (!memory_tracker_require_containers(tracker))
+    return 0;
+
+  if (!allocation)
+    return 0;
+
+  manager = MEMORY_TRACKER_CMANAGER(tracker);
+
+  /* ---------------------------------------------------------------- */
+
+  num_freed = 0;
+
+  /* ---------------------------------------------------------------- */
+  /* Untrack byte allocation.                                         */
+
+  result_byte_allocation = untrack_byte_allocation(tracker, allocation);
+  if (!result_byte_allocation)
+    return num_freed;
+  ++num_freed;
+
+  /* ---------------------------------------------------------------- */
+  /* Free dependencies.                                               */
+
+  num_freed += free_byte_allocation_dependencies(tracker, allocation);
+
+  /* ---------------------------------------------------------------- */
+  /* Free allocation.                                                 */
+
+  result_num = memory_manager_mfree(manager, allocation);
+  if (!result_num)
+  {
+    --num_freed;
+    result_num = track_byte_allocation(tracker, allocation);
+    if (!result_num)
+      return num_freed;
+
+    return num_freed;
+  }
+
+  num_freed += result_num;
+
+  /* ---------------------------------------------------------------- */
+  /* Done!                                                            */
+
+  return num_freed;
+}
+
+size_t free_byte_allocation_dependencies(memory_tracker_t *tracker, byte_allocation_t allocation)
+{
+  size_t num_freed;
+
+  int index;
+
+  const void *value;
+  const allocation_dependency_t *
+    const     dependency = (const void * const) &value;
+
+  allocation_dependency_t key;
+
+  size_t result_num;
+  size_t subresult_num;
+
+  lookup_t               *lookup;
+  const memory_manager_t *manager;
+
+#if ERROR_CHECKING
+  if (!tracker)
+    return 0;
+#endif /* #if ERROR_CHECKING */
+
+  if (!memory_tracker_require_containers(tracker))
+    return 0;
+
+  lookup = tracker->byte_allocations;
+
+  if (!allocation)
+    return 0;
+
+  manager = MEMORY_TRACKER_CMANAGER(tracker);
+
+  index = tracked_byte_allocation(tracker, allocation);
+  if (index < 0)
+    return 0;
+
+  /* ---------------------------------------------------------------- */
+
+  num_freed = 0;
+
+  key = allocation_dependency_key(alloc_dep_byte((size_t) index));
+
+  while((value = lookup_retrieve(lookup, &key, cmp_allocation_dependency_key)))
+  {
+    lookup =
+      lookup_mdelete(lookup, value, LOOKUP_UNLIMITED, cmp_allocation_dependency_key, manager, &result_num);
+    if (!lookup)
+      return num_freed;
+#if ERROR_CHECKING
+    if (!result_num)
+      return num_freed;
+#endif /* #if ERROR_CHECKING */
+
+    subresult_num =
+      free_allocation
+        ( tracker
+        , GET_ALLOC_DEP_TYPE (dependency->dependent)
+        , GET_ALLOC_DEP_INDEX(dependency->dependent)
+        );
+#if ERROR_CHECKING
+    if (!subresult_num)
+    {
+      /* Error: Couldn't free dependent! */
+      lookup_minsert(lookup, value, LOOKUP_ADD_DUPLICATES, cmp_allocation_dependency, manager, NULL, NULL);
+      return num_freed;
+    }
+#endif /* #if ERROR_CHECKING */
+
+    num_freed += result_num;
+    num_freed += subresult_num;
+  }
+
+  return num_freed;
+}
+
 #ifdef TODO
 /* ---------------------------------------------------------------- */
+/* tval_allocation tracking.                                        */
+
+int                   track_tval_allocation  (      memory_tracker_t *tracker, tval_allocation_t   allocation);
+tval_allocation_t   untrack_tval_allocation  (      memory_tracker_t *tracker, tval_allocation_t   allocation);
+int                 tracked_tval_allocation  (const memory_tracker_t *tracker, tval_allocation_t   allocation);
+size_t                 free_tval_allocation  (      memory_tracker_t *tracker, tval_allocation_t   allocation);
+size_t    free_tval_allocation_dependencies  (      memory_tracker_t *tracker, tval_allocation_t   allocation);
+
+int                   track_manual_allocation(      memory_tracker_t *tracker, manual_allocation_t allocation);
+manual_allocation_t untrack_manual_allocation(      memory_tracker_t *tracker, manual_allocation_t allocation);
+int                 tracked_manual_allocation(const memory_tracker_t *tracker, manual_allocation_t allocation);
+size_t                 free_manual_allocation(      memory_tracker_t *tracker, manual_allocation_t allocation);
+size_t    free_manual_allocation_dependencies(      memory_tracker_t *tracker, manual_allocation_t allocation);
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 /* ---------------------------------------------------------------- */
 
