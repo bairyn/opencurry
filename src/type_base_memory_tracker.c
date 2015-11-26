@@ -1817,3 +1817,351 @@ size_t free_manual_allocation_dependencies(memory_tracker_t *tracker, manual_all
 
   return num_freed;
 }
+
+/* ---------------------------------------------------------------- */
+
+int track_dependency(memory_tracker_t *tracker, allocation_dependency_t dependency)
+{
+  size_t value_index  = (size_t) -1;
+  int    is_duplicate =          -1;
+
+  lookup_t *lookup;
+
+  UNUSED(is_duplicate);
+
+#if ERROR_CHECKING
+  if (!tracker)
+    return -2;
+#endif /* #if ERROR_CHECKING */
+
+  if (!memory_tracker_require_containers(tracker))
+    return -3;
+
+  lookup = tracker->dependency_graph;
+
+  if (is_allocation_dependency_null(dependency))
+    return -4;
+
+  lookup =
+    lookup_minsert
+      ( lookup
+      , (void *) &dependency
+      , LOOKUP_NO_ADD_DUPLICATES
+
+      , cmp_allocation_dependency
+
+      , MEMORY_TRACKER_CMANAGER(tracker)
+
+      , &value_index
+      , &is_duplicate
+      );
+
+  if (!lookup)
+    return -5;
+
+  return (int) value_index;
+}
+
+allocation_dependency_t untrack_dependency(memory_tracker_t *tracker, allocation_dependency_t dependency)
+{
+  size_t num_deleted;
+
+  lookup_t *lookup;
+
+#if ERROR_CHECKING
+  if (!tracker)
+    return null_allocation_dependency;
+#endif /* #if ERROR_CHECKING */
+
+  if (!memory_tracker_require_containers(tracker))
+    return null_allocation_dependency;
+
+  lookup = tracker->dependency_graph;
+
+  if (!allocation)
+    return null_allocation_dependency;
+
+  lookup =
+    lookup_mdelete
+      ( lookup
+      , (void *) &allocation
+      , LOOKUP_UNLIMITED
+
+      , cmp_allocation_dependency
+
+      , MEMORY_TRACKER_CMANAGER(tracker)
+
+      , &num_deleted
+      );
+
+  if (!lookup)
+    return null_allocation_dependency;
+
+  if (num_deleted <= 0)
+    return null_allocation_dependency;
+
+  return allocation;
+}
+
+allocation_dependency_t get_dependency(memory_tracker_t *tracker, int index)
+{
+  const allocation_dependency_t *value;
+
+  lookup_t *lookup;
+
+#if ERROR_CHECKING
+  if (!tracker)
+    return NULL;
+#endif /* #if ERROR_CHECKING */
+
+  if (!memory_tracker_require_containers(tracker))
+    return NULL;
+
+  lookup = tracker->dependency_graph;
+
+  if (index < 0)
+    return NULL;
+  if (index >= LOOKUP_CAPACITY(lookup))
+    return NULL;
+  if (!LOOKUP_GET_VALUE_IN_USE_BIT(lookup, (size_t) index))
+    return NULL;
+
+  value = LOOKUP_INDEX_VALUE(lookup, (size_t) index);
+  if (!value)
+    return NULL;
+
+  return *value;
+}
+
+int tracked_dependency(const memory_tracker_t *tracker, allocation_dependency_t dependency)
+{
+  int         index;
+  const void *value;
+
+  const lookup_t *lookup;
+
+#if ERROR_CHECKING
+  if (!tracker)
+    return UNTRACKED - 1;
+#endif /* #if ERROR_CHECKING */
+
+  lookup = tracker->dependency_graph;
+
+  if (!lookup)
+    return UNTRACKED - 2;
+
+  if (!allocation)
+    return UNTRACKED - 3;
+
+  value =
+    lookup_retrieve
+      ( lookup
+      , (void *) &dependency
+
+      , cmp_allocation_dependency
+      );
+
+  if (!value)
+    return UNTRACKED;
+
+  index = (int) LOOKUP_GET_VALUE_INDEX(lookup, value);
+
+  return index;
+}
+
+size_t free_dependency(memory_tracker_t *tracker, allocation_dependency_t dependency)
+{
+  size_t num_freed;
+
+  allocation_dependency_t freeing_dependency = dependency;
+
+  const void *value;
+  const allocation_dependency_t *
+    const     dependency = (const void * const) &value;
+
+  allocation_dependency_t key;
+
+  size_t result_num;
+  size_t subresult_num;
+
+  lookup_t               *lookup;
+  const memory_manager_t *manager;
+
+#if ERROR_CHECKING
+  if (!tracker)
+    return 0;
+#endif /* #if ERROR_CHECKING */
+
+  if (!memory_tracker_require_containers(tracker))
+    return 0;
+
+  lookup = tracker->byte_allocations;
+
+  if (!allocation)
+    return 0;
+
+  manager = MEMORY_TRACKER_CMANAGER(tracker);
+
+  /* ---------------------------------------------------------------- */
+
+  num_freed = 0;
+
+  key = freeing_dependency;
+
+  while((value = lookup_retrieve(lookup, &key, cmp_allocation_dependency)))
+  {
+    lookup =
+      lookup_mdelete(lookup, value, LOOKUP_UNLIMITED, cmp_allocation_dependency_key, manager, &result_num);
+    if (!lookup)
+      return num_freed;
+#if ERROR_CHECKING
+    if (!result_num)
+      return num_freed;
+#endif /* #if ERROR_CHECKING */
+
+    subresult_num =
+      free_allocation
+        ( tracker
+        , GET_ALLOC_DEP_TYPE (dependency->dependent)
+        , GET_ALLOC_DEP_INDEX(dependency->dependent)
+        );
+#if ERROR_CHECKING
+    if (!subresult_num)
+    {
+      /* Error: Couldn't free dependent! */
+      lookup_minsert(lookup, value, LOOKUP_ADD_DUPLICATES, cmp_allocation_dependency, manager, NULL, NULL);
+      return num_freed;
+    }
+#endif /* #if ERROR_CHECKING */
+
+    num_freed += result_num;
+    num_freed += subresult_num;
+  }
+
+  return num_freed;
+}
+
+
+size_t free_dependency_key(memory_tracker_t *tracker, allocation_type_t parent_type, int parent_index)
+{
+  size_t num_freed;
+
+  const void *value;
+  const allocation_dependency_t *
+    const     dependency = (const void * const) &value;
+
+  allocation_dependency_t key;
+
+  size_t result_num;
+  size_t subresult_num;
+
+  lookup_t               *lookup;
+  const memory_manager_t *manager;
+
+#if ERROR_CHECKING
+  if (!tracker)
+    return 0;
+#endif /* #if ERROR_CHECKING */
+
+  if (!memory_tracker_require_containers(tracker))
+    return 0;
+
+  lookup = tracker->byte_allocations;
+
+  if (!allocation)
+    return 0;
+
+  manager = MEMORY_TRACKER_CMANAGER(tracker);
+
+  /* ---------------------------------------------------------------- */
+
+  num_freed = 0;
+
+  key = allocation_depends_key(type, index);
+
+  while((value = lookup_retrieve(lookup, &key, cmp_allocation_dependency_key)))
+  {
+    lookup =
+      lookup_mdelete(lookup, value, LOOKUP_UNLIMITED, cmp_allocation_dependency_key, manager, &result_num);
+    if (!lookup)
+      return num_freed;
+#if ERROR_CHECKING
+    if (!result_num)
+      return num_freed;
+#endif /* #if ERROR_CHECKING */
+
+    subresult_num =
+      free_allocation
+        ( tracker
+        , GET_ALLOC_DEP_TYPE (dependency->dependent)
+        , GET_ALLOC_DEP_INDEX(dependency->dependent)
+        );
+#if ERROR_CHECKING
+    if (!subresult_num)
+    {
+      /* Error: Couldn't free dependent! */
+      lookup_minsert(lookup, value, LOOKUP_ADD_DUPLICATES, cmp_allocation_dependency, manager, NULL, NULL);
+      return num_freed;
+    }
+#endif /* #if ERROR_CHECKING */
+
+    num_freed += result_num;
+    num_freed += subresult_num;
+  }
+
+  return num_freed;
+}
+
+
+int track_dependends(memory_tracker_t *tracker, allocation_type_t parent_type, int parent, allocation_type_t *dependent_type, int dependent)
+{
+  return track_dependency(tracker, allocation_depends(parent_type, parent, dependent_type, dependent));
+}
+
+int tracked_dependency_key(const memory_tracker_t *tracker, allocation_type_t parent_type, int parent, allocation_type_t *out_dependent_type, int *out_dependent)
+{
+  int         index;
+  const void *value;
+  const allocation_dependency_t *
+    const     dependency = (const void * const) &value;
+
+  const lookup_t *lookup;
+
+  allocation_dependency_t key;
+
+  WRITE_OUT(out_dependent_type, NULL);
+  WRITE_OUT(out_dependent,      -1  );
+
+#if ERROR_CHECKING
+  if (!tracker)
+    return UNTRACKED - 1;
+#endif /* #if ERROR_CHECKING */
+
+  lookup = tracker->dependency_graph;
+
+  if (!lookup)
+    return UNTRACKED - 2;
+
+  if (parent < 0 || parent_type < 0 || parent_type > a_t_end_mask)
+    return UNTRACKED - 3;
+
+  key = allocation_depends_key(parent_type, parent);
+
+  value =
+    lookup_retrieve
+      ( lookup
+      , (void *) &key
+
+      , cmp_allocation_dependency_key
+      );
+
+  if (!value)
+    return UNTRACKED;
+
+  index = (int) LOOKUP_GET_VALUE_INDEX(lookup, value);
+
+  WRITE_OUT(out_dependent_type, GET_ALLOC_DEP_TYPE (dependency->dependent));
+  WRITE_OUT(out_dependent,      GET_ALLOC_DEP_INDEX(dependency->dependent));
+
+  return index;
+}

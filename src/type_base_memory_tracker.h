@@ -129,6 +129,9 @@ manual_allocation_t manual_allocation(size_t (*cleanup)(void *context), void *co
 allocation_dependency_t allocation_dependency    (size_t parent, size_t dependent);
 allocation_dependency_t allocation_dependency_key(size_t parent);
 
+allocation_dependency_t allocation_depends    (size_t parent, size_t dependent);
+allocation_dependency_t allocation_depends_key(size_t parent);
+
 /* ---------------------------------------------------------------- */
 /* Comparers on allocations.                                        */
 
@@ -282,13 +285,17 @@ size_t    free_manual_allocation_dependencies(      memory_tracker_t *tracker, m
 /* track:   returns index.                                                  */
 /* untrack: takes a dependency index.                                       */
 /* tracked: returns index; sets first dependent.                            */
-int                       track_dependency(      memory_tracker_t *tracker, allocation_type_t parent_type, int parent, allocation_type_t dependent_type, int dependent);
-allocation_dependency_t untrack_dependency(      memory_tracker_t *tracker, int index);
+int                       track_dependency(      memory_tracker_t *tracker, allocation_dependency_t dependency);
+allocation_dependency_t untrack_dependency(      memory_tracker_t *tracker, allocation_dependency_t dependency);
 allocation_dependency_t     get_dependency(      memory_tracker_t *tracker, int index);
-int                     tracked_dependency(const memory_tracker_t *tracker, allocation_type_t parent_type, int parent, allocation_type_t dependent_type, int dependent);
-size_t                     free_dependency(      memory_tracker_t *tracker, allocation_type_t parent_type, int parent, allocation_type_t dependent_type, int dependent);
+int                     tracked_dependency(const memory_tracker_t *tracker, allocation_dependency_t dependency);
+size_t                     free_dependency(      memory_tracker_t *tracker, allocation_dependency_t dependency);
 
+size_t                 free_dependency_key(      memory_tracker_t *tracker, allocation_type_t parent_type, int parent_index);
+
+int                       track_dependends(      memory_tracker_t *tracker, allocation_type_t parent_type, int parent, allocation_type_t *dependent_type, int dependent);
 int                 tracked_dependency_key(const memory_tracker_t *tracker, allocation_type_t parent_type, int parent, allocation_type_t *out_dependent_type, int *out_dependent);
+size_t                 free_dependency_key(      memory_tracker_t *tracker, allocation_type_t parent_type, int parent_index);
 
 /* ---------------------------------------------------------------- */
 
