@@ -3195,6 +3195,7 @@ size_t lookup_retrieve_multiple
 lookup_t *lookup_delete
   ( lookup_t           *lookup
   , const void         *val
+  , size_t              is_limit_num
 
   , callback_compare_t  cmp
 
@@ -3255,6 +3256,16 @@ lookup_t *lookup_delete
   for (;;)
   {
     WRITE_OUTPUT(out_num_deleted, num_deleted);
+
+    /* Is there a limit? */
+    if (is_limit_num)
+    {
+      if (num_deleted >= is_limit_num)
+      {
+        WRITE_OUTPUT(out_num_deleted, num_deleted);
+        return lookup;
+      }
+    }
 
     /* Is the lookup container empty? */
     if (LOOKUP_EMPTY(lookup))
@@ -4909,6 +4920,7 @@ lookup_t *lookup_minsert
 lookup_t *lookup_mdelete
   ( lookup_t           *lookup
   , const void         *val
+  , size_t              is_limit_num
 
   , callback_compare_t  cmp
 
@@ -4926,6 +4938,7 @@ lookup_t *lookup_mdelete
     lookup_delete
       ( lookup
       , val
+      , is_limit_num
 
       , cmp
 

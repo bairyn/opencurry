@@ -1668,7 +1668,7 @@ int mem_free_valueless_or_inside_value_allocation
       size_t num_freed;
 
       /* TODO use "out_err_buf" once snprintf_prepend is implemented. */
-      num_freed = track_free(valueless_memory_tracker, val);
+      num_freed = track_mfree(valueless_memory_tracker, val, NULL);
 
       if (num_freed <= 0)
       {

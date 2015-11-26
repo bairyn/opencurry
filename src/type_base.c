@@ -493,7 +493,7 @@ int is_field_template_unused(const field_info_t *field_info, const void *src_fie
       if (!memory_manager)
         memory_manager = &malloc_manager;
 
-      field_working_mem = memory_manager_malloc(memory_manager, field_info->field_size);
+      field_working_mem = memory_manager_mmalloc(memory_manager, field_info->field_size);
 
       if (!field_working_mem)
         return -1;
@@ -558,7 +558,7 @@ int is_field_template_unused(const field_info_t *field_info, const void *src_fie
           if (need_free)
           {
             need_free = 0;
-            memory_manager_free(memory_manager, field_working_mem);
+            memory_manager_mfree(memory_manager, field_working_mem);
           }
           field_working_mem = NULL;
         }
@@ -568,7 +568,7 @@ int is_field_template_unused(const field_info_t *field_info, const void *src_fie
   /* Free resources. */
   if (need_free)
   {
-    memory_manager_free(memory_manager, field_working_mem);
+    memory_manager_mfree(memory_manager, field_working_mem);
   }
 
   return is_unused;
@@ -2066,11 +2066,11 @@ tval *template_cons_dup_struct
     /* Dynamically allocate memory. */
     if (!is_array && number_to_allocate == 1)
     {
-      dest = memory_manager_malloc(memory_manager, size);
+      dest = memory_manager_mmalloc(memory_manager, size);
     }
     else
     {
-      dest = memory_manager_calloc(memory_manager, number_to_allocate, size);
+      dest = memory_manager_mcalloc(memory_manager, number_to_allocate, size);
     }
 
     /* Allocation error checking. */
@@ -2117,7 +2117,7 @@ tval *template_cons_dup_struct
     if (is_allocate)
     {
       if (is_allocate)
-        memory_manager_free(memory_manager, dest);
+        memory_manager_mfree(memory_manager, dest);
 
       if (cons->out_init_error_msg)
         snprintf
@@ -2147,7 +2147,7 @@ tval *template_cons_dup_struct
         if (!mem_init_result)
         {
           if (is_allocate)
-            memory_manager_free(memory_manager, dest);
+            memory_manager_mfree(memory_manager, dest);
 
           if (cons->out_init_error_msg)
             snprintf
@@ -2162,7 +2162,7 @@ tval *template_cons_dup_struct
       else
       {
         if (is_allocate)
-          memory_manager_free(memory_manager, dest);
+          memory_manager_mfree(memory_manager, dest);
 
         if (cons->out_init_error_msg)
           snprintf
@@ -2186,7 +2186,7 @@ tval *template_cons_dup_struct
         if (!mem_init_result)
         {
           if (is_allocate)
-            memory_manager_free(memory_manager, dest);
+            memory_manager_mfree(memory_manager, dest);
 
           if (cons->out_init_error_msg)
             snprintf
@@ -2219,7 +2219,7 @@ tval *template_cons_dup_struct
   if (!struct_info)
   {
     if (is_allocate)
-      memory_manager_free(memory_manager, dest);
+      memory_manager_mfree(memory_manager, dest);
 
     if (cons->out_init_error_msg)
       snprintf
@@ -2245,7 +2245,7 @@ tval *template_cons_dup_struct
   if (is_err)
   {
     if (is_allocate)
-      memory_manager_free(memory_manager, dest);
+      memory_manager_mfree(memory_manager, dest);
 
     if (cons->out_init_error_msg)
       snprintf
