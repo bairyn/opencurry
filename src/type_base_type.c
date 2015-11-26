@@ -160,7 +160,7 @@ static const struct_info_t *type_type_is_struct  (const type_t *self)
 
     /* typed_t              (*cons_type)  (const type_t *self);                             */
     /* tval                *(*init)       (const type_t *self, tval *cons);                 */
-    /* void                 (*free)       (const type_t *self, tval *val);                  */
+    /* size_t               (*free)       (const type_t *self, tval *val);                  */
     /* const tval          *(*has_default)(const type_t *self);                             */
     /* memory_tracker_t    *(*mem)        (const type_t *self, tval *val_raw);              */
     /* void                *(*mem_init)   ( const type_t *self                              */
@@ -650,7 +650,7 @@ tval *template_cons_basic_initializer(const type_t *type, template_cons_t *cons,
  *
  * This function invokes "template_cons_basic_freer" and nothing else.
  */
-int type_has_template_cons_basic_freer(const type_t *type, tval *cons)
+size_t type_has_template_cons_basic_freer(const type_t *type, tval *cons)
 {
   return template_cons_basic_freer(type, cons);
 }
@@ -674,7 +674,7 @@ int type_has_template_cons_basic_freer(const type_t *type, tval *cons)
  * initialization.  Erroneously using this to free a value *externally*
  * may result in memory leaks or corruption.
  */
-int template_cons_basic_freer(const type_t *type, tval *val)
+size_t template_cons_basic_freer(const type_t *type, tval *val)
 {
   int                      (*mem_free)( const tval *self
                                       , tval       *val
@@ -1554,13 +1554,6 @@ int type_mem_free_valueless_or_inside_value_allocation
   return mem_free_valueless_or_inside_value_allocation(type, val, NULL, 0);
 }
 
-/* TODO TODO TODO TODO FIXME FIXME FIXME FIXME: if "container" is not equal to
- * the value, e.g. if "container" points to the memory tracker itself, then
- * what?
- * Oh, oh, add a new field to memory_tracker_t!
- *
- * AFFECTS: at *least* mem_free and is_dyn methods!!
- */
 /*
  * mem_free_valueless_or_inside_value_allocation:
  *
@@ -2296,8 +2289,8 @@ typed_t              default_type_cons_type  (const type_t *self)
 tval                *default_type_init       (const type_t *self, tval *cons)
   { return type_has_template_cons_basic_initializer(self, cons); }
 
-void                 default_type_free       (const type_t *self, tval *val)
-  {        type_has_template_cons_basic_freer(self, val); }
+size_t               default_type_free       (const type_t *self, tval *val)
+  { return type_has_template_cons_basic_freer(self, val); }
 
 const tval          *default_type_has_default(const type_t *self)
   { return type_has_no_default_value(self); }
@@ -2498,12 +2491,12 @@ tval                *type_init       (const type_t *type, tval *cons)
     return type->init(type, cons);
 }
 
-void                 type_free       (const type_t *type, tval *val)
+size_t               type_free       (const type_t *type, tval *val)
 {
   if (!type || !type->free)
-    type_defaults.free(type, val);
+    return type_defaults.free(type, val);
   else
-    type->free(type, val);
+    return type->free(type, val);
 }
 
 const tval          *type_has_default(const type_t *type)
@@ -2736,7 +2729,7 @@ int cmp_with_type     (const type_t *type, const tval *check, const tval *baseli
 
 /* TODO: more */
 
-void tval_free(tval *val)
+size_t tval_free(tval *val)
 {
-  type_free(typeof(val), val);
+  return type_free(typeof(val), val);
 }

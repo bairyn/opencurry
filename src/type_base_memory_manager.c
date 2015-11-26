@@ -159,7 +159,7 @@ static const struct_info_t *memory_manager_type_is_struct  (const type_t *self);
 /*                                                            );                                     */
 /* static typed_t              memory_manager_type_cons_type  (const type_t *self);                  */
 /* static tval                *memory_manager_type_init       (const type_t *self, tval *cons);      */
-/* static void                 memory_manager_type_free       (const type_t *self, tval *val);       */
+/* static size_t               memory_manager_type_free       (const type_t *self, tval *val);       */
 static const tval          *memory_manager_type_has_default(const type_t *self);
 /* static memory_tracker_t    *memory_manager_type_mem        (const type_t *self, tval *val_raw);   */
 /* static void                *memory_manager_type_mem_init   ( const type_t *self                   */

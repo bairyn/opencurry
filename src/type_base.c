@@ -2287,7 +2287,7 @@ void *template_cons_dup_struct_meminit_type
  * Returns >= 0 on success (0 if not dynamically allocated, >= 1 otherwise),
  * and <= -1 on failure.
  */
-int   template_cons_free_struct
+size_t template_cons_free_struct
   ( tval *val
   , int                      (*mem_free)( const tval *self
                                         , tval       *val
@@ -2295,13 +2295,25 @@ int   template_cons_free_struct
   , const tval                *mem_free_object
   )
 {
+  int mem_free_result;
+
   /* The only resources allocation done */
   /* uses "mem_init", so, conversely,   */
   /* free the value using "mem_free".   */
   if (!mem_free)
-    return -1;
+    return 0;
 
-  return mem_free(mem_free_object, val);
+  mem_free_result = mem_free(mem_free_object, val);
+  if (mem_free_result <= -1)
+    return 0;
+
+  if (mem_free_result == 0)
+    return 1;
+
+  if (mem_free_result == 1)
+    return 2;
+
+  return 1;
 }
 
 /*

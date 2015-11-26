@@ -132,6 +132,66 @@ const callback_compare_t cmp_allocation_dependency_key =
 
 /* ---------------------------------------------------------------- */
 
+const manual_allocation_t null_manual_allocation =
+  {
+    /* cleanup */ NULL
+  , /* context */ NULL
+  };
+
+int is_manual_allocation_null(manual_allocation_t manual_allocation)
+{
+  if (!manual_allocation.cleanup)
+    return TRUE();
+  else
+    return FALSE();
+}
+
+const allocation_dependency_t null_allocation_dependency =
+  {
+    /* parent    */ 0
+  , /* dependent */ 0
+  };
+
+int is_allocation_dependency_null(allocation_dependency_t allocation_dependency)
+{
+  if (!allocation_dependency.parent && !allocation_dependency.dependent)
+    return TRUE();
+  else
+    return FALSE();
+}
+
+manual_allocation_t manual_allocation(size_t (*cleanup)(void *context), void *context)
+{
+  manual_allocation_t allocation;
+
+  allocation.cleanup = cleanup;
+  allocation.context = context;
+
+  return allocation;
+}
+
+allocation_dependency_t allocation_dependency(size_t parent, size_t dependent)
+{
+  allocation_dependency_t dependency;
+
+  dependency.parent    = parent;
+  dependency.dependent = dependent;
+
+  return dependency;
+}
+
+allocation_dependency_t allocation_dependency_key(size_t parent)
+{
+  allocation_dependency_t dependency;
+
+  dependency.parent    = parent;
+  dependency.dependent = 0;
+
+  return dependency;
+}
+
+/* ---------------------------------------------------------------- */
+
 allocation_type_t get_alloc_dep_type (size_t ref)
 {
   return GET_ALLOC_DEP_TYPE(ref);
@@ -1003,6 +1063,36 @@ byte_allocation_t untrack_byte_allocation(memory_tracker_t *tracker, byte_alloca
   return allocation;
 }
 
+byte_allocation_t get_byte_allocation(memory_tracker_t *tracker, int index)
+{
+  const byte_allocation_t *value;
+
+  lookup_t *lookup;
+
+#if ERROR_CHECKING
+  if (!tracker)
+    return NULL;
+#endif /* #if ERROR_CHECKING */
+
+  if (!memory_tracker_require_containers(tracker))
+    return NULL;
+
+  lookup = tracker->byte_allocations;
+
+  if (index < 0)
+    return NULL;
+  if (index >= LOOKUP_CAPACITY(lookup))
+    return NULL;
+  if (!LOOKUP_GET_VALUE_IN_USE_BIT(lookup, (size_t) index))
+    return NULL;
+
+  value = LOOKUP_INDEX_VALUE(lookup, (size_t) index);
+  if (!value)
+    return NULL;
+
+  return *value;
+}
+
 int tracked_byte_allocation(const memory_tracker_t *tracker, byte_allocation_t allocation)
 {
   int         index;
@@ -1176,633 +1266,554 @@ size_t free_byte_allocation_dependencies(memory_tracker_t *tracker, byte_allocat
   return num_freed;
 }
 
-#ifdef TODO
 /* ---------------------------------------------------------------- */
 /* tval_allocation tracking.                                        */
 
-int                   track_tval_allocation  (      memory_tracker_t *tracker, tval_allocation_t   allocation);
-tval_allocation_t   untrack_tval_allocation  (      memory_tracker_t *tracker, tval_allocation_t   allocation);
-int                 tracked_tval_allocation  (const memory_tracker_t *tracker, tval_allocation_t   allocation);
-size_t                 free_tval_allocation  (      memory_tracker_t *tracker, tval_allocation_t   allocation);
-size_t    free_tval_allocation_dependencies  (      memory_tracker_t *tracker, tval_allocation_t   allocation);
-
-int                   track_manual_allocation(      memory_tracker_t *tracker, manual_allocation_t allocation);
-manual_allocation_t untrack_manual_allocation(      memory_tracker_t *tracker, manual_allocation_t allocation);
-int                 tracked_manual_allocation(const memory_tracker_t *tracker, manual_allocation_t allocation);
-size_t                 free_manual_allocation(      memory_tracker_t *tracker, manual_allocation_t allocation);
-size_t    free_manual_allocation_dependencies(      memory_tracker_t *tracker, manual_allocation_t allocation);
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-/* ---------------------------------------------------------------- */
-
-/*   track methods: returns index >= 0 on success.  Duplicates are errors.  */
-/* untrack methods: returns the allocation pointer when it exists.          */
-/* tracked methods: returns index if tracked, -1 if not.                    */
-int                   track_byte_allocation  (      memory_tracker_t *tracker, byte_allocation_t   allocation)
+int track_tval_allocation(memory_tracker_t *tracker, tval_allocation_t allocation)
 {
-  int    is_duplicate;
-  size_t node_index;
+  size_t value_index  = (size_t) -1;
+  int    is_duplicate =          -1;
+
+  lookup_t *lookup;
+
+  UNUSED(is_duplicate);
 
 #if ERROR_CHECKING
   if (!tracker)
-    return -1;
+    return -2;
 #endif /* #if ERROR_CHECKING */
 
   if (!memory_tracker_require_containers(tracker))
-    return -2;
-
-  if (!lookup_minsert
-         ( tracker->byte_allocations
-         , (void *) &allocation
-         , 0
-
-         , compare_callback_byte_allocation
-
-         , tracker->memory_manager.calloc
-           , &tracker->memory_manager
-         , tracker->memory_manager.realloc
-           , &tracker->memory_manager
-         , tracker->memory_manager.free
-           , &tracker->memory_manager
-
-         , &value_index
-         , &is_duplicate
-         )
-     )
     return -3;
 
-  if (is_duplicate)
+  lookup = tracker->tval_allocations;
+
+  if (!allocation)
     return -4;
+
+  lookup =
+    lookup_minsert
+      ( lookup
+      , (void *) &allocation
+      , LOOKUP_NO_ADD_DUPLICATES
+
+      , cmp_tval_allocation
+
+      , MEMORY_TRACKER_CMANAGER(tracker)
+
+      , &value_index
+      , &is_duplicate
+      );
+
+  if (!lookup)
+    return -5;
 
   return (int) value_index;
 }
 
-byte_allocation_t   untrack_byte_allocation  (      memory_tracker_t *tracker, byte_allocation_t   allocation)
+tval_allocation_t untrack_tval_allocation(memory_tracker_t *tracker, tval_allocation_t allocation)
 {
-}
+  size_t num_deleted;
 
-int                 tracked_byte_allocation  (const memory_tracker_t *tracker, byte_allocation_t   allocation)
-{
-}
-
-
-int                   track_tval_allocation  (      memory_tracker_t *tracker, tval_allocation_t   allocation)
-{
-  int    is_duplicate;
-  size_t node_index;
+  lookup_t *lookup;
 
 #if ERROR_CHECKING
   if (!tracker)
-    return -1;
+    return NULL;
 #endif /* #if ERROR_CHECKING */
 
   if (!memory_tracker_require_containers(tracker))
-    return -2;
+    return NULL;
 
-  if (!lookup_minsert
-         ( tracker->tval_allocations
-         , (void *) &allocation
-         , 0
+  lookup = tracker->tval_allocations;
 
-         , compare_callback_tval_allocation
+  if (!allocation)
+    return NULL;
 
-         , tracker->memory_manager.calloc
-           , &tracker->memory_manager
-         , tracker->memory_manager.realloc
-           , &tracker->memory_manager
-         , tracker->memory_manager.free
-           , &tracker->memory_manager
+  lookup =
+    lookup_mdelete
+      ( lookup
+      , (void *) &allocation
+      , LOOKUP_UNLIMITED
 
-         , &value_index
-         , &is_duplicate
-         )
-     )
-    return -3;
+      , cmp_tval_allocation
 
-  if (is_duplicate)
-    return -4;
+      , MEMORY_TRACKER_CMANAGER(tracker)
 
-  return (int) value_index;
+      , &num_deleted
+      );
+
+  if (!lookup)
+    return NULL;
+
+  if (num_deleted <= 0)
+    return NULL;
+
+  return allocation;
 }
 
-tval_allocation_t   untrack_tval_allocation  (      memory_tracker_t *tracker, tval_allocation_t   allocation)
+tval_allocation_t get_tval_allocation(memory_tracker_t *tracker, int index)
 {
-}
+  const tval_allocation_t *value;
 
-int                 tracked_tval_allocation  (const memory_tracker_t *tracker, tval_allocation_t   allocation)
-{
-}
-
-
-int                   track_manual_allocation(      memory_tracker_t *tracker, manual_allocation_t allocation)
-{
-  int    is_duplicate;
-  size_t node_index;
+  lookup_t *lookup;
 
 #if ERROR_CHECKING
   if (!tracker)
-    return -1;
+    return NULL;
 #endif /* #if ERROR_CHECKING */
 
   if (!memory_tracker_require_containers(tracker))
-    return -2;
+    return NULL;
 
-  if (!lookup_minsert
-         ( tracker->manual_allocations
-         , (void *) &allocation
-         , 0
+  lookup = tracker->tval_allocations;
 
-         , compare_callback_manual_allocation
+  if (index < 0)
+    return NULL;
+  if (index >= LOOKUP_CAPACITY(lookup))
+    return NULL;
+  if (!LOOKUP_GET_VALUE_IN_USE_BIT(lookup, (size_t) index))
+    return NULL;
 
-         , tracker->memory_manager.calloc
-           , &tracker->memory_manager
-         , tracker->memory_manager.realloc
-           , &tracker->memory_manager
-         , tracker->memory_manager.free
-           , &tracker->memory_manager
+  value = LOOKUP_INDEX_VALUE(lookup, (size_t) index);
+  if (!value)
+    return NULL;
 
-         , &value_index
-         , &is_duplicate
-         )
-     )
-    return -3;
-
-  if (is_duplicate)
-    return -4;
-
-  return (int) value_index;
+  return *value;
 }
 
-manual_allocation_t untrack_manual_allocation(      memory_tracker_t *tracker, manual_allocation_t allocation)
+int tracked_tval_allocation(const memory_tracker_t *tracker, tval_allocation_t allocation)
 {
+  int         index;
+  const void *value;
+
+  const lookup_t *lookup;
+
+#if ERROR_CHECKING
+  if (!tracker)
+    return UNTRACKED - 1;
+#endif /* #if ERROR_CHECKING */
+
+  lookup = tracker->tval_allocations;
+
+  if (!lookup)
+    return UNTRACKED - 2;
+
+  if (!allocation)
+    return UNTRACKED - 3;
+
+  value =
+    lookup_retrieve
+      ( lookup
+      , (void *) &allocation
+
+      , cmp_tval_allocation
+      );
+
+  if (!value)
+    return UNTRACKED;
+
+  index = (int) LOOKUP_GET_VALUE_INDEX(lookup, value);
+
+  return index;
 }
 
-int                 tracked_manual_allocation(const memory_tracker_t *tracker, manual_allocation_t allocation)
+size_t free_tval_allocation(memory_tracker_t *tracker, tval_allocation_t allocation)
 {
+  size_t num_freed;
+
+  size_t            result_num             = 0;
+  tval_allocation_t result_tval_allocation = NULL;
+
+#if ERROR_CHECKING
+  if (!tracker)
+    return 0;
+#endif /* #if ERROR_CHECKING */
+
+  if (!memory_tracker_require_containers(tracker))
+    return 0;
+
+  if (!allocation)
+    return 0;
+
+  /* ---------------------------------------------------------------- */
+
+  num_freed = 0;
+
+  /* ---------------------------------------------------------------- */
+  /* Untrack tval allocation.                                         */
+
+  result_tval_allocation = untrack_tval_allocation(tracker, allocation);
+  if (!result_tval_allocation)
+    return num_freed;
+  ++num_freed;
+
+  /* ---------------------------------------------------------------- */
+  /* Free dependencies.                                               */
+
+  num_freed += free_tval_allocation_dependencies(tracker, allocation);
+
+  /* ---------------------------------------------------------------- */
+  /* Free allocation.                                                 */
+
+  result_num = tval_free(allocation);
+
+  num_freed += result_num;
+
+  /* ---------------------------------------------------------------- */
+  /* Done!                                                            */
+
+  return num_freed;
 }
 
-/* ---------------------------------------------------------------- */
-
-
-
-
-#endif /* #ifdef TODO */
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-#ifdef TODO /* TODO */
-/* ---------------------------------------------------------------- */
-/* memory_tracker                                                   */
-/* ---------------------------------------------------------------- */
-
-allocation_dependency_t depending_parent(size_t parent)
+size_t free_tval_allocation_dependencies(memory_tracker_t *tracker, tval_allocation_t allocation)
 {
-  allocation_dependency_t dep;
+  size_t num_freed;
 
-  dep.parent     = parent;
-  dep.dependency = 0;
+  int index;
 
-  return dep;
-}
+  const void *value;
+  const allocation_dependency_t *
+    const     dependency = (const void * const) &value;
 
-allocation_dependency_t allocation_dependency(size_t parent, size_t dependent)
-{
-  allocation_dependency_t dep;
+  allocation_dependency_t key;
 
-  dep.parent     = parent;
-  dep.dependency = dependennt;
+  size_t result_num;
+  size_t subresult_num;
 
-  return dep;
-}
+  lookup_t               *lookup;
+  const memory_manager_t *manager;
 
-allocation_type_t get_alloc_type(size_t ref)
-{
-  return GET_ALLOC_TYPE(ref);
-}
+#if ERROR_CHECKING
+  if (!tracker)
+    return 0;
+#endif /* #if ERROR_CHECKING */
 
-size_t get_alloc_index(size_t ref)
-{
-  return GET_ALLOC_INDEX(ref);
-}
+  if (!memory_tracker_require_containers(tracker))
+    return 0;
 
-size_t alloc_type_byte(size_t index)
-{
-  return ALLOC_TYPE_BYTE(index);
-}
+  lookup = tracker->tval_allocations;
 
-size_t alloc_type_tval(size_t index)
-{
-  return ALLOC_TYPE_TVAL(index);
-}
+  if (!allocation)
+    return 0;
 
-size_t alloc_type_manual(size_t index)
-{
-  return ALLOC_TYPE_MANUAL(index);
-}
+  manager = MEMORY_TRACKER_CMANAGER(tracker);
 
-#ifdef TODO
-/* ---------------------------------------------------------------- */
-/* memory_tracker                                                   */
-/* ---------------------------------------------------------------- */
+  index = tracked_tval_allocation(tracker, allocation);
+  if (index < 0)
+    return 0;
 
-/* memory_tracker type. */
+  /* ---------------------------------------------------------------- */
 
-const type_t *memory_tracker_type(void)
-  { return &memory_tracker_type_def; }
+  num_freed = 0;
 
-static const char          *memory_tracker_type_name       (const type_t *self);
-static size_t               memory_tracker_type_size       (const type_t *self, const tval *val);
-static const struct_info_t *memory_tracker_type_is_struct  (const type_t *self);
-static const tval          *memory_tracker_type_has_default(const type_t *self);
+  key = allocation_dependency_key(alloc_dep_tval((size_t) index));
 
-const type_t memory_tracker_type_def =
-  { type_type
-
-    /* @: Required.           */
-
-  , /* memory                 */ MEMORY_TRACKER_DEFAULTS
-  , /* is_self_mutable        */ NULL
-  , /* @indirect              */ memory_tracker_type
-
-  , /* self                   */ NULL
-  , /* container              */ NULL
-
-  , /* typed                  */ NULL
-
-  , /* @name                  */ memory_tracker_type_name
-  , /* info                   */ NULL
-  , /* @size                  */ memory_tracker_type_size
-  , /* @is_struct             */ memory_tracker_type_is_struct
-  , /* is_mutable             */ NULL
-  , /* is_subtype             */ NULL
-  , /* is_supertype           */ NULL
-
-  , /* cons_type              */ NULL
-  , /* init                   */ NULL
-  , /* free                   */ NULL
-  , /* has_default            */ memory_tracker_type_has_default
-  , /* mem                    */ NULL
-  , /* mem_init               */ NULL
-  , /* mem_is_dyn             */ NULL
-  , /* mem_free               */ NULL
-  , /* default_memory_manager */ NULL
-
-  , /* dup                    */ NULL
-
-  , /* user                   */ NULL
-  , /* cuser                  */ NULL
-  , /* cmp                    */ NULL
-
-  , /* parity                 */ ""
-  };
-
-static const char          *memory_tracker_type_name       (const type_t *self)
-  { return "memory_tracker_t"; }
-
-static size_t               memory_tracker_type_size       (const type_t *self, const tval *val)
-  { return sizeof(memory_tracker_t); }
-
-DEF_FIELD_DEFAULT_VALUE_FROM_TYPE(memory_tracker)
-static const struct_info_t *memory_tracker_type_is_struct  (const type_t *self)
+  while((value = lookup_retrieve(lookup, &key, cmp_allocation_dependency_key)))
   {
-    STRUCT_INFO_BEGIN(memory_tracker);
+    lookup =
+      lookup_mdelete(lookup, value, LOOKUP_UNLIMITED, cmp_allocation_dependency_key, manager, &result_num);
+    if (!lookup)
+      return num_freed;
+#if ERROR_CHECKING
+    if (!result_num)
+      return num_freed;
+#endif /* #if ERROR_CHECKING */
 
-    /* typed_t type */
-    STRUCT_INFO_RADD(typed_type(), type);
+    subresult_num =
+      free_allocation
+        ( tracker
+        , GET_ALLOC_DEP_TYPE (dependency->dependent)
+        , GET_ALLOC_DEP_INDEX(dependency->dependent)
+        );
+#if ERROR_CHECKING
+    if (!subresult_num)
+    {
+      /* Error: Couldn't free dependent! */
+      lookup_minsert(lookup, value, LOOKUP_ADD_DUPLICATES, cmp_allocation_dependency, manager, NULL, NULL);
+      return num_freed;
+    }
+#endif /* #if ERROR_CHECKING */
 
-    /* memory_manager_t memory_manager; */
-    STRUCT_INFO_RADD(memory_manager_type(), memory_manager);
-
-    /* void *dynamically_allocated_container; */
-    STRUCT_INFO_RADD(objp_type(), dynamically_allocated_container);
-
-    /* void   **dynamically_allocated_buffers;      */
-    /* size_t   dynamically_allocated_buffers_num;  */
-    /* size_t   dynamically_allocated_buffers_size; */
-    STRUCT_INFO_RADD(objp_type(), dynamically_allocated_buffers);
-    STRUCT_INFO_RADD(size_type(), dynamically_allocated_buffers_num);
-    STRUCT_INFO_RADD(size_type(), dynamically_allocated_buffers_size);
-
-    /* size_t   dynamically_allocated_buffers_last_even; */
-    /* size_t   dynamically_allocated_buffers_last_odd;  */
-    STRUCT_INFO_RADD(size_type(), dynamically_allocated_buffers_last_even);
-    STRUCT_INFO_RADD(size_type(), dynamically_allocated_buffers_last_odd);
-
-    STRUCT_INFO_DONE();
+    num_freed += result_num;
+    num_freed += subresult_num;
   }
 
-static const tval          *memory_tracker_type_has_default(const type_t *self)
-  { return type_has_default_value(self, &memory_tracker_defaults); }
+  return num_freed;
+}
 
 /* ---------------------------------------------------------------- */
+/* manual_allocation tracking.                                      */
 
-/*
- * Default memory tracker:
- *   - Default memory manager.
- *   - Associated value not allocated on heap.
- *   - No allocated buffers to track dynamically allocated memory.
- */
-const memory_tracker_t memory_tracker_defaults =
-  MEMORY_TRACKER_DEFAULTS;
-
-/* ---------------------------------------------------------------- */
-
-/*
- * Global memory trackers.
- */
-
-memory_tracker_t global_memory_tracker =
-  MEMORY_TRACKER_DEFAULTS;
-
-memory_tracker_t global_typed_dyn_memory_tracker =
-  MEMORY_TRACKER_DEFAULTS;
-
-/* ---------------------------------------------------------------- */
-
-/*
- * Memory tracker methods.
- */
-
-#ifndef TODO
-int               memory_tracker_is_allocation_tracked  (memory_tracker_t *memory_tracker, const void *buffer_allocation, char *out_err_buf, size_t err_buf_size)
-{ /* TODO */ return 0; }
-memory_tracker_t *memory_tracker_track_allocation       (memory_tracker_t *memory_tracker, void *buffer_allocation, char *out_err_buf, size_t err_buf_size)
-{ /* TODO */ return buffer_allocation; }
-void             *memory_tracker_malloc_allocation      (memory_tracker_t *memory_tracker, size_t size, char *out_err_buf, size_t err_buf_size)
-{ /* TODO */ return NULL; }
-void             *memory_tracker_calloc_allocation      (memory_tracker_t *memory_tracker, size_t nmemb, size_t size, char *out_err_buf, size_t err_buf_size)
-{ /* TODO */ return NULL; }
-void             *memory_tracker_realloc_allocation     (memory_tracker_t *memory_tracker, void *buffer_allocation, size_t size, char *out_err_buf, size_t err_buf_size)
-{ /* TODO */ return NULL; }
-int               memory_tracker_untrack_allocation     (memory_tracker_t *memory_tracker, void *buffer_allocation, int allow_untracked, char *out_err_buf, size_t err_buf_size)
-{ /* TODO */ return 0; }
-int               memory_tracker_untrack_all_allocations(memory_tracker_t *memory_tracker, char *out_err_buf, size_t err_buf_size)
-{ /* TODO */ return 0; }
-int               memory_tracker_free_allocation        (memory_tracker_t *memory_tracker, void *buffer_allocation, int allow_untracked, char *out_err_buf, size_t err_buf_size)
-{ /* TODO */ return 0; }
-int               memory_tracker_free_all_allocations   (memory_tracker_t *memory_tracker, char *out_err_buf, size_t err_buf_size)
-{ /* TODO */ return 0; }
-int               memory_tracker_free_container         (memory_tracker_t *memory_tracker, char *out_err_buf, size_t err_buf_size)
-{ /* TODO */ return 0; }
-int               memory_tracker_get_tag                (memory_tracker_t *memory_tracker, void *buffer_allocation, size_t *out_tag, char *out_err_buf, size_t err_buf_size)
-{ /* TODO */ return 0; }
-int               memory_tracker_set_tag                (memory_tracker_t *memory_tracker, void *buffer_allocation, size_t tag,      char *out_err_buf, size_t err_buf_size)
-{ /* TODO */ return 0; }
-#endif /* #ifndef TODO */
-
-const char *memory_tracker_initialize_empty_with_container(memory_tracker_t *memory_tracker, const memory_manager_t *memory_manager, void *dynamically_allocated_container)
+int track_manual_allocation(memory_tracker_t *tracker, manual_allocation_t allocation)
 {
-  if (!memory_tracker)
+  size_t value_index  = (size_t) -1;
+  int    is_duplicate =          -1;
+
+  lookup_t *lookup;
+
+  UNUSED(is_duplicate);
+
+#if ERROR_CHECKING
+  if (!tracker)
+    return -2;
+#endif /* #if ERROR_CHECKING */
+
+  if (!memory_tracker_require_containers(tracker))
+    return -3;
+
+  lookup = tracker->manual_allocations;
+
+  if (is_manual_allocation_null(allocation))
+    return -4;
+
+  lookup =
+    lookup_minsert
+      ( lookup
+      , (void *) &allocation
+      , LOOKUP_NO_ADD_DUPLICATES
+
+      , cmp_manual_allocation
+
+      , MEMORY_TRACKER_CMANAGER(tracker)
+
+      , &value_index
+      , &is_duplicate
+      );
+
+  if (!lookup)
+    return -5;
+
+  return (int) value_index;
+}
+
+manual_allocation_t untrack_manual_allocation(memory_tracker_t *tracker, manual_allocation_t allocation)
+{
+  size_t num_deleted;
+
+  lookup_t *lookup;
+
+#if ERROR_CHECKING
+  if (!tracker)
+    return null_manual_allocation;
+#endif /* #if ERROR_CHECKING */
+
+  if (!memory_tracker_require_containers(tracker))
+    return null_manual_allocation;
+
+  lookup = tracker->manual_allocations;
+
+  if (is_manual_allocation_null(allocation))
+    return null_manual_allocation;
+
+  lookup =
+    lookup_mdelete
+      ( lookup
+      , (void *) &allocation
+      , LOOKUP_UNLIMITED
+
+      , cmp_manual_allocation
+
+      , MEMORY_TRACKER_CMANAGER(tracker)
+
+      , &num_deleted
+      );
+
+  if (!lookup)
+    return null_manual_allocation;
+
+  if (num_deleted <= 0)
+    return null_manual_allocation;
+
+  return allocation;
+}
+
+manual_allocation_t get_manual_allocation(memory_tracker_t *tracker, int index)
+{
+  const manual_allocation_t *value;
+
+  lookup_t *lookup;
+
+#if ERROR_CHECKING
+  if (!tracker)
+    return null_manual_allocation;
+#endif /* #if ERROR_CHECKING */
+
+  if (!memory_tracker_require_containers(tracker))
+    return null_manual_allocation;
+
+  lookup = tracker->manual_allocations;
+
+  if (index < 0)
+    return null_manual_allocation;
+  if (index >= LOOKUP_CAPACITY(lookup))
+    return null_manual_allocation;
+  if (!LOOKUP_GET_VALUE_IN_USE_BIT(lookup, (size_t) index))
+    return null_manual_allocation;
+
+  value = LOOKUP_INDEX_VALUE(lookup, (size_t) index);
+  if (!value)
+    return null_manual_allocation;
+
+  return *value;
+}
+
+int tracked_manual_allocation(const memory_tracker_t *tracker, manual_allocation_t allocation)
+{
+  int         index;
+  const void *value;
+
+  const lookup_t *lookup;
+
+#if ERROR_CHECKING
+  if (!tracker)
+    return UNTRACKED - 1;
+#endif /* #if ERROR_CHECKING */
+
+  lookup = tracker->manual_allocations;
+
+  if (!lookup)
+    return UNTRACKED - 2;
+
+  if (is_manual_allocation_null(allocation))
+    return UNTRACKED - 3;
+
+  value =
+    lookup_retrieve
+      ( lookup
+      , (void *) &allocation
+
+      , cmp_manual_allocation
+      );
+
+  if (!value)
+    return UNTRACKED;
+
+  index = (int) LOOKUP_GET_VALUE_INDEX(lookup, value);
+
+  return index;
+}
+
+size_t free_manual_allocation(memory_tracker_t *tracker, manual_allocation_t allocation)
+{
+  size_t num_freed;
+
+  size_t              result_num               = 0;
+  manual_allocation_t result_manual_allocation;
+
+#if ERROR_CHECKING
+  if (!tracker)
+    return 0;
+#endif /* #if ERROR_CHECKING */
+
+  if (!memory_tracker_require_containers(tracker))
+    return 0;
+
+  if (is_manual_allocation_null(allocation))
+    return 0;
+
+  /* ---------------------------------------------------------------- */
+
+  num_freed = 0;
+
+  /* ---------------------------------------------------------------- */
+  /* Untrack manual allocation.                                       */
+
+  result_manual_allocation = untrack_manual_allocation(tracker, allocation);
+  if (is_manual_allocation_null(result_manual_allocation))
+    return num_freed;
+  ++num_freed;
+
+  /* ---------------------------------------------------------------- */
+  /* Free dependencies.                                               */
+
+  num_freed += free_manual_allocation_dependencies(tracker, allocation);
+
+  /* ---------------------------------------------------------------- */
+  /* Free allocation.                                                 */
+
+  result_num = allocation.cleanup(allocation.context);
+
+  num_freed += result_num;
+
+  /* ---------------------------------------------------------------- */
+  /* Done!                                                            */
+
+  return num_freed;
+}
+
+size_t free_manual_allocation_dependencies(memory_tracker_t *tracker, manual_allocation_t allocation)
+{
+  size_t num_freed;
+
+  int index;
+
+  const void *value;
+  const allocation_dependency_t *
+    const     dependency = (const void * const) &value;
+
+  allocation_dependency_t key;
+
+  size_t result_num;
+  size_t subresult_num;
+
+  lookup_t               *lookup;
+  const memory_manager_t *manager;
+
+#if ERROR_CHECKING
+  if (!tracker)
+    return 0;
+#endif /* #if ERROR_CHECKING */
+
+  if (!memory_tracker_require_containers(tracker))
+    return 0;
+
+  lookup = tracker->manual_allocations;
+
+  if (is_manual_allocation_null(allocation))
+    return 0;
+
+  manager = MEMORY_TRACKER_CMANAGER(tracker);
+
+  index = tracked_manual_allocation(tracker, allocation);
+  if (index < 0)
+    return 0;
+
+  /* ---------------------------------------------------------------- */
+
+  num_freed = 0;
+
+  key = allocation_dependency_key(alloc_dep_manual((size_t) index));
+
+  while((value = lookup_retrieve(lookup, &key, cmp_allocation_dependency_key)))
   {
-    return "error: memory_tracker_no_buffers: \"memory_tracker\" is NULL!\n";
+    lookup =
+      lookup_mdelete(lookup, value, LOOKUP_UNLIMITED, cmp_allocation_dependency_key, manager, &result_num);
+    if (!lookup)
+      return num_freed;
+#if ERROR_CHECKING
+    if (!result_num)
+      return num_freed;
+#endif /* #if ERROR_CHECKING */
+
+    subresult_num =
+      free_allocation
+        ( tracker
+        , GET_ALLOC_DEP_TYPE (dependency->dependent)
+        , GET_ALLOC_DEP_INDEX(dependency->dependent)
+        );
+#if ERROR_CHECKING
+    if (!subresult_num)
+    {
+      /* Error: Couldn't free dependent! */
+      lookup_minsert(lookup, value, LOOKUP_ADD_DUPLICATES, cmp_allocation_dependency, manager, NULL, NULL);
+      return num_freed;
+    }
+#endif /* #if ERROR_CHECKING */
+
+    num_freed += result_num;
+    num_freed += subresult_num;
   }
 
-  if (!memory_manager)
-    memory_manager = default_memory_manager;
-
-  memory_tracker->type = memory_tracker_type;
-
-  memory_tracker->memory_manager                          = *memory_manager;
-
-  memory_tracker->dynamically_allocated_container         = dynamically_allocated_container;
-
-  memory_tracker->dynamically_allocated_buffers           = NULL;
-  memory_tracker->dynamically_allocated_buffers_num       = 0;
-  memory_tracker->dynamically_allocated_buffers_size      = 0;
-
-  memory_tracker->dynamically_allocated_buffers_last_even = 0;
-  memory_tracker->dynamically_allocated_buffers_last_odd  = 0;
-
-  return "";
+  return num_freed;
 }
-#endif /* #ifdef TODO */
-#endif /* #ifdef TODO */

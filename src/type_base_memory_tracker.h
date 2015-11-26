@@ -85,8 +85,8 @@ typedef tval *tval_allocation_t;
 typedef struct manual_allocation_s manual_allocation_t;
 struct manual_allocation_s
 {
-  void (*cleanup)(void *context);
-  void *context;
+  size_t (*cleanup)(void *context);
+  void    *context;
 };
 
 #define MANUAL_ALLOCATION_DEFAULTS \
@@ -117,6 +117,14 @@ struct allocation_dependency_s
 };
 
 /* ---------------------------------------------------------------- */
+
+extern const manual_allocation_t null_manual_allocation;
+int is_manual_allocation_null(manual_allocation_t manual_allocation);
+
+extern const allocation_dependency_t null_allocation_dependency;
+int is_allocation_dependency_null(allocation_dependency_t manual_allocation);
+
+manual_allocation_t manual_allocation(size_t (*cleanup)(void *context), void *context);
 
 allocation_dependency_t allocation_dependency    (size_t parent, size_t dependent);
 allocation_dependency_t allocation_dependency_key(size_t parent);
@@ -250,18 +258,21 @@ size_t            memory_tracker_free_containers   (memory_tracker_t *tracker);
 
 int                   track_byte_allocation  (      memory_tracker_t *tracker, byte_allocation_t   allocation);
 byte_allocation_t   untrack_byte_allocation  (      memory_tracker_t *tracker, byte_allocation_t   allocation);
+byte_allocation_t       get_byte_allocation  (      memory_tracker_t *tracker, int                 index     );
 int                 tracked_byte_allocation  (const memory_tracker_t *tracker, byte_allocation_t   allocation);
 size_t                 free_byte_allocation  (      memory_tracker_t *tracker, byte_allocation_t   allocation);
 size_t    free_byte_allocation_dependencies  (      memory_tracker_t *tracker, byte_allocation_t   allocation);
 
 int                   track_tval_allocation  (      memory_tracker_t *tracker, tval_allocation_t   allocation);
 tval_allocation_t   untrack_tval_allocation  (      memory_tracker_t *tracker, tval_allocation_t   allocation);
+tval_allocation_t       get_tval_allocation  (      memory_tracker_t *tracker, int                 index     );
 int                 tracked_tval_allocation  (const memory_tracker_t *tracker, tval_allocation_t   allocation);
 size_t                 free_tval_allocation  (      memory_tracker_t *tracker, tval_allocation_t   allocation);
 size_t    free_tval_allocation_dependencies  (      memory_tracker_t *tracker, tval_allocation_t   allocation);
 
 int                   track_manual_allocation(      memory_tracker_t *tracker, manual_allocation_t allocation);
 manual_allocation_t untrack_manual_allocation(      memory_tracker_t *tracker, manual_allocation_t allocation);
+manual_allocation_t     get_manual_allocation(      memory_tracker_t *tracker, int                 index     );
 int                 tracked_manual_allocation(const memory_tracker_t *tracker, manual_allocation_t allocation);
 size_t                 free_manual_allocation(      memory_tracker_t *tracker, manual_allocation_t allocation);
 size_t    free_manual_allocation_dependencies(      memory_tracker_t *tracker, manual_allocation_t allocation);
@@ -273,7 +284,11 @@ size_t    free_manual_allocation_dependencies(      memory_tracker_t *tracker, m
 /* tracked: returns index; sets first dependent.                            */
 int                       track_dependency(      memory_tracker_t *tracker, allocation_type_t parent_type, int parent, allocation_type_t dependent_type, int dependent);
 allocation_dependency_t untrack_dependency(      memory_tracker_t *tracker, int index);
-int                     tracked_dependency(const memory_tracker_t *tracker, allocation_type_t parent_type, int parent, allocation_type_t *out_dependent_type, int *out_dependent);
+allocation_dependency_t     get_dependency(      memory_tracker_t *tracker, int index);
+int                     tracked_dependency(const memory_tracker_t *tracker, allocation_type_t parent_type, int parent, allocation_type_t dependent_type, int dependent);
+size_t                     free_dependency(      memory_tracker_t *tracker, allocation_type_t parent_type, int parent, allocation_type_t dependent_type, int dependent);
+
+int                 tracked_dependency_key(const memory_tracker_t *tracker, allocation_type_t parent_type, int parent, allocation_type_t *out_dependent_type, int *out_dependent);
 
 /* ---------------------------------------------------------------- */
 

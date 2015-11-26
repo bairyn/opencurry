@@ -449,7 +449,7 @@ struct type_s
   /*                                                                  */
   /* Support for idempotence (multiple calls to "free") is            */
   /* recommended but not required.                                    */
-  void                 (*free)       (const type_t *self, tval *val);
+  size_t               (*free)       (const type_t *self, tval *val);
 
   /* A type can be associated with a designated default value,        */
   /* returned by this method.                                         */
@@ -888,9 +888,9 @@ tval *type_has_template_cons_basic_initializer_force_memory_manager(const type_t
 tval *template_cons_basic_initializer(const type_t *type, template_cons_t *cons, int allow_alternate_memory_manager);
 
 /* free */
-int type_has_template_cons_basic_freer(const type_t *type, tval *val);
+size_t type_has_template_cons_basic_freer(const type_t *type, tval *val);
 
-int template_cons_basic_freer(const type_t *type, tval *cons);
+size_t template_cons_basic_freer(const type_t *type, tval *cons);
 
 /* has_default */
 const tval   *type_has_no_default_value(const type_t *self);
@@ -1030,7 +1030,7 @@ const type_t        *default_type_is_supertype
                                              );
 typed_t              default_type_cons_type  (const type_t *self);
 tval                *default_type_init       (const type_t *self, tval *cons);
-void                 default_type_free       (const type_t *self, tval *val);
+size_t               default_type_free       (const type_t *self, tval *val);
 const tval          *default_type_has_default(const type_t *self);
 memory_tracker_t    *default_type_mem        (const type_t *self, tval *val_raw);
 void                *default_type_mem_init   ( const type_t *self
@@ -1137,7 +1137,7 @@ const type_t        *type_is_supertype
                                      );
 typed_t              type_cons_type  (const type_t *type);
 tval                *type_init       (const type_t *type, tval *cons);
-void                 type_free       (const type_t *type, tval *val);
+size_t               type_free       (const type_t *type, tval *val);
 const tval          *type_has_default(const type_t *type);
 memory_tracker_t    *type_mem        (const type_t *type, tval *val_raw);
 void                *type_mem_init   ( const type_t *type
@@ -1201,6 +1201,6 @@ int cmp_with_type     (const type_t *type, const tval *check, const tval *baseli
 
 /* TODO: more */
 
-void tval_free (tval *val);
+size_t tval_free (tval *val);
 
 #endif /* ifndef TYPE_BASE_TYPE_H */

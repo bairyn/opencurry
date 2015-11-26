@@ -940,7 +940,7 @@ void *template_cons_dup_struct_meminit_type
   , int         is_dynamically_allocated
   );
 
-int template_cons_free_struct
+size_t template_cons_free_struct
   ( tval *val
   , int                      (*mem_free)( const tval *self
                                         , tval       *val
