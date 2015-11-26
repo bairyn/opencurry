@@ -88,7 +88,7 @@ void *offset_ref(void *base, ptrdiff_t offset)
   return OFFSET_REF(base, offset);
 }
 
-const void *offset_ref(const void *base, ptrdiff_t offset)
+const void *offset_cref(const void *base, ptrdiff_t offset)
 {
   return OFFSET_CREF(base, offset);
 }
