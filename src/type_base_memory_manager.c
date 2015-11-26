@@ -399,12 +399,12 @@ void on_memory_manager_err_do_nothing(const memory_manager_t *self, const char *
 
 const memory_manager_t * const default_memory_manager = &malloc_manager;
 
-static void *malloc_manager_mmalloc (const memory_manager_t *self, size_t  size);
-static void  malloc_manager_mfree   (const memory_manager_t *self, void   *ptr);
-static void *malloc_manager_mrealloc(const memory_manager_t *self, void   *ptr,   size_t size);
-static void *malloc_manager_mcalloc (const memory_manager_t *self, size_t  nmemb, size_t size);
-static void  malloc_manager_on_oom (const memory_manager_t *self, size_t      size);
-static void  malloc_manager_on_err (const memory_manager_t *self, const char *msg);
+static void   *malloc_manager_mmalloc (const memory_manager_t *self, size_t  size);
+static size_t  malloc_manager_mfree   (const memory_manager_t *self, void   *ptr);
+static void   *malloc_manager_mrealloc(const memory_manager_t *self, void   *ptr,   size_t size);
+static void   *malloc_manager_mcalloc (const memory_manager_t *self, size_t  nmemb, size_t size);
+static void    malloc_manager_on_oom  (const memory_manager_t *self, size_t      size);
+static void    malloc_manager_on_err  (const memory_manager_t *self, const char *msg);
 
 const memory_manager_t malloc_manager =
   { memory_manager_type
@@ -421,15 +421,23 @@ const memory_manager_t malloc_manager =
   , 0
   };
 
-static void *malloc_manager_mmalloc (const memory_manager_t *self, size_t  size)
+static void   *malloc_manager_mmalloc (const memory_manager_t *self, size_t  size)
   { return malloc (size); }
-static void  malloc_manager_mfree   (const memory_manager_t *self, void   *ptr)
-  {        free   (ptr); }
-static void *malloc_manager_mrealloc(const memory_manager_t *self, void   *ptr,   size_t size)
+static size_t  malloc_manager_mfree   (const memory_manager_t *self, void   *ptr)
+{
+#if ERROR_CHECKING
+  if (!ptr)
+    return 0;
+#endif /* #if ERROR_CHECKING */
+
+  free(ptr);
+  return 1;
+}
+static void   *malloc_manager_mrealloc(const memory_manager_t *self, void   *ptr,   size_t size)
   { return realloc(ptr,   size); }
-static void *malloc_manager_mcalloc (const memory_manager_t *self, size_t  nmemb, size_t size)
+static void   *malloc_manager_mcalloc (const memory_manager_t *self, size_t  nmemb, size_t size)
   { return calloc (nmemb, size); }
-static void  malloc_manager_on_oom (const memory_manager_t *self, size_t      size)
+static void    malloc_manager_on_oom  (const memory_manager_t *self, size_t      size)
 {
   static char         buf[4096];
   static const size_t buf_size = sizeof(buf) / sizeof(buf[0]);
@@ -443,7 +451,7 @@ static void  malloc_manager_on_oom (const memory_manager_t *self, size_t      si
   buf[buf_size - 1] = 0;
   malloc_manager_on_err(self, buf);
 }
-static void  malloc_manager_on_err (const memory_manager_t *self, const char *msg)
+static void    malloc_manager_on_err  (const memory_manager_t *self, const char *msg)
 {
   size_t len;
 
@@ -628,7 +636,7 @@ void *memory_manager_mmalloc(const memory_manager_t *memory_manager, size_t size
   return mem;
 }
 
-void memory_manager_mfree(const memory_manager_t *memory_manager, void *ptr)
+size_t memory_manager_mfree(const memory_manager_t *memory_manager, void *ptr)
 {
   if (!memory_manager || !memory_manager->mfree)
     memory_manager = &malloc_manager;
@@ -649,7 +657,7 @@ void memory_manager_mfree(const memory_manager_t *memory_manager, void *ptr)
     return NULL;
   }
 
-  memory_manager->mfree(memory_manager, ptr);
+  return memory_manager->mfree(memory_manager, ptr);
 }
 
 void *memory_manager_mrealloc(const memory_manager_t *memory_manager, void *ptr, size_t size)
