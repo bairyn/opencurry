@@ -1952,6 +1952,8 @@ size_t free_manual_allocation_dependencies(memory_tracker_t *tracker, manual_all
 
 int replace_with_byte_allocation(memory_tracker_t *tracker, allocation_type_t src_type, int src_index, byte_allocation_t dest_allocation)
 {
+  static const allocation_type_t dest_type = a_t_byte;
+
   int dest_index;
   int num_dependency_replacements;
 
@@ -1989,7 +1991,7 @@ int replace_with_byte_allocation(memory_tracker_t *tracker, allocation_type_t sr
   {
     added_dest = FALSE();
 
-    if (src_type == a_t_byte && src_index == dest_index)
+    if (src_type == dest_type && src_index == dest_index)
     {
       return dest_index;
     }
@@ -2022,7 +2024,7 @@ int replace_with_byte_allocation(memory_tracker_t *tracker, allocation_type_t sr
           break;
         }
 
-        num_dependency_replacements = dependency_replace_allocation(tracker, a_t_byte, src_index, a_t_byte, dest_index);
+        num_dependency_replacements = dependency_replace_allocation(tracker, src_type, src_index, dest_type, dest_index);
         if (num_dependency_replacements < 0)
         {
           dest_index = min_int(-16, num_dependency_replacements - 16);
@@ -2032,13 +2034,13 @@ int replace_with_byte_allocation(memory_tracker_t *tracker, allocation_type_t sr
         src_allocation = untrack_byte_allocation(tracker, src_allocation);
         if (!src_allocation)
         {
-          num_dependency_replacements = dependency_replace_allocation(tracker, a_t_byte, dest_index, a_t_byte, src_index);
+          num_dependency_replacements = dependency_replace_allocation(tracker, dest_type, dest_index, src_type, src_index);
           if (num_dependency_replacements < 0)
           {
             /* Something went really wrong. */
 
-            free_allocation(tracker, src_type, src_index);
-            free_allocation(tracker, a_t_byte, dest_index);
+            free_allocation(tracker, src_type,  src_index);
+            free_allocation(tracker, dest_type, dest_index);
 
             dest_index = -64;
             return dest_index;
@@ -2071,7 +2073,7 @@ int replace_with_byte_allocation(memory_tracker_t *tracker, allocation_type_t sr
           break;
         }
 
-        num_dependency_replacements = dependency_replace_allocation(tracker, a_t_tval, src_index, a_t_byte, dest_index);
+        num_dependency_replacements = dependency_replace_allocation(tracker, src_type, src_index, dest_type, dest_index);
         if (num_dependency_replacements < 0)
         {
           dest_index = min_int(-16, num_dependency_replacements - 16);
@@ -2081,13 +2083,13 @@ int replace_with_byte_allocation(memory_tracker_t *tracker, allocation_type_t sr
         src_allocation = untrack_tval_allocation(tracker, src_allocation);
         if (!src_allocation)
         {
-          num_dependency_replacements = dependency_replace_allocation(tracker, a_t_byte, dest_index, a_t_tval, src_index);
+          num_dependency_replacements = dependency_replace_allocation(tracker, dest_type, dest_index, src_type, src_index);
           if (num_dependency_replacements < 0)
           {
             /* Something went really wrong. */
 
-            free_allocation(tracker, src_type, src_index);
-            free_allocation(tracker, a_t_byte, dest_index);
+            free_allocation(tracker, src_type,  src_index);
+            free_allocation(tracker, dest_type, dest_index);
 
             dest_index = -64;
             return dest_index;
@@ -2120,7 +2122,7 @@ int replace_with_byte_allocation(memory_tracker_t *tracker, allocation_type_t sr
           break;
         }
 
-        num_dependency_replacements = dependency_replace_allocation(tracker, a_t_manual, src_index, a_t_byte, dest_index);
+        num_dependency_replacements = dependency_replace_allocation(tracker, src_type, src_index, dest_type, dest_index);
         if (num_dependency_replacements < 0)
         {
           dest_index = min_int(-16, num_dependency_replacements - 16);
@@ -2130,13 +2132,13 @@ int replace_with_byte_allocation(memory_tracker_t *tracker, allocation_type_t sr
         src_allocation = untrack_manual_allocation(tracker, src_allocation);
         if (is_manual_allocation_null(src_allocation))
         {
-          num_dependency_replacements = dependency_replace_allocation(tracker, a_t_byte, dest_index, a_t_manual, src_index);
+          num_dependency_replacements = dependency_replace_allocation(tracker, dest_type, dest_index, src_type, src_index);
           if (num_dependency_replacements < 0)
           {
             /* Something went really wrong. */
 
-            free_allocation(tracker, src_type, src_index);
-            free_allocation(tracker, a_t_byte, dest_index);
+            free_allocation(tracker, src_type,  src_index);
+            free_allocation(tracker, dest_type, dest_index);
 
             dest_index = -64;
             return dest_index;
@@ -2170,6 +2172,8 @@ int replace_with_byte_allocation(memory_tracker_t *tracker, allocation_type_t sr
 
 int replace_with_tval_allocation(memory_tracker_t *tracker, allocation_type_t src_type, int src_index, tval_allocation_t dest_allocation)
 {
+  static const allocation_type_t dest_type = a_t_tval;
+
   int dest_index;
   int num_dependency_replacements;
 
@@ -2207,7 +2211,7 @@ int replace_with_tval_allocation(memory_tracker_t *tracker, allocation_type_t sr
   {
     added_dest = FALSE();
 
-    if (src_type == a_t_tval && src_index == dest_index)
+    if (src_type == dest_type && src_index == dest_index)
     {
       return dest_index;
     }
@@ -2240,7 +2244,7 @@ int replace_with_tval_allocation(memory_tracker_t *tracker, allocation_type_t sr
           break;
         }
 
-        num_dependency_replacements = dependency_replace_allocation(tracker, a_t_byte, src_index, a_t_tval, dest_index);
+        num_dependency_replacements = dependency_replace_allocation(tracker, src_type, src_index, dest_type, dest_index);
         if (num_dependency_replacements < 0)
         {
           dest_index = min_int(-16, num_dependency_replacements - 16);
@@ -2250,13 +2254,13 @@ int replace_with_tval_allocation(memory_tracker_t *tracker, allocation_type_t sr
         src_allocation = untrack_byte_allocation(tracker, src_allocation);
         if (!src_allocation)
         {
-          num_dependency_replacements = dependency_replace_allocation(tracker, a_t_tval, dest_index, a_t_byte, src_index);
+          num_dependency_replacements = dependency_replace_allocation(tracker, dest_type, dest_index, src_type, src_index);
           if (num_dependency_replacements < 0)
           {
             /* Something went really wrong. */
 
-            free_allocation(tracker, src_type, src_index);
-            free_allocation(tracker, a_t_tval, dest_index);
+            free_allocation(tracker, src_type,  src_index);
+            free_allocation(tracker, dest_type, dest_index);
 
             dest_index = -64;
             return dest_index;
@@ -2289,7 +2293,7 @@ int replace_with_tval_allocation(memory_tracker_t *tracker, allocation_type_t sr
           break;
         }
 
-        num_dependency_replacements = dependency_replace_allocation(tracker, a_t_tval, src_index, a_t_tval, dest_index);
+        num_dependency_replacements = dependency_replace_allocation(tracker, src_type, src_index, dest_type, dest_index);
         if (num_dependency_replacements < 0)
         {
           dest_index = min_int(-16, num_dependency_replacements - 16);
@@ -2299,13 +2303,13 @@ int replace_with_tval_allocation(memory_tracker_t *tracker, allocation_type_t sr
         src_allocation = untrack_tval_allocation(tracker, src_allocation);
         if (!src_allocation)
         {
-          num_dependency_replacements = dependency_replace_allocation(tracker, a_t_tval, dest_index, a_t_tval, src_index);
+          num_dependency_replacements = dependency_replace_allocation(tracker, dest_type, dest_index, src_type, src_index);
           if (num_dependency_replacements < 0)
           {
             /* Something went really wrong. */
 
-            free_allocation(tracker, src_type, src_index);
-            free_allocation(tracker, a_t_tval, dest_index);
+            free_allocation(tracker, src_type,  src_index);
+            free_allocation(tracker, dest_type, dest_index);
 
             dest_index = -64;
             return dest_index;
@@ -2338,7 +2342,7 @@ int replace_with_tval_allocation(memory_tracker_t *tracker, allocation_type_t sr
           break;
         }
 
-        num_dependency_replacements = dependency_replace_allocation(tracker, a_t_manual, src_index, a_t_tval, dest_index);
+        num_dependency_replacements = dependency_replace_allocation(tracker, src_type, src_index, dest_type, dest_index);
         if (num_dependency_replacements < 0)
         {
           dest_index = min_int(-16, num_dependency_replacements - 16);
@@ -2348,13 +2352,13 @@ int replace_with_tval_allocation(memory_tracker_t *tracker, allocation_type_t sr
         src_allocation = untrack_manual_allocation(tracker, src_allocation);
         if (is_manual_allocation_null(src_allocation))
         {
-          num_dependency_replacements = dependency_replace_allocation(tracker, a_t_tval, dest_index, a_t_manual, src_index);
+          num_dependency_replacements = dependency_replace_allocation(tracker, dest_type, dest_index, src_type, src_index);
           if (num_dependency_replacements < 0)
           {
             /* Something went really wrong. */
 
-            free_allocation(tracker, src_type, src_index);
-            free_allocation(tracker, a_t_tval, dest_index);
+            free_allocation(tracker, src_type,  src_index);
+            free_allocation(tracker, dest_type, dest_index);
 
             dest_index = -64;
             return dest_index;
@@ -2388,6 +2392,8 @@ int replace_with_tval_allocation(memory_tracker_t *tracker, allocation_type_t sr
 
 int replace_with_manual_allocation(memory_tracker_t *tracker, allocation_type_t src_type, int src_index, manual_allocation_t dest_allocation)
 {
+  static const allocation_type_t dest_type = a_t_manual;
+
   int dest_index;
   int num_dependency_replacements;
 
@@ -2425,7 +2431,7 @@ int replace_with_manual_allocation(memory_tracker_t *tracker, allocation_type_t 
   {
     added_dest = FALSE();
 
-    if (src_type == a_t_manual && src_index == dest_index)
+    if (src_type == dest_type && src_index == dest_index)
     {
       return dest_index;
     }
@@ -2458,7 +2464,7 @@ int replace_with_manual_allocation(memory_tracker_t *tracker, allocation_type_t 
           break;
         }
 
-        num_dependency_replacements = dependency_replace_allocation(tracker, a_t_byte, src_index, a_t_manual, dest_index);
+        num_dependency_replacements = dependency_replace_allocation(tracker, src_type, src_index, dest_type, dest_index);
         if (num_dependency_replacements < 0)
         {
           dest_index = min_int(-16, num_dependency_replacements - 16);
@@ -2468,13 +2474,13 @@ int replace_with_manual_allocation(memory_tracker_t *tracker, allocation_type_t 
         src_allocation = untrack_byte_allocation(tracker, src_allocation);
         if (!src_allocation)
         {
-          num_dependency_replacements = dependency_replace_allocation(tracker, a_t_manual, dest_index, a_t_byte, src_index);
+          num_dependency_replacements = dependency_replace_allocation(tracker, dest_type, dest_index, src_type, src_index);
           if (num_dependency_replacements < 0)
           {
             /* Something went really wrong. */
 
-            free_allocation(tracker, src_type,   src_index);
-            free_allocation(tracker, a_t_manual, dest_index);
+            free_allocation(tracker, src_type,  src_index);
+            free_allocation(tracker, dest_type, dest_index);
 
             dest_index = -64;
             return dest_index;
@@ -2507,7 +2513,7 @@ int replace_with_manual_allocation(memory_tracker_t *tracker, allocation_type_t 
           break;
         }
 
-        num_dependency_replacements = dependency_replace_allocation(tracker, a_t_tval, src_index, a_t_manual, dest_index);
+        num_dependency_replacements = dependency_replace_allocation(tracker, src_type, src_index, dest_type, dest_index);
         if (num_dependency_replacements < 0)
         {
           dest_index = min_int(-16, num_dependency_replacements - 16);
@@ -2517,13 +2523,13 @@ int replace_with_manual_allocation(memory_tracker_t *tracker, allocation_type_t 
         src_allocation = untrack_tval_allocation(tracker, src_allocation);
         if (!src_allocation)
         {
-          num_dependency_replacements = dependency_replace_allocation(tracker, a_t_manual, dest_index, a_t_tval, src_index);
+          num_dependency_replacements = dependency_replace_allocation(tracker, dest_type, dest_index, src_type, src_index);
           if (num_dependency_replacements < 0)
           {
             /* Something went really wrong. */
 
-            free_allocation(tracker, src_type,   src_index);
-            free_allocation(tracker, a_t_manual, dest_index);
+            free_allocation(tracker, src_type,  src_index);
+            free_allocation(tracker, dest_type, dest_index);
 
             dest_index = -64;
             return dest_index;
@@ -2556,7 +2562,7 @@ int replace_with_manual_allocation(memory_tracker_t *tracker, allocation_type_t 
           break;
         }
 
-        num_dependency_replacements = dependency_replace_allocation(tracker, a_t_manual, src_index, a_t_manual, dest_index);
+        num_dependency_replacements = dependency_replace_allocation(tracker, src_type, src_index, dest_type, dest_index);
         if (num_dependency_replacements < 0)
         {
           dest_index = min_int(-16, num_dependency_replacements - 16);
@@ -2566,13 +2572,13 @@ int replace_with_manual_allocation(memory_tracker_t *tracker, allocation_type_t 
         src_allocation = untrack_manual_allocation(tracker, src_allocation);
         if (is_manual_allocation_null(src_allocation))
         {
-          num_dependency_replacements = dependency_replace_allocation(tracker, a_t_manual, dest_index, a_t_manual, src_index);
+          num_dependency_replacements = dependency_replace_allocation(tracker, dest_type, dest_index, src_type, src_index);
           if (num_dependency_replacements < 0)
           {
             /* Something went really wrong. */
 
-            free_allocation(tracker, src_type,   src_index);
-            free_allocation(tracker, a_t_manual, dest_index);
+            free_allocation(tracker, src_type,  src_index);
+            free_allocation(tracker, dest_type, dest_index);
 
             dest_index = -64;
             return dest_index;
