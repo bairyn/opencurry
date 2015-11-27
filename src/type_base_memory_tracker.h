@@ -190,6 +190,10 @@ struct memory_tracker_s
   /*                                                     */
   /* When this memory tracker is freed, this is freed    */
   /* last.                                               */
+  /*                                                     */
+  /* This behaves like a standard memory, byte,          */
+  /* allocation, so is freed by the memory_manager's     */
+  /* "mfree" method.                                     */
   void *dynamic_container;
 
   /* ---------------------------------------------------------------- */
@@ -253,6 +257,10 @@ size_t            memory_tracker_free_containers   (memory_tracker_t *tracker);
 /* tracked methods: returns index if tracked, -1 if not.                    */
 /*    free methods: returns number of allocations freed.                    */
 
+/* replace methods: preserving dependencies,                                */
+/*                  and returning the index of dest on success;             */
+/*                  untrack src and then track dest if untracked.           */
+
 /* untrack methods ignore dependencies! */
 
 /* TODO: free_dependencies: handle loops! */
@@ -260,6 +268,7 @@ size_t            memory_tracker_free_containers   (memory_tracker_t *tracker);
 #define UNTRACKED -1
 
 int                   track_byte_allocation  (      memory_tracker_t *tracker, byte_allocation_t   allocation);
+int                 replace_byte_allocation  (      memory_tracker_t *tracker, byte_allocation_t   allocation_src, byte_allocation_t   allocation_dest);
 byte_allocation_t   untrack_byte_allocation  (      memory_tracker_t *tracker, byte_allocation_t   allocation);
 byte_allocation_t       get_byte_allocation  (      memory_tracker_t *tracker, int                 index     );
 int                 tracked_byte_allocation  (const memory_tracker_t *tracker, byte_allocation_t   allocation);
@@ -267,6 +276,7 @@ size_t                 free_byte_allocation  (      memory_tracker_t *tracker, b
 size_t    free_byte_allocation_dependencies  (      memory_tracker_t *tracker, byte_allocation_t   allocation);
 
 int                   track_tval_allocation  (      memory_tracker_t *tracker, tval_allocation_t   allocation);
+int                 replace_tval_allocation  (      memory_tracker_t *tracker, tval_allocation_t   allocation_src, tval_allocation_t   allocation_dest);
 tval_allocation_t   untrack_tval_allocation  (      memory_tracker_t *tracker, tval_allocation_t   allocation);
 tval_allocation_t       get_tval_allocation  (      memory_tracker_t *tracker, int                 index     );
 int                 tracked_tval_allocation  (const memory_tracker_t *tracker, tval_allocation_t   allocation);
@@ -274,11 +284,18 @@ size_t                 free_tval_allocation  (      memory_tracker_t *tracker, t
 size_t    free_tval_allocation_dependencies  (      memory_tracker_t *tracker, tval_allocation_t   allocation);
 
 int                   track_manual_allocation(      memory_tracker_t *tracker, manual_allocation_t allocation);
+int                 replace_manual_allocation(      memory_tracker_t *tracker, manual_allocation_t allocation_src, manual_allocation_t allocation_dest);
 manual_allocation_t untrack_manual_allocation(      memory_tracker_t *tracker, manual_allocation_t allocation);
 manual_allocation_t     get_manual_allocation(      memory_tracker_t *tracker, int                 index     );
 int                 tracked_manual_allocation(const memory_tracker_t *tracker, manual_allocation_t allocation);
 size_t                 free_manual_allocation(      memory_tracker_t *tracker, manual_allocation_t allocation);
 size_t    free_manual_allocation_dependencies(      memory_tracker_t *tracker, manual_allocation_t allocation);
+
+/* ---------------------------------------------------------------- */
+
+int replace_with_byte_allocation  (memory_tracker_t *tracker, allocation_type_t src_type, int src_index, byte_allocation_t   allocation_dest);
+int replace_with_tval_allocation  (memory_tracker_t *tracker, allocation_type_t src_type, int src_index, tval_allocation_t   allocation_dest);
+int replace_with_manual_allocation(memory_tracker_t *tracker, allocation_type_t src_type, int src_index, manual_allocation_t allocation_dest);
 
 /* ---------------------------------------------------------------- */
 
@@ -291,6 +308,9 @@ allocation_dependency_t     get_dependency(      memory_tracker_t *tracker, int 
 int                     tracked_dependency(const memory_tracker_t *tracker, allocation_dependency_t dependency);
 size_t                     free_dependency(      memory_tracker_t *tracker, allocation_dependency_t dependency);
 
+/* Returns number of dependency replacements >=0 performed on success. */
+int          dependency_replace_allocation(      memory_tracker_t *tracker, allocation_type_t src_type, int src_index, allocation_type_t dest_type, int dest_index);
+
 size_t                 free_dependency_key(      memory_tracker_t *tracker, allocation_type_t parent_type, int parent_index);
 
 int                       track_dependends(      memory_tracker_t *tracker, allocation_type_t parent_type, int parent, allocation_type_t      dependent_type, int      dependent);
@@ -300,7 +320,9 @@ size_t                 free_dependency_key(      memory_tracker_t *tracker, allo
 /* ---------------------------------------------------------------- */
 
 /* >= 1 when exists. */
-int untrack_allocation(memory_tracker_t *memory_tracker, allocation_type_t type, int index);
+int untrack_allocation(memory_tracker_t *tracker, allocation_type_t type, int index);
+
+int replace_with_existing_allocation(memory_tracker_t *tracker, allocation_type_t src_type, int src_index, allocation_type_t dest_type, int dest_index);
 
 /* Returns number of freed allocations. */
 size_t free_allocation             (memory_tracker_t *tracker, allocation_type_t type, int index);
@@ -318,20 +340,19 @@ void *memory_tracker_dynamic_container (const memory_tracker_t *tracker);
 
 /* ---------------------------------------------------------------- */
 
-void   *track_mmalloc  (memory_tracker_t *tracker, size_t        size,                int *out_index);
-void   *track_mcalloc  (memory_tracker_t *tracker, size_t        nmemb, size_t  size, int *out_index);
-void   *track_mrealloc (memory_tracker_t *tracker, void         *ptr,   size_t  size, int *out_index);
-size_t  track_mfree    (memory_tracker_t *tracker, void         *ptr,                 int *out_index);
-
-tval   *track_tval_init(memory_tracker_t *tracker, const type_t *type,  tval   *cons, int *out_index);
+void   *track_mmalloc  (memory_tracker_t *tracker, size_t size,               int *out_index);
+void   *track_mcalloc  (memory_tracker_t *tracker, size_t nmemb, size_t size, int *out_index);
+void   *track_mrealloc (memory_tracker_t *tracker, void   *ptr,  size_t size, int *out_index);
+size_t  track_mfree    (memory_tracker_t *tracker, void   *ptr,               int *out_index);
 
 /* ---------------------------------------------------------------- */
 
-size_t track_tval_free(memory_tracker_t *tracker, tval *val);
+tval   *track_tval_init(memory_tracker_t *tracker, const type_t *type, tval *cons, int *out_index);
+size_t  track_tval_free(memory_tracker_t *tracker, tval *val);
 
 /* ---------------------------------------------------------------- */
 
-size_t track_manual_allocation_free(memory_tracker_t *tracker, manual_allocation_t allocation);
+size_t track_manual_free(memory_tracker_t *tracker, manual_allocation_t cleanup);
 
 /* ---------------------------------------------------------------- */
 /* Post-dependencies.                                               */
