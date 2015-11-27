@@ -47,6 +47,10 @@
 
 #include "bits.h"
 
+/* TODO: structs and methods for:         */
+/*   1) allocations of any type           */
+/*   2) allocation references of any type */
+
 /* ---------------------------------------------------------------- */
 /* Dependencies.                                                    */
 /* ---------------------------------------------------------------- */
@@ -309,6 +313,8 @@ int                     tracked_dependency(const memory_tracker_t *tracker, allo
 size_t                     free_dependency(      memory_tracker_t *tracker, allocation_dependency_t dependency);
 
 /* Returns number of dependency replacements >=0 performed on success. */
+/* Performs no tracking or untracking.                                 */
+/* Both "src" and "dest" should exist for successful replacement.      */
 int          dependency_replace_allocation(      memory_tracker_t *tracker, allocation_type_t src_type, int src_index, allocation_type_t dest_type, int dest_index);
 
 size_t                 free_dependency_key(      memory_tracker_t *tracker, allocation_type_t parent_type, int parent_index);
@@ -343,7 +349,7 @@ void *memory_tracker_dynamic_container (const memory_tracker_t *tracker);
 void   *track_mmalloc  (memory_tracker_t *tracker, size_t size,               int *out_index);
 void   *track_mcalloc  (memory_tracker_t *tracker, size_t nmemb, size_t size, int *out_index);
 void   *track_mrealloc (memory_tracker_t *tracker, void   *ptr,  size_t size, int *out_index);
-size_t  track_mfree    (memory_tracker_t *tracker, void   *ptr,               int *out_index);
+size_t  track_mfree    (memory_tracker_t *tracker, void   *ptr);
 
 /* ---------------------------------------------------------------- */
 

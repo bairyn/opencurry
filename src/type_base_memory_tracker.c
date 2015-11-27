@@ -1058,11 +1058,10 @@ int track_byte_allocation(memory_tracker_t *tracker, byte_allocation_t allocatio
 
 /* Untrack src and track dest if it doesn't exist, preserving dependencies. */
 /* No allocation is performed.                         */
-int replace_byte_allocation(memory_tracker_t *tracker, byte_allocation_t allocation_src, byte_allocation_t allocation_dest)
+int replace_byte_allocation(memory_tracker_t *tracker, byte_allocation_t src_allocation, byte_allocation_t dest_allocation)
 {
   int index_src;
   int index_dest;
-  int num_replaced;
 
 #if ERROR_CHECKING
   if (!tracker)
@@ -1072,21 +1071,21 @@ int replace_byte_allocation(memory_tracker_t *tracker, byte_allocation_t allocat
   if (!memory_tracker_require_containers(tracker))
     return -3;
 
-  if (!allocation_src)
+  if (!src_allocation)
     return -4;
 
-  if (!allocation_dest)
+  if (!dest_allocation)
     return -5;
 
-  index_src = tracked_byte_allocation(allocation_src);
+  index_src = tracked_byte_allocation(tracker, src_allocation);
   if (index_src < 0)
     return -1;
 
-  index_dest = tracked_byte_allocation(allocation_dest);
+  index_dest = tracked_byte_allocation(tracker, dest_allocation);
   if (index_dest == index_src)
     return index_dest;
 
-  return replace_with_byte_allocation(tracker, a_t_byte, index_src, allocation_dest);
+  return replace_with_byte_allocation(tracker, a_t_byte, index_src, dest_allocation);
 }
 
 byte_allocation_t untrack_byte_allocation(memory_tracker_t *tracker, byte_allocation_t allocation)
@@ -1380,11 +1379,10 @@ int track_tval_allocation(memory_tracker_t *tracker, tval_allocation_t allocatio
 
 /* Untrack src and track dest if it doesn't exist, preserving dependencies. */
 /* No allocation is performed.                         */
-int replace_tval_allocation(memory_tracker_t *tracker, tval_allocation_t allocation_src, tval_allocation_t allocation_dest)
+int replace_tval_allocation(memory_tracker_t *tracker, tval_allocation_t src_allocation, tval_allocation_t dest_allocation)
 {
   int index_src;
   int index_dest;
-  int num_replaced;
 
 #if ERROR_CHECKING
   if (!tracker)
@@ -1394,21 +1392,21 @@ int replace_tval_allocation(memory_tracker_t *tracker, tval_allocation_t allocat
   if (!memory_tracker_require_containers(tracker))
     return -3;
 
-  if (!allocation_src)
+  if (!src_allocation)
     return -4;
 
-  if (!allocation_dest)
+  if (!dest_allocation)
     return -5;
 
-  index_src = tracked_tval_allocation(allocation_src);
+  index_src = tracked_tval_allocation(tracker, src_allocation);
   if (index_src < 0)
     return -1;
 
-  index_dest = tracked_tval_allocation(allocation_dest);
+  index_dest = tracked_tval_allocation(tracker, dest_allocation);
   if (index_dest == index_src)
     return index_dest;
 
-  return replace_with_tval_allocation(tracker, a_t_tval, index_src, allocation_dest);
+  return replace_with_tval_allocation(tracker, a_t_tval, index_src, dest_allocation);
 }
 
 tval_allocation_t untrack_tval_allocation(memory_tracker_t *tracker, tval_allocation_t allocation)
@@ -1689,11 +1687,10 @@ int track_manual_allocation(memory_tracker_t *tracker, manual_allocation_t alloc
 
 /* Untrack src and track dest if it doesn't exist, preserving dependencies. */
 /* No allocation is performed.                         */
-int replace_manual_allocation(memory_tracker_t *tracker, manual_allocation_t allocation_src, manual_allocation_t allocation_dest)
+int replace_manual_allocation(memory_tracker_t *tracker, manual_allocation_t src_allocation, manual_allocation_t dest_allocation)
 {
   int index_src;
   int index_dest;
-  int num_replaced;
 
 #if ERROR_CHECKING
   if (!tracker)
@@ -1703,21 +1700,21 @@ int replace_manual_allocation(memory_tracker_t *tracker, manual_allocation_t all
   if (!memory_tracker_require_containers(tracker))
     return -3;
 
-  if (!allocation_src)
+  if (is_manual_allocation_null(src_allocation))
     return -4;
 
-  if (!allocation_dest)
+  if (is_manual_allocation_null(dest_allocation))
     return -5;
 
-  index_src = tracked_manual_allocation(allocation_src);
+  index_src = tracked_manual_allocation(tracker, src_allocation);
   if (index_src < 0)
     return -1;
 
-  index_dest = tracked_manual_allocation(allocation_dest);
+  index_dest = tracked_manual_allocation(tracker, dest_allocation);
   if (index_dest == index_src)
     return index_dest;
 
-  return replace_with_manual_allocation(tracker, a_t_manual, index_src, allocation_dest);
+  return replace_with_manual_allocation(tracker, a_t_manual, index_src, dest_allocation);
 }
 
 manual_allocation_t untrack_manual_allocation(memory_tracker_t *tracker, manual_allocation_t allocation)
@@ -1953,51 +1950,659 @@ size_t free_manual_allocation_dependencies(memory_tracker_t *tracker, manual_all
 
 /* ---------------------------------------------------------------- */
 
-int replace_with_byte_allocation(memory_tracker_t *tracker, allocation_type_t src_type, int src_index, byte_allocation_t allocation_dest)
+int replace_with_byte_allocation(memory_tracker_t *tracker, allocation_type_t src_type, int src_index, byte_allocation_t dest_allocation)
 {
-  int index_src;
-  int index_dest;
-  int num_replaced;
+  int dest_index;
+  int num_dependency_replacements;
+
+  int added_dest;
+
+  const lookup_t *lookup;
 
 #if ERROR_CHECKING
   if (!tracker)
-    return -2;
+    return -32;
 #endif /* #if ERROR_CHECKING */
 
   if (!memory_tracker_require_containers(tracker))
-    return -3;
+    return -31;
 
-  if (!allocation_src)
-    return -4;
+  if (src_type < 0 || src_type >= a_t_end)
+    return -30;
 
-  if (!allocation_dest)
-    return -5;
+  if (src_index < 0)
+    return -8;
 
-  index_src = tracked_byte_allocation(allocation_src);
-  if (index_src < 0)
-    return -1;
+  dest_index = tracked_byte_allocation(tracker, dest_allocation);
+  if (dest_index < 0)
+  {
+    added_dest = TRUE();
 
-  index_dest = tracked_byte_allocation(allocation_dest);
-  if (index_dest == index_src)
-    return index_dest;
+    dest_index = track_byte_allocation(tracker, dest_allocation);
 
-  if (index_dest >= 0)
-    return -6;
+    if (dest_index < 0)
+    {
+      return dest_index;
+    }
+  }
+  else
+  {
+    added_dest = FALSE();
 
-  index_dest = track_byte_allocation();
-  if (index_dest < 0)
-    return -7;
+    if (src_type == a_t_byte && src_index == dest_index)
+    {
+      return dest_index;
+    }
+  }
 
-  /* TODO */
-  TODO
-  index = dependency_replace_allocation(tracker
+  switch (src_type)
+  {
+    default:
+      {
+        dest_index = -33;
+        break;
+      }; break;
+
+    case a_t_byte:
+      {
+        byte_allocation_t src_allocation;
+
+        lookup = tracker->byte_allocations;
+
+        if (src_index >= LOOKUP_CAPACITY(lookup))
+        {
+          dest_index = -28;
+          break;
+        }
+
+        src_allocation = get_byte_allocation(tracker, src_index);
+        if (!src_allocation)
+        {
+          dest_index = -2;
+          break;
+        }
+
+        num_dependency_replacements = dependency_replace_allocation(tracker, a_t_byte, src_index, a_t_byte, dest_index);
+        if (num_dependency_replacements < 0)
+        {
+          dest_index = min_int(-16, num_dependency_replacements - 16);
+          break;
+        }
+
+        src_allocation = untrack_byte_allocation(tracker, src_allocation);
+        if (!src_allocation)
+        {
+          num_dependency_replacements = dependency_replace_allocation(tracker, a_t_byte, dest_index, a_t_byte, src_index);
+          if (num_dependency_replacements < 0)
+          {
+            /* Something went really wrong. */
+
+            free_allocation(tracker, src_type, src_index);
+            free_allocation(tracker, a_t_byte, dest_index);
+
+            dest_index = -64;
+            return dest_index;
+          }
+
+          dest_index = -27;
+          break;
+        }
+
+        dest_index = dest_index;
+        break;
+      }; break;
+
+    case a_t_tval:
+      {
+        tval_allocation_t src_allocation;
+
+        lookup = tracker->tval_allocations;
+
+        if (src_index >= LOOKUP_CAPACITY(lookup))
+        {
+          dest_index = -28;
+          break;
+        }
+
+        src_allocation = get_tval_allocation(tracker, src_index);
+        if (!src_allocation)
+        {
+          dest_index = -2;
+          break;
+        }
+
+        num_dependency_replacements = dependency_replace_allocation(tracker, a_t_tval, src_index, a_t_byte, dest_index);
+        if (num_dependency_replacements < 0)
+        {
+          dest_index = min_int(-16, num_dependency_replacements - 16);
+          break;
+        }
+
+        src_allocation = untrack_tval_allocation(tracker, src_allocation);
+        if (!src_allocation)
+        {
+          num_dependency_replacements = dependency_replace_allocation(tracker, a_t_byte, dest_index, a_t_tval, src_index);
+          if (num_dependency_replacements < 0)
+          {
+            /* Something went really wrong. */
+
+            free_allocation(tracker, src_type, src_index);
+            free_allocation(tracker, a_t_byte, dest_index);
+
+            dest_index = -64;
+            return dest_index;
+          }
+
+          dest_index = -27;
+          break;
+        }
+
+        dest_index = dest_index;
+        break;
+      }; break;
+
+    case a_t_manual:
+      {
+        manual_allocation_t src_allocation;
+
+        lookup = tracker->manual_allocations;
+
+        if (src_index >= LOOKUP_CAPACITY(lookup))
+        {
+          dest_index = -28;
+          break;
+        }
+
+        src_allocation = get_manual_allocation(tracker, src_index);
+        if (is_manual_allocation_null(src_allocation))
+        {
+          dest_index = -2;
+          break;
+        }
+
+        num_dependency_replacements = dependency_replace_allocation(tracker, a_t_manual, src_index, a_t_byte, dest_index);
+        if (num_dependency_replacements < 0)
+        {
+          dest_index = min_int(-16, num_dependency_replacements - 16);
+          break;
+        }
+
+        src_allocation = untrack_manual_allocation(tracker, src_allocation);
+        if (is_manual_allocation_null(src_allocation))
+        {
+          num_dependency_replacements = dependency_replace_allocation(tracker, a_t_byte, dest_index, a_t_manual, src_index);
+          if (num_dependency_replacements < 0)
+          {
+            /* Something went really wrong. */
+
+            free_allocation(tracker, src_type, src_index);
+            free_allocation(tracker, a_t_byte, dest_index);
+
+            dest_index = -64;
+            return dest_index;
+          }
+
+          dest_index = -27;
+          break;
+        }
+
+        dest_index = dest_index;
+        break;
+      }; break;
+  }
+
+  if (dest_index < 0)
+  {
+    /* Something went wrong. */
+
+    if (added_dest)
+    {
+      dest_allocation = untrack_byte_allocation(tracker, dest_allocation);
+      if (!dest_allocation)
+        return dest_index - 7;
+    }
+
+    return dest_index;
+  }
+
+  return dest_index;
 }
 
-/* TODO */
-int replace_with_tval_allocation(memory_tracker_t *tracker, allocation_type_t src_type, int src_index, tval_allocation_t allocation_dest);
+int replace_with_tval_allocation(memory_tracker_t *tracker, allocation_type_t src_type, int src_index, tval_allocation_t dest_allocation)
+{
+  int dest_index;
+  int num_dependency_replacements;
 
-/* TODO */
-int replace_with_manual_allocation(memory_tracker_t *tracker, allocation_type_t src_type, int src_index, manual_allocation_t allocation_dest)
+  int added_dest;
+
+  const lookup_t *lookup;
+
+#if ERROR_CHECKING
+  if (!tracker)
+    return -32;
+#endif /* #if ERROR_CHECKING */
+
+  if (!memory_tracker_require_containers(tracker))
+    return -31;
+
+  if (src_type < 0 || src_type >= a_t_end)
+    return -30;
+
+  if (src_index < 0)
+    return -8;
+
+  dest_index = tracked_tval_allocation(tracker, dest_allocation);
+  if (dest_index < 0)
+  {
+    added_dest = TRUE();
+
+    dest_index = track_tval_allocation(tracker, dest_allocation);
+
+    if (dest_index < 0)
+    {
+      return dest_index;
+    }
+  }
+  else
+  {
+    added_dest = FALSE();
+
+    if (src_type == a_t_tval && src_index == dest_index)
+    {
+      return dest_index;
+    }
+  }
+
+  switch (src_type)
+  {
+    default:
+      {
+        dest_index = -33;
+        break;
+      }; break;
+
+    case a_t_byte:
+      {
+        byte_allocation_t src_allocation;
+
+        lookup = tracker->byte_allocations;
+
+        if (src_index >= LOOKUP_CAPACITY(lookup))
+        {
+          dest_index = -28;
+          break;
+        }
+
+        src_allocation = get_byte_allocation(tracker, src_index);
+        if (!src_allocation)
+        {
+          dest_index = -2;
+          break;
+        }
+
+        num_dependency_replacements = dependency_replace_allocation(tracker, a_t_byte, src_index, a_t_tval, dest_index);
+        if (num_dependency_replacements < 0)
+        {
+          dest_index = min_int(-16, num_dependency_replacements - 16);
+          break;
+        }
+
+        src_allocation = untrack_byte_allocation(tracker, src_allocation);
+        if (!src_allocation)
+        {
+          num_dependency_replacements = dependency_replace_allocation(tracker, a_t_tval, dest_index, a_t_byte, src_index);
+          if (num_dependency_replacements < 0)
+          {
+            /* Something went really wrong. */
+
+            free_allocation(tracker, src_type, src_index);
+            free_allocation(tracker, a_t_tval, dest_index);
+
+            dest_index = -64;
+            return dest_index;
+          }
+
+          dest_index = -27;
+          break;
+        }
+
+        dest_index = dest_index;
+        break;
+      }; break;
+
+    case a_t_tval:
+      {
+        tval_allocation_t src_allocation;
+
+        lookup = tracker->tval_allocations;
+
+        if (src_index >= LOOKUP_CAPACITY(lookup))
+        {
+          dest_index = -28;
+          break;
+        }
+
+        src_allocation = get_tval_allocation(tracker, src_index);
+        if (!src_allocation)
+        {
+          dest_index = -2;
+          break;
+        }
+
+        num_dependency_replacements = dependency_replace_allocation(tracker, a_t_tval, src_index, a_t_tval, dest_index);
+        if (num_dependency_replacements < 0)
+        {
+          dest_index = min_int(-16, num_dependency_replacements - 16);
+          break;
+        }
+
+        src_allocation = untrack_tval_allocation(tracker, src_allocation);
+        if (!src_allocation)
+        {
+          num_dependency_replacements = dependency_replace_allocation(tracker, a_t_tval, dest_index, a_t_tval, src_index);
+          if (num_dependency_replacements < 0)
+          {
+            /* Something went really wrong. */
+
+            free_allocation(tracker, src_type, src_index);
+            free_allocation(tracker, a_t_tval, dest_index);
+
+            dest_index = -64;
+            return dest_index;
+          }
+
+          dest_index = -27;
+          break;
+        }
+
+        dest_index = dest_index;
+        break;
+      }; break;
+
+    case a_t_manual:
+      {
+        manual_allocation_t src_allocation;
+
+        lookup = tracker->manual_allocations;
+
+        if (src_index >= LOOKUP_CAPACITY(lookup))
+        {
+          dest_index = -28;
+          break;
+        }
+
+        src_allocation = get_manual_allocation(tracker, src_index);
+        if (is_manual_allocation_null(src_allocation))
+        {
+          dest_index = -2;
+          break;
+        }
+
+        num_dependency_replacements = dependency_replace_allocation(tracker, a_t_manual, src_index, a_t_tval, dest_index);
+        if (num_dependency_replacements < 0)
+        {
+          dest_index = min_int(-16, num_dependency_replacements - 16);
+          break;
+        }
+
+        src_allocation = untrack_manual_allocation(tracker, src_allocation);
+        if (is_manual_allocation_null(src_allocation))
+        {
+          num_dependency_replacements = dependency_replace_allocation(tracker, a_t_tval, dest_index, a_t_manual, src_index);
+          if (num_dependency_replacements < 0)
+          {
+            /* Something went really wrong. */
+
+            free_allocation(tracker, src_type, src_index);
+            free_allocation(tracker, a_t_tval, dest_index);
+
+            dest_index = -64;
+            return dest_index;
+          }
+
+          dest_index = -27;
+          break;
+        }
+
+        dest_index = dest_index;
+        break;
+      }; break;
+  }
+
+  if (dest_index < 0)
+  {
+    /* Something went wrong. */
+
+    if (added_dest)
+    {
+      dest_allocation = untrack_tval_allocation(tracker, dest_allocation);
+      if (!dest_allocation)
+        return dest_index - 7;
+    }
+
+    return dest_index;
+  }
+
+  return dest_index;
+}
+
+int replace_with_manual_allocation(memory_tracker_t *tracker, allocation_type_t src_type, int src_index, manual_allocation_t dest_allocation)
+{
+  int dest_index;
+  int num_dependency_replacements;
+
+  int added_dest;
+
+  const lookup_t *lookup;
+
+#if ERROR_CHECKING
+  if (!tracker)
+    return -32;
+#endif /* #if ERROR_CHECKING */
+
+  if (!memory_tracker_require_containers(tracker))
+    return -31;
+
+  if (src_type < 0 || src_type >= a_t_end)
+    return -30;
+
+  if (src_index < 0)
+    return -8;
+
+  dest_index = tracked_manual_allocation(tracker, dest_allocation);
+  if (dest_index < 0)
+  {
+    added_dest = TRUE();
+
+    dest_index = track_manual_allocation(tracker, dest_allocation);
+
+    if (dest_index < 0)
+    {
+      return dest_index;
+    }
+  }
+  else
+  {
+    added_dest = FALSE();
+
+    if (src_type == a_t_manual && src_index == dest_index)
+    {
+      return dest_index;
+    }
+  }
+
+  switch (src_type)
+  {
+    default:
+      {
+        dest_index = -33;
+        break;
+      }; break;
+
+    case a_t_byte:
+      {
+        byte_allocation_t src_allocation;
+
+        lookup = tracker->byte_allocations;
+
+        if (src_index >= LOOKUP_CAPACITY(lookup))
+        {
+          dest_index = -28;
+          break;
+        }
+
+        src_allocation = get_byte_allocation(tracker, src_index);
+        if (!src_allocation)
+        {
+          dest_index = -2;
+          break;
+        }
+
+        num_dependency_replacements = dependency_replace_allocation(tracker, a_t_byte, src_index, a_t_manual, dest_index);
+        if (num_dependency_replacements < 0)
+        {
+          dest_index = min_int(-16, num_dependency_replacements - 16);
+          break;
+        }
+
+        src_allocation = untrack_byte_allocation(tracker, src_allocation);
+        if (!src_allocation)
+        {
+          num_dependency_replacements = dependency_replace_allocation(tracker, a_t_manual, dest_index, a_t_byte, src_index);
+          if (num_dependency_replacements < 0)
+          {
+            /* Something went really wrong. */
+
+            free_allocation(tracker, src_type,   src_index);
+            free_allocation(tracker, a_t_manual, dest_index);
+
+            dest_index = -64;
+            return dest_index;
+          }
+
+          dest_index = -27;
+          break;
+        }
+
+        dest_index = dest_index;
+        break;
+      }; break;
+
+    case a_t_tval:
+      {
+        tval_allocation_t src_allocation;
+
+        lookup = tracker->tval_allocations;
+
+        if (src_index >= LOOKUP_CAPACITY(lookup))
+        {
+          dest_index = -28;
+          break;
+        }
+
+        src_allocation = get_tval_allocation(tracker, src_index);
+        if (!src_allocation)
+        {
+          dest_index = -2;
+          break;
+        }
+
+        num_dependency_replacements = dependency_replace_allocation(tracker, a_t_tval, src_index, a_t_manual, dest_index);
+        if (num_dependency_replacements < 0)
+        {
+          dest_index = min_int(-16, num_dependency_replacements - 16);
+          break;
+        }
+
+        src_allocation = untrack_tval_allocation(tracker, src_allocation);
+        if (!src_allocation)
+        {
+          num_dependency_replacements = dependency_replace_allocation(tracker, a_t_manual, dest_index, a_t_tval, src_index);
+          if (num_dependency_replacements < 0)
+          {
+            /* Something went really wrong. */
+
+            free_allocation(tracker, src_type,   src_index);
+            free_allocation(tracker, a_t_manual, dest_index);
+
+            dest_index = -64;
+            return dest_index;
+          }
+
+          dest_index = -27;
+          break;
+        }
+
+        dest_index = dest_index;
+        break;
+      }; break;
+
+    case a_t_manual:
+      {
+        manual_allocation_t src_allocation;
+
+        lookup = tracker->manual_allocations;
+
+        if (src_index >= LOOKUP_CAPACITY(lookup))
+        {
+          dest_index = -28;
+          break;
+        }
+
+        src_allocation = get_manual_allocation(tracker, src_index);
+        if (is_manual_allocation_null(src_allocation))
+        {
+          dest_index = -2;
+          break;
+        }
+
+        num_dependency_replacements = dependency_replace_allocation(tracker, a_t_manual, src_index, a_t_manual, dest_index);
+        if (num_dependency_replacements < 0)
+        {
+          dest_index = min_int(-16, num_dependency_replacements - 16);
+          break;
+        }
+
+        src_allocation = untrack_manual_allocation(tracker, src_allocation);
+        if (is_manual_allocation_null(src_allocation))
+        {
+          num_dependency_replacements = dependency_replace_allocation(tracker, a_t_manual, dest_index, a_t_manual, src_index);
+          if (num_dependency_replacements < 0)
+          {
+            /* Something went really wrong. */
+
+            free_allocation(tracker, src_type,   src_index);
+            free_allocation(tracker, a_t_manual, dest_index);
+
+            dest_index = -64;
+            return dest_index;
+          }
+
+          dest_index = -27;
+          break;
+        }
+
+        dest_index = dest_index;
+        break;
+      }; break;
+  }
+
+  if (dest_index < 0)
+  {
+    /* Something went wrong. */
+
+    if (added_dest)
+    {
+      dest_allocation = untrack_manual_allocation(tracker, dest_allocation);
+      if (is_manual_allocation_null(dest_allocation))
+        return dest_index - 7;
+    }
+
+    return dest_index;
+  }
+
+  return dest_index;
+}
 
 /* ---------------------------------------------------------------- */
 
@@ -2444,8 +3049,80 @@ int untrack_allocation(memory_tracker_t *tracker, allocation_type_t type, int in
 }
 
 
-/* TODO */
-int replace_with_existing_allocation(memory_tracker_t *tracker, allocation_type_t src_type, int src_index, allocation_type_t dest_type, int dest_index);
+int replace_with_existing_allocation(memory_tracker_t *tracker, allocation_type_t src_type, int src_index, allocation_type_t dest_type, int dest_index)
+{
+  const lookup_t *lookup;
+
+#if ERROR_CHECKING
+  if (!tracker)
+    return -32;
+#endif /* #if ERROR_CHECKING */
+
+  if (!memory_tracker_require_containers(tracker))
+    return -31;
+
+  if (dest_type < 0 || dest_type >= a_t_end)
+    return -30;
+
+  if (dest_index < 0)
+    return -9;
+
+  switch (dest_type)
+  {
+    default:
+      return -33;
+
+    case a_t_byte:
+      {
+        byte_allocation_t dest_allocation;
+
+        lookup = tracker->byte_allocations;
+
+        if (dest_index >= LOOKUP_CAPACITY(lookup))
+          return -29;
+
+        dest_allocation = get_byte_allocation(tracker, dest_index);
+        if (!dest_allocation)
+          return -2;
+
+        return replace_with_byte_allocation(tracker, src_type, src_index, dest_allocation);
+      }; break;
+
+    case a_t_tval:
+      {
+        tval_allocation_t dest_allocation;
+
+        lookup = tracker->tval_allocations;
+
+        if (dest_index >= LOOKUP_CAPACITY(lookup))
+          return -29;
+
+        dest_allocation = get_tval_allocation(tracker, dest_index);
+        if (!dest_allocation)
+          return -2;
+
+        return replace_with_tval_allocation(tracker, src_type, src_index, dest_allocation);
+      }; break;
+
+    case a_t_manual:
+      {
+        manual_allocation_t dest_allocation;
+
+        lookup = tracker->manual_allocations;
+
+        if (dest_index >= LOOKUP_CAPACITY(lookup))
+          return -29;
+
+        dest_allocation = get_manual_allocation(tracker, dest_index);
+        if (is_manual_allocation_null(dest_allocation))
+          return -2;
+
+        return replace_with_manual_allocation(tracker, src_type, src_index, dest_allocation);
+      }; break;
+  }
+
+  return -34;
+}
 
 
 /* Returns number of freed allocations. */
@@ -2695,8 +3372,8 @@ void *track_mcalloc(memory_tracker_t *tracker, size_t nmemb, size_t size, int *o
 void *track_mrealloc(memory_tracker_t *tracker, void *ptr, size_t size, int *out_index)
 {
   int               allocated;
-  byte_allocation_t allocation_src;
-  byte_allocation_t allocation_dest;
+  byte_allocation_t src_allocation;
+  byte_allocation_t dest_allocation;
 
   const memory_manager_t *manager;
 
@@ -2715,43 +3392,45 @@ void *track_mrealloc(memory_tracker_t *tracker, void *ptr, size_t size, int *out
 
   manager = MEMORY_TRACKER_CMANAGER(tracker);
 
-  allocation_src = ptr;
+  src_allocation = ptr;
 
-  allocated = tracked_byte_allocation(tracker, allocation_src);
+  allocated = tracked_byte_allocation(tracker, src_allocation);
   if (allocated < 0)
   {
     WRITE_OUTPUT(out_index, -64 - 3);
     return NULL;
   }
 
-  allocation_dest = memory_manager_mcalloc(manager, nmemb, size);
-  if (!allocation)
+  dest_allocation = memory_manager_mrealloc(manager, ptr, size);
+  if (!dest_allocation)
   {
     WRITE_OUTPUT(out_index, -64 - 2);
     return NULL;
   }
 
-  if (allocation_dest != allocation_src)
+  if (dest_allocation != src_allocation)
   {
-    allocated = replace_byte_allocation(tracker, allocation_src, allocation_dest);
+    allocated = replace_byte_allocation(tracker, src_allocation, dest_allocation);
     if (allocated < 0)
     {
       WRITE_OUTPUT(out_index, allocated);
 
-      free_byte_allocation_dependencies(tracker, allocation_src);
-      untrack_byte_allocation          (tracker, allocation_src);
-      memory_manager_mfree             (manager, allocation_dest);
+      free_byte_allocation_dependencies(tracker, src_allocation);
+      untrack_byte_allocation          (tracker, src_allocation);
+      memory_manager_mfree             (manager, dest_allocation);
 
       return NULL;
     }
   }
 
   WRITE_OUTPUT(out_index, allocated);
-  return allocation;
+  return dest_allocation;
 }
 
-/* TODO */
-size_t track_mfree(memory_tracker_t *tracker, void *ptr, int *out_index);
+size_t track_mfree(memory_tracker_t *tracker, void *ptr)
+{
+  return free_byte_allocation(tracker, ptr);
+}
 
 /* ---------------------------------------------------------------- */
 
