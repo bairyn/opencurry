@@ -129,8 +129,8 @@ manual_allocation_t manual_allocation(size_t (*cleanup)(void *context), void *co
 allocation_dependency_t allocation_dependency    (size_t parent, size_t dependent);
 allocation_dependency_t allocation_dependency_key(size_t parent);
 
-allocation_dependency_t allocation_depends    (size_t parent, size_t dependent);
-allocation_dependency_t allocation_depends_key(size_t parent);
+allocation_dependency_t allocation_depends    (allocation_type_t parent_type, int parent_index, allocation_type_t dependent_type, int dependent_index);
+allocation_dependency_t allocation_depends_key(allocation_type_t parent_type, int parent_index);
 
 /* ---------------------------------------------------------------- */
 /* Comparers on allocations.                                        */
@@ -293,7 +293,7 @@ size_t                     free_dependency(      memory_tracker_t *tracker, allo
 
 size_t                 free_dependency_key(      memory_tracker_t *tracker, allocation_type_t parent_type, int parent_index);
 
-int                       track_dependends(      memory_tracker_t *tracker, allocation_type_t parent_type, int parent, allocation_type_t *dependent_type, int dependent);
+int                       track_dependends(      memory_tracker_t *tracker, allocation_type_t parent_type, int parent, allocation_type_t      dependent_type, int      dependent);
 int                 tracked_dependency_key(const memory_tracker_t *tracker, allocation_type_t parent_type, int parent, allocation_type_t *out_dependent_type, int *out_dependent);
 size_t                 free_dependency_key(      memory_tracker_t *tracker, allocation_type_t parent_type, int parent_index);
 
