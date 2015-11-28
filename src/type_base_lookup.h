@@ -891,14 +891,33 @@ const void *lookup_retrieve
   , callback_compare_t  cmp
   );
 
+size_t lookup_retrieve_multiple_from
+  ( const lookup_t     *lookup
+  , const bnode_t      *root
+  , const void         *val
+
+  , callback_compare_t  cmp
+
+  , void               *out_values
+    , size_t              values_num_max
+  , size_t             *out_value_indices
+    , size_t              value_indices_num_max
+  , size_t             *out_node_indices
+    , size_t              node_indices_num_max
+  );
+
 size_t lookup_retrieve_multiple
   ( const lookup_t     *lookup
   , const void         *val
 
   , callback_compare_t  cmp
 
-  , void               *out_val
-  , size_t              out_val_num_max
+  , void               *out_values
+    , size_t              values_num_max
+  , size_t             *out_value_indices
+    , size_t              value_indices_num_max
+  , size_t             *out_node_indices
+    , size_t              node_indices_num_max
   );
 
 #define LOOKUP_UNLIMITED ((size_t) 0)
