@@ -306,22 +306,26 @@ int replace_with_manual_allocation(memory_tracker_t *tracker, allocation_type_t 
 /* track:   returns index.                                                  */
 /* untrack: takes a dependency index.                                       */
 /* tracked: returns index; sets first dependent.                            */
-int                       track_dependency(      memory_tracker_t *tracker, allocation_dependency_t dependency);
-allocation_dependency_t untrack_dependency(      memory_tracker_t *tracker, allocation_dependency_t dependency);
-allocation_dependency_t     get_dependency(      memory_tracker_t *tracker, int index);
-int                     tracked_dependency(const memory_tracker_t *tracker, allocation_dependency_t dependency);
-size_t                     free_dependency(      memory_tracker_t *tracker, allocation_dependency_t dependency);
+int                           track_dependency(      memory_tracker_t *tracker, allocation_dependency_t dependency);
+allocation_dependency_t     untrack_dependency(      memory_tracker_t *tracker, allocation_dependency_t dependency);
+allocation_dependency_t         get_dependency(      memory_tracker_t *tracker, int index);
+int                         tracked_dependency(const memory_tracker_t *tracker, allocation_dependency_t dependency);
+size_t                         free_dependency(      memory_tracker_t *tracker, allocation_dependency_t dependency);
+
+/* Return value corresponds to first match. */
+allocation_dependency_t untrack_dependency_key(      memory_tracker_t *tracker, allocation_type_t parent_type, int parent_index, allocation_dependency_t *out_dependencies,       size_t dependencies_num_max,       size_t *out_num_dependencies);
+int                     tracked_dependency_key(const memory_tracker_t *tracker, allocation_type_t parent_type, int parent_index, int                     *out_dependency_indices, size_t dependency_indices_num_max, size_t *out_num_dependencies);
+size_t                     free_dependency_key(      memory_tracker_t *tracker, allocation_type_t parent_type, int parent_index);
+
+int                              track_depends(      memory_tracker_t *tracker, allocation_type_t parent_type, int parent_index, allocation_type_t dependent_type, int dependent_index);
+allocation_dependency_t        untrack_depends(      memory_tracker_t *tracker, allocation_type_t parent_type, int parent_index, allocation_type_t dependent_type, int dependent_index);
+int                            tracked_depends(const memory_tracker_t *tracker, allocation_type_t parent_type, int parent_index, allocation_type_t dependent_type, int dependent_index);
+size_t                            free_depends(      memory_tracker_t *tracker, allocation_type_t parent_type, int parent_index, allocation_type_t dependent_type, int dependent_index);
 
 /* Returns number of dependency replacements >=0 performed on success. */
 /* Performs no tracking or untracking.                                 */
 /* Both "src" and "dest" should exist for successful replacement.      */
-int          dependency_replace_allocation(      memory_tracker_t *tracker, allocation_type_t src_type, int src_index, allocation_type_t dest_type, int dest_index);
-
-size_t                 free_dependency_key(      memory_tracker_t *tracker, allocation_type_t parent_type, int parent_index);
-
-int                       track_dependends(      memory_tracker_t *tracker, allocation_type_t parent_type, int parent, allocation_type_t      dependent_type, int      dependent);
-int                 tracked_dependency_key(const memory_tracker_t *tracker, allocation_type_t parent_type, int parent, allocation_type_t *out_dependent_type, int *out_dependent);
-size_t                 free_dependency_key(      memory_tracker_t *tracker, allocation_type_t parent_type, int parent_index);
+int dependency_replace_allocation(memory_tracker_t *tracker, allocation_type_t src_type, int src_index, allocation_type_t dest_type, int dest_index);
 
 /* ---------------------------------------------------------------- */
 

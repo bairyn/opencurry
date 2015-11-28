@@ -2798,7 +2798,7 @@ size_t free_dependency(memory_tracker_t *tracker, allocation_dependency_t depend
 
   key = dependency;
 
-  while((value = lookup_retrieve(lookup, &key, cmp_allocation_dependency)))
+  while((value = lookup_retrieve(lookup, &key, cmp_allocation_dependency_key)))
   {
     lookup =
       lookup_mdelete(lookup, value, LOOKUP_UNLIMITED, cmp_allocation_dependency_key, manager, &result_num);
@@ -2835,6 +2835,176 @@ size_t free_dependency(memory_tracker_t *tracker, allocation_dependency_t depend
   return num_freed;
 }
 
+
+allocation_dependency_t untrack_dependency_key(memory_tracker_t *tracker, allocation_type_t parent_type, int parent_index, allocation_dependency_t *out_dependencies, size_t dependencies_num_max, size_t *out_num_dependencies)
+{
+  size_t  dependencies_written;
+  size_t  num_dependencies;
+
+  allocation_dependency_t first_dependency;
+  const void *value;
+  const allocation_dependency_t *
+    const     dependency = (const void * const) &value;
+
+  lookup_t               *lookup;
+  const memory_manager_t *manager;
+
+  allocation_dependency_t key;
+
+  size_t result_num;
+
+#if ERROR_CHECKING
+  if (!tracker)
+    return null_allocation_dependency;
+#endif /* #if ERROR_CHECKING */
+
+  num_dependencies = 0;
+  WRITE_OUTPUT(out_num_dependencies, num_dependencies);
+
+  lookup = tracker->dependency_graph;
+
+  if (!lookup)
+    return null_allocation_dependency;
+
+  manager = MEMORY_TRACKER_CMANAGER(tracker);
+
+  if (parent_type  < 0 || parent_type  >= a_t_end)
+    return null_allocation_dependency;
+
+  if (parent_index < 0 || parent_index >= LOOKUP_CAPACITY(lookup))
+    return null_allocation_dependency;
+
+  key = allocation_depends_key(parent_type, parent_index);
+
+  /* ---------------------------------------------------------------- */
+
+  num_dependencies = 0;
+  first_dependency = null_allocation_dependency;
+  while((value = lookup_retrieve(lookup, &key, cmp_allocation_dependency_key)))
+  {
+    ++num_dependencies;
+
+    if (is_allocation_dependency_null(first_dependency))
+    {
+      first_dependency = *dependency;
+    }
+
+    if (out_dependencies)
+    {
+      if (dependencies_written < dependencies_num_max)
+      {
+        out_dependencies[dependencies_written++] = *dependency;
+      }
+    }
+
+    /* ---------------------------------------------------------------- */
+
+    lookup =
+      lookup_mdelete(lookup, value, LOOKUP_UNLIMITED, cmp_allocation_dependency_key, manager, &result_num);
+    if (!lookup)
+      return num_freed;
+#if ERROR_CHECKING
+    if (!result_num)
+    {
+      WRITE_OUTPUT(out_num_dependencies, num_dependencies);
+      return null_allocation_dependency;
+    }
+#endif /* #if ERROR_CHECKING */
+  }
+
+  /* ---------------------------------------------------------------- */
+
+  if (num_dependencies <= 0)
+  {
+    WRITE_OUTPUT(out_num_dependencies, num_dependencies);
+    return null_allocation_dependency;
+  }
+
+  WRITE_OUTPUT(out_num_dependencies, num_dependencies);
+  return first_dependency;
+}
+
+/* TODO: int * and size_t * */
+int tracked_dependency_key(const memory_tracker_t *tracker, allocation_type_t parent_type, int parent_index, int *out_dependency_indices, size_t dependency_indices_num_max, size_t *out_num_dependencies)
+{
+  size_t  num_dependencies;
+  int    *indices;
+  size_t  indices_num_max;
+
+  int         index;
+  const void *value;
+  const allocation_dependency_t *
+    const     dependency = (const void * const) &value;
+
+  const lookup_t *lookup;
+
+  allocation_dependency_t key;
+
+#if sizeof(int) > sizeof(size_t)
+#  error "tracked_dependency_key: Requires sizeof(int) <= sizeof(size_t)!"
+#endif
+#if ERROR_CHECKING
+  if (sizeof(int) > sizeof(size_t))
+  {
+    bug("tracked_dependency_key: line #" CURRENT_LINE_STR ": sizeof(int) > sizeof(size_t)!\n");
+    return -255;
+  }
+#endif /* #if ERROR_CHECKING */
+
+#if ERROR_CHECKING
+  if (!tracker)
+    return UNTRACKED - 1;
+#endif /* #if ERROR_CHECKING */
+
+  num_dependencies = 0;
+  WRITE_OUTPUT(out_num_dependencies, num_dependencies);
+
+  lookup = tracker->dependency_graph;
+
+  if (!lookup)
+    return UNTRACKED - 3;
+
+  if (parent_type  < 0 || parent_type  >= a_t_end)
+    return UNTRACKED - 4;
+
+  if (parent_index < 0 || parent_index >= LOOKUP_CAPACITY(lookup))
+    return UNTRACKED - 5;
+
+  key = allocation_depends_key(parent_type, parent_index);
+
+  if (!out_dependency_indices || dependency_indices_num_max <= 0)
+  {
+    indices         = &index;
+    indices_num_max = 1;
+  }
+  else
+  {
+    indices         = out_dependency_indices;
+    indices_num_max = dependency_indices_num_max;
+  }
+
+  num_dependencies =
+    lookup_retrieve_multiple
+      ( lookup
+      , (void *) &key
+
+      , cmp_allocation_dependency_key
+
+      , NULL
+        , 0
+      , indices
+        , indices_num_max
+      , NULL
+        , 0
+      );
+
+  WRITE_OUTPUT(out_num_dependencies, num_dependencies);
+
+  if (num_dependencies <= 0)
+    return UNTRACKED;
+
+  return *indices;
+}
 
 size_t free_dependency_key(memory_tracker_t *tracker, allocation_type_t parent_type, int parent_index)
 {
@@ -2909,60 +3079,24 @@ size_t free_dependency_key(memory_tracker_t *tracker, allocation_type_t parent_t
 }
 
 
-int track_dependends(memory_tracker_t *tracker, allocation_type_t parent_type, int parent, allocation_type_t dependent_type, int dependent)
+int track_depends(memory_tracker_t *tracker, allocation_type_t parent_type, int parent_index, allocation_type_t dependent_type, int dependent_index)
 {
-  return track_dependency(tracker, allocation_depends(parent_type, parent, dependent_type, dependent));
+  return track_dependency(tracker, allocation_depends(parent_type, parent_index, dependent_type, dependent_index));
 }
 
-int tracked_dependency_key(const memory_tracker_t *tracker, allocation_type_t parent_type, int parent, allocation_type_t *out_dependent_type, int *out_dependent)
+allocation_dependency_t untrack_depends(memory_tracker_t *tracker, allocation_type_t parent_type, int parent_index, allocation_type_t dependent_type, int dependent_index)
 {
-  int         index;
-  const void *value;
-  const allocation_dependency_t *
-    const     dependency = (const void * const) &value;
+  return untrack_dependency(tracker, allocation_depends(parent_type, parent_index, dependent_type, dependent_index));
+}
 
-  const lookup_t *lookup;
+int tracked_depends(const memory_tracker_t *tracker, allocation_type_t parent_type, int parent_index, allocation_type_t dependent_type, int dependent_index)
+{
+  return tracked_dependency(tracker, allocation_depends(parent_type, parent_index, dependent_type, dependent_index));
+}
 
-  allocation_dependency_t key;
-
-  WRITE_OUTPUT(out_dependent_type, -1);
-  WRITE_OUTPUT(out_dependent,      -1);
-
-#if ERROR_CHECKING
-  if (!tracker)
-    return UNTRACKED - 1;
-#endif /* #if ERROR_CHECKING */
-
-  lookup = tracker->dependency_graph;
-
-  if (!lookup)
-    return UNTRACKED - 3;
-
-  if (parent_type < 0 || parent_type >= a_t_end)
-    return UNTRACKED - 4;
-
-  if (parent      < 0 || parent      >= LOOKUP_CAPACITY(lookup))
-    return UNTRACKED - 5;
-
-  key = allocation_depends_key(parent_type, parent);
-
-  value =
-    lookup_retrieve
-      ( lookup
-      , (void *) &key
-
-      , cmp_allocation_dependency_key
-      );
-
-  if (!value)
-    return UNTRACKED;
-
-  index = (int) LOOKUP_GET_VALUE_INDEX(lookup, value);
-
-  WRITE_OUTPUT(out_dependent_type, GET_ALLOC_DEP_TYPE (dependency->dependent));
-  WRITE_OUTPUT(out_dependent,      GET_ALLOC_DEP_INDEX(dependency->dependent));
-
-  return index;
+size_t free_depends(memory_tracker_t *tracker, allocation_type_t parent_type, int parent_index, allocation_type_t dependent_type, int dependent_index)
+{
+  return free_dependency(tracker, allocation_depends(parent_type, parent_index, dependent_type, dependent_index));
 }
 
 /* ---------------------------------------------------------------- */

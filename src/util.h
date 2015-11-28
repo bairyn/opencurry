@@ -157,6 +157,10 @@ void *deref_default(void **ptr, void *when_default);
 
 /* ---------------------------------------------------------------- */
 
+void *pad(void *buf, size_t num, size_t from_elem_size, size_t to_elem_size);
+
+/* ---------------------------------------------------------------- */
+
 #define NOP() \
   do          \
   {           \
