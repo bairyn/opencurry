@@ -916,7 +916,7 @@ codepoint_t utf8_decode_one_erroneous(const unsigned char *input, size_t input_m
   switch(error_behaviour)
   {
     default:
-      report_bug("utf8_decode_one_erroneous: DEFAULT_UTF8_DECODE_ERRROR_BEHAVIOUR set to unrecognized value!  Proceeding anyway.");
+      bug("utf8_decode_one_erroneous: DEFAULT_UTF8_DECODE_ERRROR_BEHAVIOUR set to unrecognized value!  Proceeding anyway.");
 
     case utf8_replacement_character_uFFFD_behaviour:
     case utf8_po_replacement_character_uFFFD_behaviour:

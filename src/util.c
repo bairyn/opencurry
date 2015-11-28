@@ -1283,7 +1283,7 @@ int snprintf_insert(char *str, size_t size, const char *format, ...)
 */
 
 /* Should be called only from locations that shouldn't be reached. */
-void report_bug(const char *msg)
+void bug(const char *msg)
 {
   fprintf(stderr, "**BUG: %s\n", msg);
 }

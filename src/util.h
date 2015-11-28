@@ -1147,7 +1147,7 @@ int snprintf_insert(char *str, size_t size, size_t offset, const char *format, .
 */
 
 /* Should be called only from locations that shouldn't be reached. */
-void report_bug(const char *msg);
+void bug(const char *msg);
 
 void ensure_ascii_null_terminated(char *buf, size_t buf_size);
 
