@@ -87,4 +87,7 @@ unit_test_result_t lookup_insert_delete_test_run(unit_test_context_t *context);
 extern unit_test_t lookup_minsert_test;
 unit_test_result_t lookup_minsert_test_run(unit_test_context_t *context);
 
+extern unit_test_t lookup_accessing_test;
+unit_test_result_t lookup_accessing_test_run(unit_test_context_t *context);
+
 #endif /* ifndef TESTS_TEST_TYPE_BASE_LOOKUP_H */

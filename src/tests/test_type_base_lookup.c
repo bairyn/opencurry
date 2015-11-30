@@ -67,6 +67,7 @@ unit_test_t *type_base_lookup_tests[] =
   , &lookup_insert_test
   , &lookup_insert_delete_test
   , &lookup_minsert_test
+  , &lookup_accessing_test
 
   , NULL
   };
@@ -1943,6 +1944,26 @@ unit_test_result_t lookup_minsert_test_run(unit_test_context_t *context)
   }
 
   LOOKUP_DEINIT(lookup);
+
+  return result;
+}
+
+/* ---------------------------------------------------------------- */
+
+unit_test_t lookup_accessing_test =
+  {  lookup_accessing_test_run
+  , "lookup_accessing_test"
+  , "Tests for retrieval, iteration, and traversal."
+  };
+
+unit_test_result_t lookup_minsert_test_run(unit_test_context_t *context)
+{
+  unit_test_result_t result = assert_success(context);
+
+  ENCLOSE()
+  {
+    COMPOUND(UNIT_TEST_SKIP);
+  }
 
   return result;
 }
