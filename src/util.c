@@ -105,6 +105,40 @@ void *deref_default(void **ptr, void *when_default)
 
 /* ---------------------------------------------------------------- */
 
+/* xxyyzz000000 */
+/* =>           */
+/* xx00yy00zz00 */
+void *pad(void *buf, size_t num, size_t from_elem_size, size_t to_elem_size)
+{
+  size_t i;
+  size_t distance;
+
+  unsigned char *bytes = buf;
+
+  if (!buf)
+    return NULL;
+
+  if (from_elem_size > to_elem_size)
+    return NULL;
+
+  distance = size_minus(to_elem_size, from_elem_size);
+
+  if (num <= 0 || distance <= 0)
+    return buf;
+
+  for (i = 0; i < num; ++i)
+  {
+    size_t r = size_minus(size_less_null(num), i);
+
+    memmove(bytes + to_elem_size * r, bytes + from_elem_size * r, from_elem_size);
+    memset (bytes + to_elem_size * r + from_elem_size, 0x00, distance);
+  }
+
+  return buf;
+}
+
+/* ---------------------------------------------------------------- */
+
 size_t size_less_null(size_t size)
 {
   return SIZE_LESS_NULL(size);
