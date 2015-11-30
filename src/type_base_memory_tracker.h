@@ -365,6 +365,11 @@ size_t  track_tval_free(memory_tracker_t *tracker, tval *val);
 size_t track_manual_free(memory_tracker_t *tracker, manual_allocation_t cleanup);
 
 /* ---------------------------------------------------------------- */
+/* Variants.                                                        */
+
+int tracked_dependency_key_size(const memory_tracker_t *tracker, allocation_type_t parent_type, int parent_index, size_t *out_dependency_indices, size_t dependency_indices_num_max, size_t *out_num_dependencies);
+
+/* ---------------------------------------------------------------- */
 /* Post-dependencies.                                               */
 /* ---------------------------------------------------------------- */
 

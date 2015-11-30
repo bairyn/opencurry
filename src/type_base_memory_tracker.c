@@ -3085,6 +3085,10 @@ size_t free_depends(memory_tracker_t *tracker, allocation_type_t parent_type, in
   return free_dependency(tracker, allocation_depends(parent_type, parent_index, dependent_type, dependent_index));
 }
 
+
+/* TODO */
+int dependency_replace_allocation(memory_tracker_t *tracker, allocation_type_t src_type, int src_index, allocation_type_t dest_type, int dest_index);
+
 /* ---------------------------------------------------------------- */
 
 int untrack_allocation(memory_tracker_t *tracker, allocation_type_t type, int index)
@@ -3606,4 +3610,74 @@ size_t track_tval_free(memory_tracker_t *tracker, tval *val)
 size_t track_manual_free(memory_tracker_t *tracker, manual_allocation_t cleanup)
 {
   return free_manual_allocation(tracker, cleanup);
+}
+
+/* ---------------------------------------------------------------- */
+/* Variants.                                                        */
+
+int tracked_dependency_key_size(const memory_tracker_t *tracker, allocation_type_t parent_type, int parent_index, size_t *out_dependency_indices, size_t dependency_indices_num_max, size_t *out_num_dependencies)
+{
+  size_t  num_dependencies;
+  size_t *indices;
+  size_t  indices_num_max;
+
+  size_t  index;
+
+  const lookup_t *lookup;
+
+  allocation_dependency_t key;
+
+#if ERROR_CHECKING
+  if (!tracker)
+    return UNTRACKED - 1;
+#endif /* #if ERROR_CHECKING */
+
+  num_dependencies = 0;
+  WRITE_OUTPUT(out_num_dependencies, num_dependencies);
+
+  lookup = tracker->dependency_graph;
+
+  if (!lookup)
+    return UNTRACKED - 3;
+
+  if (parent_type  < 0 || parent_type  >= a_t_end)
+    return UNTRACKED - 4;
+
+  if (parent_index < 0 || parent_index >= LOOKUP_CAPACITY(lookup))
+    return UNTRACKED - 5;
+
+  key = allocation_depends_key(parent_type, parent_index);
+
+  if (!out_dependency_indices || dependency_indices_num_max <= 0)
+  {
+    indices         = &index;
+    indices_num_max = 1;
+  }
+  else
+  {
+    indices         = out_dependency_indices;
+    indices_num_max = dependency_indices_num_max;
+  }
+
+  num_dependencies =
+    lookup_retrieve_multiple
+      ( lookup
+      , (void *) &key
+
+      , cmp_allocation_dependency_key
+
+      , NULL
+        , 0
+      , indices
+        , indices_num_max
+      , NULL
+        , 0
+      );
+
+  WRITE_OUTPUT(out_num_dependencies, num_dependencies);
+
+  if (num_dependencies <= 0)
+    return UNTRACKED;
+
+  return *indices;
 }
