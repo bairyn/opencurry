@@ -2590,22 +2590,20 @@ size_t lookup_retrieve_multiple_from
       /* Write out the value index? */
       if (out_value_indices && num_matches < value_indices_num_max)
       {
-        int index;
+        size_t index;
 
         index = LOOKUP_GET_VALUE_INDEX(lookup, node_val);
         out_value_indices[num_matches] = index;
       }
 
-      /* Write out the value index? */
+      /* Write out the node index? */
       if (out_node_indices  && num_matches < node_indices_num_max)
       {
-        int index;
+        size_t index;
 
         index = LOOKUP_GET_NODE_INDEX(lookup, node);
         out_node_indices[num_matches] = index;
       }
-
-      /* Write out the node index? */
 
       /* Increment num_matches. */
       ++num_matches;
@@ -5047,6 +5045,254 @@ lookup_t *lookup_mdelete
     return NULL;
 
   return lookup_auto_resize(lookup, memory_manager);
+}
+
+/* ---------------------------------------------------------------- */
+
+/* Returns number of matches irrespective of with_value breaking. */
+size_t lookup_retrieve_multiple_with
+  ( const lookup_t     *lookup
+  , const bnode_t      *root
+  , const void         *val
+
+  , callback_compare_t  cmp
+
+  , lookup_iteration_callback_fun_t  with_value
+    , void                            *with_value_context
+    , void                            *initial_accumulation
+
+  , void **out_final_accumulation
+  )
+{
+  int break_iteration;
+
+  size_t         num_matches;
+  size_t         num_child_matches;
+  const bnode_t *first_match;
+
+  unsigned char *out_value_bytes = out_values;
+
+  LOOKUP_CFIND_VARIABLE_DECLARATIONS;
+
+#if ERROR_CHECKING
+  if (!lookup)
+    return 0;
+#endif /* #if ERROR_CHECKING  */
+
+  WRITE_OUTPUT(out_final_accumulation, initial_accumulation);
+
+  /* Is a value provided? */
+  if (!val)
+    return 0;
+
+  if (LOOKUP_EMPTY(lookup))
+    return 0;
+
+  LOOKUP_OPTIONAL_CNODE(lookup, root);
+
+  /* ---------------------------------------------------------------- */
+  /* Find the root matching node.                                     */
+
+  /* Ordered BST traversal to leaf or first match. */
+  if (!LOOKUP_CFIND_FROM_STD(lookup, root, val, cmp))
+    return 0;
+
+  /* Was there no match? */
+  if (ordering != 0)
+    return 0;
+
+  /* ---------------------------------------------------------------- */
+
+  num_matches     = 0;
+  break_iteration = 0;
+
+  /* Traverse right nodes while matching. */
+  do
+  {
+    /* Set "root" for backtracking after left-node traversal. */
+    root = node;
+
+    /* Traversing Left nodes while matching. */
+    do
+    {
+      /* Callback? */
+      if (!break_iteration && with_value)
+      {
+        initial_accumulation =
+          with_value
+            ( with_value_context
+            , initial_accumulation
+
+            , lookup
+            , value
+            , node
+
+            , &break_iteration
+            );
+      }
+
+      /* Increment num_matches. */
+      ++num_matches;
+
+      /* ---------------------------------------------------------------- */
+
+      /* Leaf? */
+      if (BNODE_IS_LEAF(node->left))
+        break;
+
+      /* Next node. */
+      node = LOOKUP_INDEX_CORDER(lookup, BNODE_GET_REF(node->left));
+
+      /* val <?= node value */
+      node_val = LOOKUP_NODE_CVALUE(lookup, node);
+      ordering = call_callback_compare(cmp, val, node_val);
+    } while (ordering == ordering_rel_eq);
+
+    /* Keep traversing right nodes? */
+
+    /* Backtrack. */
+    node = root;
+
+    /* Leaf? */
+    if (BNODE_IS_LEAF(node->right))
+      break;
+
+    /* Next node. */
+    node = LOOKUP_INDEX_CORDER(lookup, BNODE_GET_REF(node->right));
+
+    /* val <?= node value */
+    node_val = LOOKUP_NODE_CVALUE(lookup, node);
+    ordering = call_callback_compare(cmp, val, node_val);
+  } while (ordering == ordering_rel_eq);
+
+  WRITE_OUTPUT(out_final_accumulation, initial_accumulation);
+
+  return num_matches;
+}
+
+size_t lookup_retrieve_multiple_from_int
+  ( const lookup_t     *lookup
+  , const bnode_t      *root
+  , const void         *val
+
+  , callback_compare_t  cmp
+
+  , void               *out_values
+    , size_t              values_num_max
+  , int                *out_value_indices
+    , size_t              value_indices_num_max
+  , int                *out_node_indices
+    , size_t              node_indices_num_max
+  )
+{
+  size_t         num_matches;
+  size_t         num_child_matches;
+  const bnode_t *first_match;
+
+  unsigned char *out_value_bytes = out_values;
+
+  LOOKUP_CFIND_VARIABLE_DECLARATIONS;
+
+#if ERROR_CHECKING
+  if (!lookup)
+    return 0;
+#endif /* #if ERROR_CHECKING  */
+
+  /* Is a value provided? */
+  if (!val)
+    return 0;
+
+  if (LOOKUP_EMPTY(lookup))
+    return 0;
+
+  LOOKUP_OPTIONAL_CNODE(lookup, root);
+
+  /* ---------------------------------------------------------------- */
+  /* Find the root matching node.                                     */
+
+  /* Ordered BST traversal to leaf or first match. */
+  if (!LOOKUP_CFIND_FROM_STD(lookup, root, val, cmp))
+    return 0;
+
+  /* Was there no match? */
+  if (ordering != 0)
+    return 0;
+
+  /* ---------------------------------------------------------------- */
+
+  num_matches = 0;
+
+  /* Traverse right nodes while matching. */
+  do
+  {
+    /* Set "root" for backtracking after left-node traversal. */
+    root = node;
+
+    /* Traversing Left nodes while matching. */
+    do
+    {
+      /* Write out the value? */
+      if (out_values        && num_matches < values_num_max)
+      {
+        memmove(out_value_bytes, node_val, LOOKUP_VALUE_SIZE(lookup));
+        out_value_bytes += LOOKUP_VALUE_SIZE(lookup);
+      }
+
+      /* Write out the value index? */
+      if (out_value_indices && num_matches < value_indices_num_max)
+      {
+        int index;
+
+        index = LOOKUP_GET_VALUE_INDEX(lookup, node_val);
+        out_value_indices[num_matches] = index;
+      }
+
+      /* Write out the value index? */
+      if (out_node_indices  && num_matches < node_indices_num_max)
+      {
+        int index;
+
+        index = LOOKUP_GET_NODE_INDEX(lookup, node);
+        out_node_indices[num_matches] = index;
+      }
+
+      /* Write out the node index? */
+
+      /* Increment num_matches. */
+      ++num_matches;
+
+      /* ---------------------------------------------------------------- */
+
+      /* Leaf? */
+      if (BNODE_IS_LEAF(node->left))
+        break;
+
+      /* Next node. */
+      node = LOOKUP_INDEX_CORDER(lookup, BNODE_GET_REF(node->left));
+
+      /* val <?= node value */
+      node_val = LOOKUP_NODE_CVALUE(lookup, node);
+      ordering = call_callback_compare(cmp, val, node_val);
+    } while (ordering == ordering_rel_eq);
+
+    /* Keep traversing right nodes? */
+
+    /* Backtrack. */
+    node = root;
+
+    /* Leaf? */
+    if (BNODE_IS_LEAF(node->right))
+      break;
+
+    /* Next node. */
+    node = LOOKUP_INDEX_CORDER(lookup, BNODE_GET_REF(node->right));
+
+    /* val <?= node value */
+    node_val = LOOKUP_NODE_CVALUE(lookup, node);
+    ordering = call_callback_compare(cmp, val, node_val);
+  } while (ordering == ordering_rel_eq);
+
+  return num_matches;
 }
 
 /* ---------------------------------------------------------------- */

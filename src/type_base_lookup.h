@@ -961,6 +961,37 @@ lookup_t *lookup_mdelete
 
 /* ---------------------------------------------------------------- */
 
+size_t lookup_retrieve_multiple_with
+  ( const lookup_t     *lookup
+  , const bnode_t      *root
+  , const void         *val
+
+  , callback_compare_t  cmp
+
+  , lookup_iteration_callback_fun_t  with_value
+    , void                            *with_value_context
+    , void                            *initial_accumulation
+
+  , void **out_final_accumulation
+  );
+
+size_t lookup_retrieve_multiple_from_int
+  ( const lookup_t     *lookup
+  , const bnode_t      *root
+  , const void         *val
+
+  , callback_compare_t  cmp
+
+  , void               *out_values
+    , size_t              values_num_max
+  , int                *out_value_indices
+    , size_t              value_indices_num_max
+  , int                *out_node_indices
+    , size_t              node_indices_num_max
+  );
+
+/* ---------------------------------------------------------------- */
+
 const void *lookup_min(lookup_t *lookup, bnode_t *root, bnode_t **out_end);
 const void *lookup_max(lookup_t *lookup, bnode_t *root, bnode_t **out_end);
 
