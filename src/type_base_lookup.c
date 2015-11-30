@@ -2535,8 +2535,6 @@ size_t lookup_retrieve_multiple_from
   )
 {
   size_t         num_matches;
-  size_t         num_child_matches;
-  const bnode_t *first_match;
 
   unsigned char *out_value_bytes = out_values;
 
@@ -2666,8 +2664,8 @@ size_t lookup_retrieve_multiple
 
       , out_values
         , values_num_max
-      , out_values_indices
-        , values_indices_num_max
+      , out_value_indices
+        , value_indices_num_max
       , out_node_indices
         , node_indices_num_max
       );
@@ -5064,13 +5062,9 @@ size_t lookup_retrieve_multiple_with
   , void **out_final_accumulation
   )
 {
-  int break_iteration;
+  size_t num_matches;
 
-  size_t         num_matches;
-  size_t         num_child_matches;
-  const bnode_t *first_match;
-
-  unsigned char *out_value_bytes = out_values;
+  int    break_iteration;
 
   LOOKUP_CFIND_VARIABLE_DECLARATIONS;
 
@@ -5124,7 +5118,7 @@ size_t lookup_retrieve_multiple_with
             , initial_accumulation
 
             , lookup
-            , value
+            , node_val
             , node
 
             , &break_iteration
@@ -5186,8 +5180,6 @@ size_t lookup_retrieve_multiple_from_int
   )
 {
   size_t         num_matches;
-  size_t         num_child_matches;
-  const bnode_t *first_match;
 
   unsigned char *out_value_bytes = out_values;
 

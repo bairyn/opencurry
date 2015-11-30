@@ -877,7 +877,7 @@ size_t memory_tracker_free_containers(memory_tracker_t *tracker)
         {
           /* Error: failed to free a byte allocation! */
 #if ERROR_CHECKING
-          report_bug
+          bug
             ( "Error: memory_tracker_free_containers: line #"
               CURRENT_LINE_STR
               "failed to free a byte allocation!\n"
@@ -900,7 +900,7 @@ size_t memory_tracker_free_containers(memory_tracker_t *tracker)
       {
           /* Error: failed to untrack a container! */
 #if ERROR_CHECKING
-          report_bug
+          bug
             ( "Error: memory_tracker_free_containers: line #"
               CURRENT_LINE_STR
               "failed to untrack container!\n"
@@ -931,7 +931,7 @@ size_t memory_tracker_free_containers(memory_tracker_t *tracker)
       {
         /* Error: failed to free a tval allocation! */
 #if ERROR_CHECKING
-        report_bug
+        bug
           ( "Error: memory_tracker_free_containers: line #"
             CURRENT_LINE_STR
             "failed to free a tval allocation!\n"
@@ -963,7 +963,7 @@ size_t memory_tracker_free_containers(memory_tracker_t *tracker)
       {
         /* Error: failed to free a manual allocation! */
 #if ERROR_CHECKING
-        report_bug
+        bug
           ( "Error: memory_tracker_free_containers: line #"
             CURRENT_LINE_STR
             "failed to free a manual allocation!\n"
@@ -2838,8 +2838,7 @@ size_t free_dependency(memory_tracker_t *tracker, allocation_dependency_t depend
 
 allocation_dependency_t untrack_dependency_key(memory_tracker_t *tracker, allocation_type_t parent_type, int parent_index, allocation_dependency_t *out_dependencies, size_t dependencies_num_max, size_t *out_num_dependencies)
 {
-  size_t  dependencies_written;
-  size_t  num_dependencies;
+  size_t num_dependencies;
 
   allocation_dependency_t first_dependency;
   const void *value;
@@ -2882,8 +2881,6 @@ allocation_dependency_t untrack_dependency_key(memory_tracker_t *tracker, alloca
   first_dependency = null_allocation_dependency;
   while((value = lookup_retrieve(lookup, &key, cmp_allocation_dependency_key)))
   {
-    ++num_dependencies;
-
     if (is_allocation_dependency_null(first_dependency))
     {
       first_dependency = *dependency;
@@ -2891,25 +2888,28 @@ allocation_dependency_t untrack_dependency_key(memory_tracker_t *tracker, alloca
 
     if (out_dependencies)
     {
-      if (dependencies_written < dependencies_num_max)
+      if (num_dependencies < dependencies_num_max)
       {
-        out_dependencies[dependencies_written++] = *dependency;
+        out_dependencies[num_dependencies] = *dependency;
       }
     }
+
+    ++num_dependencies;
 
     /* ---------------------------------------------------------------- */
 
     lookup =
       lookup_mdelete(lookup, value, LOOKUP_UNLIMITED, cmp_allocation_dependency_key, manager, &result_num);
-    if (!lookup)
-      return num_freed;
+    if (
+          !lookup
 #if ERROR_CHECKING
-    if (!result_num)
+       || !result_num
+#endif /* #if ERROR_CHECKING */
+       )
     {
       WRITE_OUTPUT(out_num_dependencies, num_dependencies);
       return null_allocation_dependency;
     }
-#endif /* #if ERROR_CHECKING */
   }
 
   /* ---------------------------------------------------------------- */
@@ -2924,32 +2924,17 @@ allocation_dependency_t untrack_dependency_key(memory_tracker_t *tracker, alloca
   return first_dependency;
 }
 
-/* TODO: int * and size_t * */
 int tracked_dependency_key(const memory_tracker_t *tracker, allocation_type_t parent_type, int parent_index, int *out_dependency_indices, size_t dependency_indices_num_max, size_t *out_num_dependencies)
 {
   size_t  num_dependencies;
   int    *indices;
   size_t  indices_num_max;
 
-  int         index;
-  const void *value;
-  const allocation_dependency_t *
-    const     dependency = (const void * const) &value;
+  int     index;
 
   const lookup_t *lookup;
 
   allocation_dependency_t key;
-
-#if sizeof(int) > sizeof(size_t)
-#  error "tracked_dependency_key: Requires sizeof(int) <= sizeof(size_t)!"
-#endif
-#if ERROR_CHECKING
-  if (sizeof(int) > sizeof(size_t))
-  {
-    bug("tracked_dependency_key: line #" CURRENT_LINE_STR ": sizeof(int) > sizeof(size_t)!\n");
-    return -255;
-  }
-#endif /* #if ERROR_CHECKING */
 
 #if ERROR_CHECKING
   if (!tracker)
@@ -2984,8 +2969,9 @@ int tracked_dependency_key(const memory_tracker_t *tracker, allocation_type_t pa
   }
 
   num_dependencies =
-    lookup_retrieve_multiple
+    lookup_retrieve_multiple_from_int
       ( lookup
+      , NULL
       , (void *) &key
 
       , cmp_allocation_dependency_key
