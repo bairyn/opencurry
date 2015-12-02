@@ -70,13 +70,14 @@ unit_test_t memory_tracking_test =
   , "Testing memory tracking."
   };
 
-unit_test_result_t lookup_memory_management_test_run(unit_test_context_t *context)
+unit_test_result_t memory_tracking_test_run(unit_test_context_t *context)
 {
   unit_test_result_t result = assert_success(context);
 
+  memory_tracker_t  memory_tracker;
   memory_tracker_t *tracker;
 
-  tracker = memory_tracker_init(tracker, NULL, NULL);
+  tracker = memory_tracker_init(&memory_tracker, NULL, NULL);
 
   ENCLOSE()
   {

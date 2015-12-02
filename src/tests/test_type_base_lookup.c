@@ -95,7 +95,7 @@ unit_test_result_t test_type_base_lookup_run(unit_test_context_t *context)
   lookup_free_buffers(lookup, NULL)
 
 #define LOOKUP_INSERT(lookup, val, add_when_exists, cmp, out_is_duplicate) \
-  lookup_minsert(lookup, val, add_when_exists, cmp, NULL, out_is_duplicate)
+  lookup_insert(lookup, val, add_when_exists, cmp, NULL, out_is_duplicate)
 
 #define LOOKUP_MINSERT(lookup, val, add_when_exists, cmp, out_is_duplicate) \
   lookup_minsert(lookup, val, add_when_exists, cmp, NULL, NULL, out_is_duplicate)
@@ -1956,7 +1956,7 @@ unit_test_t lookup_accessing_test =
   , "Tests for retrieval, iteration, and traversal."
   };
 
-unit_test_result_t lookup_minsert_test_run(unit_test_context_t *context)
+unit_test_result_t lookup_accessing_test_run(unit_test_context_t *context)
 {
   unit_test_result_t result = assert_success(context);
 
