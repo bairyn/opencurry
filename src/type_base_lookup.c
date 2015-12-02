@@ -3657,6 +3657,11 @@ lookup_t *lookup_delete
         )
         return NULL;
 
+      if (!begin_parent && begin)
+      {
+        begin_parent = node;
+      }
+
       /* 3) Get begin_rightmost node.                                     */
       if (begin_parent != node)
         if (!(lookup_max(lookup, begin, &begin_rightmost)))
