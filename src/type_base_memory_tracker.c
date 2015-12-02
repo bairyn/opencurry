@@ -95,6 +95,11 @@ static int compare_allocation_dependency_key(void *context, const allocation_dep
   return compare_size(compare_size_context(), &check->parent, &baseline->parent);
 }
 
+static int compare_allocation_dependency_value(void *context, const allocation_dependency_t *check, const allocation_dependency_t *baseline)
+{
+  return compare_size(compare_size_context(), &check->dependent, &baseline->dependent);
+}
+
 const callback_compare_t cmp_byte_allocation =
   { callback_compare_type
 
@@ -127,6 +132,13 @@ const callback_compare_t cmp_allocation_dependency_key =
   { callback_compare_type
 
   , /* comparer         */ (comparer_t) compare_allocation_dependency_key
+  , /* comparer_context */ NULL
+  };
+
+const callback_compare_t cmp_allocation_dependency_value =
+  { callback_compare_type
+
+  , /* comparer         */ (comparer_t) compare_allocation_dependency_value
   , /* comparer_context */ NULL
   };
 
@@ -185,7 +197,17 @@ allocation_dependency_t allocation_dependency_key(size_t parent)
   allocation_dependency_t dependency;
 
   dependency.parent    = parent;
-  dependency.dependent = 0;
+  dependency.dependent = 1;
+
+  return dependency;
+}
+
+allocation_dependency_t allocation_dependency_value(size_t dependent)
+{
+  allocation_dependency_t dependency;
+
+  dependency.parent    = 1;
+  dependency.dependent = dependent;
 
   return dependency;
 }
@@ -219,7 +241,22 @@ allocation_dependency_t allocation_depends_key(allocation_type_t parent_type, in
     return null_allocation_dependency;
 
   dependency.parent    = ALLOC_DEP_REF((size_t) parent_type,    (size_t) parent_index);
-  dependency.dependent = 0;
+  dependency.dependent = 1;
+
+  return dependency;
+}
+
+allocation_dependency_t allocation_depends_value(allocation_type_t dependent_type, int dependent_index)
+{
+  allocation_dependency_t dependency;
+
+  if (  dependent_type  < 0 || dependent_type >= a_t_end
+     || dependent_index < 0
+     )
+    return null_allocation_dependency;
+
+  dependency.parent    = 1;
+  dependency.dependent = ALLOC_DEP_REF((size_t) dependent_type, (size_t) dependent_index);
 
   return dependency;
 }
@@ -1302,7 +1339,7 @@ size_t free_byte_allocation_dependencies(memory_tracker_t *tracker, byte_allocat
   while((value = lookup_retrieve(lookup, &key, cmp_allocation_dependency_key)))
   {
     lookup =
-      lookup_mdelete(lookup, value, LOOKUP_UNLIMITED, cmp_allocation_dependency_key, manager, &result_num);
+      lookup_mdelete(lookup, value, LOOKUP_UNLIMITED, cmp_allocation_dependency, manager, &result_num);
     if (!lookup)
       return num_freed;
 #if ERROR_CHECKING
@@ -1610,7 +1647,7 @@ size_t free_tval_allocation_dependencies(memory_tracker_t *tracker, tval_allocat
   while((value = lookup_retrieve(lookup, &key, cmp_allocation_dependency_key)))
   {
     lookup =
-      lookup_mdelete(lookup, value, LOOKUP_UNLIMITED, cmp_allocation_dependency_key, manager, &result_num);
+      lookup_mdelete(lookup, value, LOOKUP_UNLIMITED, cmp_allocation_dependency, manager, &result_num);
     if (!lookup)
       return num_freed;
 #if ERROR_CHECKING
@@ -1918,7 +1955,7 @@ size_t free_manual_allocation_dependencies(memory_tracker_t *tracker, manual_all
   while((value = lookup_retrieve(lookup, &key, cmp_allocation_dependency_key)))
   {
     lookup =
-      lookup_mdelete(lookup, value, LOOKUP_UNLIMITED, cmp_allocation_dependency_key, manager, &result_num);
+      lookup_mdelete(lookup, value, LOOKUP_UNLIMITED, cmp_allocation_dependency, manager, &result_num);
     if (!lookup)
       return num_freed;
 #if ERROR_CHECKING
@@ -2801,7 +2838,7 @@ size_t free_dependency(memory_tracker_t *tracker, allocation_dependency_t depend
   while((value = lookup_retrieve(lookup, &key, cmp_allocation_dependency_key)))
   {
     lookup =
-      lookup_mdelete(lookup, value, LOOKUP_UNLIMITED, cmp_allocation_dependency_key, manager, &result_num);
+      lookup_mdelete(lookup, value, LOOKUP_UNLIMITED, cmp_allocation_dependency, manager, &result_num);
     if (!lookup)
       return num_freed;
 #if ERROR_CHECKING
@@ -2899,7 +2936,7 @@ allocation_dependency_t untrack_dependency_key(memory_tracker_t *tracker, alloca
     /* ---------------------------------------------------------------- */
 
     lookup =
-      lookup_mdelete(lookup, value, LOOKUP_UNLIMITED, cmp_allocation_dependency_key, manager, &result_num);
+      lookup_mdelete(lookup, value, LOOKUP_UNLIMITED, cmp_allocation_dependency, manager, &result_num);
     if (
           !lookup
 #if ERROR_CHECKING
@@ -3034,7 +3071,7 @@ size_t free_dependency_key(memory_tracker_t *tracker, allocation_type_t parent_t
   while((value = lookup_retrieve(lookup, &key, cmp_allocation_dependency_key)))
   {
     lookup =
-      lookup_mdelete(lookup, value, LOOKUP_UNLIMITED, cmp_allocation_dependency_key, manager, &result_num);
+      lookup_mdelete(lookup, value, LOOKUP_UNLIMITED, cmp_allocation_dependency, manager, &result_num);
     if (!lookup)
       return num_freed;
 #if ERROR_CHECKING
@@ -3086,8 +3123,174 @@ size_t free_depends(memory_tracker_t *tracker, allocation_type_t parent_type, in
 }
 
 
-/* TODO */
-int dependency_replace_allocation(memory_tracker_t *tracker, allocation_type_t src_type, int src_index, allocation_type_t dest_type, int dest_index);
+/* Returns number of dependency replacements >=0 performed on success. */
+/* Performs no tracking or untracking.                                 */
+/* Both "src" and "dest" should exist for successful replacement.      */
+int dependency_replace_allocation(memory_tracker_t *tracker, allocation_type_t src_type, int src_index, allocation_type_t dest_type, int dest_index)
+{
+  size_t num_replacements;
+
+  lookup_t               *lookup;
+  const memory_manager_t *manager;
+
+  size_t src_ref;
+
+  const allocation_dependency_t *value;
+        allocation_dependency_t  key;
+        allocation_dependency_t  replacement_value;
+
+  size_t result_num;
+
+#if ERROR_CHECKING
+  if (!tracker)
+    return -32 - 7;
+#endif /* #if ERROR_CHECKING */
+
+  lookup = tracker->dependency_graph;
+  if (!lookup)
+    return -32 - 4;
+
+  if (!tracker_allocation_ccontainer(tracker, src_type,  (const int *) &src_index) )
+    return -32 - 2;
+  if (!tracker_allocation_ccontainer(tracker, dest_type, (const int *) &dest_index))
+    return -32 - 1;
+
+  manager = MEMORY_TRACKER_CMANAGER(tracker);
+
+  src_ref = ALLOC_DEP_REF((size_t) src_type, (size_t) src_index);
+
+  /* ---------------------------------------------------------------- */
+
+  if
+    (  src_type  == dest_type
+    && src_index == dest_index
+    )
+  {
+    return 0;
+  }
+
+  num_replacements = 0;
+
+  /* ---------------------------------------------------------------- */
+  /* First, update all dependencies with "parent" as src.             */
+
+  key = allocation_dependency_key(src_ref);
+  if (is_allocation_dependency_null(key))
+    return -32 - 3;
+
+  while((value = lookup_retrieve(lookup, &key, cmp_allocation_dependency_key)))
+  {
+    ++num_replacements;
+
+    /* ---------------------------------------------------------------- */
+
+    /* Set replacement value. */
+    replacement_value = allocation_dependency(src_ref, value->dependent);
+
+    /* Remove old dependency. */
+    lookup =
+      lookup_mdelete(lookup, value, LOOKUP_UNLIMITED, cmp_allocation_dependency, manager, &result_num);
+
+    if (
+          !lookup
+#if ERROR_CHECKING
+       || !result_num
+#endif /* #if ERROR_CHECKING */
+       )
+    {
+      int error_code = min_int(-128, -128 - 2 * num_replacements);
+      free_allocation(tracker, src_type,  src_index);
+      free_allocation(tracker, dest_type, dest_index);
+      free_allocation(tracker, GET_ALLOC_DEP_TYPE(replacement_value.dependent), GET_ALLOC_DEP_INDEX(replacement_value.dependent));
+      return error_code;
+    }
+
+    /* Insert new dependency. */
+    lookup =
+      lookup_minsert
+        ( lookup
+        , &replacement_value
+        , LOOKUP_NO_ADD_DUPLICATES
+
+        , cmp_allocation_dependency
+
+        , manager
+
+        , NULL
+        , NULL
+        );
+    if (!lookup)
+    {
+      int error_code = min_int(-128, -128 - 2 * num_replacements - 1);
+      free_allocation(tracker, src_type,  src_index);
+      free_allocation(tracker, dest_type, dest_index);
+      free_allocation(tracker, GET_ALLOC_DEP_TYPE(replacement_value.dependent), GET_ALLOC_DEP_INDEX(replacement_value.dependent));
+      return error_code;
+    }
+  }
+
+  /* ---------------------------------------------------------------- */
+  /* Second, update all dependencies with "dependent" as src.         */
+
+  key = allocation_dependency_value(src_ref);
+  if (is_allocation_dependency_null(key))
+    return -32 - 4;
+
+  while((value = lookup_get(lookup, &key, cmp_allocation_dependency_value)))
+  {
+    ++num_replacements;
+
+    /* ---------------------------------------------------------------- */
+
+    /* Set replacement value. */
+    replacement_value = allocation_dependency(value->parent, src_ref);
+
+    /* Remove old dependency. */
+    lookup =
+      lookup_mdelete(lookup, value, LOOKUP_UNLIMITED, cmp_allocation_dependency, manager, &result_num);
+
+    if (
+          !lookup
+#if ERROR_CHECKING
+       || !result_num
+#endif /* #if ERROR_CHECKING */
+       )
+    {
+      int error_code = min_int(-128 - 64, -128 - 64 - 2 * num_replacements);
+      free_allocation(tracker, src_type,  src_index);
+      free_allocation(tracker, dest_type, dest_index);
+      free_allocation(tracker, GET_ALLOC_DEP_TYPE(replacement_value.parent), GET_ALLOC_DEP_INDEX(replacement_value.parent));
+      return error_code;
+    }
+
+    /* Insert new dependency. */
+    lookup =
+      lookup_minsert
+        ( lookup
+        , &replacement_value
+        , LOOKUP_NO_ADD_DUPLICATES
+
+        , cmp_allocation_dependency
+
+        , manager
+
+        , NULL
+        , NULL
+        );
+    if (!lookup)
+    {
+      int error_code = min_int(-128 - 64, -128 - 64 - 2 * num_replacements - 1);
+      free_allocation(tracker, src_type,  src_index);
+      free_allocation(tracker, dest_type, dest_index);
+      free_allocation(tracker, GET_ALLOC_DEP_TYPE(replacement_value.parent), GET_ALLOC_DEP_INDEX(replacement_value.parent));
+      return error_code;
+    }
+  }
+
+  /* ---------------------------------------------------------------- */
+
+  return (int) num_replacements;
+}
 
 /* ---------------------------------------------------------------- */
 
@@ -3680,4 +3883,64 @@ int tracked_dependency_key_size(const memory_tracker_t *tracker, allocation_type
     return UNTRACKED;
 
   return *indices;
+}
+
+/* ---------------------------------------------------------------- */
+/* Utilities.                                                       */
+
+/* Obtain the memory tracker's container associated with the */
+/* allocation type.                                          */
+/*                                                           */
+/* Optionally verifies an index when provided is valid,      */
+/* in-bounds and in use; returning NULL when not.            */
+const lookup_t *tracker_allocation_ccontainer(const memory_tracker_t *tracker, allocation_type_t type, const int *index)
+{
+  const lookup_t *lookup;
+
+#if ERROR_CHECKING
+  if (!tracker)
+    return NULL;
+#endif /* #if ERROR_CHECKING */
+
+  if (type < 0 || type >= a_t_end)
+    return NULL;
+
+  switch (type)
+  {
+    default:
+    {
+      return NULL;
+    }; break;
+
+    case a_t_byte:
+    {
+      lookup = tracker->byte_allocations;
+    }; break;
+
+    case a_t_tval:
+    {
+      lookup = tracker->tval_allocations;
+    }; break;
+
+    case a_t_manual:
+    {
+      lookup = tracker->manual_allocations;
+    }; break;
+  }
+
+  if (index)
+  {
+    int alloc_index = *index;
+
+    if (alloc_index < 0)
+      return NULL;
+
+    if (alloc_index >= LOOKUP_CAPACITY(lookup))
+      return NULL;
+
+    if (!LOOKUP_GET_VALUE_IN_USE_BIT(lookup, (size_t) alloc_index))
+      return NULL;
+  }
+
+  return lookup;
 }

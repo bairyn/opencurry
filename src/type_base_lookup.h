@@ -934,6 +934,23 @@ lookup_t *lookup_delete
 
 /* ---------------------------------------------------------------- */
 
+const void *lookup_get_from
+  ( const lookup_t     *lookup
+  , const bnode_t      *root
+  , const void         *val
+
+  , callback_compare_t  cmp
+  );
+
+const void *lookup_get
+  ( const lookup_t     *lookup
+  , const void         *val
+
+  , callback_compare_t  cmp
+  );
+
+/* ---------------------------------------------------------------- */
+
 lookup_t *lookup_minsert
   ( lookup_t               *lookup
   , const void             *val

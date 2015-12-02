@@ -4977,6 +4977,125 @@ void *lookup_iterate
 
 /* ---------------------------------------------------------------- */
 
+/* Out-of-order retrieval. */
+const void *lookup_get_from
+  ( const lookup_t     *lookup
+  , const bnode_t      *root
+  , const void         *val
+
+  , callback_compare_t  cmp
+  )
+{
+  int ordering;
+
+  const bnode_t *node;
+  const void    *node_val;
+
+#if ERROR_CHECKING
+  if (!lookup)
+    return NULL;
+#endif /* #if ERROR_CHECKING  */
+
+  /* Is a value provided? */
+  if (!val)
+    return NULL;
+
+  if (LOOKUP_EMPTY(lookup))
+    return NULL;
+
+  LOOKUP_OPTIONAL_CNODE(lookup, root);
+
+  /* ---------------------------------------------------------------- */
+
+  node = root;
+
+  /* val <?= node value */
+  node_val = LOOKUP_NODE_CVALUE(lookup, node);
+  ordering = call_callback_compare(cmp, val, node_val);
+
+#if ERROR_CHECKING
+  if (IS_ORDERING_ERROR(ordering))
+  {
+    return NULL;
+  }
+#endif /* #if ERROR_CHECKING  */
+
+  if (ordering == 0)
+    return node_val;
+
+  /* ---------------------------------------------------------------- */
+
+  if      ( BNODE_IS_LEAF(node->left) &&  BNODE_IS_LEAF(node->right))
+  {
+    return NULL;
+  }
+  else if (!BNODE_IS_LEAF(node->left) &&  BNODE_IS_LEAF(node->right))
+  {
+    return
+      lookup_get_from
+        ( lookup
+        , LOOKUP_INDEX_CORDER(lookup, BNODE_GET_REF(node->left))
+        , val
+
+        , cmp
+        );
+  }
+  else if ( BNODE_IS_LEAF(node->left) && !BNODE_IS_LEAF(node->right))
+  {
+    return
+      lookup_get_from
+        ( lookup
+        , LOOKUP_INDEX_CORDER(lookup, BNODE_GET_REF(node->right))
+        , val
+
+        , cmp
+        );
+  }
+  else
+  {
+    const void *value;
+
+    value =
+      lookup_get_from
+        ( lookup
+        , LOOKUP_INDEX_CORDER(lookup, BNODE_GET_REF(node->left))
+        , val
+
+        , cmp
+        );
+    if (value)
+      return value;
+
+    return
+      lookup_get_from
+        ( lookup
+        , LOOKUP_INDEX_CORDER(lookup, BNODE_GET_REF(node->right))
+        , val
+
+        , cmp
+        );
+  }
+}
+
+const void *lookup_get
+  ( const lookup_t     *lookup
+  , const void         *val
+
+  , callback_compare_t  cmp
+  )
+{
+  return
+    lookup_get_from
+      ( lookup
+      , NULL
+      , val
+
+      , cmp
+      );
+}
+
+/* ---------------------------------------------------------------- */
+
 lookup_t *lookup_minsert
   ( lookup_t           *lookup
   , const void         *val

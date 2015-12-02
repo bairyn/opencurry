@@ -130,11 +130,13 @@ int is_allocation_dependency_null(allocation_dependency_t manual_allocation);
 
 manual_allocation_t manual_allocation(size_t (*cleanup)(void *context), void *context);
 
-allocation_dependency_t allocation_dependency    (size_t parent, size_t dependent);
-allocation_dependency_t allocation_dependency_key(size_t parent);
+allocation_dependency_t allocation_dependency      (size_t parent, size_t dependent);
+allocation_dependency_t allocation_dependency_key  (size_t parent);
+allocation_dependency_t allocation_dependency_value(size_t dependent);
 
-allocation_dependency_t allocation_depends    (allocation_type_t parent_type, int parent_index, allocation_type_t dependent_type, int dependent_index);
-allocation_dependency_t allocation_depends_key(allocation_type_t parent_type, int parent_index);
+allocation_dependency_t allocation_depends      (allocation_type_t parent_type,    int parent_index, allocation_type_t dependent_type, int dependent_index);
+allocation_dependency_t allocation_depends_key  (allocation_type_t parent_type,    int parent_index);
+allocation_dependency_t allocation_depends_value(allocation_type_t dependent_type, int dependent_index);
 
 /* ---------------------------------------------------------------- */
 /* Comparers on allocations.                                        */
@@ -145,6 +147,7 @@ extern const callback_compare_t cmp_manual_allocation;
 extern const callback_compare_t cmp_allocation_dependency;
 /* Key-based allocation dependency comparer on "parent". */
 extern const callback_compare_t cmp_allocation_dependency_key;
+extern const callback_compare_t cmp_allocation_dependency_value;
 
 /* ---------------------------------------------------------------- */
 
@@ -368,6 +371,11 @@ size_t track_manual_free(memory_tracker_t *tracker, manual_allocation_t cleanup)
 /* Variants.                                                        */
 
 int tracked_dependency_key_size(const memory_tracker_t *tracker, allocation_type_t parent_type, int parent_index, size_t *out_dependency_indices, size_t dependency_indices_num_max, size_t *out_num_dependencies);
+
+/* ---------------------------------------------------------------- */
+/* Utilities.                                                       */
+
+const lookup_t *tracker_allocation_ccontainer(const memory_tracker_t *tracker, allocation_type_t type, const int *index);
 
 /* ---------------------------------------------------------------- */
 /* Post-dependencies.                                               */
