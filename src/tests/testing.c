@@ -3411,9 +3411,9 @@ unit_test_result_t assert_false_continue(unit_test_context_t *context, const cha
 }
 
 
-unit_test_result_t assert_not_intle(unit_test_context_t *context, const char *err_msg, const char *tag, int check, int baseline)
+unit_test_result_t assert_not_inteq(unit_test_context_t *context, const char *err_msg, const char *tag, int check, int baseline)
 {
-  if (!(check <= baseline))
+  if (!(check == baseline))
   {
     return UNIT_TEST_PASS;
   }
@@ -3428,9 +3428,9 @@ unit_test_result_t assert_not_intle(unit_test_context_t *context, const char *er
   }
 }
 
-unit_test_result_t assert_not_intle_continue(unit_test_context_t *context, const char *err_msg, const char *tag, int check, int baseline)
+unit_test_result_t assert_not_inteq_continue(unit_test_context_t *context, const char *err_msg, const char *tag, int check, int baseline)
 {
-  if (!(check <= baseline))
+  if (!(check == baseline))
   {
     return UNIT_TEST_PASS;
   }
@@ -3445,9 +3445,9 @@ unit_test_result_t assert_not_intle_continue(unit_test_context_t *context, const
   }
 }
 
-unit_test_result_t assert_not_uintle(unit_test_context_t *context, const char *err_msg, const char *tag, unsigned int check, unsigned int baseline)
+unit_test_result_t assert_not_uinteq(unit_test_context_t *context, const char *err_msg, const char *tag, unsigned int check, unsigned int baseline)
 {
-  if (!(check <= baseline))
+  if (!(check == baseline))
   {
     return UNIT_TEST_PASS;
   }
@@ -3462,9 +3462,9 @@ unit_test_result_t assert_not_uintle(unit_test_context_t *context, const char *e
   }
 }
 
-unit_test_result_t assert_not_uintle_continue(unit_test_context_t *context, const char *err_msg, const char *tag, unsigned int check, unsigned int baseline)
+unit_test_result_t assert_not_uinteq_continue(unit_test_context_t *context, const char *err_msg, const char *tag, unsigned int check, unsigned int baseline)
 {
-  if (!(check <= baseline))
+  if (!(check == baseline))
   {
     return UNIT_TEST_PASS;
   }
@@ -3479,9 +3479,9 @@ unit_test_result_t assert_not_uintle_continue(unit_test_context_t *context, cons
   }
 }
 
-unit_test_result_t assert_not_ulongle(unit_test_context_t *context, const char *err_msg, const char *tag, unsigned long check, unsigned long baseline)
+unit_test_result_t assert_not_ulongeq(unit_test_context_t *context, const char *err_msg, const char *tag, unsigned long check, unsigned long baseline)
 {
-  if (!(check <= baseline))
+  if (!(check == baseline))
   {
     return UNIT_TEST_PASS;
   }
@@ -3496,9 +3496,9 @@ unit_test_result_t assert_not_ulongle(unit_test_context_t *context, const char *
   }
 }
 
-unit_test_result_t assert_not_ulongle_continue(unit_test_context_t *context, const char *err_msg, const char *tag, unsigned long check, unsigned long baseline)
+unit_test_result_t assert_not_ulongeq_continue(unit_test_context_t *context, const char *err_msg, const char *tag, unsigned long check, unsigned long baseline)
 {
-  if (!(check <= baseline))
+  if (!(check == baseline))
   {
     return UNIT_TEST_PASS;
   }
@@ -3513,9 +3513,9 @@ unit_test_result_t assert_not_ulongle_continue(unit_test_context_t *context, con
   }
 }
 
-unit_test_result_t assert_not_sizele(unit_test_context_t *context, const char *err_msg, const char *tag, size_t check, size_t baseline)
+unit_test_result_t assert_not_sizeeq(unit_test_context_t *context, const char *err_msg, const char *tag, size_t check, size_t baseline)
 {
-  if (!(check <= baseline))
+  if (!(check == baseline))
   {
     return UNIT_TEST_PASS;
   }
@@ -3530,9 +3530,9 @@ unit_test_result_t assert_not_sizele(unit_test_context_t *context, const char *e
   }
 }
 
-unit_test_result_t assert_not_sizele_continue(unit_test_context_t *context, const char *err_msg, const char *tag, size_t check, size_t baseline)
+unit_test_result_t assert_not_sizeeq_continue(unit_test_context_t *context, const char *err_msg, const char *tag, size_t check, size_t baseline)
 {
-  if (!(check <= baseline))
+  if (!(check == baseline))
   {
     return UNIT_TEST_PASS;
   }
@@ -3547,9 +3547,9 @@ unit_test_result_t assert_not_sizele_continue(unit_test_context_t *context, cons
   }
 }
 
-unit_test_result_t assert_not_ptrdiffle(unit_test_context_t *context, const char *err_msg, const char *tag, ptrdiff_t check, ptrdiff_t baseline)
+unit_test_result_t assert_not_ptrdiffeq(unit_test_context_t *context, const char *err_msg, const char *tag, ptrdiff_t check, ptrdiff_t baseline)
 {
-  if (!(check <= baseline))
+  if (!(check == baseline))
   {
     return UNIT_TEST_PASS;
   }
@@ -3564,9 +3564,9 @@ unit_test_result_t assert_not_ptrdiffle(unit_test_context_t *context, const char
   }
 }
 
-unit_test_result_t assert_not_ptrdiffle_continue(unit_test_context_t *context, const char *err_msg, const char *tag, ptrdiff_t check, ptrdiff_t baseline)
+unit_test_result_t assert_not_ptrdiffeq_continue(unit_test_context_t *context, const char *err_msg, const char *tag, ptrdiff_t check, ptrdiff_t baseline)
 {
-  if (!(check <= baseline))
+  if (!(check == baseline))
   {
     return UNIT_TEST_PASS;
   }
@@ -3581,9 +3581,9 @@ unit_test_result_t assert_not_ptrdiffle_continue(unit_test_context_t *context, c
   }
 }
 
-unit_test_result_t assert_not_objple(unit_test_context_t *context, const char *err_msg, const char *tag, const void *check, const void *baseline)
+unit_test_result_t assert_not_objpeq(unit_test_context_t *context, const char *err_msg, const char *tag, const void *check, const void *baseline)
 {
-  if (!(check <= baseline))
+  if (!(check == baseline))
   {
     return UNIT_TEST_PASS;
   }
@@ -3598,9 +3598,9 @@ unit_test_result_t assert_not_objple(unit_test_context_t *context, const char *e
   }
 }
 
-unit_test_result_t assert_not_objple_continue(unit_test_context_t *context, const char *err_msg, const char *tag, const void *check, const void *baseline)
+unit_test_result_t assert_not_objpeq_continue(unit_test_context_t *context, const char *err_msg, const char *tag, const void *check, const void *baseline)
 {
-  if (!(check <= baseline))
+  if (!(check == baseline))
   {
     return UNIT_TEST_PASS;
   }
@@ -3615,9 +3615,9 @@ unit_test_result_t assert_not_objple_continue(unit_test_context_t *context, cons
   }
 }
 
-unit_test_result_t assert_not_funple(unit_test_context_t *context, const char *err_msg, const char *tag, tests_funp_t check, tests_funp_t baseline)
+unit_test_result_t assert_not_funpeq(unit_test_context_t *context, const char *err_msg, const char *tag, tests_funp_t check, tests_funp_t baseline)
 {
-  if (!(check <= baseline))
+  if (!(check == baseline))
   {
     return UNIT_TEST_PASS;
   }
@@ -3632,9 +3632,9 @@ unit_test_result_t assert_not_funple(unit_test_context_t *context, const char *e
   }
 }
 
-unit_test_result_t assert_not_funple_continue(unit_test_context_t *context, const char *err_msg, const char *tag, tests_funp_t check, tests_funp_t baseline)
+unit_test_result_t assert_not_funpeq_continue(unit_test_context_t *context, const char *err_msg, const char *tag, tests_funp_t check, tests_funp_t baseline)
 {
-  if (!(check <= baseline))
+  if (!(check == baseline))
   {
     return UNIT_TEST_PASS;
   }
