@@ -1239,9 +1239,9 @@ lookup_t *lookup_shrink
   else
   {
 #if ERROR_CHECKING
-    if (lookup->values)
+    if (!lookup->values)
       return NULL;
-    if (lookup->order)
+    if (!lookup->order)
       return NULL;
 #endif /* #if ERROR_CHECKING  */
 
