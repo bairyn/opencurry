@@ -1653,16 +1653,14 @@ int mem_free_valueless_or_inside_value_allocation
      */
 
     memory_tracker_t *valueless_memory_tracker;
-    
+
     valueless_memory_tracker = type_mem(type, NULL);
     if (valueless_memory_tracker)
     {
       int    success_code;
       size_t num_freed;
 
-      /* TODO use "out_err_buf" once snprintf_prepend is implemented. */
-      num_freed = track_mfree(valueless_memory_tracker, val, NULL);
-
+      num_freed = track_mfree(valueless_memory_tracker, val);
       if (num_freed <= 0)
       {
         /* "memory_tracker_free_allocation" failed. */
@@ -2098,18 +2096,18 @@ int type_has_standard_cmp(const type_t *self, const tval *check, const tval *bas
  * >
  * > const type_t intpair_type_def =
  * >   { type_type
- * > 
+ * >
  * >     /-* @: Required.           *-/
- * > 
+ * >
  * >   , /-* memory                 *-/ MEMORY_TRACKER_DEFAULTS
  * >   , /-* is_self_mutable        *-/ NULL
  * >   , /-* @indirect              *-/ intpair_type
- * > 
+ * >
  * >   , /-* self                   *-/ NULL
  * >   , /-* container              *-/ NULL
- * > 
+ * >
  * >   , /-* typed                  *-/ NULL
- * > 
+ * >
  * >   , /-* @name                  *-/ intpair_type_name
  * >   , /-* info                   *-/ NULL
  * >   , /-* @size                  *-/ intpair_type_size
@@ -2117,7 +2115,7 @@ int type_has_standard_cmp(const type_t *self, const tval *check, const tval *bas
  * >   , /-* is_mutable             *-/ NULL
  * >   , /-* is_subtype             *-/ NULL
  * >   , /-* is_supertype           *-/ NULL
- * > 
+ * >
  * >   , /-* cons_type              *-/ NULL
  * >   , /-* init                   *-/ NULL
  * >   , /-* free                   *-/ NULL
@@ -2133,7 +2131,7 @@ int type_has_standard_cmp(const type_t *self, const tval *check, const tval *bas
  * >   , /-* user                   *-/ NULL
  * >   , /-* cuser                  *-/ NULL
  * >   , /-* cmp                    *-/ NULL
- * > 
+ * >
  * >   , /-* parity                 *-/ ""
  * >   };
  * >
