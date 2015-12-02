@@ -579,6 +579,9 @@ unit_test_result_t assert_not_memeq_continue     (ASSERT_PARAMS, void         *c
   else                                   \
     do {} while(0)
 
+#define COMPOUND_SKIP_CONT() \
+  COMPOUND(UNIT_TEST_SKIP_CONTINUE)
+
 /* Run the assertion as a child test. */
 #define COMPOUND_TEST(name, description, assertion) \
   COMPOUND_TEST_CONTEXT(context, name, description, assertion)

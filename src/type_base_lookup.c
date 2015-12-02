@@ -1367,10 +1367,10 @@ size_t lookup_auto_expand_threshold(void *context, size_t capacity)
   { return LOOKUP_AUTO_EXPAND_THRESHOLD(capacity); }
 
 size_t lookup_auto_expand_capacity (void *context, size_t capacity)
-  { return LOOKUP_AUTO_SHRINK_CAPACITY (capacity); }
+  { return LOOKUP_AUTO_EXPAND_CAPACITY (capacity); }
 
 size_t lookup_auto_shrink_threshold(void *context, size_t capacity)
-  { return LOOKUP_AUTO_EXPAND_THRESHOLD(capacity); }
+  { return LOOKUP_AUTO_SHRINK_THRESHOLD(capacity); }
 
 size_t lookup_auto_shrink_capacity (void *context, size_t capacity)
   { return LOOKUP_AUTO_SHRINK_CAPACITY (capacity); }
@@ -1498,14 +1498,10 @@ lookup_t *lookup_auto_resize_controlled
     new_capacity  = min_capacity_val;
   }
 
-  /* Assume "len" is at least minimum capacity. */
-  if (capacity <= min_capacity_val)
-    len = min_capacity_val;
-
   /* 2) Maximum capacity => expand. */
 
   /* Are we at max capacity? */
-  if (len >= capacity)
+  if (len >= new_capacity)
   {
     expanding     = 1;
     shrinking     = 0;
@@ -1514,6 +1510,10 @@ lookup_t *lookup_auto_resize_controlled
   }
   else
   {
+    /* Assume "len" is at least minimum capacity. */
+    if (capacity <= min_capacity_val)
+      len = min_capacity_val;
+
     /* 3) Expanding and shrinking thresholds. */
 
     /* If we're recycling,

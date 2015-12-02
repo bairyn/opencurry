@@ -1962,7 +1962,7 @@ unit_test_result_t lookup_accessing_test_run(unit_test_context_t *context)
 
   ENCLOSE()
   {
-    COMPOUND(UNIT_TEST_SKIP);
+    COMPOUND_SKIP_CONT();
   }
 
   return result;
