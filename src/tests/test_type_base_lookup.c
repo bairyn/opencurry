@@ -1549,6 +1549,63 @@ unit_test_result_t lookup_insert_delete_test_run(unit_test_context_t *context)
     ASSERT1( false,  lookup_max_capacity(lookup) );
 
     retrieve = 9; ASSERT2( inteq, val_or_m1(lookup_retrieve(lookup, ret, cmp)), -1 );
+
+    /* Delete root. */
+    value    = *(const int *) LOOKUP_NODE_CVALUE(lookup, LOOKUP_ROOT_CNODE(lookup));
+    retrieve = value;
+
+    ASSERT2( inteq, val_or_m1(lookup_retrieve(lookup, ret, cmp)), value );
+
+    ++num_deletions;
+    ASSERT2( objpeq, LOOKUP_DELETE(lookup, val,  cmp, nd), lookup_val_ref );
+    ASSERT2( inteq,  num_deleted, 1 );
+    ASSERT2( inteq,  CHECKED_LOOKUP_INT_LEN(lookup), 9 + LOOKUP_INSERT_TESTS_NUM_ADDITIONAL_VALUES - num_deletions );
+    ASSERT1( false,  lookup_max_capacity(lookup) );
+
+    ASSERT2( inteq, val_or_m1(lookup_retrieve(lookup, ret, cmp)), -1 );
+
+
+    /* Delete 10. */
+    retrieve = 10; ASSERT2( inteq, val_or_m1(lookup_retrieve(lookup, ret, cmp)), 10 );
+
+    value = 10;
+    ++num_deletions;
+    ASSERT2( objpeq, LOOKUP_DELETE(lookup, val,  cmp, nd), lookup_val_ref );
+    ASSERT2( inteq,  num_deleted, 1 );
+    ASSERT2( inteq,  CHECKED_LOOKUP_INT_LEN(lookup), 9 + LOOKUP_INSERT_TESTS_NUM_ADDITIONAL_VALUES - num_deletions );
+    ASSERT1( false,  lookup_max_capacity(lookup) );
+
+    retrieve = 10; ASSERT2( inteq, val_or_m1(lookup_retrieve(lookup, ret, cmp)), -1 );
+
+
+    /* Delete root. */
+    value    = *(const int *) LOOKUP_NODE_CVALUE(lookup, LOOKUP_ROOT_CNODE(lookup));
+    retrieve = value;
+
+    ASSERT2( inteq, val_or_m1(lookup_retrieve(lookup, ret, cmp)), value );
+
+    ++num_deletions;
+    ASSERT2( objpeq, LOOKUP_DELETE(lookup, val,  cmp, nd), lookup_val_ref );
+    ASSERT2( inteq,  num_deleted, 1 );
+    ASSERT2( inteq,  CHECKED_LOOKUP_INT_LEN(lookup), 9 + LOOKUP_INSERT_TESTS_NUM_ADDITIONAL_VALUES - num_deletions );
+    ASSERT1( false,  lookup_max_capacity(lookup) );
+
+    ASSERT2( inteq, val_or_m1(lookup_retrieve(lookup, ret, cmp)), -1 );
+
+
+    /* Delete root. */
+    value    = *(const int *) LOOKUP_NODE_CVALUE(lookup, LOOKUP_ROOT_CNODE(lookup));
+    retrieve = value;
+
+    ASSERT2( inteq, val_or_m1(lookup_retrieve(lookup, ret, cmp)), value );
+
+    ++num_deletions;
+    ASSERT2( objpeq, LOOKUP_DELETE(lookup, val,  cmp, nd), lookup_val_ref );
+    ASSERT2( inteq,  num_deleted, 1 );
+    ASSERT2( inteq,  CHECKED_LOOKUP_INT_LEN(lookup), 9 + LOOKUP_INSERT_TESTS_NUM_ADDITIONAL_VALUES - num_deletions );
+    ASSERT1( false,  lookup_max_capacity(lookup) );
+
+    ASSERT2( inteq, val_or_m1(lookup_retrieve(lookup, ret, cmp)), -1 );
   }
 
   LOOKUP_DEINIT(lookup);
