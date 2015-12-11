@@ -3300,12 +3300,16 @@ lookup_t *lookup_delete
   size_t   num_deleted;
   bnode_t *next_root;
 
+  const bnode_t *lookup_root;
+
   LOOKUP_FIND_VARIABLE_DECLARATIONS;
 
 #if ERROR_CHECKING
   if (!lookup)
     return NULL;
 #endif /* #if ERROR_CHECKING  */
+
+  lookup_root = LOOKUP_ROOT_CNODE(lookup);
 
   if (!val)
   {
@@ -3410,41 +3414,89 @@ lookup_t *lookup_delete
     }
     else if (!BNODE_IS_LEAF(node->left) &&  BNODE_IS_LEAF(node->right))
     {
-      if (parent_link)
-        BNODE_LINK_SET_REF(parent_link, BNODE_GET_REF(node->left));
+      if (node != lookup_root)
+      {
+        if (parent_link)
+          BNODE_LINK_SET_REF(parent_link, BNODE_GET_REF(node->left));
 
-      LOOKUP_SET_ORDER_IN_USE_BIT(lookup, node - lookup->order,         0);
-      LOOKUP_SET_VALUE_IN_USE_BIT(lookup, BNODE_GET_VALUE(node->value), 0);
-      --lookup->len;
+        LOOKUP_SET_ORDER_IN_USE_BIT(lookup, node - lookup->order,         0);
+        LOOKUP_SET_VALUE_IN_USE_BIT(lookup, BNODE_GET_VALUE(node->value), 0);
+        --lookup->len;
 
-      ++num_deleted;
-      WRITE_OUTPUT(out_num_deleted, num_deleted);
+        ++num_deleted;
+        WRITE_OUTPUT(out_num_deleted, num_deleted);
 
-      /*
-       *   n
-       *  / \
-       * l   r
-       *
-       * l <= n < r
-       *
-       * l may be a duplicate; continue.
-       */
-      continue;
+        /*
+         *   n
+         *  / \
+         * l   r
+         *
+         * l <= n < r
+         *
+         * l may be a duplicate; continue.
+         */
+        continue;
+      }
+      else
+      {
+        bnode_t *child;
+
+        LOOKUP_SET_VALUE_IN_USE_BIT(lookup, BNODE_GET_VALUE(node->value), 0);
+
+        child = LOOKUP_INDEX_ORDER(lookup, BNODE_GET_REF(node->left));
+
+        BNODE_SET_VALUE   (node,         BNODE_GET_VALUE(child->value));
+        BNODE_LINK_SET_REF(&node->left,  BNODE_GET_REF  (child->left));
+        BNODE_LINK_SET_REF(&node->right, BNODE_GET_REF  (child->right));
+
+        LOOKUP_SET_ORDER_IN_USE_BIT(lookup, LOOKUP_GET_NODE_INDEX(lookup, child), 0);
+        --lookup->len;
+
+        ++num_deleted;
+        WRITE_OUTPUT(out_num_deleted, num_deleted);
+
+        /* l may be a duplicate; continue. */
+        continue;
+      }
     }
     else if ( BNODE_IS_LEAF(node->left) && !BNODE_IS_LEAF(node->right))
     {
-      if (parent_link)
-        BNODE_LINK_SET_REF(parent_link, BNODE_GET_REF(node->right));
+      if (node != lookup_root)
+      {
+        if (parent_link)
+          BNODE_LINK_SET_REF(parent_link, BNODE_GET_REF(node->right));
 
-      LOOKUP_SET_ORDER_IN_USE_BIT(lookup, node - lookup->order,         0);
-      LOOKUP_SET_VALUE_IN_USE_BIT(lookup, BNODE_GET_VALUE(node->value), 0);
+        LOOKUP_SET_ORDER_IN_USE_BIT(lookup, node - lookup->order,         0);
+        LOOKUP_SET_VALUE_IN_USE_BIT(lookup, BNODE_GET_VALUE(node->value), 0);
 
-      --lookup->len;
+        --lookup->len;
 
-      ++num_deleted;
-      WRITE_OUTPUT(out_num_deleted, num_deleted);
+        ++num_deleted;
+        WRITE_OUTPUT(out_num_deleted, num_deleted);
 
-      break;
+        break;
+      }
+      else
+      {
+        bnode_t *child;
+
+        LOOKUP_SET_VALUE_IN_USE_BIT(lookup, BNODE_GET_VALUE(node->value), 0);
+
+        child = LOOKUP_INDEX_ORDER(lookup, BNODE_GET_REF(node->right));
+
+        BNODE_SET_VALUE   (node,         BNODE_GET_VALUE(child->value));
+        BNODE_LINK_SET_REF(&node->left,  BNODE_GET_REF  (child->left));
+        BNODE_LINK_SET_REF(&node->right, BNODE_GET_REF  (child->right));
+
+        LOOKUP_SET_ORDER_IN_USE_BIT(lookup, LOOKUP_GET_NODE_INDEX(lookup, child), 0);
+        --lookup->len;
+
+        ++num_deleted;
+        WRITE_OUTPUT(out_num_deleted, num_deleted);
+
+        /* l may be a duplicate; continue. */
+        continue;
+      }
     }
     else
     {
@@ -3472,8 +3524,8 @@ lookup_t *lookup_delete
 
       /* Relinking. */
       /* 4) end->left              = node->left                                */
-      /* 5) begin_rightmost->right = node->right unless begin_parent == begin. */
-      /* 6) begin_parent->left     = NULL        unless begin_parent == begin. */
+      /* 5) begin_rightmost->right = node->right unless begin_parent == node.  */
+      /* 6) begin_parent->left     = NULL        unless begin_parent == node.  */
       /* 7) parent_link            = begin                                     */
 
       /* Then we can free node.                                                */
@@ -3520,13 +3572,13 @@ lookup_t *lookup_delete
       /* *            begin-> 08                                             * */
       /* *                   /  \                                            * */
       /* *                  /    \                                           * */
-      /* *                08      09 <- begin_rightmost                      * */
+      /* *                08      09                                         * */
       /* *               /          \                                        * */
       /* *              /            \                                       * */
       /* *            08              10                                     * */
       /* *           /                  \                                    * */
       /* *          /                    \                                   * */
-      /* *  end-> 08                      12                                 * */
+      /* *  end-> 08                      12 <- begin_rightmost              * */
       /* *       /                                                           * */
       /* *      /                                                            * */
       /* *    04                                                             * */
@@ -3565,14 +3617,14 @@ lookup_t *lookup_delete
       /* *               p                                                   * */
       /* *               |                                                   * */
       /* *               |                                                   * */
-      /* *              08 <- begin = end = begin_rightmost                  * */
+      /* *              08 <- begin = end                                    * */
       /* *             /  \                                                  * */
       /* *            /    \                                                 * */
       /* *           /      \                                                * */
       /* *         04        12                                              * */
       /* *        /  \         \                                             * */
       /* *       /    \         \                                            * */
-      /* *      03    05         42                                          * */
+      /* *      03    05         42 <- begin_rightmost                       * */
       /* *                                                                   * */
       /* * ----------------------------------------------------------------- * */
 
@@ -3688,7 +3740,14 @@ lookup_t *lookup_delete
       /* Relinking.                                                       */
 
       /* 4) end->left = node->left                                        */
-      BNODE_LINK_SET_REF(&end->left, BNODE_GET_REF(node->left));
+      if (!BNODE_IS_LEAF(node->left))
+      {
+        BNODE_LINK_SET_REF(&end->left, BNODE_GET_REF(node->left));
+      }
+      else
+      {
+        BNODE_LINK_SET_LEAF(&end->left);
+      }
 
       if (begin_parent != node)
       {
@@ -3699,7 +3758,7 @@ lookup_t *lookup_delete
         BNODE_LINK_SET_LEAF(&begin_parent->left);
       }
 
-      /* 7) parent_link            = begin                                */
+      /* 7) parent_link = begin                                           */
       if (parent)
       {
         BNODE_LINK_SET_REF(parent_link, begin - lookup->order);
