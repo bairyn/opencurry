@@ -3740,19 +3740,12 @@ lookup_t *lookup_delete
       /* Relinking.                                                       */
 
       /* 4) end->left = node->left                                        */
-      if (!BNODE_IS_LEAF(node->left))
-      {
-        BNODE_LINK_SET_REF(&end->left, BNODE_GET_REF(node->left));
-      }
-      else
-      {
-        BNODE_LINK_SET_LEAF(&end->left);
-      }
+      BNODE_LINK_SET_REF(&end->left, BNODE_GET_REF(node->left));
 
       if (begin_parent != node)
       {
         /* 5) begin_rightmost->right = node->right */
-        BNODE_LINK_SET_REF(&begin_rightmost->right, node->right);
+        BNODE_LINK_SET_REF(&begin_rightmost->right, BNODE_GET_REF(node->right));
 
         /* 6) begin_parent->left     = NULL        */
         BNODE_LINK_SET_LEAF(&begin_parent->left);
