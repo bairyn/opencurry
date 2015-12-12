@@ -81,9 +81,33 @@ unit_test_result_t memory_tracking_test_run(unit_test_context_t *context)
 
   ENCLOSE()
   {
+    int  *intp;
+    char *buf;
+    static const size_t buf_size = DEFAULT_BUF_SIZE;
+
     ASSERT1( true, IS_TRUE(tracker) );
 
-    COMPOUND_SKIP_CONT();
+    /* ---------------------------------------------------------------- */
+
+    intp = track_mmalloc(tracker, sizeof(*intp), NULL);
+    ASSERT1( true, IS_TRUE(intp) );
+
+    *intp = 42;
+    ASSERT2( inteq, *intp, 42 );
+
+    ASSERT2( inteq, track_mfree(tracker, intp), 2 );
+
+    /* ---------------------------------------------------------------- */
+
+    buf = track_mcalloc(tracker, buf_size, sizeof(char), NULL);
+    ASSERT1( true, IS_TRUE(buf) );
+
+    ASSERT2( sizeeq, strlcpy(buf, "love", sizeof(buf)), 4 );
+    ASSERT3( nstreq, sizeof(buf), buf, "love" );
+
+    ASSERT2( inteq, track_mfree(tracker, buf), 2 );
+
+    /* ---------------------------------------------------------------- */
   }
 
   ENCLOSE()
