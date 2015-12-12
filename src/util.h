@@ -146,6 +146,7 @@ size_t max_size(size_t a, size_t b);
 
 /* TODO: unit tests! */
 #define ARROW_REF(ptr, member)        ( ((ptr)) ? (&(ptr)->member) : (NULL) )
+#define ARROW_DEREF(ptr, member)      ( ((ptr)) ? ( (ptr)->member) : (NULL) )
 #define OFFSET_REF( base, offset)     ((      void *) ( ((base)) ? (((      unsigned char *) (base)) + ((ptrdiff_t) (offset))) : (NULL) ))
 #define OFFSET_CREF(base, offset)     ((const void *) ( ((base)) ? (((const unsigned char *) (base)) + ((ptrdiff_t) (offset))) : (NULL) ))
 #define DEREF_PTR(    ptr)            ( ((ptr)) ? (*(ptr)) : (NULL) )

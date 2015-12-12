@@ -348,7 +348,7 @@ size_t free_allocation_dependencies(memory_tracker_t *tracker, allocation_type_t
       memory_manager_t *memory_tracker_manager (      memory_tracker_t *tracker);
 const memory_manager_t *memory_tracker_cmanager(const memory_tracker_t *tracker);
 
-#define MEMORY_TRACKER_DYNAMIC_CONTAINER(tracker) ((void *) (ARROW_REF((tracker), dynamic_container)))
+#define MEMORY_TRACKER_DYNAMIC_CONTAINER(tracker) ((void *) (ARROW_DEREF((tracker), dynamic_container)))
 void *memory_tracker_dynamic_container (const memory_tracker_t *tracker);
 
 /* ---------------------------------------------------------------- */

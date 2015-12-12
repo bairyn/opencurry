@@ -440,6 +440,8 @@ memory_tracker_t *memory_tracker_init(memory_tracker_t *dest, const memory_manag
       /* Error: failed to allocate memory! */
       return NULL;
     }
+
+    dest->dynamic_container = dest;
   }
   else
   {
@@ -889,19 +891,19 @@ size_t memory_tracker_free_containers(memory_tracker_t *tracker)
           (LOOKUP_NODE_VALUE(lookup, root))
         );
 
-      if      (byte_value == tracker->byte_allocations   && !free_byte_allocations)
+      if      (byte_value == tracker->byte_allocations)
       {
         free_byte_allocations   = byte_value;
       }
-      else if (byte_value == tracker->tval_allocations   && !free_tval_allocations)
+      else if (byte_value == tracker->tval_allocations)
       {
         free_tval_allocations   = byte_value;
       }
-      else if (byte_value == tracker->manual_allocations && !free_manual_allocations)
+      else if (byte_value == tracker->manual_allocations)
       {
         free_manual_allocations = byte_value;
       }
-      else if (byte_value == tracker->dependency_graph   && !free_dependency_graph)
+      else if (byte_value == tracker->dependency_graph)
       {
         free_dependency_graph   = byte_value;
       }

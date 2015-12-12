@@ -81,12 +81,14 @@ unit_test_result_t memory_tracking_test_run(unit_test_context_t *context)
 
   ENCLOSE()
   {
+    ASSERT1( true, IS_TRUE(tracker) );
+
     COMPOUND_SKIP_CONT();
   }
 
   ENCLOSE()
   {
-    ASSERT2( inteq, memory_tracker_free(tracker), 0 );
+    ASSERT2( not_inteq, memory_tracker_free(tracker), 0 );
   }
 
   return result;
